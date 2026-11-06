@@ -1,10 +1,16 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F3F5F1">
+<meta name="description" content="Nachbarschaftshilfe in Garbsen: kleine Jobs in deiner Nähe finden oder Hilfe suchen.">
 <title>Nachbarhand</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;800&display=swap">
 <style>
-/* Leaflet 1.9.4 (BSD-2-Clause), Bildverweise entfernt */
+/* Leaflet 1.9.4, BSD-2-Clause, (c) Volodymyr Agafonkin, CloudMade; Bildverweise entfernt */
 /* required styles */
 
 .leaflet-pane,
@@ -965,8 +971,30 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
-</style>
 
+/* Grundregeln, die die Claude-Vorschau sonst selbst ergänzt (wichtig für GitHub Pages) */
+[hidden] { display: none !important; }
+body { margin: 0; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* Konto und Anmeldung */
+.kopf-rechts { display: flex; align-items: center; gap: 8px; }
+.btn-klein { width: auto; padding: 8px 14px; font-size: 14px; border-radius: 999px; }
+.avatar-btn { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--ink); color: var(--surface); font-family: var(--f-display); font-weight: 800; font-size: 14px; cursor: pointer; display: grid; place-items: center; }
+.umschalter { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 12px; background: var(--tile); }
+.umschalter button { border: 0; background: transparent; padding: 10px; border-radius: 9px; font-weight: 700; color: var(--muted); cursor: pointer; }
+.umschalter button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; cursor: pointer; }
+.check input { width: 22px; height: 22px; margin: 1px 0 0; flex: none; accent-color: var(--ink); }
+.erfolg { display: grid; gap: 6px; padding: 16px; border-radius: 14px; background: var(--good-bg); color: var(--ink); }
+.erfolg p { color: var(--ink); }
+.btn[disabled], .btn[aria-busy="true"] { opacity: .55; cursor: progress; }
+.konto-kopf { display: flex; align-items: center; gap: 12px; }
+.feld-hinweis { font-size: 13px; color: var(--muted); margin-top: -10px; }
+.lade { color: var(--muted); padding: 18px 4px; }
+</style>
+</head>
+<body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="i-garten" viewBox="0 0 24 24"><path d="M5 19C5 10.7 10.7 5 19 5c0 8.3-5.7 14-14 14Z"/><path d="M5 19l8-8"/></symbol>
   <symbol id="i-einkaufen" viewBox="0 0 24 24"><path d="M5.5 8.5h13l-1.2 11H6.7z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></symbol>
@@ -993,7 +1021,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 <div class="app">
   <header class="kopf">
     <div class="marke"><span class="marke-tag" aria-hidden="true"></span>Nachbarhand</div>
-    <span class="pill pill-muted">Prototyp</span>
+    <div class="kopf-rechts" id="kopf-rechts"><span class="pill pill-muted">Demo</span></div>
   </header>
 
   <main>
@@ -1027,7 +1055,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
         <div><strong>Selbst Hilfe gebraucht?</strong><p>Gesuch in einer Minute erstellen.</p></div>
         <button type="button" class="btn btn-secondary btn-auto" data-go="neu">Hilfe suchen</button>
       </div>
-      <p class="fuss">Prototyp mit erfundenen Beispiel-Gesuchen in Garbsen. Es fließt kein echtes Geld.</p>
+      <p class="fuss" id="fuss">Prototyp mit erfundenen Beispiel-Gesuchen in Garbsen. Es fließt kein echtes Geld.</p>
     </section>
 
     <!-- ===== Karte ===== -->
@@ -1106,6 +1134,18 @@ button, input, select, textarea { font: inherit; color: inherit; }
             </select>
           </div>
         </div>
+        <div class="feld-row">
+          <div class="feld">
+            <label for="neu-stadtteil">Stadtteil</label>
+            <select id="neu-stadtteil" name="stadtteil"></select>
+          </div>
+          <div class="feld">
+            <label for="neu-adresse">Straße und Hausnummer <span class="optional" id="adresse-optional">(optional)</span></label>
+            <input id="neu-adresse" name="adresse" maxlength="120" autocomplete="street-address" placeholder="z. B. Weberstraße 5" aria-describedby="adresse-hinweis fehler-adresse">
+          </div>
+        </div>
+        <p class="feld-hinweis" id="adresse-hinweis">Die Adresse sieht nur, wer bei dir zusagt. Auf der Karte erscheint nur dein Stadtteil.</p>
+        <p class="fehler" id="fehler-adresse" hidden>Bitte gib deine Straße und Hausnummer an.</p>
         <div class="feld">
           <label for="neu-betrag">Aufwandsentschädigung</label>
           <div class="betrag-eingabe">
@@ -1121,8 +1161,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
         </div>
         <div class="kosten" id="neu-kosten" aria-live="polite"></div>
         <div class="regel"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span>Nachbarschaftshilfe bleibt klein: höchstens 50 € pro Auftrag und keine festen, regelmäßigen Termine.</span></div>
-        <div class="hinweis"><svg class="i" aria-hidden="true"><use href="#i-schloss"/></svg><span>Auf der Karte erscheint nur dein ungefährer Standort in Garbsen-Mitte. Deine Adresse sieht nur, wer zusagt.</span></div>
-        <button class="btn btn-primary" type="submit">Gesuch veröffentlichen</button>
+        <p class="fehler" id="neu-fehler" role="alert" hidden></p>
+        <button class="btn btn-primary" type="submit" id="neu-senden">Gesuch veröffentlichen</button>
       </form>
     </section>
 
@@ -1138,7 +1178,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
         <h2 class="h-klein">Deine Gesuche</h2>
         <div class="liste" id="eigene"></div>
       </div>
-      <button type="button" class="link-btn" data-reset>Beispieldaten zurücksetzen</button>
+      <button type="button" class="link-btn" data-reset id="reset-knopf">Beispieldaten zurücksetzen</button>
     </section>
   </main>
 </div>
@@ -1164,15 +1204,27 @@ button, input, select, textarea { font: inherit; color: inherit; }
 (() => {
   'use strict';
 
+  /* ===== Betriebsart ===== */
+  // Wird beim Bauen für die Claude-Vorschau auf true gesetzt: Dort ist keine Datenbank erreichbar, also immer Demo.
+  const VORSCHAU = false;
+
+  // Zugang zur Datenbank (Supabase). Beide Werte sind öffentlich und dürfen im Code stehen.
+  // Leer = Demo-Modus mit erfundenen Beispieldaten.
+  const LIVE = {
+    url: '',
+    key: ''
+  };
+  const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';
+
   /* ===== Einstellungen: Gebühren, Regeln und Karte hier anpassen ===== */
   const CONFIG = {
-    gebuehrAuftraggeber: 1.99, // fester Betrag, den die suchende Person zusätzlich zahlt
-    provisionHelfer: 0.05,     // Anteil, der vom Betrag des Helfers abgeht
+    gebuehrAuftraggeber: 1.99, // nur Demo: fester Betrag, den die suchende Person zusätzlich zahlt
+    provisionHelfer: 0.05,     // nur Demo: Anteil, der vom Betrag des Helfers abgeht
     minBetrag: 5,
     maxBetrag: 50,             // Obergrenze für Nachbarschaftshilfe
     freigrenze: 255,           // § 22 Nr. 3 EStG: unter 256 € Gewinn im Jahr steuerfrei
     bereichMeter: 250,         // Radius des ungefähren Bereichs um ein Gesuch
-    ich: { name: 'Tim', initialen: 'TS', stadtteil: 'Garbsen-Mitte', lat: 52.4248, lng: 9.5962 }
+    ich: { name: 'Tim', initialen: 'TS', stadtteil: 'Garbsen-Mitte', lat: 52.4248, lng: 9.5962 } // Demo-Person
   };
 
   const KARTE = {
@@ -1187,6 +1239,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   };
 
   // Stadtteile von Garbsen. Mittelpunkte aus OpenStreetMap-Haltestellen und GeoNames, auf ca. 100 m genau.
+  // Dieselbe Liste steht in supabase/schema.sql.
   const STADTTEILE = [
     { name: 'Garbsen-Mitte', lat: 52.4262, lng: 9.6015, r: 480 },
     { name: 'Berenbostel', lat: 52.4352, lng: 9.6098, r: 480 },
@@ -1202,6 +1255,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     { name: 'Altgarbsen', lat: 52.4188, lng: 9.5815, r: 420 },
     { name: 'Auf der Horst', lat: 52.4166, lng: 9.5975, r: 420 }
   ];
+  const STADTTEIL_NAMEN = STADTTEILE.map((s) => s.name).sort((a, b) => a.localeCompare(b, 'de'));
 
   const KATEGORIEN = [
     { id: 'garten', name: 'Garten' },
@@ -1212,7 +1266,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     { id: 'technik', name: 'Technik' }
   ];
 
-  /* ===== Beispieldaten: erfundene Personen, echte Stadtteile ===== */
+  /* ===== Beispieldaten für den Demo-Modus: erfundene Personen, echte Stadtteile ===== */
   const BEISPIELE = [
     { id: 'g1', kat: 'garten', titel: 'Rasen ein letztes Mal mähen', wer: 'Karin M.', initialen: 'KM', sterne: 4.9, bewertungen: 14, betrag: 15,
       stadtteil: 'Berenbostel', lat: 52.4344, lng: 9.6106, wann: 'Samstag, vormittags', dauer: 'ca. 1 Std.',
@@ -1270,12 +1324,26 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
   const SPEICHER = 'nachbarhand-prototyp-v2';
   const VIEWS = ['entdecken', 'karte', 'neu', 'auftraege'];
-  const EIGEN_VERSATZ = [[180, -150], [-160, 170], [220, 160], [-210, -190]]; // Meter Nord/Ost ab deinem Standort
+  const EIGEN_VERSATZ = [[180, -150], [-160, 170], [220, 160], [-210, -190]]; // Demo: Meter Nord/Ost ab deinem Standort
 
   const $ = (s, r = document) => r.querySelector(s);
   const kopie = (x) => JSON.parse(JSON.stringify(x));
 
-  function laden() {
+  /* ===== Datenhaltung: Demo (dieses Gerät) oder Live (Supabase) ===== */
+  const db = {
+    modus: 'demo',
+    client: null,
+    user: null,
+    profil: null,
+    geladen: false,
+    laedt: false,
+    fehler: null,
+    bewertungen: new Map(), // gesuch_id -> meine Sterne
+    adressen: new Map()     // gesuch_id -> Adresse (nur für Beteiligte)
+  };
+  const istLive = () => db.modus === 'live';
+
+  function demoLaden() {
     try {
       const raw = localStorage.getItem(SPEICHER);
       if (raw) {
@@ -1285,12 +1353,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
     } catch (e) { /* ohne Speicher weiter */ }
     return kopie(BEISPIELE);
   }
-  function speichern() {
+  function demoSpeichern() {
+    if (istLive()) return;
     try { localStorage.setItem(SPEICHER, JSON.stringify(gesuche)); } catch (e) { /* ohne Speicher weiter */ }
   }
 
-  let gesuche = laden();
-  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, markiert: null, zentrieren: null, rueckzug: false, zuletzt: null };
+  let gesuche = [];
+  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, zuletzt: null, busy: false };
 
   /* ===== Hilfsfunktionen ===== */
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1298,8 +1367,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
   const euroKurz = (n) => Number.isInteger(n) ? `${n} €` : euro(n);
   const katName = (id) => (KATEGORIEN.find((k) => k.id === id) || {}).name || '';
   const icon = (id, cls = '') => `<svg class="i ${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
-  const vorname = (g) => g.wer.split(' ')[0];
-  const auszahlung = (g) => Math.round(g.betrag * (1 - CONFIG.provisionHelfer) * 100) / 100;
+  const vorname = (name) => String(name || '').split(' ')[0];
+  const anzeigename = (p) => p ? `${p.vorname}${p.nachname_initial ? ' ' + p.nachname_initial + '.' : ''}` : 'Unbekannt';
+  const kuerzel = (p) => p ? ((p.vorname || '?')[0] + (p.nachname_initial || '')).toUpperCase() : '?';
+  const auszahlung = (g) => istLive() ? g.betrag : Math.round(g.betrag * (1 - CONFIG.provisionHelfer) * 100) / 100;
 
   function abstand(a, b) {
     const R = 6371000, rad = Math.PI / 180;
@@ -1310,7 +1381,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
   function versetze(p, nordM, ostM) {
     return { lat: p.lat + nordM / 111320, lng: p.lng + ostM / (111320 * Math.cos(p.lat * Math.PI / 180)) };
   }
-  const meterVonMir = (g) => abstand(CONFIG.ich, g);
+  // Wo bin ich? Demo: Tim in Garbsen-Mitte. Live: Mitte des Stadtteils aus dem Profil.
+  function meinOrt() {
+    if (!istLive()) return CONFIG.ich;
+    const name = (db.profil && db.profil.stadtteil) || 'Garbsen-Mitte';
+    const s = STADTTEILE.find((x) => x.name === name) || STADTTEILE[0];
+    return { lat: s.lat, lng: s.lng, stadtteil: s.name };
+  }
+  const zeigeIch = () => !istLive() || !!db.profil;
+  const meterVonMir = (g) => abstand(meinOrt(), g);
   function distanz(g) {
     if (g.eigen) return 'bei dir';
     const m = meterVonMir(g);
@@ -1331,11 +1410,27 @@ button, input, select, textarea { font: inherit; color: inherit; }
     return l;
   }
   function statusPill(g) {
-    if (g.eigen) return `<span class="pill pill-muted">Sichtbar für Nachbarn</span>`;
+    if (g.eigen) {
+      if (g.status === 'offen') return `<span class="pill pill-muted">Sichtbar für Nachbarn</span>`;
+      if (g.status === 'zugesagt') return `<span class="pill pill-info">${esc(vorname(g.helferName)) || 'Jemand'} hilft</span>`;
+      if (g.status === 'erledigt') return `<span class="pill pill-warn">Bitte bestätigen</span>`;
+      if (g.status === 'bezahlt') return `<span class="pill pill-good">${icon('check', 'i-xs')} Abgeschlossen</span>`;
+    }
     if (g.status === 'zugesagt') return `<span class="pill pill-info">Zugesagt</span>`;
     if (g.status === 'erledigt') return `<span class="pill pill-warn">Wartet auf Bestätigung</span>`;
-    if (g.status === 'bezahlt') return `<span class="pill pill-good">${icon('check', 'i-xs')} Ausgezahlt</span>`;
+    if (g.status === 'bezahlt') return `<span class="pill pill-good">${icon('check', 'i-xs')} ${istLive() ? 'Bestätigt' : 'Ausgezahlt'}</span>`;
     return '';
+  }
+  function fehlerText(e) {
+    const m = (e && (e.message || e.error_description || e.msg)) || '';
+    if (/failed to fetch|network|load failed/i.test(m)) return 'Keine Verbindung. Prüfe dein Internet und versuch es noch einmal.';
+    if (/invalid login credentials/i.test(m)) return 'E-Mail oder Passwort stimmt nicht.';
+    if (/email not confirmed/i.test(m)) return 'Bitte bestätige zuerst deine E-Mail-Adresse über den Link in der E-Mail.';
+    if (/already registered|already been registered/i.test(m)) return 'Für diese E-Mail gibt es schon ein Konto. Melde dich an.';
+    if (/password should be at least|weak password/i.test(m)) return 'Das Passwort ist zu kurz oder zu einfach. Nimm mindestens 8 Zeichen.';
+    if (/rate limit|too many/i.test(m)) return 'Zu viele Versuche. Warte ein paar Minuten.';
+    if (/jwt|permission denied/i.test(m)) return 'Deine Anmeldung ist abgelaufen. Bitte melde dich neu an.';
+    return m || 'Etwas ist schiefgelaufen. Versuch es noch einmal.';
   }
 
   let toastTimer;
@@ -1344,7 +1439,152 @@ button, input, select, textarea { font: inherit; color: inherit; }
     t.textContent = text;
     t.classList.add('zeigen');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('zeigen'), 2800);
+    toastTimer = setTimeout(() => t.classList.remove('zeigen'), 3200);
+  }
+
+  /* ===== Live: Verbindung, Anmeldung, Laden ===== */
+  function ladeSkript(src) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = () => reject(new Error('Skript nicht geladen'));
+      document.head.appendChild(s);
+      setTimeout(() => reject(new Error('Zeitüberschreitung')), 15000);
+    });
+  }
+
+  async function starteLive() {
+    if (VORSCHAU || !LIVE.url || !LIVE.key) return false;
+    try {
+      if (!(window.supabase && window.supabase.createClient)) await ladeSkript(SUPABASE_JS);
+      db.client = window.supabase.createClient(LIVE.url, LIVE.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+    } catch (e) {
+      meldung('Die Datenbank ist gerade nicht erreichbar. Du siehst die Demo.');
+      return false;
+    }
+    db.modus = 'live';
+    gesuche = [];
+    renderAlles();
+    const { data } = await db.client.auth.getSession();
+    await setzeSitzung(data && data.session, true);
+    db.client.auth.onAuthStateChange((event, session) => {
+      // Supabase empfiehlt, hier nicht direkt weitere Anfragen abzuwarten
+      setTimeout(() => setzeSitzung(session, false), 0);
+    });
+    db.client.channel('gesuche-aenderungen')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gesuche' }, () => bald(neuLaden))
+      .subscribe();
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) bald(neuLaden); });
+    return true;
+  }
+
+  let baldTimer;
+  function bald(fn) { clearTimeout(baldTimer); baldTimer = setTimeout(fn, 400); }
+
+  async function setzeSitzung(session, erzwingen) {
+    const uid = session && session.user ? session.user.id : null;
+    const bisher = db.user ? db.user.id : null;
+    if (!erzwingen && uid === bisher) return;
+    db.user = session ? session.user : null;
+    db.profil = null;
+    db.bewertungen.clear();
+    db.adressen.clear();
+    if (uid) {
+      const { data } = await db.client.from('profile').select('*').eq('id', uid).maybeSingle();
+      db.profil = data || null;
+    }
+    if (ui.panel === 'anmelden' && db.profil) {
+      schliessen();
+      meldung(`Willkommen, ${db.profil.vorname}!`);
+    }
+    renderStadtteilAuswahl();
+    renderKosten();
+    await neuLaden();
+  }
+
+  const GESUCH_FELDER = 'id, ersteller, kategorie, titel, beschreibung, betrag, wann, dauer, stadtteil, lat, lng, status, helfer, erstellt, ' +
+    'ersteller_profil:profile!gesuche_ersteller_fkey(vorname, nachname_initial, sterne_summe, sterne_anzahl), ' +
+    'helfer_profil:profile!gesuche_helfer_fkey(vorname, nachname_initial)';
+
+  function ausDb(r) {
+    const ich = db.user ? db.user.id : null;
+    const p = r.ersteller_profil || null;
+    return {
+      id: r.id, kat: r.kategorie, titel: r.titel, text: r.beschreibung || '', betrag: r.betrag, wann: r.wann, dauer: r.dauer,
+      stadtteil: r.stadtteil, lat: r.lat, lng: r.lng,
+      status: r.status === 'bestaetigt' ? 'bezahlt' : r.status,
+      erstellt: Date.parse(r.erstellt) || 0,
+      eigen: !!ich && r.ersteller === ich,
+      helfer: ich && r.helfer === ich ? 'ich' : (r.helfer ? 'andere' : null),
+      wer: anzeigename(p), initialen: kuerzel(p),
+      sterne: p && p.sterne_anzahl ? p.sterne_summe / p.sterne_anzahl : null,
+      bewertungen: p ? p.sterne_anzahl : 0,
+      helferName: r.helfer_profil ? anzeigename(r.helfer_profil) : '',
+      meineBewertung: db.bewertungen.get(r.id) || 0
+    };
+  }
+
+  async function neuLaden() {
+    if (!istLive()) return;
+    db.laedt = true;
+    try {
+      const { data, error } = await db.client.from('gesuche').select(GESUCH_FELDER)
+        .neq('status', 'zurueckgezogen').order('erstellt', { ascending: false }).limit(300);
+      if (error) throw error;
+      if (db.user) {
+        const b = await db.client.from('bewertungen').select('gesuch_id, sterne').eq('von', db.user.id);
+        if (!b.error && b.data) b.data.forEach((x) => db.bewertungen.set(x.gesuch_id, x.sterne));
+      }
+      gesuche = (data || []).map(ausDb);
+      db.fehler = null;
+      db.geladen = true;
+    } catch (e) {
+      db.fehler = fehlerText(e);
+    } finally {
+      db.laedt = false;
+    }
+    if (ui.offen && !gesuche.some((g) => g.id === ui.offen)) {
+      schliessen();
+      meldung('Dieses Gesuch ist nicht mehr verfügbar.');
+    }
+    renderAlles();
+  }
+
+  async function ladeAdresse(id) {
+    if (db.adressen.has(id)) return;
+    db.adressen.set(id, null); // wird geladen
+    const { data } = await db.client.from('gesuch_adressen').select('adresse').eq('gesuch_id', id).maybeSingle();
+    db.adressen.set(id, data ? data.adresse : '');
+    if (ui.offen === id) renderSheet();
+  }
+  const adresseVon = (g) => istLive() ? db.adressen.get(g.id) : g.adresse;
+
+  // Statuswechsel: Live über Datenbankfunktionen, Demo direkt hier
+  async function aendereStatus(g, aktion) {
+    if (istLive()) {
+      const rpc = { zusagen: 'gesuch_zusagen', absagen: 'gesuch_absagen', erledigt: 'gesuch_erledigt', bestaetigen: 'gesuch_bestaetigen', rueckzug: 'gesuch_zurueckziehen' }[aktion];
+      const { error } = await db.client.rpc(rpc, { p_id: g.id });
+      if (error) throw error;
+      await neuLaden();
+      return;
+    }
+    if (aktion === 'zusagen') { g.status = 'zugesagt'; g.helfer = 'ich'; }
+    else if (aktion === 'absagen') { g.status = 'offen'; g.helfer = null; }
+    else if (aktion === 'erledigt') g.status = 'erledigt';
+    else if (aktion === 'bestaetigen') g.status = 'bezahlt';
+    else if (aktion === 'rueckzug') gesuche = gesuche.filter((x) => x.id !== g.id);
+    demoSpeichern();
+  }
+
+  async function bewerte(g, sterne) {
+    if (istLive()) {
+      const { error } = await db.client.rpc('bewerten', { p_id: g.id, p_sterne: sterne });
+      if (error) throw error;
+      db.bewertungen.set(g.id, sterne);
+    }
+    g.meineBewertung = sterne;
+    demoSpeichern();
   }
 
   /* ===== Darstellung ===== */
@@ -1359,11 +1599,23 @@ button, input, select, textarea { font: inherit; color: inherit; }
       <span class="card-main">
         <span class="card-title">${esc(g.titel)}</span>
         <span class="card-ort">${icon('ort', 'i-xs')}${esc(g.stadtteil)} · ${distanz(g)}</span>
-        <span class="card-meta">${esc(g.wer)} · ${esc(g.wann)}</span>
+        <span class="card-meta">${esc(g.eigen ? 'Dein Gesuch' : g.wer)} · ${esc(g.wann)}</span>
         ${extra}
       </span>
       <span class="price">${euroKurz(g.betrag)}</span>
     </button>`;
+  }
+
+  function renderKopf() {
+    const el = $('#kopf-rechts');
+    if (!istLive()) el.innerHTML = '<span class="pill pill-muted">Demo</span>';
+    else if (!db.profil) el.innerHTML = '<button type="button" class="btn btn-secondary btn-klein" data-panel="anmelden">Anmelden</button>';
+    else el.innerHTML = `<button type="button" class="avatar-btn" data-panel="konto" aria-label="Dein Konto">${esc(kuerzel(db.profil))}</button>`;
+    $('#fuss').textContent = istLive()
+      ? 'Testphase: Die Aufwandsentschädigung zahlt ihr direkt untereinander. Nachbarhand vermittelt nur und nimmt noch keine Gebühr.'
+      : 'Prototyp mit erfundenen Beispiel-Gesuchen in Garbsen. Es fließt kein echtes Geld.';
+    $('#reset-knopf').hidden = istLive();
+    $('#adresse-optional').hidden = istLive();
   }
 
   function renderChips() {
@@ -1371,22 +1623,36 @@ button, input, select, textarea { font: inherit; color: inherit; }
     $('#chips-karte').innerHTML = chipsHTML();
   }
 
+  function stadtteilOptionen(auswahl, mitAlle) {
+    return (mitAlle ? `<option value="alle">Ganz Garbsen</option>` : '') +
+      STADTTEIL_NAMEN.map((n) => `<option value="${esc(n)}" ${auswahl === n ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  }
   function renderStadtteilAuswahl() {
-    const namen = STADTTEILE.map((s) => s.name).sort((a, b) => a.localeCompare(b, 'de'));
-    $('#stadtteil').innerHTML = `<option value="alle">Ganz Garbsen</option>` +
-      namen.map((n) => `<option value="${esc(n)}" ${ui.stadtteil === n ? 'selected' : ''}>${esc(n)}</option>`).join('');
+    $('#stadtteil').innerHTML = stadtteilOptionen(ui.stadtteil, true);
+    $('#neu-stadtteil').innerHTML = stadtteilOptionen(meinOrt().stadtteil, false);
   }
 
   function renderListe() {
     const offene = gesuche.filter((g) => !g.eigen && g.status === 'offen');
-    $('#anzahl-text').textContent = `${CONFIG.ich.stadtteil}, Garbsen · ${offene.length} ${offene.length === 1 ? 'Nachbar sucht' : 'Nachbarn suchen'} gerade Hilfe`;
+    const ort = meinOrt();
+    $('#h-entdecken').textContent = istLive() ? (db.profil ? `Hallo ${db.profil.vorname}` : 'Hilfe in Garbsen') : 'Hallo Tim';
+    const anzahl = `${offene.length} ${offene.length === 1 ? 'Nachbar sucht' : 'Nachbarn suchen'} gerade Hilfe`;
+    $('#anzahl-text').textContent = zeigeIch() ? `${ort.stadtteil}, Garbsen · ${anzahl}` : `Garbsen · ${anzahl}`;
+
+    if (istLive() && !db.geladen) {
+      $('#liste').innerHTML = db.fehler
+        ? `<div class="leer"><p><strong>Die Gesuche konnten nicht geladen werden.</strong></p><p>${esc(db.fehler)}</p><button type="button" class="btn btn-secondary btn-auto" data-neu-laden>Erneut versuchen</button></div>`
+        : `<p class="lade">Gesuche werden geladen …</p>`;
+      return;
+    }
     const treffer = sortiere(offene.filter((g) => passt(g) && (ui.stadtteil === 'alle' || g.stadtteil === ui.stadtteil)));
     if (!treffer.length) {
       const q = ui.suche.trim();
       const wo = ui.stadtteil === 'alle' ? '' : ` in ${esc(ui.stadtteil)}`;
+      const nochNichts = istLive() && !offene.length;
       $('#liste').innerHTML = `<div class="leer">
-        <p><strong>Nichts gefunden${q ? ` für „${esc(q)}“` : ''}${wo}.</strong></p>
-        <p>Probier eine andere Tätigkeit, Kategorie oder einen anderen Stadtteil. Oder such selbst Hilfe.</p>
+        <p><strong>${nochNichts ? 'Noch keine offenen Gesuche in Garbsen.' : `Nichts gefunden${q ? ` für „${esc(q)}“` : ''}${wo}.`}</strong></p>
+        <p>${nochNichts ? 'Mach den Anfang: Wobei könntest du Hilfe gebrauchen?' : 'Probier eine andere Tätigkeit, Kategorie oder einen anderen Stadtteil. Oder such selbst Hilfe.'}</p>
         <button type="button" class="btn btn-secondary btn-auto" data-go="neu">Gesuch erstellen</button>
       </div>`;
       return;
@@ -1395,13 +1661,22 @@ button, input, select, textarea { font: inherit; color: inherit; }
   }
 
   function renderAuftraege() {
+    const abschnitte = document.querySelectorAll('#view-auftraege .abschnitt');
+    if (istLive() && !db.profil) {
+      $('#summe').innerHTML = `<span class="h-klein">Deine Aufträge</span>
+        <p>Melde dich an, um deine Gesuche und Zusagen zu sehen.</p>
+        <button type="button" class="btn btn-primary" data-panel="anmelden">Anmelden oder registrieren</button>`;
+      abschnitte.forEach((a) => { a.hidden = true; });
+      return;
+    }
+    abschnitte.forEach((a) => { a.hidden = false; });
     const zusagen = gesuche.filter((g) => g.helfer === 'ich');
     const eigene = gesuche.filter((g) => g.eigen);
     const verdient = zusagen.filter((g) => g.status === 'bezahlt').reduce((s, g) => s + auszahlung(g), 0);
     const anteil = Math.min(100, verdient / CONFIG.freigrenze * 100);
     const rest = Math.max(0, CONFIG.freigrenze - verdient);
     $('#summe').innerHTML = `
-      <span class="h-klein">Verdient über Nachbarhand</span>
+      <span class="h-klein">${istLive() ? 'Aufwandsentschädigungen (bestätigt)' : 'Verdient über Nachbarhand'}</span>
       <span class="summe-zahl">${euro(verdient)}</span>
       <div class="meter" role="img" aria-label="${euro(verdient)} von ${euro(CONFIG.freigrenze)} steuerfreiem Betrag"><span style="width:${anteil.toFixed(1)}%"></span></div>
       <span class="summe-hint">Bis ${CONFIG.freigrenze} € Gewinn im Jahr steuerfrei (§ 22 Nr. 3 EStG). Noch ${euro(rest)} frei.</span>`;
@@ -1467,10 +1742,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
     kacheln.on('tileload', () => { kartenStatus.geladen++; });
     kacheln.on('tileerror', () => {
       kartenStatus.fehler++;
-      if (!kartenStatus.geladen && kartenStatus.fehler >= 2) vereinfachen();
+      if (!kartenStatus.geladen && kartenStatus.fehler >= 4) vereinfachen();
     });
     kacheln.addTo(map);
-    setTimeout(() => { if (!kartenStatus.geladen) vereinfachen(); }, 5000);
+    if (VORSCHAU) setTimeout(() => { if (!kartenStatus.geladen) vereinfachen(); }, 6000);
 
     kartenStatus.map = map;
     kartenStatus.kacheln = kacheln;
@@ -1500,7 +1775,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
       pane: 'labels', interactive: false, keyboard: false,
       icon: L.divIcon({ className: 'stadtteil-label', html: `<span>${esc(s.name)}</span>`, iconSize: null })
     }))).addTo(k.map);
-    $('#karte-hinweis').hidden = false;
+    $('#karte-hinweis').hidden = !VORSCHAU;
     $('#legende-stadtteil').hidden = false;
     requestAnimationFrame(labelsAufraeumen);
   }
@@ -1555,10 +1830,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
       L.circle([aktiv.lat, aktiv.lng], { radius: CONFIG.bereichMeter, className: 'bereich-kreis', interactive: false }).addTo(k.bereich);
     }
 
-    L.marker([CONFIG.ich.lat, CONFIG.ich.lng], {
-      interactive: false, keyboard: false, zIndexOffset: -500,
-      icon: L.divIcon({ className: 'ich-anker', html: '<span class="ich"></span><span class="ich-label">Du</span>', iconSize: null })
-    }).addTo(k.pins);
+    if (zeigeIch()) {
+      const ort = meinOrt();
+      L.marker([ort.lat, ort.lng], {
+        interactive: false, keyboard: false, zIndexOffset: -500,
+        icon: L.divIcon({ className: 'ich-anker', html: '<span class="ich"></span><span class="ich-label">Du</span>', iconSize: null })
+      }).addTo(k.pins);
+    }
 
     sichtbar.forEach((g) => {
       const cls = [g.eigen ? 'pin-eigen' : '', g.helfer === 'ich' ? 'pin-zugesagt' : '', g.id === hervor ? 'is-aktiv' : ''].join(' ');
@@ -1600,7 +1878,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     const was = b.dataset.karte;
     if (was === 'rein') map.zoomIn();
     else if (was === 'raus') map.zoomOut();
-    else if (was === 'ich') map.setView([CONFIG.ich.lat, CONFIG.ich.lng], 15);
+    else if (was === 'ich') { const o = meinOrt(); map.setView([o.lat, o.lng], 15); }
     else if (was === 'alles') zeigeGanzGarbsen();
   });
 
@@ -1610,10 +1888,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
   }
   new MutationObserver(aktualisiereKachelThema).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-  /* ===== Detail-Ansicht (Bottom Sheet) ===== */
-  function sheetHTML(g) {
-    const vn = vorname(g);
+  /* ===== Detail-Ansicht und Konto (Bottom Sheet) ===== */
+  function sheetGesuchHTML(g) {
+    const live = istLive();
+    const vn = vorname(g.wer);
+    const hn = vorname(g.helferName) || 'Die helfende Person';
     const gebuehr = CONFIG.gebuehrAuftraggeber;
+    const dis = ui.busy ? 'disabled aria-busy="true"' : '';
     let html = `
       <div class="sheet-top">
         <span class="eyebrow">${icon(g.kat, 'i-sm')}${katName(g.kat)}</span>
@@ -1624,20 +1905,28 @@ button, input, select, textarea { font: inherit; color: inherit; }
     if (g.eigen) {
       html += `<p class="klein">Dein Gesuch · sichtbar für Nachbarn in Garbsen</p>`;
     } else {
+      const bewertung = g.bewertungen
+        ? `${icon('stern', 'i-xs i-fill')}${g.sterne.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} · ${g.bewertungen} ${g.bewertungen === 1 ? 'Bewertung' : 'Bewertungen'}`
+        : 'Neu bei Nachbarhand';
       html += `<div class="person">
         <span class="avatar" aria-hidden="true">${esc(g.initialen)}</span>
         <div>
-          <div class="person-name">${esc(g.wer)} <span class="pill pill-good">${icon('check', 'i-xs')}Verifiziert</span></div>
-          <div class="person-meta">${icon('stern', 'i-xs i-fill')}${g.sterne.toLocaleString('de-DE', { minimumFractionDigits: 1 })} · ${g.bewertungen} Bewertungen</div>
+          <div class="person-name">${esc(g.wer)}${live ? '' : ` <span class="pill pill-good">${icon('check', 'i-xs')}Verifiziert</span>`}</div>
+          <div class="person-meta">${bewertung}</div>
         </div>
       </div>`;
     }
 
+    let detail;
+    if (live) detail = g.eigen
+      ? `Zahlst du direkt<span>an die Person, die dir hilft</span>`
+      : `Bekommst du direkt<span>von ${esc(vn)}, ohne Gebühr in der Testphase</span>`;
+    else detail = g.eigen
+      ? `Du zahlst ${euro(g.betrag + gebuehr)}<span>inkl. ${euro(gebuehr)} Servicegebühr, erst nach Erledigung</span>`
+      : `Du erhältst ${euro(auszahlung(g))}<span>nach ${Math.round(CONFIG.provisionHelfer * 100)} % Servicegebühr</span>`;
     html += `<div class="betrag">
       <div><div class="betrag-zahl">${euroKurz(g.betrag)}</div><div class="betrag-label">Aufwandsentschädigung</div></div>
-      <div class="betrag-detail">${g.eigen
-        ? `Du zahlst ${euro(g.betrag + gebuehr)}<span>inkl. ${euro(gebuehr)} Servicegebühr, erst nach Erledigung</span>`
-        : `Du erhältst ${euro(auszahlung(g))}<span>nach ${Math.round(CONFIG.provisionHelfer * 100)} % Servicegebühr</span>`}</div>
+      <div class="betrag-detail">${detail}</div>
     </div>
     <dl class="fakten">
       <div><dt>Stadtteil</dt><dd>${esc(g.stadtteil)}</dd></div>
@@ -1648,53 +1937,134 @@ button, input, select, textarea { font: inherit; color: inherit; }
     if (g.text) html += `<p class="beschreibung">${esc(g.text)}</p>`;
     html += `<button type="button" class="link-inline" data-aktion="karte">${icon('karte', 'i-sm')}Auf der Karte zeigen</button>`;
 
+    // Adresse: nur für Beteiligte
+    const beteiligt = g.eigen || g.helfer === 'ich';
+    const adresse = beteiligt ? adresseVon(g) : '';
+    if (beteiligt && live) ladeAdresse(g.id);
     if (g.eigen) {
-      html += `<div class="hinweis">${icon('schloss')}<span>Deine genaue Adresse sieht nur, wer zusagt.</span></div>`;
+      html += `<div class="hinweis">${icon('schloss')}<span>${adresse ? `Deine Adresse <strong>${esc(adresse)}</strong> sieht` : 'Deine genaue Adresse sieht'} nur, wer zusagt.</span></div>`;
     } else if (g.status === 'offen') {
       html += `<div class="hinweis">${icon('schloss')}<span>Die genaue Adresse siehst du nach deiner Zusage.</span></div>`;
     } else {
-      html += `<div class="hinweis hinweis-offen">${icon('ort')}<span><strong>${esc(g.adresse)}</strong><br>Nur für dich sichtbar</span></div>`;
+      const adressText = adresse ? esc(adresse) : (adresse === '' ? 'Adresse nicht verfügbar' : 'Adresse wird geladen …');
+      html += `<div class="hinweis hinweis-offen">${icon('ort')}<span><strong>${adressText}</strong><br>Nur für dich sichtbar</span></div>`;
+    }
+
+    // Fortschritt für laufende Aufträge
+    if (g.status !== 'offen' && (g.helfer === 'ich' || g.eigen)) {
       const stufen = ['zugesagt', 'erledigt', 'bezahlt'];
-      const namen = ['Zugesagt', 'Erledigt gemeldet', 'Bestätigt und ausgezahlt'];
+      const namen = ['Zugesagt', 'Erledigt gemeldet', live ? 'Bestätigt' : 'Bestätigt und ausgezahlt'];
       const idx = stufen.indexOf(g.status);
       html += `<ol class="schritte" aria-label="Fortschritt">${namen.map((n, i) =>
         `<li class="${i <= idx ? 'is-done' : ''} ${i === idx ? 'is-current' : ''}"><span class="punkt">${i <= idx ? icon('check', 'i-xs') : ''}</span>${n}</li>`
       ).join('')}</ol>`;
-      if (g.antwort) html += `<div class="nachricht"><span class="nachricht-von">Nachricht von ${esc(vn)}</span><p>${esc(g.antwort)}</p></div>`;
+      if (!live && g.helfer === 'ich' && g.antwort) html += `<div class="nachricht"><span class="nachricht-von">Nachricht von ${esc(vn)}</span><p>${esc(g.antwort)}</p></div>`;
     }
 
+    const sterneHTML = (b, wen) => `<div class="bewerten"><span><strong>${b ? 'Danke für deine Bewertung.' : `Wie war es mit ${esc(wen)}?`}</strong></span>
+      <div class="sterne" role="group" aria-label="Bewertung">${[1, 2, 3, 4, 5].map((n) =>
+        `<button type="button" class="stern ${n <= b ? 'is-an' : ''}" data-stern="${n}" aria-label="${n} ${n === 1 ? 'Stern' : 'Sterne'}" aria-pressed="${n <= b}" ${dis}>${icon('stern')}</button>`
+      ).join('')}</div></div>`;
+
     if (g.eigen) {
-      html += ui.rueckzug
-        ? `<div class="bestaetigen-box"><p>Gesuch wirklich zurückziehen? Nachbarn sehen es dann nicht mehr.</p>
-            <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-aktion="rueckzug">Zurückziehen</button>
-            <button type="button" class="btn btn-secondary" data-aktion="rueckzug-nein">Abbrechen</button></div></div>`
-        : `<button type="button" class="btn btn-secondary btn-danger" data-aktion="rueckzug-frage">Gesuch zurückziehen</button>`;
+      if (g.status === 'offen') {
+        html += ui.rueckzug
+          ? `<div class="bestaetigen-box"><p>Gesuch wirklich zurückziehen? Nachbarn sehen es dann nicht mehr.</p>
+              <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-aktion="rueckzug" ${dis}>Zurückziehen</button>
+              <button type="button" class="btn btn-secondary" data-aktion="rueckzug-nein">Abbrechen</button></div></div>`
+          : `<button type="button" class="btn btn-secondary btn-danger" data-aktion="rueckzug-frage">Gesuch zurückziehen</button>`;
+      } else if (g.status === 'zugesagt') {
+        html += `<div class="status-box good">${icon('check')}${esc(g.helferName || 'Jemand')} hilft dir</div>
+          <p class="klein">Sobald der Job erledigt ist, meldet ${esc(hn)} das hier. Danach bestätigst du.</p>`;
+      } else if (g.status === 'erledigt') {
+        html += `<div class="status-box warn">${esc(hn)} hat den Job als erledigt gemeldet.</div>
+          <button type="button" class="btn btn-primary" data-aktion="bestaetigen" ${dis}>Erledigt bestätigen</button>`;
+      } else if (g.status === 'bezahlt') {
+        html += `<div class="status-box good">${icon('check')}Abgeschlossen</div>` + (g.helferName ? sterneHTML(g.meineBewertung || 0, hn) : '');
+      }
     } else if (g.status === 'offen') {
-      html += `<button type="button" class="btn btn-primary" data-aktion="zusagen">Ich helfe</button>
-        <p class="klein">Bezahlt wird sicher über die App, nicht bar. Helfen kannst du ab 18 Jahren.</p>`;
+      html += `<button type="button" class="btn btn-primary" data-aktion="zusagen" ${dis}>Ich helfe</button>
+        <p class="klein">${live ? `Die Aufwandsentschädigung bekommst du direkt von ${esc(vn)}.` : 'Bezahlt wird sicher über die App, nicht bar.'} Helfen kannst du ab 18 Jahren.</p>`;
     } else if (g.status === 'zugesagt') {
-      html += `<button type="button" class="btn btn-primary" data-aktion="erledigt">Job erledigt melden</button>`;
+      html += `<button type="button" class="btn btn-primary" data-aktion="erledigt" ${dis}>Job erledigt melden</button>
+        <button type="button" class="link-btn" data-aktion="absagen" ${dis}>Zusage zurückziehen</button>`;
     } else if (g.status === 'erledigt') {
-      html += `<div class="status-box warn">Warte auf Bestätigung von ${esc(vn)}. Danach wird ausgezahlt.</div>
-        <button type="button" class="btn btn-secondary" data-aktion="bestaetigen">Demo: ${esc(vn)} bestätigt</button>`;
+      html += `<div class="status-box warn">Warte auf Bestätigung von ${esc(vn)}.${live ? '' : ' Danach wird ausgezahlt.'}</div>` +
+        (live ? '' : `<button type="button" class="btn btn-secondary" data-aktion="bestaetigen">Demo: ${esc(vn)} bestätigt</button>`);
     } else if (g.status === 'bezahlt') {
-      const b = g.meineBewertung || 0;
-      html += `<div class="status-box good">${icon('check')}${euro(auszahlung(g))} ausgezahlt</div>
-        <div class="bewerten"><span><strong>${b ? 'Danke für deine Bewertung.' : `Wie war es mit ${esc(vn)}?`}</strong></span>
-        <div class="sterne" role="group" aria-label="Bewertung">${[1, 2, 3, 4, 5].map((n) =>
-          `<button type="button" class="stern ${n <= b ? 'is-an' : ''}" data-stern="${n}" aria-label="${n} ${n === 1 ? 'Stern' : 'Sterne'}" aria-pressed="${n <= b}">${icon('stern')}</button>`
-        ).join('')}</div></div>`;
+      html += `<div class="status-box good">${icon('check')}${live ? `${esc(vn)} hat bestätigt` : `${euro(auszahlung(g))} ausgezahlt`}</div>` + sterneHTML(g.meineBewertung || 0, vn);
     }
     return html;
   }
 
+  function sheetAnmeldenHTML() {
+    const reg = ui.authModus === 'registrieren';
+    const kopf = `<div class="sheet-top">
+        <span class="eyebrow">Konto</span>
+        <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
+      </div>`;
+    if (ui.authFertig) {
+      return kopf + `<h2 id="sheet-titel">Fast geschafft</h2>
+        <div class="erfolg"><strong>Schau in dein Postfach.</strong><p>Wir haben dir eine E-Mail an ${esc(ui.authFertig)} geschickt. Tippe auf den Link darin, dann bist du angemeldet.</p></div>
+        <button type="button" class="btn btn-secondary" data-close>Alles klar</button>`;
+    }
+    return kopf + `<h2 id="sheet-titel">${reg ? 'Konto erstellen' : 'Anmelden'}</h2>
+      ${ui.authGrund ? `<p class="klein">${esc(ui.authGrund)}</p>` : ''}
+      <div class="umschalter">
+        <button type="button" data-auth-modus="anmelden" aria-pressed="${!reg}">Anmelden</button>
+        <button type="button" data-auth-modus="registrieren" aria-pressed="${reg}">Neu registrieren</button>
+      </div>
+      <form class="form" id="auth-form" novalidate>
+        ${reg ? `<div class="feld-row">
+          <div class="feld"><label for="auth-vorname">Vorname</label><input id="auth-vorname" autocomplete="given-name" maxlength="40" required></div>
+          <div class="feld"><label for="auth-initial">Nachname <span class="optional">(nur 1. Buchstabe)</span></label><input id="auth-initial" autocomplete="off" maxlength="1"></div>
+        </div>
+        <div class="feld"><label for="auth-stadtteil">Dein Stadtteil</label><select id="auth-stadtteil">${stadtteilOptionen('Garbsen-Mitte', false)}</select></div>` : ''}
+        <div class="feld"><label for="auth-email">E-Mail</label><input id="auth-email" type="email" autocomplete="email" required></div>
+        <div class="feld"><label for="auth-passwort">Passwort</label><input id="auth-passwort" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" minlength="8" required>${reg ? '<p class="feld-hinweis" style="margin-top:0">Mindestens 8 Zeichen.</p>' : ''}</div>
+        ${reg ? `<label class="check"><input type="checkbox" id="auth-18"><span>Ich bin mindestens 18 Jahre alt.</span></label>
+        <label class="check"><input type="checkbox" id="auth-regeln"><span>Ich habe verstanden: Nachbarhand vermittelt nur. Die Absprache und Bezahlung läuft direkt zwischen uns Nachbarn, gelegentlich und in kleinem Umfang.</span></label>` : ''}
+        <p class="fehler" id="auth-fehler" role="alert" hidden></p>
+        <button type="submit" class="btn btn-primary" ${ui.busy ? 'disabled aria-busy="true"' : ''}>${reg ? 'Konto erstellen' : 'Anmelden'}</button>
+      </form>`;
+  }
+
+  function sheetKontoHTML() {
+    const p = db.profil;
+    if (!p) return '';
+    const bewertung = p.sterne_anzahl
+      ? `${icon('stern', 'i-xs i-fill')}${(p.sterne_summe / p.sterne_anzahl).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} · ${p.sterne_anzahl} ${p.sterne_anzahl === 1 ? 'Bewertung' : 'Bewertungen'}`
+      : 'Noch keine Bewertungen';
+    return `<div class="sheet-top">
+        <span class="eyebrow">Dein Konto</span>
+        <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
+      </div>
+      <div class="konto-kopf">
+        <span class="avatar" aria-hidden="true">${esc(kuerzel(p))}</span>
+        <div>
+          <h2 id="sheet-titel">${esc(anzeigename(p))}</h2>
+          <div class="person-meta">${bewertung}</div>
+        </div>
+      </div>
+      <p class="klein">Angemeldet als ${esc(db.user && db.user.email)}. Andere sehen nur deinen Vornamen, den Anfangsbuchstaben und deinen Stadtteil.</p>
+      <div class="feld"><label for="konto-stadtteil">Dein Stadtteil</label><select id="konto-stadtteil">${stadtteilOptionen(p.stadtteil, false)}</select></div>
+      <button type="button" class="btn btn-secondary" data-abmelden ${ui.busy ? 'disabled' : ''}>Abmelden</button>`;
+  }
+
   function renderSheet() {
-    const g = gesuche.find((x) => x.id === ui.offen);
-    if (!g) { schliessen(); return; }
-    $('#sheet-inhalt').innerHTML = sheetHTML(g);
+    let html = '';
+    if (ui.panel === 'anmelden') html = sheetAnmeldenHTML();
+    else if (ui.panel === 'konto') html = sheetKontoHTML();
+    else {
+      const g = gesuche.find((x) => x.id === ui.offen);
+      if (!g) { schliessen(); return; }
+      html = sheetGesuchHTML(g);
+    }
+    $('#sheet-inhalt').innerHTML = html;
   }
 
   function renderAlles() {
+    renderKopf();
     renderChips();
     renderListe();
     renderKarte();
@@ -1727,97 +2097,203 @@ button, input, select, textarea { font: inherit; color: inherit; }
     if (VIEWS.includes(v)) zeige(v);
   });
 
-  function oeffnen(id, ausloeser) {
-    ui.offen = id;
-    ui.rueckzug = false;
-    ui.zuletzt = ausloeser || null;
-    renderSheet();
+  function sheetZeigen() {
     $('#backdrop').hidden = false;
     $('#sheet').hidden = false;
     $('#sheet').scrollTop = 0;
     document.body.classList.add('sheet-offen');
-    renderKarte();
     const c = $('#sheet [data-close]');
     if (c) c.focus({ preventScroll: true });
+  }
+  function oeffnen(id, ausloeser) {
+    ui.offen = id;
+    ui.panel = null;
+    ui.rueckzug = false;
+    ui.zuletzt = ausloeser || null;
+    renderSheet();
+    sheetZeigen();
+    renderKarte();
+  }
+  function oeffnePanel(name, grund) {
+    if (name === 'konto' && !db.profil) name = 'anmelden';
+    ui.zuletzt = document.activeElement;
+    ui.offen = null;
+    ui.panel = name;
+    ui.authModus = 'anmelden';
+    ui.authGrund = grund || '';
+    ui.authFertig = '';
+    renderSheet();
+    sheetZeigen();
+    renderKarte();
   }
   function schliessen() {
     const id = ui.offen;
     ui.offen = null;
+    ui.panel = null;
     $('#backdrop').hidden = true;
     $('#sheet').hidden = true;
     document.body.classList.remove('sheet-offen');
     renderKarte();
-    let ziel = (ui.zuletzt && ui.zuletzt.isConnected) ? ui.zuletzt : $(`#view-${ui.view} .card[data-id="${id}"]`);
-    if (!ziel && ui.view === 'karte' && kartenStatus.marker.has(id)) ziel = kartenStatus.marker.get(id).getElement();
-    if (ziel) ziel.focus({ preventScroll: true });
+    let ziel = (ui.zuletzt && ui.zuletzt.isConnected) ? ui.zuletzt : (id ? $(`#view-${ui.view} .card[data-id="${id}"]`) : null);
+    if (!ziel && id && ui.view === 'karte' && kartenStatus.marker.has(id)) ziel = kartenStatus.marker.get(id).getElement();
+    if (ziel && ziel.focus) ziel.focus({ preventScroll: true });
   }
 
-  $('#sheet').addEventListener('click', (e) => {
+  const ERFOLG = {
+    zusagen: (g) => `Zugesagt. ${vorname(g.wer)} sieht jetzt deinen Namen.`,
+    absagen: () => 'Zusage zurückgezogen. Das Gesuch ist wieder offen.',
+    erledigt: (g) => `Gemeldet. ${vorname(g.wer)} muss noch bestätigen.`,
+    bestaetigen: (g) => istLive() ? 'Bestätigt. Danke, dass ihr euch geholfen habt!' : `${euro(auszahlung(g))} ausgezahlt`,
+    rueckzug: () => 'Gesuch zurückgezogen'
+  };
+
+  $('#sheet').addEventListener('click', async (e) => {
     const t = e.target.closest('button');
-    if (!t) return;
+    if (!t || t.disabled) return;
     if (t.hasAttribute('data-close')) { schliessen(); return; }
+    if (t.dataset.authModus) {
+      ui.authModus = t.dataset.authModus;
+      renderSheet();
+      const erstes = $('#auth-form input');
+      if (erstes) erstes.focus();
+      return;
+    }
+    if (t.hasAttribute('data-abmelden')) {
+      ui.busy = true; renderSheet();
+      await db.client.auth.signOut();
+      ui.busy = false;
+      schliessen();
+      meldung('Du bist abgemeldet.');
+      return;
+    }
     const g = gesuche.find((x) => x.id === ui.offen);
     if (!g) return;
-    const vn = vorname(g);
     const a = t.dataset.aktion;
-    let fokus = '#sheet .btn';
 
-    if (t.dataset.stern) {
-      g.meineBewertung = Number(t.dataset.stern);
-      fokus = `#sheet [data-stern="${t.dataset.stern}"]`;
-      meldung('Bewertung gespeichert');
-    } else if (a === 'karte') {
+    if (a === 'karte') {
       ui.zuletzt = null;
       schliessen();
       ui.markiert = g.id;
       ui.zentrieren = g.id;
       gehe('karte');
       return;
-    } else if (a === 'zusagen') {
-      g.status = 'zugesagt'; g.helfer = 'ich';
-      meldung(`Zugesagt. ${vn} sieht jetzt dein Profil.`);
-    } else if (a === 'erledigt') {
-      g.status = 'erledigt';
-      meldung(`Gemeldet. ${vn} muss noch bestätigen.`);
-    } else if (a === 'bestaetigen') {
-      g.status = 'bezahlt';
-      meldung(`${euro(auszahlung(g))} ausgezahlt`);
-      fokus = '#sheet [data-stern="1"]';
-    } else if (a === 'rueckzug-frage') {
-      ui.rueckzug = true;
-    } else if (a === 'rueckzug-nein') {
-      ui.rueckzug = false;
-    } else if (a === 'rueckzug') {
-      gesuche = gesuche.filter((x) => x.id !== g.id);
-      speichern();
-      schliessen();
-      renderAlles();
-      meldung('Gesuch zurückgezogen');
-      return;
-    } else {
+    }
+    if (a === 'rueckzug-frage' || a === 'rueckzug-nein') {
+      ui.rueckzug = a === 'rueckzug-frage';
+      renderSheet();
+      const f = $('#sheet [data-aktion="rueckzug-nein"], #sheet [data-aktion="rueckzug-frage"]');
+      if (f) f.focus({ preventScroll: true });
       return;
     }
-    speichern();
+    if (!a && !t.dataset.stern) return;
+    if (istLive() && !db.profil) {
+      oeffnePanel('anmelden', a === 'zusagen' ? 'Melde dich an, um zu helfen. Danach kannst du direkt zusagen.' : 'Bitte melde dich an.');
+      return;
+    }
+
+    ui.busy = true;
+    renderSheet();
+    try {
+      if (t.dataset.stern) {
+        await bewerte(g, Number(t.dataset.stern));
+        meldung('Bewertung gespeichert');
+      } else {
+        await aendereStatus(g, a);
+        meldung(ERFOLG[a](g));
+        if (a === 'rueckzug') { ui.busy = false; schliessen(); renderAlles(); return; }
+      }
+    } catch (err) {
+      meldung(fehlerText(err));
+    } finally {
+      ui.busy = false;
+    }
     renderAlles();
+    if (ui.offen) renderSheet();
+    const fokus = t.dataset.stern ? `#sheet [data-stern="${t.dataset.stern}"]` : '#sheet .btn';
     const f = $(fokus);
     if (f) f.focus({ preventScroll: true });
   });
+
+  // Anmelden und Registrieren
+  $('#sheet').addEventListener('submit', async (e) => {
+    if (e.target.id !== 'auth-form') return;
+    e.preventDefault();
+    const reg = ui.authModus === 'registrieren';
+    const fehler = $('#auth-fehler');
+    const zeigeFehler = (text, feld) => { fehler.textContent = text; fehler.hidden = false; if (feld) feld.focus(); };
+    const email = $('#auth-email').value.trim();
+    const passwort = $('#auth-passwort').value;
+    if (reg && !$('#auth-vorname').value.trim()) return zeigeFehler('Bitte gib deinen Vornamen ein.', $('#auth-vorname'));
+    if (!/^\S+@\S+\.\S+$/.test(email)) return zeigeFehler('Bitte gib eine gültige E-Mail-Adresse ein.', $('#auth-email'));
+    if (passwort.length < (reg ? 8 : 1)) return zeigeFehler(reg ? 'Das Passwort braucht mindestens 8 Zeichen.' : 'Bitte gib dein Passwort ein.', $('#auth-passwort'));
+    if (reg && !$('#auth-18').checked) return zeigeFehler('Nachbarhand ist erst ab 18 Jahren.', $('#auth-18'));
+    if (reg && !$('#auth-regeln').checked) return zeigeFehler('Bitte bestätige, dass du die Regeln verstanden hast.', $('#auth-regeln'));
+
+    const knopf = e.target.querySelector('button[type="submit"]');
+    knopf.disabled = true;
+    knopf.setAttribute('aria-busy', 'true');
+    fehler.hidden = true;
+    try {
+      if (reg) {
+        const { data, error } = await db.client.auth.signUp({
+          email,
+          password: passwort,
+          options: {
+            emailRedirectTo: location.origin + location.pathname,
+            data: {
+              vorname: $('#auth-vorname').value.trim().slice(0, 40),
+              nachname_initial: $('#auth-initial').value.trim().slice(0, 1).toUpperCase(),
+              stadtteil: $('#auth-stadtteil').value,
+              volljaehrig: 'true'
+            }
+          }
+        });
+        if (error) throw error;
+        if (!data.session) { ui.authFertig = email; renderSheet(); return; }
+      } else {
+        const { data, error } = await db.client.auth.signInWithPassword({ email, password: passwort });
+        if (error) throw error;
+        await setzeSitzung(data.session, true);
+        if (!db.profil) throw new Error('Zu deinem Konto fehlt das Profil. Wurde supabase/schema.sql in Supabase ausgeführt?');
+      }
+    } catch (err) {
+      knopf.disabled = false;
+      knopf.removeAttribute('aria-busy');
+      zeigeFehler(fehlerText(err));
+    }
+  });
+
+  // Stadtteil im Konto ändern
+  $('#sheet').addEventListener('change', async (e) => {
+    if (e.target.id !== 'konto-stadtteil' || !db.profil) return;
+    const neu = e.target.value;
+    const { error } = await db.client.from('profile').update({ stadtteil: neu }).eq('id', db.profil.id);
+    if (error) { meldung(fehlerText(error)); e.target.value = db.profil.stadtteil; return; }
+    db.profil.stadtteil = neu;
+    meldung(`Stadtteil geändert: ${neu}`);
+    renderStadtteilAuswahl();
+    renderAlles();
+  });
+
   $('#backdrop').addEventListener('click', schliessen);
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && ui.offen) schliessen();
+    if (e.key === 'Escape' && (ui.offen || ui.panel)) schliessen();
   });
 
   /* ===== Klicks auf Listen und Filter ===== */
   document.addEventListener('click', (e) => {
     const go = e.target.closest('[data-go]');
     if (go) { gehe(go.dataset.go); return; }
+    const panel = e.target.closest('[data-panel]');
+    if (panel) { oeffnePanel(panel.dataset.panel); return; }
+    if (e.target.closest('[data-neu-laden]')) { db.fehler = null; renderListe(); neuLaden(); return; }
     const kat = e.target.closest('[data-kat]');
     if (kat) { ui.kat = kat.dataset.kat; renderChips(); renderListe(); renderKarte(); return; }
     const card = e.target.closest('.card[data-id]');
     if (card) { oeffnen(card.dataset.id, card); return; }
     if (e.target.closest('[data-reset]')) {
       gesuche = kopie(BEISPIELE);
-      speichern();
+      demoSpeichern();
       renderAlles();
       meldung('Beispieldaten wiederhergestellt');
     }
@@ -1845,6 +2321,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
       el.innerHTML = `<div class="kosten-zeile"><span>Betrag zwischen ${CONFIG.minBetrag} und ${CONFIG.maxBetrag} € wählen</span></div>`;
       return;
     }
+    if (istLive()) {
+      el.innerHTML = `
+        <div class="kosten-zeile kosten-summe" style="border:0;padding:0;margin:0"><span>Du zahlst direkt</span><span>${euro(b)}</span></div>
+        <span class="kosten-hinweis">Die Aufwandsentschädigung gibst du der Person, die dir hilft. Nachbarhand nimmt in der Testphase keine Gebühr.</span>`;
+      return;
+    }
     const g = CONFIG.gebuehrAuftraggeber;
     el.innerHTML = `
       <div class="kosten-zeile"><span>Aufwandsentschädigung</span><span>${euro(b)}</span></div>
@@ -1868,60 +2350,100 @@ button, input, select, textarea { font: inherit; color: inherit; }
   $('#neu-titel').addEventListener('input', (e) => {
     if (e.target.value.trim().length >= 3) { e.target.removeAttribute('aria-invalid'); $('#fehler-titel').hidden = true; }
   });
+  $('#neu-adresse').addEventListener('input', (e) => {
+    if (e.target.value.trim().length >= 3) { e.target.removeAttribute('aria-invalid'); $('#fehler-adresse').hidden = true; }
+  });
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const titel = $('#neu-titel').value.trim();
+    const adresse = $('#neu-adresse').value.trim();
     const b = betragWert();
     let ersterFehler = null;
+    $('#neu-fehler').hidden = true;
     if (titel.length < 3) {
       $('#neu-titel').setAttribute('aria-invalid', 'true'); $('#fehler-titel').hidden = false;
       ersterFehler = ersterFehler || $('#neu-titel');
+    }
+    if (istLive() && adresse.length < 3) {
+      $('#neu-adresse').setAttribute('aria-invalid', 'true'); $('#fehler-adresse').hidden = false;
+      ersterFehler = ersterFehler || $('#neu-adresse');
     }
     if (!betragGueltig(b)) {
       betragInput.setAttribute('aria-invalid', 'true'); $('#fehler-betrag').hidden = false;
       ersterFehler = ersterFehler || betragInput;
     }
     if (ersterFehler) { ersterFehler.focus(); return; }
+    if (istLive() && !db.profil) {
+      oeffnePanel('anmelden', 'Melde dich an, um dein Gesuch zu veröffentlichen. Deine Eingaben bleiben erhalten.');
+      return;
+    }
 
-    const anzahlEigene = gesuche.filter((g) => g.eigen).length;
-    const [nord, ost] = EIGEN_VERSATZ[anzahlEigene % EIGEN_VERSATZ.length];
-    const pos = versetze(CONFIG.ich, nord, ost);
-    const neu = {
-      id: 'e' + Date.now(),
-      eigen: true,
-      kat: form.querySelector('input[name="kat"]:checked').value,
-      titel,
-      wer: 'Du',
-      initialen: CONFIG.ich.initialen,
-      betrag: b,
-      stadtteil: CONFIG.ich.stadtteil,
-      lat: pos.lat,
-      lng: pos.lng,
-      wann: `${$('#neu-tag').value}, ${$('#neu-zeit').value}`,
-      dauer: 'nach Absprache',
-      text: $('#neu-text').value.trim(),
-      adresse: CONFIG.ich.stadtteil,
-      status: 'offen',
-      erstellt: Date.now()
-    };
-    gesuche.unshift(neu);
-    speichern();
+    const kat = form.querySelector('input[name="kat"]:checked').value;
+    const stadtteil = $('#neu-stadtteil').value;
+    const wann = `${$('#neu-tag').value}, ${$('#neu-zeit').value}`;
+    const text = $('#neu-text').value.trim();
+    let neuId;
+
+    if (istLive()) {
+      const knopf = $('#neu-senden');
+      knopf.disabled = true;
+      knopf.setAttribute('aria-busy', 'true');
+      try {
+        const { data, error } = await db.client.rpc('gesuch_erstellen', {
+          p_kategorie: kat, p_titel: titel, p_beschreibung: text, p_betrag: b,
+          p_wann: wann, p_stadtteil: stadtteil, p_adresse: adresse
+        });
+        if (error) throw error;
+        neuId = data;
+        db.adressen.set(neuId, adresse);
+        await neuLaden();
+      } catch (err) {
+        $('#neu-fehler').textContent = fehlerText(err);
+        $('#neu-fehler').hidden = false;
+        return;
+      } finally {
+        knopf.disabled = false;
+        knopf.removeAttribute('aria-busy');
+      }
+    } else {
+      const anzahlEigene = gesuche.filter((g) => g.eigen).length;
+      const [nord, ost] = EIGEN_VERSATZ[anzahlEigene % EIGEN_VERSATZ.length];
+      const basis = stadtteil === CONFIG.ich.stadtteil ? CONFIG.ich : STADTTEILE.find((s) => s.name === stadtteil);
+      const pos = versetze(basis, nord, ost);
+      neuId = 'e' + Date.now();
+      gesuche.unshift({
+        id: neuId, eigen: true, kat, titel, wer: 'Du', initialen: CONFIG.ich.initialen, betrag: b,
+        stadtteil, lat: pos.lat, lng: pos.lng, wann, dauer: 'nach Absprache', text,
+        adresse: adresse || stadtteil, status: 'offen', erstellt: Date.now()
+      });
+      demoSpeichern();
+    }
+
     form.reset();
+    renderStadtteilAuswahl();
     renderKosten();
     ui.kat = 'alle'; ui.suche = ''; $('#suche').value = '';
-    ui.zentrieren = neu.id;
+    ui.zentrieren = neuId;
     renderAlles();
     gehe('karte');
-    oeffnen(neu.id);
+    oeffnen(neuId);
     meldung('Gesuch veröffentlicht');
   });
 
   /* ===== Start ===== */
+  gesuche = demoLaden();
   const start = location.hash.slice(1);
   renderStadtteilAuswahl();
   renderAlles();
   renderKosten();
   zeige(VIEWS.includes(start) ? start : 'entdecken');
+  starteLive().then((live) => {
+    if (!live) return;
+    renderStadtteilAuswahl();
+    renderKosten();
+  });
 })();
 </script>
+</body>
+</html>
