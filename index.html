@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F3F5F1">
 <meta name="description" content="Nachbarschaftshilfe in Garbsen: kleine Jobs in deiner Nähe finden oder Hilfe suchen.">
-<title>Nachbarhand</title>
+<title>Hand drauf</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<script>try{var a=JSON.parse(localStorage.getItem("handdrauf-ansicht")||"{}"),r=document.documentElement;if(a.thema==="dunkel"||a.thema==="hell")r.setAttribute("data-theme",a.thema==="dunkel"?"dark":"light");if(a.schrift==="gross"||a.schrift==="sehr-gross")r.setAttribute("data-schrift",a.schrift)}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;800&display=swap">
@@ -706,12 +710,17 @@ svg.leaflet-image-layer.leaflet-interactive path {
   color-scheme: dark;
 }
 
+/* Schriftgröße aus den Ansicht-Einstellungen. Alle Schriftgrößen sind in rem und wachsen mit. */
+html { font-size: 100%; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+:root[data-schrift="gross"] { font-size: 112.5%; }
+:root[data-schrift="sehr-gross"] { font-size: 125%; }
+
 * { box-sizing: border-box; }
 body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--f-body);
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1.45;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
@@ -719,8 +728,8 @@ body {
 body.sheet-offen { overflow: hidden; }
 h1, h2, h3, p { margin: 0; }
 h1, h2 { font-family: var(--f-display); font-weight: 800; letter-spacing: -0.01em; text-wrap: balance; }
-h1 { font-size: 28px; line-height: 1.1; }
-h2 { font-size: 24px; line-height: 1.15; }
+h1 { font-size: 1.75rem; line-height: 1.1; }
+h2 { font-size: 1.5rem; line-height: 1.15; }
 button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -734,11 +743,22 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* Kopf */
 .kopf { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.marke { display: flex; align-items: center; gap: 8px; font-family: var(--f-display); font-weight: 800; font-size: 20px; letter-spacing: -0.01em; }
-.marke-tag { width: 22px; height: 15px; border-radius: 4px 8px 8px 4px; background: var(--accent); position: relative; }
-.marke-tag::after { content: ""; position: absolute; left: 4px; top: 50%; width: 4px; height: 4px; margin-top: -2px; border-radius: 50%; background: var(--paper); }
+.marke { display: flex; align-items: center; gap: 9px; min-height: 44px; font-family: var(--f-display); font-weight: 800; font-size: 1.375rem; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; white-space: nowrap; }
+.marke-zeichen { width: 40px; height: 40px; flex: none; }
+:root[data-theme="dark"] .marke-zeichen > circle:first-of-type { fill: #E9EDE6; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .marke-zeichen > circle:first-of-type { fill: #E9EDE6; } }
+.ansicht-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; color: var(--ink); font-weight: 700; font-size: 0.875rem; cursor: pointer; }
+.ansicht-btn:hover { background: var(--tile); }
+@media (max-width: 380px) { .ansicht-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .ansicht-btn { padding: 0 10px; } }
 
-.pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: 0.02em; line-height: 1.3; white-space: nowrap; }
+/* Tätigkeits-Symbole (Tuschezeichnung, mehrfarbig) */
+.ks { stroke: none; fill: none; }
+.ks .fi { fill: var(--ink); } .ks .fw { fill: var(--surface); } .ks .si { stroke: var(--ink); } .ks .sw { stroke: var(--surface); }
+.ico .ks { width: 34px; height: 34px; }
+.chip .ks { width: 28px; height: 28px; margin: -4px 0 -4px -7px; padding: 2px; border-radius: 50%; background: var(--surface); }
+.eyebrow .ks { width: 24px; height: 24px; }
+
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; line-height: 1.3; white-space: nowrap; }
 .pill-muted { background: var(--tile); color: var(--muted); }
 .pill-good { background: var(--good-bg); color: var(--hedge); }
 .pill-warn { background: var(--warn-bg); color: var(--warn); }
@@ -746,14 +766,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .view { display: flex; flex-direction: column; gap: 16px; }
 .lead { color: var(--muted); }
-.klein { color: var(--muted); font-size: 14px; }
-.h-klein { font-family: var(--f-body); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.klein { color: var(--muted); font-size: 0.875rem; }
+.h-klein { font-family: var(--f-body); font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .hallo { display: grid; gap: 6px; }
 
 /* Suche */
 .suche { position: relative; }
 .suche > .i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
-.suche input { width: 100%; height: 54px; padding: 0 16px 0 46px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--surface); font-size: 16px; }
+.suche input { width: 100%; height: 54px; padding: 0 16px 0 46px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--surface); font-size: 1rem; }
 .suche input:focus { border-color: var(--ink); outline: none; }
 .suche input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
@@ -761,7 +781,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; scrollbar-width: none; }
 .chips::-webkit-scrollbar { display: none; }
 .chips-wrap { flex-wrap: wrap; overflow: visible; }
-.chip { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font-weight: 700; font-size: 14px; cursor: pointer; }
+.chip { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font-weight: 700; font-size: 0.875rem; cursor: pointer; }
 .chip:hover { border-color: var(--muted); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
 .chip-radio { position: relative; display: inline-flex; }
@@ -772,28 +792,28 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Liste */
 .liste-kopf { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; }
 .filter { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-.filter select { border: 0; background: transparent; font-weight: 700; font-size: 14px; color: var(--ink); padding: 6px 4px; cursor: pointer; max-width: 100%; }
+.filter select { border: 0; background: transparent; font-weight: 700; font-size: 0.875rem; color: var(--ink); padding: 6px 4px; cursor: pointer; max-width: 100%; }
 .liste { display: grid; gap: 10px; }
 .card { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; cursor: pointer; }
 .card:hover { border-color: var(--muted); }
 .ico { flex: none; width: 44px; height: 44px; border-radius: 12px; background: var(--tile); display: grid; place-items: center; color: var(--ink); }
 .card-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
-.card-title { font-weight: 700; font-size: 16px; }
-.card-meta { color: var(--muted); font-size: 14px; }
-.card-ort { color: var(--ink); font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+.card-title { font-weight: 700; font-size: 1rem; }
+.card-meta { color: var(--muted); font-size: 0.875rem; }
+.card-ort { color: var(--ink); font-size: 0.875rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
 .card-ort .i { color: var(--muted); }
-.price { flex: none; background: var(--accent); color: var(--on-accent); font-weight: 700; font-size: 15px; padding: 6px 11px; border-radius: 999px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.price { flex: none; background: var(--accent); color: var(--on-accent); font-weight: 700; font-size: 0.9375rem; padding: 6px 11px; border-radius: 999px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .leer { display: grid; gap: 8px; justify-items: start; padding: 20px; border: 1.5px dashed var(--line); border-radius: 16px; }
 .leer p { color: var(--muted); }
 .leer strong { color: var(--ink); }
-.leer-klein { color: var(--muted); font-size: 15px; padding: 14px 16px; border: 1.5px dashed var(--line); border-radius: 14px; }
+.leer-klein { color: var(--muted); font-size: 0.9375rem; padding: 14px 16px; border: 1.5px dashed var(--line); border-radius: 14px; }
 
 .selbst { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 16px; border-radius: 16px; background: var(--tile); }
-.selbst p { color: var(--muted); font-size: 14px; }
-.fuss { color: var(--muted); font-size: 13px; text-align: center; }
+.selbst p { color: var(--muted); font-size: 0.875rem; }
+.fuss { color: var(--muted); font-size: 0.8125rem; text-align: center; }
 
 /* Buttons */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px 18px; border-radius: 12px; border: 0; font-weight: 700; font-size: 16px; cursor: pointer; text-decoration: none; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px 18px; border-radius: 12px; border: 0; font-weight: 700; font-size: 1rem; cursor: pointer; text-decoration: none; }
 .btn-auto { width: auto; padding: 11px 16px; }
 .btn-primary { background: var(--ink); color: var(--surface); }
 .btn-secondary { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line); }
@@ -801,17 +821,17 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn-danger { color: var(--crit); }
 .btn-danger-solid { background: var(--crit); color: var(--surface); }
 .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.link-btn { background: none; border: 0; color: var(--muted); font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 8px; justify-self: center; }
-.link-inline { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 4px 0; color: var(--ink); font-weight: 700; font-size: 15px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.link-btn { min-height: 44px; background: none; border: 0; color: var(--muted); font-size: 0.875rem; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 8px; justify-self: center; }
+.link-inline { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 4px 0; color: var(--ink); font-weight: 700; font-size: 0.9375rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 
 /* Karte */
 .karte-kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .karte { position: relative; width: 100%; height: clamp(380px, 66vh, 620px); border-radius: 18px; overflow: hidden; border: 1px solid var(--line); background: var(--map-land); isolation: isolate; }
 #map { position: absolute; inset: 0; }
-.leaflet-container { background: var(--map-land); font-family: var(--f-body); font-size: 13px; }
-.leaflet-container .leaflet-control-attribution { background: color-mix(in srgb, var(--surface) 86%, transparent); color: var(--muted); font-size: 10.5px; line-height: 1.5; padding: 1px 7px; border-radius: 8px 0 0 0; }
+.leaflet-container { background: var(--map-land); font-family: var(--f-body); font-size: 0.8125rem; }
+.leaflet-container .leaflet-control-attribution { background: color-mix(in srgb, var(--surface) 86%, transparent); color: var(--muted); font-size: 0.6562rem; line-height: 1.5; padding: 1px 7px; border-radius: 8px 0 0 0; }
 .leaflet-container .leaflet-control-attribution a { color: var(--ink); }
-.leaflet-control-scale-line { border-color: var(--muted); color: var(--ink); background: color-mix(in srgb, var(--surface) 80%, transparent); font-size: 11px; }
+.leaflet-control-scale-line { border-color: var(--muted); color: var(--ink); background: color-mix(in srgb, var(--surface) 80%, transparent); font-size: 0.6875rem; }
 .leaflet-bottom.leaflet-left .leaflet-control { margin-left: 12px; margin-bottom: 12px; }
 
 .karte-knoepfe { position: absolute; top: 12px; right: 12px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
@@ -829,7 +849,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   position: absolute; left: 0; top: 0; transform: translate(-50%, calc(-100% - 7px)); transform-origin: 50% 100%;
   display: inline-flex; align-items: center; gap: 3px; padding: 4px 9px; border-radius: 999px;
   background: var(--pin-bg); color: var(--pin-fg); border: 2px solid var(--pin-rand);
-  font-family: var(--f-body); font-weight: 700; font-size: 13px; line-height: 1.3; font-variant-numeric: tabular-nums; white-space: nowrap;
+  font-family: var(--f-body); font-weight: 700; font-size: 0.8125rem; line-height: 1.3; font-variant-numeric: tabular-nums; white-space: nowrap;
   box-shadow: 0 2px 6px rgba(0,0,0,.22); cursor: pointer; transition: transform .15s ease;
 }
 .pin::after { content: ""; position: absolute; left: 50%; top: calc(100% - 1px); width: 10px; height: 10px; background: var(--pin-bg); border-right: 2px solid var(--pin-rand); border-bottom: 2px solid var(--pin-rand); transform: translate(-50%, -50%) rotate(45deg); z-index: -1; }
@@ -837,25 +857,25 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .pin-eigen { --pin-bg: var(--hedge); --pin-fg: var(--on-hedge); }
 .pin-zugesagt { --pin-bg: var(--surface); --pin-fg: var(--ink); --pin-rand: var(--ink); }
 .pin.is-aktiv { --pin-bg: var(--ink); --pin-fg: var(--surface); --pin-rand: var(--surface); transform: translate(-50%, calc(-100% - 7px)) scale(1.12); }
-.zoom-weit .pin { font-size: 11.5px; padding: 1px 7px; border-width: 1.5px; transform: translate(-50%, calc(-100% - 6px)); }
+.zoom-weit .pin { font-size: 0.7188rem; padding: 1px 7px; border-width: 1.5px; transform: translate(-50%, calc(-100% - 6px)); }
 .zoom-weit .pin::after { width: 8px; height: 8px; border-width: 1.5px; }
 .zoom-weit .pin:hover { transform: translate(-50%, calc(-100% - 6px)) scale(1.06); }
 .zoom-weit .pin.is-aktiv { transform: translate(-50%, calc(-100% - 6px)) scale(1.12); }
 .ich { position: absolute; left: 0; top: 0; width: 16px; height: 16px; border-radius: 50%; background: var(--you); border: 3px solid var(--surface); transform: translate(-50%, -50%); box-shadow: 0 0 0 6px color-mix(in srgb, var(--you) 24%, transparent); }
-.ich-label { position: absolute; left: 0; top: 0; transform: translate(-50%, 11px); font-size: 12px; font-weight: 700; color: var(--you); text-shadow: 0 0 3px var(--surface), 0 0 3px var(--surface); white-space: nowrap; }
-.stadtteil-label span { position: absolute; left: 0; top: 0; transform: translate(-50%, 5px); white-space: nowrap; font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--map-label); text-shadow: 0 0 3px var(--map-land), 0 0 3px var(--map-land), 0 0 2px var(--map-land); pointer-events: none; }
+.ich-label { position: absolute; left: 0; top: 0; transform: translate(-50%, 11px); font-size: 0.75rem; font-weight: 700; color: var(--you); text-shadow: 0 0 3px var(--surface), 0 0 3px var(--surface); white-space: nowrap; }
+.stadtteil-label span { position: absolute; left: 0; top: 0; transform: translate(-50%, 5px); white-space: nowrap; font-size: 0.6562rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--map-label); text-shadow: 0 0 3px var(--map-land), 0 0 3px var(--map-land), 0 0 2px var(--map-land); pointer-events: none; }
 .stadtteil-label span.versteckt { visibility: hidden; }
 .leaflet-container path.stadtteil-flaeche { fill: var(--map-area); fill-opacity: 1; stroke: var(--map-edge); stroke-width: 1; stroke-opacity: 1; }
 .leaflet-container path.bereich-kreis { fill: var(--accent); fill-opacity: .2; stroke: var(--ink); stroke-width: 2; stroke-opacity: .85; stroke-dasharray: 6 5; }
 
-.legende { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--muted); }
+.legende { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 0.8125rem; color: var(--muted); }
 .legende span { display: inline-flex; align-items: center; gap: 6px; }
 .sw { width: 16px; height: 11px; border-radius: 6px; }
 .sw-offen { background: var(--accent); }
 .sw-eigen { background: var(--hedge); }
 .sw-zugesagt { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }
 .sw-stadtteil { width: 14px; height: 14px; border-radius: 50%; background: var(--map-area); box-shadow: inset 0 0 0 1px var(--map-edge); }
-.hinweis-karte { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; background: var(--tile); color: var(--muted); font-size: 14px; }
+.hinweis-karte { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; background: var(--tile); color: var(--muted); font-size: 0.875rem; }
 .hinweis-karte .i { color: var(--ink); margin-top: 1px; }
 .hinweis-karte strong { color: var(--ink); }
 
@@ -873,29 +893,29 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .griff { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto 12px; }
 .sheet-inner { display: flex; flex-direction: column; gap: 16px; }
 .sheet-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
-.icon-btn { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--tile); color: var(--ink); display: grid; place-items: center; cursor: pointer; flex: none; }
+.eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--tile); color: var(--ink); display: grid; place-items: center; cursor: pointer; flex: none; }
 .person { display: flex; align-items: center; gap: 12px; }
-.avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--ink); color: var(--surface); display: grid; place-items: center; font-family: var(--f-display); font-weight: 800; font-size: 15px; flex: none; }
+.avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--ink); color: var(--surface); display: grid; place-items: center; font-family: var(--f-display); font-weight: 800; font-size: 0.9375rem; flex: none; }
 .person-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 700; }
-.person-meta { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 14px; }
+.person-meta { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 0.875rem; }
 .person-meta .i { color: var(--accent); }
 .betrag { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 16px; border-radius: 14px; background: var(--tile); }
-.betrag-zahl { font-family: var(--f-display); font-weight: 800; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
-.betrag-label { color: var(--muted); font-size: 13px; margin-top: 4px; }
-.betrag-detail { text-align: right; font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
-.betrag-detail span { display: block; color: var(--muted); font-weight: 400; font-size: 13px; }
+.betrag-zahl { font-family: var(--f-display); font-weight: 800; font-size: 2.125rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.betrag-label { color: var(--muted); font-size: 0.8125rem; margin-top: 4px; }
+.betrag-detail { text-align: right; font-weight: 700; font-size: 0.9375rem; font-variant-numeric: tabular-nums; }
+.betrag-detail span { display: block; color: var(--muted); font-weight: 400; font-size: 0.8125rem; }
 .fakten { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; margin: 0; }
 .fakten div { min-width: 0; }
-.fakten dt { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
-.fakten dd { margin: 2px 0 0; font-weight: 700; font-size: 15px; }
+.fakten dt { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.fakten dd { margin: 2px 0 0; font-weight: 700; font-size: 0.9375rem; }
 .beschreibung { max-width: 62ch; }
-.hinweis { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; border: 1.5px dashed var(--line); color: var(--muted); font-size: 14px; }
+.hinweis { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; border: 1.5px dashed var(--line); color: var(--muted); font-size: 0.875rem; }
 .hinweis .i { margin-top: 1px; }
 .hinweis-offen { border-style: solid; border-color: var(--hedge); color: var(--ink); background: var(--good-bg); }
 .hinweis-offen .i { color: var(--hedge); }
 .schritte { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.schritte li { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; font-size: 13px; color: var(--muted); padding: 0 4px; }
+.schritte li { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; font-size: 0.8125rem; color: var(--muted); padding: 0 4px; }
 .schritte li::before { content: ""; position: absolute; top: 11px; right: 50%; width: 100%; height: 2px; background: var(--line); }
 .schritte li:first-child::before { display: none; }
 .schritte li.is-done::before { background: var(--hedge); }
@@ -904,7 +924,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .schritte li.is-done .punkt { background: var(--hedge); border-color: var(--hedge); color: var(--on-hedge); }
 .schritte li.is-current { font-weight: 700; }
 .nachricht { align-self: flex-start; max-width: 92%; background: var(--tile); border-radius: 16px 16px 16px 4px; padding: 10px 14px; display: grid; gap: 2px; }
-.nachricht-von { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.nachricht-von { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .status-box { display: flex; gap: 8px; align-items: center; padding: 12px 14px; border-radius: 12px; font-weight: 700; }
 .status-box.warn { background: var(--warn-bg); color: var(--warn); }
 .status-box.good { background: var(--good-bg); color: var(--hedge); }
@@ -919,10 +939,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Formular */
 .form { display: flex; flex-direction: column; gap: 18px; }
 .feld { display: grid; gap: 7px; min-width: 0; border: 0; padding: 0; margin: 0; }
-.feld > label, .feld > legend { font-weight: 700; font-size: 15px; padding: 0; }
+.feld > label, .feld > legend { font-weight: 700; font-size: 0.9375rem; padding: 0; }
 .feld legend { margin-bottom: 8px; }
 .optional { font-weight: 400; color: var(--muted); }
-.feld input, .feld textarea, .feld select { width: 100%; font-size: 16px; color: var(--ink); background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.feld input, .feld textarea, .feld select { width: 100%; font-size: 1rem; color: var(--ink); background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; }
 .feld textarea { resize: vertical; min-height: 88px; }
 .feld input:focus, .feld textarea:focus, .feld select:focus { border-color: var(--ink); outline: none; }
 .feld input:focus-visible, .feld textarea:focus-visible, .feld select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
@@ -930,42 +950,42 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .feld-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 @media (max-width: 360px) { .feld-row { grid-template-columns: 1fr; } }
 .betrag-eingabe { display: flex; align-items: center; gap: 10px; }
-.step { width: 52px; height: 56px; flex: none; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font-size: 24px; font-weight: 700; cursor: pointer; }
+.step { width: 52px; height: 56px; flex: none; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font-size: 1.5rem; font-weight: 700; cursor: pointer; }
 .betrag-feld { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); height: 56px; padding-right: 14px; }
 .betrag-feld:focus-within { border-color: var(--ink); }
-.feld .betrag-feld input { border: 0; background: transparent; padding: 0 4px; height: 100%; text-align: right; width: 4ch; font-family: var(--f-display); font-weight: 800; font-size: 28px; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
+.feld .betrag-feld input { border: 0; background: transparent; padding: 0 4px; height: 100%; text-align: right; width: 4ch; font-family: var(--f-display); font-weight: 800; font-size: 1.75rem; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
 .betrag-feld input::-webkit-outer-spin-button, .betrag-feld input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.betrag-feld span { font-family: var(--f-display); font-weight: 800; font-size: 24px; color: var(--muted); }
+.betrag-feld span { font-family: var(--f-display); font-weight: 800; font-size: 1.5rem; color: var(--muted); }
 .schnell { display: flex; gap: 8px; flex-wrap: wrap; }
-.schnell .chip { padding: 6px 12px; }
-.kosten { display: grid; gap: 6px; padding: 14px 16px; border-radius: 14px; background: var(--tile); font-variant-numeric: tabular-nums; font-size: 15px; }
+.schnell .chip { padding: 6px 14px; }
+.kosten { display: grid; gap: 6px; padding: 14px 16px; border-radius: 14px; background: var(--tile); font-variant-numeric: tabular-nums; font-size: 0.9375rem; }
 .kosten-zeile { display: flex; justify-content: space-between; gap: 12px; }
 .kosten-zeile span:first-child { color: var(--muted); }
 .kosten-summe { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 2px; font-weight: 700; }
 .kosten-summe span:first-child { color: var(--ink); }
-.kosten-hinweis { font-size: 13px; color: var(--muted); }
-.regel { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--muted); }
+.kosten-hinweis { font-size: 0.8125rem; color: var(--muted); }
+.regel { display: flex; gap: 10px; align-items: flex-start; font-size: 0.875rem; color: var(--muted); }
 .regel .i { color: var(--hedge); margin-top: 1px; }
-.fehler { color: var(--crit); font-size: 14px; font-weight: 700; }
+.fehler { color: var(--crit); font-size: 0.875rem; font-weight: 700; }
 
 /* Aufträge */
 .summe { display: grid; gap: 8px; padding: 18px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
-.summe-zahl { font-family: var(--f-display); font-weight: 800; font-size: 36px; line-height: 1; font-variant-numeric: tabular-nums; }
+.summe-zahl { font-family: var(--f-display); font-weight: 800; font-size: 2.25rem; line-height: 1; font-variant-numeric: tabular-nums; }
 .meter { height: 8px; border-radius: 4px; background: var(--tile); overflow: hidden; }
 .meter span { display: block; height: 100%; border-radius: 4px; background: var(--hedge); }
-.summe-hint { font-size: 13px; color: var(--muted); }
+.summe-hint { font-size: 0.8125rem; color: var(--muted); }
 .abschnitt { display: grid; gap: 10px; }
 
 /* Navigation unten */
 .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1200; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .tabs-inner { max-width: 520px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.tab { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 4px 8px; color: var(--muted); font-weight: 700; font-size: 12px; text-decoration: none; }
+.tab { display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 56px; padding: 9px 2px 8px; color: var(--muted); font-weight: 700; font-size: min(0.75rem, 13px); white-space: nowrap; text-decoration: none; }
 .tab .i { width: 24px; height: 24px; }
 .tab[aria-current="page"] { color: var(--ink); }
 .tab-plus { width: 44px; height: 26px; border-radius: 999px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; }
 .tab-plus .i { width: 20px; height: 20px; stroke-width: 2.4; }
 
-.toast { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 1600; max-width: calc(100% - 32px); width: max-content; background: var(--ink); color: var(--surface); padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 15px; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+.toast { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 1600; max-width: calc(100% - 32px); width: max-content; background: var(--ink); color: var(--surface); padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 0.9375rem; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
 .toast.zeigen { opacity: 1; transform: translateX(-50%) translateY(-4px); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -978,33 +998,36 @@ body { margin: 0; }
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 
 /* Konto und Anmeldung */
-.kopf-rechts { display: flex; align-items: center; gap: 8px; }
-.btn-klein { width: auto; padding: 8px 14px; font-size: 14px; border-radius: 999px; }
-.avatar-btn { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--ink); color: var(--surface); font-family: var(--f-display); font-weight: 800; font-size: 14px; cursor: pointer; display: grid; place-items: center; }
+.kopf-rechts, .kopf-konto { display: flex; align-items: center; gap: 6px; }
+.btn-klein { width: auto; padding: 8px 14px; font-size: 0.875rem; border-radius: 999px; }
+.avatar-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--ink); color: var(--surface); font-family: var(--f-display); font-weight: 800; font-size: 0.875rem; cursor: pointer; display: grid; place-items: center; }
 .umschalter { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 12px; background: var(--tile); }
 .umschalter button { border: 0; background: transparent; padding: 10px; border-radius: 9px; font-weight: 700; color: var(--muted); cursor: pointer; }
 .umschalter button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
-.check { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; cursor: pointer; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 0.9375rem; cursor: pointer; }
 .check input { width: 22px; height: 22px; margin: 1px 0 0; flex: none; accent-color: var(--ink); }
 .erfolg { display: grid; gap: 6px; padding: 16px; border-radius: 14px; background: var(--good-bg); color: var(--ink); }
 .erfolg p { color: var(--ink); }
 .btn[disabled], .btn[aria-busy="true"] { opacity: .55; cursor: progress; }
 .konto-kopf { display: flex; align-items: center; gap: 12px; }
-.feld-hinweis { font-size: 13px; color: var(--muted); margin-top: -10px; }
+.feld-hinweis { font-size: 0.8125rem; color: var(--muted); margin-top: -10px; }
 .lade { color: var(--muted); padding: 18px 4px; }
 
 /* OpenStreetMap-Kacheln gibt es nur hell: im dunklen Design abdunkeln */
 .karte-dunkel .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.65); }
+
+/* Ansicht-Einstellungen */
+.segment { display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; gap: 4px; padding: 4px; border-radius: 14px; background: var(--tile); }
+.segment button { min-height: 44px; border: 0; background: transparent; padding: 8px 6px; border-radius: 10px; font-weight: 700; color: var(--muted); cursor: pointer; }
+.segment button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.14), inset 0 0 0 1.5px var(--ink); }
+.schrift-probe { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); font-size: 0.9375rem; color: var(--muted); }
+.schrift-probe strong { color: var(--ink); font-size: 1rem; }
 </style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <symbol id="i-garten" viewBox="0 0 24 24"><path d="M5 19C5 10.7 10.7 5 19 5c0 8.3-5.7 14-14 14Z"/><path d="M5 19l8-8"/></symbol>
-  <symbol id="i-einkaufen" viewBox="0 0 24 24"><path d="M5.5 8.5h13l-1.2 11H6.7z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></symbol>
-  <symbol id="i-tiere" viewBox="0 0 24 24"><circle cx="6.5" cy="11" r="1.8"/><circle cx="10" cy="6.8" r="1.8"/><circle cx="14" cy="6.8" r="1.8"/><circle cx="17.5" cy="11" r="1.8"/><path d="M8.3 17.2c0-2.8 1.7-4.9 3.7-4.9s3.7 2.1 3.7 4.9c0 1.6-1.3 2.3-3.7 2.3s-3.7-.7-3.7-2.3Z"/></symbol>
-  <symbol id="i-haushalt" viewBox="0 0 24 24"><path d="M4 11.5 12 5l8 6.5"/><path d="M6.5 10v9h11v-9"/><path d="M10 19v-5h4v5"/></symbol>
-  <symbol id="i-tragen" viewBox="0 0 24 24"><path d="M4 8l8-4 8 4v8.5l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8.5"/></symbol>
-  <symbol id="i-technik" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="11" rx="1.5"/><path d="M9 19.5h6M12 16v3.5"/></symbol>
+  <filter id="tusche-s" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="5" result="r"/><feDisplacementMap in="SourceGraphic" in2="r" scale="1.1" xChannelSelector="R" yChannelSelector="G"/></filter>
+  <symbol id="i-ansicht" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></symbol>
   <symbol id="i-suche" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></symbol>
   <symbol id="i-entdecken" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></symbol>
   <symbol id="i-karte" viewBox="0 0 24 24"><path d="M9 4.5 3.5 6.5v13l5.5-2 6 2 5.5-2v-13l-5.5 2-6-2z"/><path d="M9 4.5v13M15 6.5v13"/></symbol>
@@ -1023,8 +1046,11 @@ body { margin: 0; }
 
 <div class="app">
   <header class="kopf">
-    <div class="marke"><span class="marke-tag" aria-hidden="true"></span>Nachbarhand</div>
-    <div class="kopf-rechts" id="kopf-rechts"><span class="pill pill-muted">Demo</span></div>
+    <a class="marke" href="#entdecken" aria-label="Hand drauf, zur Startseite"><svg class="marke-zeichen" viewBox="0 0 240 240" aria-hidden="true" focusable="false"><defs><clipPath id="hdk-k"><circle cx="120" cy="120" r="112"/></clipPath></defs><circle cx="120" cy="120" r="112" fill="#FFFFFF"/><g clip-path="url(#hdk-k)"><g transform="translate(6 6) scale(0.82)"><defs><filter id="hdk-t" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="11" result="r"/><feDisplacementMap in="SourceGraphic" in2="r" scale="3.2" xChannelSelector="R" yChannelSelector="G"/></filter></defs><g filter="url(#hdk-t)"><path d="M-8 248 C16 216 42 190 70 166 L124 200 C106 214 92 230 82 252 Z" fill="#FFFFFF" stroke="#172029" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M248 246 C224 216 206 192 192 164 C188 132 180 104 164 84 C144 70 114 72 88 88 C72 100 64 116 68 132 C74 154 94 174 118 192 C136 210 152 230 164 250 Z" fill="#F4B400" stroke="#172029" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M87 88 C66 85 57 101 65 112 C71 118 84 116 91 112" fill="#F4B400" stroke="#172029" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M77 109 C56 106 47 122 55 133 C61 139 74 137 81 133" fill="#F4B400" stroke="#172029" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M77 132 C56 129 47 145 55 156 C61 162 74 160 81 156" fill="#F4B400" stroke="#172029" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M89 154 C68 151 59 167 67 178 C73 184 86 182 93 178" fill="#F4B400" stroke="#172029" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><g transform="rotate(-8 184 80)"><path d="M184.0 65.5 C142.0 65.0 112.2 68.0 108.6 68.0 C98.5 70.3 98.5 89.7 108.6 92.0 C112.2 92.0 142.0 95.0 184.0 94.5 C203.6 94.5 203.6 65.5 184.0 65.5 Z" fill="#FFFFFF" stroke="#172029" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/></g><g transform="rotate(-6 198 106)"><path d="M198.0 92.5 C176.0 92.0 165.2 95.0 162.0 95.0 C152.5 97.0 152.5 115.0 162.0 117.0 C165.2 117.0 176.0 120.0 198.0 119.5 C216.2 119.5 216.2 92.5 198.0 92.5 Z" fill="#FFFFFF" stroke="#172029" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/></g><g transform="rotate(1 202 131)"><path d="M202.0 117.5 C179.0 117.0 167.2 120.0 164.0 120.0 C154.5 122.0 154.5 140.0 164.0 142.0 C167.2 142.0 179.0 145.0 202.0 144.5 C220.2 144.5 220.2 117.5 202.0 117.5 Z" fill="#FFFFFF" stroke="#172029" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/></g><g transform="rotate(8 198 156)"><path d="M198.0 142.5 C177.0 142.0 167.2 145.0 164.0 145.0 C154.5 147.0 154.5 165.0 164.0 167.0 C167.2 167.0 177.0 170.0 198.0 169.5 C216.2 169.5 216.2 142.5 198.0 142.5 Z" fill="#FFFFFF" stroke="#172029" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/></g><g transform="rotate(15 188 178)"><path d="M188.0 164.5 C171.0 164.0 165.2 167.0 162.0 167.0 C152.5 169.0 152.5 187.0 162.0 189.0 C165.2 189.0 171.0 192.0 188.0 191.5 C206.2 191.5 206.2 164.5 188.0 164.5 Z" fill="#FFFFFF" stroke="#172029" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/></g></g></g></g><circle cx="120" cy="120" r="112" fill="none" stroke="#172029" stroke-width="8"/></svg><span>Hand drauf</span></a>
+    <div class="kopf-rechts">
+      <button type="button" class="ansicht-btn" data-panel="ansicht"><svg class="i" aria-hidden="true"><use href="#i-ansicht"/></svg><span>Ansicht</span></button>
+      <div id="kopf-rechts" class="kopf-konto"><span class="pill pill-muted">Demo</span></div>
+    </div>
   </header>
 
   <main>
@@ -1204,6 +1230,17 @@ body { margin: 0; }
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
+/* Tätigkeits-Symbole von Hand drauf (erzeugt aus design/symbole.py, viewBox 0 0 48 48).
+   Klassen: fi/si = Tinte, fw/sw = Fläche. Gelb ist fest. */
+const KAT_SYMBOLE = {
+  "garten": "<path class=\"si\" d=\"M30 33.5 L40.5 17.5 L43.6 19.6 L33.2 36.6 Z\" fill=\"#F4B400\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect class=\"fw si\" x=\"37.8\" y=\"12.3\" width=\"9.2\" height=\"5.4\" rx=\"2.2\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\" transform=\"rotate(34 42.4 15)\"/><path class=\"si\" d=\"M12 17 C12 9.5 27 9.5 27 17\" fill=\"none\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path class=\"si\" d=\"M6.5 21 C6.5 18.5 8 17 10.5 17 H28.5 C31 17 32.5 18.5 32.5 21 V38 C32.5 40.5 31 42 28.5 42 H10.5 C8 42 6.5 40.5 6.5 38 Z\" fill=\"#F4B400\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"si\" d=\"M11.5 23 V35\" fill=\"none\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\".55\"/><path class=\"si\" d=\"M45.5 24 v2.4 M42.5 25.5 v3 M46 30 v2.2\" fill=\"none\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+  "einkaufen": "<path class=\"fw si\" d=\"M26 17 L31 4.5 C32 3 34.5 3.5 34 5.5 L30 18\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"fw si\" d=\"M17 18 C16 11 19 6 22 6.5 C24.5 7 24 12 22.5 18\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"si\" d=\"M8.5 17 H39.5 L37 40 C36.8 41.5 35.8 42 34.5 42 H13.5 C12.2 42 11.2 41.5 11 40 Z\" fill=\"#F4B400\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"si\" d=\"M13.5 25 H34.5\" fill=\"none\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\".55\"/>",
+  "tiere": "<path class=\"fw si\" d=\"M14 15 C14 9.5 18.5 7 24 7 C29.5 7 34 9.5 34 15 V27 C34 35 29.5 41 24 41 C18.5 41 14 35 14 27 Z\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"si\" d=\"M14.5 12 C9 11 4.5 16 5.5 23 C6 27 9.5 28 11.5 25 C13 23 14 19 14.5 15\" fill=\"#F4B400\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"si\" d=\"M33.5 12 C39 11 43.5 16 42.5 23 C42 27 38.5 28 36.5 25 C35 23 34 19 33.5 15\" fill=\"#F4B400\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle class=\"fi\" cx=\"19.5\" cy=\"22\" r=\"1.9\"/><circle class=\"fi\" cx=\"28.5\" cy=\"22\" r=\"1.9\"/><path class=\"fi\" d=\"M20.8 30 C20.8 27.8 27.2 27.8 27.2 30 C27.2 32 25.3 33 24 33 C22.7 33 20.8 32 20.8 30 Z\"/><path class=\"si\" d=\"M24 33 V36 M20.5 36.5 C22 38 26 38 27.5 36.5\" fill=\"none\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+  "haushalt": "<g transform=\"rotate(-38 24 24)\"><rect class=\"si\" x=\"21\" y=\"16\" width=\"6.5\" height=\"29\" rx=\"3\" fill=\"#F4B400\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"fw si\" d=\"M11 8.5 C11 6.5 12.5 5.5 14.5 5.5 H33 C36 5.5 38.5 7 39.5 9.5 L40 11 C40.5 12.5 39.5 13.5 38 13.5 H14.5 C12.5 13.5 11 12.5 11 10.5 Z\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"si\" d=\"M21 13.5 V17 M27.5 13.5 V17\" fill=\"none\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></g><path class=\"si\" d=\"M35 38 l6 -2 M34 42.5 l6.5 1.2\" fill=\"none\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+  "tragen": "<path class=\"si\" d=\"M7 17 L24 11 L41 17 V37 L24 43 L7 37 Z\" fill=\"#F4B400\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"si\" d=\"M7 17 L24 23 L41 17 M24 23 V43\" fill=\"none\" stroke-width=\"2.25\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path class=\"sw\" d=\"M15.5 14 L32.5 20 V26\" fill=\"none\" stroke-width=\"4.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path class=\"si\" d=\"M15.5 14 L32.5 20 V26\" fill=\"none\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\".5\"/><path class=\"si\" d=\"M11.5 28.5 C13.5 29.5 16.5 30.5 18.5 31\" fill=\"none\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+  "technik": "<rect class=\"fw si\" x=\"13\" y=\"5\" width=\"20\" height=\"38\" rx=\"4.5\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\" transform=\"rotate(-6 23 24)\"/><rect x=\"16.5\" y=\"10\" width=\"13\" height=\"25\" rx=\"1.5\" fill=\"#F4B400\" stroke=\"none\" transform=\"rotate(-6 23 24)\"/><path class=\"si\" d=\"M21.5 39.2 h3.5\" fill=\"none\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" transform=\"rotate(-6 23 24)\"/><path class=\"fw si\" d=\"M30 8.5 C30 5.5 32 4 35 4 H40.5 C43.5 4 45 5.5 45 8.5 V11 C45 14 43.5 15.5 40.5 15.5 H36 L32 19 L32.8 15.2 C31 14.6 30 13 30 11 Z\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle class=\"fi\" cx=\"34.5\" cy=\"9.8\" r=\"1.3\"/><circle class=\"fi\" cx=\"37.8\" cy=\"9.8\" r=\"1.3\"/><circle class=\"fi\" cx=\"41.1\" cy=\"9.8\" r=\"1.3\"/>"
+};
+
 (() => {
   'use strict';
 
@@ -1221,7 +1258,7 @@ body { margin: 0; }
 
   /* ===== Einstellungen: Gebühren, Regeln und Karte hier anpassen ===== */
   const CONFIG = {
-    gebuehrAuftraggeber: 1.99, // nur Demo: fester Betrag, den die suchende Person zusätzlich zahlt
+    gebuehrAuftraggeber: 0.99, // nur Demo: fester Betrag, den die suchende Person zusätzlich zahlt
     provisionHelfer: 0.05,     // nur Demo: Anteil, der vom Betrag des Helfers abgeht
     minBetrag: 5,
     maxBetrag: 50,             // Obergrenze für Nachbarschaftshilfe
@@ -1370,12 +1407,44 @@ body { margin: 0; }
   let gesuche = [];
   const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, zuletzt: null, busy: false };
 
+  /* ===== Ansicht: Design, Schriftgröße, Startseite (nur auf diesem Gerät gespeichert) ===== */
+  const ANSICHT_SPEICHER = 'handdrauf-ansicht';
+  const ANSICHT_OPTIONEN = {
+    thema: [['auto', 'Automatisch'], ['hell', 'Hell'], ['dunkel', 'Dunkel']],
+    schrift: [['normal', 'Normal'], ['gross', 'Groß'], ['sehr-gross', 'Sehr groß']],
+    start: [['entdecken', 'Liste'], ['karte', 'Karte']]
+  };
+  const ansicht = { thema: 'auto', schrift: 'normal', start: 'entdecken' };
+  try {
+    const gespeichert = JSON.parse(localStorage.getItem(ANSICHT_SPEICHER) || '{}');
+    Object.keys(ansicht).forEach((k) => {
+      if (ANSICHT_OPTIONEN[k].some(([w]) => w === gespeichert[k])) ansicht[k] = gespeichert[k];
+    });
+  } catch (e) { /* ohne Speicher: Standardwerte */ }
+  function ansichtAnwenden() {
+    const r = document.documentElement;
+    if (ansicht.thema === 'auto') r.removeAttribute('data-theme');
+    else r.setAttribute('data-theme', ansicht.thema === 'dunkel' ? 'dark' : 'light');
+    if (ansicht.schrift === 'normal') r.removeAttribute('data-schrift'); else r.setAttribute('data-schrift', ansicht.schrift);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = getComputedStyle(r).getPropertyValue('--paper').trim() || '#F3F5F1';
+  }
+  function ansichtSetzen(k, w) {
+    if (!ANSICHT_OPTIONEN[k] || !ANSICHT_OPTIONEN[k].some(([x]) => x === w)) return;
+    ansicht[k] = w;
+    try { localStorage.setItem(ANSICHT_SPEICHER, JSON.stringify(ansicht)); } catch (e) { /* nur für diese Sitzung */ }
+    ansichtAnwenden();
+  }
+  ansichtAnwenden();
+
   /* ===== Hilfsfunktionen ===== */
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const euro = (n) => n.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
   const euroKurz = (n) => Number.isInteger(n) ? `${n} €` : euro(n);
   const katName = (id) => (KATEGORIEN.find((k) => k.id === id) || {}).name || '';
-  const icon = (id, cls = '') => `<svg class="i ${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+  const icon = (id, cls = '') => KAT_SYMBOLE[id]
+    ? `<svg class="i ks ${cls}" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><g filter="url(#tusche-s)">${KAT_SYMBOLE[id]}</g></svg>`
+    : `<svg class="i ${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
   const vorname = (name) => String(name || '').split(' ')[0];
   const anzeigename = (p) => p ? `${p.vorname}${p.nachname_initial ? ' ' + p.nachname_initial + '.' : ''}` : 'Unbekannt';
   const kuerzel = (p) => p ? ((p.vorname || '?')[0] + (p.nachname_initial || '')).toUpperCase() : '?';
@@ -1402,8 +1471,8 @@ body { margin: 0; }
   function distanz(g) {
     if (g.eigen) return 'bei dir';
     const m = meterVonMir(g);
-    if (m < 1000) return Math.max(100, Math.round(m / 50) * 50) + ' m';
-    return (m / 1000).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' km';
+    if (m < 1000) return Math.max(100, Math.round(m / 50) * 50) + '\u00a0m';
+    return (m / 1000).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '\u00a0km';
   }
   function passt(g) {
     if (ui.kat !== 'alle' && g.kat !== ui.kat) return false;
@@ -1621,7 +1690,7 @@ body { margin: 0; }
     else if (!db.profil) el.innerHTML = '<button type="button" class="btn btn-secondary btn-klein" data-panel="anmelden">Anmelden</button>';
     else el.innerHTML = `<button type="button" class="avatar-btn" data-panel="konto" aria-label="Dein Konto">${esc(kuerzel(db.profil))}</button>`;
     $('#fuss').textContent = istLive()
-      ? 'Testphase: Die Aufwandsentschädigung zahlt ihr direkt untereinander. Nachbarhand vermittelt nur und nimmt noch keine Gebühr.'
+      ? 'Testphase: Die Aufwandsentschädigung zahlt ihr direkt untereinander. Hand drauf vermittelt nur und nimmt noch keine Gebühr.'
       : 'Prototyp mit erfundenen Beispiel-Gesuchen in Garbsen. Es fließt kein echtes Geld.';
     $('#reset-knopf').hidden = istLive();
     $('#adresse-optional').hidden = istLive();
@@ -1685,7 +1754,7 @@ body { margin: 0; }
     const anteil = Math.min(100, verdient / CONFIG.freigrenze * 100);
     const rest = Math.max(0, CONFIG.freigrenze - verdient);
     $('#summe').innerHTML = `
-      <span class="h-klein">${istLive() ? 'Aufwandsentschädigungen (bestätigt)' : 'Verdient über Nachbarhand'}</span>
+      <span class="h-klein">${istLive() ? 'Aufwandsentschädigungen (bestätigt)' : 'Verdient über Hand drauf'}</span>
       <span class="summe-zahl">${euro(verdient)}</span>
       <div class="meter" role="img" aria-label="${euro(verdient)} von ${euro(CONFIG.freigrenze)} steuerfreiem Betrag"><span style="width:${anteil.toFixed(1)}%"></span></div>
       <span class="summe-hint">Bis ${CONFIG.freigrenze} € Gewinn im Jahr steuerfrei (§ 22 Nr. 3 EStG). Noch ${euro(rest)} frei.</span>`;
@@ -1929,7 +1998,7 @@ body { margin: 0; }
     } else {
       const bewertung = g.bewertungen
         ? `${icon('stern', 'i-xs i-fill')}${g.sterne.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} · ${g.bewertungen} ${g.bewertungen === 1 ? 'Bewertung' : 'Bewertungen'}`
-        : 'Neu bei Nachbarhand';
+        : 'Neu bei Hand drauf';
       html += `<div class="person">
         <span class="avatar" aria-hidden="true">${esc(g.initialen)}</span>
         <div>
@@ -2045,7 +2114,7 @@ body { margin: 0; }
         <div class="feld"><label for="auth-email">E-Mail</label><input id="auth-email" type="email" autocomplete="email" required></div>
         <div class="feld"><label for="auth-passwort">Passwort</label><input id="auth-passwort" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" minlength="8" required>${reg ? '<p class="feld-hinweis" style="margin-top:0">Mindestens 8 Zeichen.</p>' : ''}</div>
         ${reg ? `<label class="check"><input type="checkbox" id="auth-18"><span>Ich bin mindestens 18 Jahre alt.</span></label>
-        <label class="check"><input type="checkbox" id="auth-regeln"><span>Ich habe verstanden: Nachbarhand vermittelt nur. Die Absprache und Bezahlung läuft direkt zwischen uns Nachbarn, gelegentlich und in kleinem Umfang.</span></label>` : ''}
+        <label class="check"><input type="checkbox" id="auth-regeln"><span>Ich habe verstanden: Hand drauf vermittelt nur. Die Absprache und Bezahlung läuft direkt zwischen uns Nachbarn, gelegentlich und in kleinem Umfang.</span></label>` : ''}
         <p class="fehler" id="auth-fehler" role="alert" hidden></p>
         <button type="submit" class="btn btn-primary" ${ui.busy ? 'disabled aria-busy="true"' : ''}>${reg ? 'Konto erstellen' : 'Anmelden'}</button>
       </form>`;
@@ -2073,9 +2142,29 @@ body { margin: 0; }
       <button type="button" class="btn btn-secondary" data-abmelden ${ui.busy ? 'disabled' : ''}>Abmelden</button>`;
   }
 
+  function sheetAnsichtHTML() {
+    const gruppe = (k, titel, hinweis) => `<fieldset class="feld">
+        <legend>${titel}</legend>
+        <div class="segment" role="group">${ANSICHT_OPTIONEN[k].map(([w, n]) =>
+          `<button type="button" data-ansicht="${k}" data-wert="${w}" aria-pressed="${ansicht[k] === w}">${n}</button>`).join('')}</div>
+        ${hinweis ? `<p class="klein">${hinweis}</p>` : ''}
+      </fieldset>`;
+    return `<div class="sheet-top">
+        <span class="eyebrow">Ansicht</span>
+        <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
+      </div>
+      <h2 id="sheet-titel">So sieht die App für dich aus</h2>
+      ${gruppe('thema', 'Design', 'Automatisch folgt der Einstellung deines Handys.')}
+      ${gruppe('schrift', 'Schriftgröße', '')}
+      <div class="schrift-probe" aria-hidden="true"><span class="price">15 €</span><span><strong>Rasen mähen</strong><br>Berenbostel · Samstag, vormittags</span></div>
+      ${gruppe('start', 'Startseite', 'Was du beim Öffnen zuerst siehst.')}
+      <p class="klein">Gespeichert nur auf diesem Gerät.</p>`;
+  }
+
   function renderSheet() {
     let html = '';
-    if (ui.panel === 'anmelden') html = sheetAnmeldenHTML();
+    if (ui.panel === 'ansicht') html = sheetAnsichtHTML();
+    else if (ui.panel === 'anmelden') html = sheetAnmeldenHTML();
     else if (ui.panel === 'konto') html = sheetKontoHTML();
     else {
       const g = gesuche.find((x) => x.id === ui.offen);
@@ -2248,7 +2337,7 @@ body { margin: 0; }
     if (reg && !$('#auth-vorname').value.trim()) return zeigeFehler('Bitte gib deinen Vornamen ein.', $('#auth-vorname'));
     if (!/^\S+@\S+\.\S+$/.test(email)) return zeigeFehler('Bitte gib eine gültige E-Mail-Adresse ein.', $('#auth-email'));
     if (passwort.length < (reg ? 8 : 1)) return zeigeFehler(reg ? 'Das Passwort braucht mindestens 8 Zeichen.' : 'Bitte gib dein Passwort ein.', $('#auth-passwort'));
-    if (reg && !$('#auth-18').checked) return zeigeFehler('Nachbarhand ist erst ab 18 Jahren.', $('#auth-18'));
+    if (reg && !$('#auth-18').checked) return zeigeFehler('Hand drauf ist erst ab 18 Jahren.', $('#auth-18'));
     if (reg && !$('#auth-regeln').checked) return zeigeFehler('Bitte bestätige, dass du die Regeln verstanden hast.', $('#auth-regeln'));
 
     const knopf = e.target.querySelector('button[type="submit"]');
@@ -2308,6 +2397,15 @@ body { margin: 0; }
     if (go) { gehe(go.dataset.go); return; }
     const panel = e.target.closest('[data-panel]');
     if (panel) { oeffnePanel(panel.dataset.panel); return; }
+    const opt = e.target.closest('[data-ansicht]');
+    if (opt) {
+      ansichtSetzen(opt.dataset.ansicht, opt.dataset.wert);
+      renderSheet();
+      const zurueck = document.querySelector(`[data-ansicht="${opt.dataset.ansicht}"][data-wert="${opt.dataset.wert}"]`);
+      if (zurueck) zurueck.focus({ preventScroll: true });
+      if (kartenStatus.map) kartenStatus.map.invalidateSize({ pan: false });
+      return;
+    }
     if (e.target.closest('[data-neu-laden]')) { db.fehler = null; renderListe(); neuLaden(); return; }
     const kat = e.target.closest('[data-kat]');
     if (kat) { ui.kat = kat.dataset.kat; renderChips(); renderListe(); renderKarte(); return; }
@@ -2346,7 +2444,7 @@ body { margin: 0; }
     if (istLive()) {
       el.innerHTML = `
         <div class="kosten-zeile kosten-summe" style="border:0;padding:0;margin:0"><span>Du zahlst direkt</span><span>${euro(b)}</span></div>
-        <span class="kosten-hinweis">Die Aufwandsentschädigung gibst du der Person, die dir hilft. Nachbarhand nimmt in der Testphase keine Gebühr.</span>`;
+        <span class="kosten-hinweis">Die Aufwandsentschädigung gibst du der Person, die dir hilft. Hand drauf nimmt in der Testphase keine Gebühr.</span>`;
       return;
     }
     const g = CONFIG.gebuehrAuftraggeber;
@@ -2459,7 +2557,7 @@ body { margin: 0; }
   renderStadtteilAuswahl();
   renderAlles();
   renderKosten();
-  zeige(VIEWS.includes(start) ? start : 'entdecken');
+  zeige(VIEWS.includes(start) ? start : ansicht.start);
   starteLive().then((live) => {
     if (!live) return;
     renderStadtteilAuswahl();

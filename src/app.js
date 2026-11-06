@@ -15,7 +15,7 @@
 
   /* ===== Einstellungen: Gebühren, Regeln und Karte hier anpassen ===== */
   const CONFIG = {
-    gebuehrAuftraggeber: 1.99, // nur Demo: fester Betrag, den die suchende Person zusätzlich zahlt
+    gebuehrAuftraggeber: 0.99, // nur Demo: fester Betrag, den die suchende Person zusätzlich zahlt
     provisionHelfer: 0.05,     // nur Demo: Anteil, der vom Betrag des Helfers abgeht
     minBetrag: 5,
     maxBetrag: 50,             // Obergrenze für Nachbarschaftshilfe
@@ -164,12 +164,44 @@
   let gesuche = [];
   const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, zuletzt: null, busy: false };
 
+  /* ===== Ansicht: Design, Schriftgröße, Startseite (nur auf diesem Gerät gespeichert) ===== */
+  const ANSICHT_SPEICHER = 'handdrauf-ansicht';
+  const ANSICHT_OPTIONEN = {
+    thema: [['auto', 'Automatisch'], ['hell', 'Hell'], ['dunkel', 'Dunkel']],
+    schrift: [['normal', 'Normal'], ['gross', 'Groß'], ['sehr-gross', 'Sehr groß']],
+    start: [['entdecken', 'Liste'], ['karte', 'Karte']]
+  };
+  const ansicht = { thema: 'auto', schrift: 'normal', start: 'entdecken' };
+  try {
+    const gespeichert = JSON.parse(localStorage.getItem(ANSICHT_SPEICHER) || '{}');
+    Object.keys(ansicht).forEach((k) => {
+      if (ANSICHT_OPTIONEN[k].some(([w]) => w === gespeichert[k])) ansicht[k] = gespeichert[k];
+    });
+  } catch (e) { /* ohne Speicher: Standardwerte */ }
+  function ansichtAnwenden() {
+    const r = document.documentElement;
+    if (ansicht.thema === 'auto') r.removeAttribute('data-theme');
+    else r.setAttribute('data-theme', ansicht.thema === 'dunkel' ? 'dark' : 'light');
+    if (ansicht.schrift === 'normal') r.removeAttribute('data-schrift'); else r.setAttribute('data-schrift', ansicht.schrift);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = getComputedStyle(r).getPropertyValue('--paper').trim() || '#F3F5F1';
+  }
+  function ansichtSetzen(k, w) {
+    if (!ANSICHT_OPTIONEN[k] || !ANSICHT_OPTIONEN[k].some(([x]) => x === w)) return;
+    ansicht[k] = w;
+    try { localStorage.setItem(ANSICHT_SPEICHER, JSON.stringify(ansicht)); } catch (e) { /* nur für diese Sitzung */ }
+    ansichtAnwenden();
+  }
+  ansichtAnwenden();
+
   /* ===== Hilfsfunktionen ===== */
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const euro = (n) => n.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
   const euroKurz = (n) => Number.isInteger(n) ? `${n} €` : euro(n);
   const katName = (id) => (KATEGORIEN.find((k) => k.id === id) || {}).name || '';
-  const icon = (id, cls = '') => `<svg class="i ${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+  const icon = (id, cls = '') => KAT_SYMBOLE[id]
+    ? `<svg class="i ks ${cls}" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><g filter="url(#tusche-s)">${KAT_SYMBOLE[id]}</g></svg>`
+    : `<svg class="i ${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
   const vorname = (name) => String(name || '').split(' ')[0];
   const anzeigename = (p) => p ? `${p.vorname}${p.nachname_initial ? ' ' + p.nachname_initial + '.' : ''}` : 'Unbekannt';
   const kuerzel = (p) => p ? ((p.vorname || '?')[0] + (p.nachname_initial || '')).toUpperCase() : '?';
@@ -196,8 +228,8 @@
   function distanz(g) {
     if (g.eigen) return 'bei dir';
     const m = meterVonMir(g);
-    if (m < 1000) return Math.max(100, Math.round(m / 50) * 50) + ' m';
-    return (m / 1000).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' km';
+    if (m < 1000) return Math.max(100, Math.round(m / 50) * 50) + '\u00a0m';
+    return (m / 1000).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '\u00a0km';
   }
   function passt(g) {
     if (ui.kat !== 'alle' && g.kat !== ui.kat) return false;
@@ -415,7 +447,7 @@
     else if (!db.profil) el.innerHTML = '<button type="button" class="btn btn-secondary btn-klein" data-panel="anmelden">Anmelden</button>';
     else el.innerHTML = `<button type="button" class="avatar-btn" data-panel="konto" aria-label="Dein Konto">${esc(kuerzel(db.profil))}</button>`;
     $('#fuss').textContent = istLive()
-      ? 'Testphase: Die Aufwandsentschädigung zahlt ihr direkt untereinander. Nachbarhand vermittelt nur und nimmt noch keine Gebühr.'
+      ? 'Testphase: Die Aufwandsentschädigung zahlt ihr direkt untereinander. Hand drauf vermittelt nur und nimmt noch keine Gebühr.'
       : 'Prototyp mit erfundenen Beispiel-Gesuchen in Garbsen. Es fließt kein echtes Geld.';
     $('#reset-knopf').hidden = istLive();
     $('#adresse-optional').hidden = istLive();
@@ -479,7 +511,7 @@
     const anteil = Math.min(100, verdient / CONFIG.freigrenze * 100);
     const rest = Math.max(0, CONFIG.freigrenze - verdient);
     $('#summe').innerHTML = `
-      <span class="h-klein">${istLive() ? 'Aufwandsentschädigungen (bestätigt)' : 'Verdient über Nachbarhand'}</span>
+      <span class="h-klein">${istLive() ? 'Aufwandsentschädigungen (bestätigt)' : 'Verdient über Hand drauf'}</span>
       <span class="summe-zahl">${euro(verdient)}</span>
       <div class="meter" role="img" aria-label="${euro(verdient)} von ${euro(CONFIG.freigrenze)} steuerfreiem Betrag"><span style="width:${anteil.toFixed(1)}%"></span></div>
       <span class="summe-hint">Bis ${CONFIG.freigrenze} € Gewinn im Jahr steuerfrei (§ 22 Nr. 3 EStG). Noch ${euro(rest)} frei.</span>`;
@@ -723,7 +755,7 @@
     } else {
       const bewertung = g.bewertungen
         ? `${icon('stern', 'i-xs i-fill')}${g.sterne.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} · ${g.bewertungen} ${g.bewertungen === 1 ? 'Bewertung' : 'Bewertungen'}`
-        : 'Neu bei Nachbarhand';
+        : 'Neu bei Hand drauf';
       html += `<div class="person">
         <span class="avatar" aria-hidden="true">${esc(g.initialen)}</span>
         <div>
@@ -839,7 +871,7 @@
         <div class="feld"><label for="auth-email">E-Mail</label><input id="auth-email" type="email" autocomplete="email" required></div>
         <div class="feld"><label for="auth-passwort">Passwort</label><input id="auth-passwort" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" minlength="8" required>${reg ? '<p class="feld-hinweis" style="margin-top:0">Mindestens 8 Zeichen.</p>' : ''}</div>
         ${reg ? `<label class="check"><input type="checkbox" id="auth-18"><span>Ich bin mindestens 18 Jahre alt.</span></label>
-        <label class="check"><input type="checkbox" id="auth-regeln"><span>Ich habe verstanden: Nachbarhand vermittelt nur. Die Absprache und Bezahlung läuft direkt zwischen uns Nachbarn, gelegentlich und in kleinem Umfang.</span></label>` : ''}
+        <label class="check"><input type="checkbox" id="auth-regeln"><span>Ich habe verstanden: Hand drauf vermittelt nur. Die Absprache und Bezahlung läuft direkt zwischen uns Nachbarn, gelegentlich und in kleinem Umfang.</span></label>` : ''}
         <p class="fehler" id="auth-fehler" role="alert" hidden></p>
         <button type="submit" class="btn btn-primary" ${ui.busy ? 'disabled aria-busy="true"' : ''}>${reg ? 'Konto erstellen' : 'Anmelden'}</button>
       </form>`;
@@ -867,9 +899,29 @@
       <button type="button" class="btn btn-secondary" data-abmelden ${ui.busy ? 'disabled' : ''}>Abmelden</button>`;
   }
 
+  function sheetAnsichtHTML() {
+    const gruppe = (k, titel, hinweis) => `<fieldset class="feld">
+        <legend>${titel}</legend>
+        <div class="segment" role="group">${ANSICHT_OPTIONEN[k].map(([w, n]) =>
+          `<button type="button" data-ansicht="${k}" data-wert="${w}" aria-pressed="${ansicht[k] === w}">${n}</button>`).join('')}</div>
+        ${hinweis ? `<p class="klein">${hinweis}</p>` : ''}
+      </fieldset>`;
+    return `<div class="sheet-top">
+        <span class="eyebrow">Ansicht</span>
+        <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
+      </div>
+      <h2 id="sheet-titel">So sieht die App für dich aus</h2>
+      ${gruppe('thema', 'Design', 'Automatisch folgt der Einstellung deines Handys.')}
+      ${gruppe('schrift', 'Schriftgröße', '')}
+      <div class="schrift-probe" aria-hidden="true"><span class="price">15 €</span><span><strong>Rasen mähen</strong><br>Berenbostel · Samstag, vormittags</span></div>
+      ${gruppe('start', 'Startseite', 'Was du beim Öffnen zuerst siehst.')}
+      <p class="klein">Gespeichert nur auf diesem Gerät.</p>`;
+  }
+
   function renderSheet() {
     let html = '';
-    if (ui.panel === 'anmelden') html = sheetAnmeldenHTML();
+    if (ui.panel === 'ansicht') html = sheetAnsichtHTML();
+    else if (ui.panel === 'anmelden') html = sheetAnmeldenHTML();
     else if (ui.panel === 'konto') html = sheetKontoHTML();
     else {
       const g = gesuche.find((x) => x.id === ui.offen);
@@ -1042,7 +1094,7 @@
     if (reg && !$('#auth-vorname').value.trim()) return zeigeFehler('Bitte gib deinen Vornamen ein.', $('#auth-vorname'));
     if (!/^\S+@\S+\.\S+$/.test(email)) return zeigeFehler('Bitte gib eine gültige E-Mail-Adresse ein.', $('#auth-email'));
     if (passwort.length < (reg ? 8 : 1)) return zeigeFehler(reg ? 'Das Passwort braucht mindestens 8 Zeichen.' : 'Bitte gib dein Passwort ein.', $('#auth-passwort'));
-    if (reg && !$('#auth-18').checked) return zeigeFehler('Nachbarhand ist erst ab 18 Jahren.', $('#auth-18'));
+    if (reg && !$('#auth-18').checked) return zeigeFehler('Hand drauf ist erst ab 18 Jahren.', $('#auth-18'));
     if (reg && !$('#auth-regeln').checked) return zeigeFehler('Bitte bestätige, dass du die Regeln verstanden hast.', $('#auth-regeln'));
 
     const knopf = e.target.querySelector('button[type="submit"]');
@@ -1102,6 +1154,15 @@
     if (go) { gehe(go.dataset.go); return; }
     const panel = e.target.closest('[data-panel]');
     if (panel) { oeffnePanel(panel.dataset.panel); return; }
+    const opt = e.target.closest('[data-ansicht]');
+    if (opt) {
+      ansichtSetzen(opt.dataset.ansicht, opt.dataset.wert);
+      renderSheet();
+      const zurueck = document.querySelector(`[data-ansicht="${opt.dataset.ansicht}"][data-wert="${opt.dataset.wert}"]`);
+      if (zurueck) zurueck.focus({ preventScroll: true });
+      if (kartenStatus.map) kartenStatus.map.invalidateSize({ pan: false });
+      return;
+    }
     if (e.target.closest('[data-neu-laden]')) { db.fehler = null; renderListe(); neuLaden(); return; }
     const kat = e.target.closest('[data-kat]');
     if (kat) { ui.kat = kat.dataset.kat; renderChips(); renderListe(); renderKarte(); return; }
@@ -1140,7 +1201,7 @@
     if (istLive()) {
       el.innerHTML = `
         <div class="kosten-zeile kosten-summe" style="border:0;padding:0;margin:0"><span>Du zahlst direkt</span><span>${euro(b)}</span></div>
-        <span class="kosten-hinweis">Die Aufwandsentschädigung gibst du der Person, die dir hilft. Nachbarhand nimmt in der Testphase keine Gebühr.</span>`;
+        <span class="kosten-hinweis">Die Aufwandsentschädigung gibst du der Person, die dir hilft. Hand drauf nimmt in der Testphase keine Gebühr.</span>`;
       return;
     }
     const g = CONFIG.gebuehrAuftraggeber;
@@ -1253,7 +1314,7 @@
   renderStadtteilAuswahl();
   renderAlles();
   renderKosten();
-  zeige(VIEWS.includes(start) ? start : 'entdecken');
+  zeige(VIEWS.includes(start) ? start : ansicht.start);
   starteLive().then((live) => {
     if (!live) return;
     renderStadtteilAuswahl();

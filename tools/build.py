@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Baut Nachbarhand aus src/ zusammen.
+"""Baut Hand drauf aus src/ zusammen.
 
     python3 tools/build.py                    -> index.html (für GitHub Pages)
     python3 tools/build.py --vorschau ZIEL    -> zusätzlich eine Fassung für die Claude-Vorschau
@@ -16,18 +16,22 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n'
          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
          '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700'
          '&family=Bricolage+Grotesque:opsz,wght@12..96,600;800&display=swap">')
+# Setzt Design und Schriftgröße vor dem ersten Zeichnen, damit nichts aufblitzt
+FRUEH = ('<script>try{var a=JSON.parse(localStorage.getItem("handdrauf-ansicht")||"{}"),r=document.documentElement;'
+         'if(a.thema==="dunkel"||a.thema==="hell")r.setAttribute("data-theme",a.thema==="dunkel"?"dark":"light");'
+         'if(a.schrift==="gross"||a.schrift==="sehr-gross")r.setAttribute("data-schrift",a.schrift)}catch(e){}</script>')
 
 
 def teile(vorschau):
     leaflet_css = (SRC / 'vendor' / 'leaflet-1.9.4.css').read_text()
     styles = (SRC / 'styles.css').read_text()
-    body = (SRC / 'body.html').read_text()
-    app = (SRC / 'app.js').read_text()
+    body = (SRC / 'body.html').read_text().replace('<!--KOPFZEICHEN-->', (SRC / 'kopfzeichen.svg').read_text().strip())
+    app = (SRC / 'symbole.js').read_text() + '\n' + (SRC / 'app.js').read_text()
     if vorschau:
         alt = 'const VORSCHAU = false;'
         assert alt in app
         app = app.replace(alt, 'const VORSCHAU = true;')
-    kopf = f'{FONTS}\n<style>\n{leaflet_css}</style>\n<style>\n{styles}</style>'
+    kopf = f'{FRUEH}\n{FONTS}\n<style>\n{leaflet_css}</style>\n<style>\n{styles}</style>'
     rumpf = f'{body}\n<script src="{LEAFLET_JS}"></script>\n<script>\n{app}</script>\n'
     return kopf, rumpf
 
@@ -39,13 +43,16 @@ def standalone():
             '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#F3F5F1">\n'
             '<meta name="description" content="Nachbarschaftshilfe in Garbsen: kleine Jobs in deiner Nähe finden oder Hilfe suchen.">\n'
-            '<title>Nachbarhand</title>\n'
+            '<title>Hand drauf</title>\n'
+            '<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">\n'
+            '<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">\n'
+            '<link rel="manifest" href="manifest.webmanifest">\n'
             f'{kopf}\n</head>\n<body>\n{rumpf}</body>\n</html>\n')
 
 
 def vorschau_fragment():
     kopf, rumpf = teile(True)
-    return ('<title>Nachbarhand</title>\n'
+    return ('<title>Hand drauf</title>\n'
             '<meta name="claude:viewport-fit-sides" content="cover">\n'
             f'{kopf}\n{rumpf}')
 

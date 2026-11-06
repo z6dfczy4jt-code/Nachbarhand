@@ -1,6 +1,6 @@
 # Datenbank einrichten (Supabase)
 
-Ohne Datenbank läuft Nachbarhand im **Demo-Modus** mit erfundenen Beispielen, die nur auf deinem Gerät gespeichert werden.
+Ohne Datenbank läuft Hand drauf im **Demo-Modus** mit erfundenen Beispielen, die nur auf deinem Gerät gespeichert werden.
 Mit Supabase bekommt die App **echte Konten** und eine **gemeinsame Datenbank**: Was Karin einstellt, sieht Tim auf seinem Handy.
 
 Supabase ist für ein Projekt dieser Größe kostenlos. Die Einrichtung dauert etwa 10 Minuten.
@@ -9,7 +9,7 @@ Supabase ist für ein Projekt dieser Größe kostenlos. Die Einrichtung dauert e
 
 1. Auf [supabase.com](https://supabase.com) auf **Start your project** tippen und **mit GitHub anmelden**.
 2. **New project** wählen:
-   - Name: `nachbarhand`
+   - Name: `hand-drauf`
    - Database Password: auf **Generate a password** tippen und das Passwort sicher aufbewahren (wird für die App nicht gebraucht)
    - Region: **Central EU (Frankfurt)**, damit die Daten in der EU liegen
    - Plan: **Free**
