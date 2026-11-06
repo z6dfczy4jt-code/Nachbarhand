@@ -330,3 +330,6 @@ body { margin: 0; }
 .konto-kopf { display: flex; align-items: center; gap: 12px; }
 .feld-hinweis { font-size: 13px; color: var(--muted); margin-top: -10px; }
 .lade { color: var(--muted); padding: 18px 4px; }
+
+/* OpenStreetMap-Kacheln gibt es nur hell: im dunklen Design abdunkeln */
+.karte-dunkel .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.65); }

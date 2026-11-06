@@ -25,10 +25,16 @@
   };
 
   const KARTE = {
-    // Kartenkacheln von CARTO auf Basis von OpenStreetMap (kostenlos für kleine Projekte, Namensnennung Pflicht)
-    kachelnHell: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    kachelnDunkel: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    kachelnQuelle: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    // Kartenkacheln ohne API-Key. Lädt ein Anbieter nicht, nimmt die App automatisch den nächsten.
+    // OpenStreetMap erlaubt das für kleine Projekte mit Namensnennung; bei vielen Nutzern auf einen eigenen Anbieter wechseln.
+    anbieter: [
+      { name: 'OpenStreetMap', url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', maxNativeZoom: 19,
+        quelle: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende' },
+      { name: 'OpenStreetMap Deutschland', url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png', maxNativeZoom: 18,
+        quelle: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende, <a href="https://www.openstreetmap.de">openstreetmap.de</a>' },
+      { name: 'CARTO', url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', maxNativeZoom: 20, subdomains: 'abcd',
+        quelle: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende &copy; <a href="https://carto.com/attributions">CARTO</a>' }
+    ],
     ortsQuelle: 'Orte: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende, GeoNames',
     grenzen: [[52.33, 9.38], [52.55, 9.76]],      // so weit lässt sich die Karte verschieben
     minZoom: 11,
@@ -486,7 +492,7 @@
   }
 
   /* ===== Karte (Leaflet) ===== */
-  const kartenStatus = { map: null, kacheln: null, pins: null, bereich: null, stadtteile: null, labels: null, vereinfacht: false, geladen: 0, fehler: 0, marker: new Map() };
+  const kartenStatus = { map: null, kacheln: null, anbieter: 0, pins: null, bereich: null, stadtteile: null, labels: null, vereinfacht: false, geladen: 0, fehler: 0, marker: new Map() };
 
   function dunklesThema() {
     const t = document.documentElement.getAttribute('data-theme');
@@ -494,7 +500,25 @@
     if (t === 'light') return false;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
-  const kachelUrl = () => dunklesThema() ? KARTE.kachelnDunkel : KARTE.kachelnHell;
+  function kachelSchicht(i) {
+    const a = KARTE.anbieter[i];
+    const s = window.L.tileLayer(a.url, { maxZoom: KARTE.maxZoom, maxNativeZoom: a.maxNativeZoom, subdomains: a.subdomains || 'abc', attribution: a.quelle });
+    s.on('tileload', () => { kartenStatus.geladen++; });
+    s.on('tileerror', () => {
+      kartenStatus.fehler++;
+      if (!kartenStatus.geladen && kartenStatus.fehler >= 4) naechsterAnbieter();
+    });
+    return s;
+  }
+  function naechsterAnbieter() {
+    const k = kartenStatus;
+    if (k.vereinfacht || !k.map) return;
+    if (k.kacheln && k.map.hasLayer(k.kacheln)) k.map.removeLayer(k.kacheln);
+    k.anbieter++;
+    k.fehler = 0;
+    if (k.anbieter >= KARTE.anbieter.length) { vereinfachen(); return; }
+    k.kacheln = kachelSchicht(k.anbieter).addTo(k.map);
+  }
 
   // Ganz Garbsen zeigen. Ist die Karte hoch genug, liegt die Stadt unterhalb der Kartenknöpfe, sonst links daneben.
   function zeigeGanzGarbsen() {
@@ -535,17 +559,10 @@
     map.createPane('labels').style.zIndex = 450;
     map.getPane('labels').style.pointerEvents = 'none';
 
-    const kacheln = L.tileLayer(kachelUrl(), { subdomains: 'abcd', maxZoom: 20, attribution: KARTE.kachelnQuelle });
-    kacheln.on('tileload', () => { kartenStatus.geladen++; });
-    kacheln.on('tileerror', () => {
-      kartenStatus.fehler++;
-      if (!kartenStatus.geladen && kartenStatus.fehler >= 4) vereinfachen();
-    });
-    kacheln.addTo(map);
-    if (VORSCHAU) setTimeout(() => { if (!kartenStatus.geladen) vereinfachen(); }, 6000);
-
     kartenStatus.map = map;
-    kartenStatus.kacheln = kacheln;
+    // In der Claude-Vorschau sind Kartenbilder gesperrt: dort gleich die vereinfachte Karte
+    if (!VORSCHAU) kartenStatus.kacheln = kachelSchicht(0).addTo(map);
+    aktualisiereKachelThema();
     kartenStatus.bereich = L.layerGroup().addTo(map);
     kartenStatus.pins = L.layerGroup().addTo(map);
 
@@ -554,6 +571,7 @@
     map.on('click', () => { if (ui.markiert) { ui.markiert = null; renderKarte(); } });
     zeigeGanzGarbsen();
     zoomKlasse();
+    if (VORSCHAU) vereinfachen();
     return true;
   }
 
@@ -563,7 +581,7 @@
     if (k.vereinfacht || !k.map) return;
     k.vereinfacht = true;
     const L = window.L;
-    k.map.removeLayer(k.kacheln);
+    if (k.kacheln && k.map.hasLayer(k.kacheln)) k.map.removeLayer(k.kacheln);
     k.map.attributionControl.addAttribution(KARTE.ortsQuelle);
     k.stadtteile = L.layerGroup(STADTTEILE.map((s) => L.circle([s.lat, s.lng], {
       radius: s.r, pane: 'stadtteile', className: 'stadtteil-flaeche', interactive: false, weight: 1
@@ -608,7 +626,8 @@
 
   function aktualisiereKachelThema() {
     const k = kartenStatus;
-    if (k.kacheln && !k.vereinfacht) k.kacheln.setUrl(kachelUrl());
+    // Die Kacheln gibt es nur hell; im dunklen Design werden sie per Filter abgedunkelt
+    if (k.map) k.map.getContainer().classList.toggle('karte-dunkel', dunklesThema());
   }
 
   function renderKarte() {
