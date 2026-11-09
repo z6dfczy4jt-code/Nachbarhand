@@ -1963,6 +1963,7 @@
   async function kalenderLaden(g) {
     const ics = kalenderDatei(g);
     if (!ics) return;
+    if (VORSCHAU) { meldung('In dieser Vorschau gehen keine Downloads. In der App und auf der Website klappt es.'); return; }
     const dateiname = `hand-drauf-${g.titel.toLowerCase().replace(/[äöüß]/g, (c) => ({ ä: 'ae', ö: 'oe', ü: 'ue', ß: 'ss' }[c])).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'termin'}.ics`;
     // iPhone-App: Datei im Zwischenspeicher ablegen und über das Teilen-Menü öffnen („Zum Kalender hinzufügen“)
     const dateien = plugin('Filesystem'), teilenPlugin = plugin('Share');
