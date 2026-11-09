@@ -35,7 +35,7 @@ def teile(vorschau):
     leaflet_css = (SRC / 'vendor' / 'leaflet-1.9.4.css').read_text()
     styles = (SRC / 'styles.css').read_text()
     body = (SRC / 'body.html').read_text().replace('<!--KOPFZEICHEN-->', (SRC / 'kopfzeichen.svg').read_text().strip())
-    app = '\n'.join((SRC / n).read_text() for n in ('symbole.js', 'recht.js', 'app.js'))
+    app = '\n'.join((SRC / n).read_text() for n in ('symbole.js', 'recht.js', 'fragen.js', 'app.js'))
     if vorschau:
         alt = 'const VORSCHAU = false;'
         assert alt in app

@@ -501,3 +501,46 @@ body { margin: 0; }
 .einladen-karte { display: grid; gap: 12px; padding: 16px; border-radius: 16px; box-shadow: inset 0 0 0 1.5px var(--line); }
 .einladen-karte p { margin: 4px 0 0; color: var(--muted); font-size: 0.9375rem; }
 .einladen-karte .btn { justify-self: start; }
+
+/* ===== Termin unter „Heute“, „Morgen“ … ===== */
+.wahl span { flex-direction: column; gap: 1px; line-height: 1.2; }
+.wahl-datum { font-size: 0.8125rem; font-weight: 400; color: var(--muted); }
+.wahl input:checked + span .wahl-datum { color: inherit; opacity: .8; }
+.wahl-datum:empty { display: none; }
+
+/* ===== Leere Plattform: Anfang machen oder Beispiele ansehen ===== */
+.leer-start { border-style: solid; border-color: var(--accent); background: var(--surface); }
+.leer-knoepfe { display: flex; flex-wrap: wrap; gap: 10px; }
+.leer-knoepfe .btn { text-decoration: none; }
+.karte-leer { position: absolute; left: 12px; right: 12px; bottom: 30px; z-index: 1000; display: grid; gap: 10px; padding: 14px 16px; border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); }
+.karte-leer p { margin: 0; color: var(--muted); font-size: 0.9375rem; }
+.karte-leer strong { color: var(--ink); }
+.pin-abgelaufen { --pin-bg: var(--surface); --pin-fg: var(--muted); --pin-rand: var(--muted); border-style: dashed; }
+
+/* ===== Hinweisband im Beispiel-Modus ===== */
+.beispiel-band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 14px; margin: -4px 0 8px; padding: 10px 14px; border-radius: 12px; background: var(--warn-bg); color: var(--ink); font-size: 0.9375rem; }
+.beispiel-band a { color: var(--ink); font-weight: 700; text-underline-offset: 3px; min-height: 44px; display: inline-flex; align-items: center; }
+
+/* ===== Auf den Startbildschirm ===== */
+.installieren-karte { display: grid; grid-template-columns: auto 1fr; gap: 12px; padding: 16px; border-radius: 16px; background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line); }
+.installieren-karte[hidden] { display: none; }
+.installieren-icon { width: 44px; height: 44px; border-radius: 11px; }
+.installieren-karte p { margin: 4px 0 10px; color: var(--muted); font-size: 0.9375rem; }
+.installieren-karte .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.installieren-karte .i-xs { vertical-align: -2px; }
+
+/* ===== Häufige Fragen ===== */
+.fragen-gruppe { display: grid; gap: 0; margin-top: 8px; }
+.fragen-gruppe .h-klein { margin: 8px 0 4px; }
+.frage { border-bottom: 1px solid var(--line); }
+.frage summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 10px 0; font-weight: 700; cursor: pointer; list-style: none; }
+.frage summary::-webkit-details-marker { display: none; }
+.frage summary::after { content: '+'; flex: none; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--tile); font-size: 1.125rem; line-height: 1; }
+.frage[open] summary::after { content: '–'; }
+.frage summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+.antwort { padding: 0 0 14px; color: var(--ink); }
+.antwort p { margin: 0 0 8px; }
+.antwort ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.link-als-knopf { display: inline-flex; align-items: center; }
+.wahl-raster ~ .feld-hinweis, .wahl-raster ~ .fehler { margin-top: 8px; }
+.leer-knoepfe { justify-self: stretch; }

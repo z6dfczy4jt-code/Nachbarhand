@@ -4,6 +4,8 @@
   /* ===== Betriebsart ===== */
   // Wird beim Bauen für die Claude-Vorschau auf true gesetzt: Dort ist keine Datenbank erreichbar, also immer Demo.
   const VORSCHAU = false;
+  // ?beispiele in der Adresse: erfundene Beispiele zeigen, auch wenn die Datenbank erreichbar ist
+  const BEISPIEL_MODUS = (() => { try { return new URLSearchParams(location.search).has('beispiele'); } catch (e) { return false; } })();
 
   // Zugang zur Datenbank (Supabase). Beide Werte sind öffentlich und dürfen im Code stehen.
   // Leer = Demo-Modus mit erfundenen Beispieldaten.
@@ -132,6 +134,8 @@
   const SPEICHER = 'nachbarhand-prototyp-v2';
   const VIEWS = ['entdecken', 'karte', 'neu', 'auftraege'];
   const RECHT = RECHT_TEXTE(CONFIG.betreiber, (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+  const FRAGEN = FRAGEN_TEXTE(CONFIG);
+  const istSeite = (n) => !!RECHT[n] || n === 'fragen'; // Seiten mit eigener Adresse (#impressum, #fragen …)
   const EIGEN_VERSATZ = [[180, -150], [-160, 170], [220, 160], [-210, -190]]; // Demo: Meter Nord/Ost ab deinem Standort
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -151,7 +155,8 @@
     nachrichten: new Map(), // gesuch_id -> Verlauf (null = wird geladen)
     letzte: new Map(),      // gesuch_id -> Zeit der letzten Nachricht der anderen Person
     gemeldet: new Set(),    // in dieser Sitzung gemeldete Gesuche
-    profile: new Map()      // profil_id -> öffentliches Profil (für die Profil-Ansicht)
+    profile: new Map(),     // profil_id -> öffentliches Profil (für die Profil-Ansicht)
+    altesSchema: false      // Datenbank ohne das Update vom November 2026 (kein Termin, kein Bearbeiten)
   };
   const istLive = () => db.modus === 'live';
 
@@ -171,7 +176,7 @@
   }
 
   let gesuche = [];
-  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false };
+  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false, bearbeiten: null };
 
   /* ===== Ansicht: Design, Schriftgröße, Startseite (nur auf diesem Gerät gespeichert) ===== */
   const ANSICHT_SPEICHER = 'handdrauf-ansicht';
@@ -253,6 +258,61 @@
     if (m < 1000) return Math.max(100, Math.round(m / 50) * 50) + '\u00a0m';
     return (m / 1000).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '\u00a0km';
   }
+  /* ===== Termine: „Morgen“ wird beim Speichern zum echten Datum ===== */
+  const WOCHENTAGE = ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'];
+  const MONATE = ['Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sept.', 'Okt.', 'Nov.', 'Dez.'];
+  const TAG_MS = 86400000;
+  const MAX_TAGE = 21; // spätestens dann läuft ein offenes Gesuch ab
+  const TAG_WAHL = ['Heute', 'Morgen', 'Dieses Wochenende', 'Nächste Woche'];
+  const ZEIT_TEXT = { vormittags: 'vormittags', nachmittags: 'nachmittags', abends: 'abends', flexibel: 'Uhrzeit flexibel' };
+  function heute() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+  function plusTage(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+  const isoTag = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const ausIso = (s) => { const [j, m, t] = String(s).split('-').map(Number); return new Date(j, m - 1, t); };
+  const tagText = (d) => `${WOCHENTAGE[d.getDay()]} ${d.getDate()}. ${MONATE[d.getMonth()]}`;
+  // Welche Tage meint „Heute“, „Morgen“, „Am Wochenende“, „Nächste Woche“, von heute aus gesehen?
+  function zeitraum(wahl, basis = heute()) {
+    const wt = basis.getDay();
+    let von, bis;
+    if (wahl === 'Heute') von = bis = basis;
+    else if (wahl === 'Morgen') von = bis = plusTage(basis, 1);
+    else if (wahl === 'Dieses Wochenende') { von = wt === 0 ? basis : plusTage(basis, 6 - wt); bis = wt === 0 ? basis : plusTage(von, 1); }
+    else if (wahl === 'Nächste Woche') { von = plusTage(basis, ((8 - wt) % 7) || 7); bis = plusTage(von, 6); }
+    else return null;
+    let text, kurz;
+    if (+von === +bis) text = kurz = tagText(von);
+    else if (wahl === 'Dieses Wochenende') {
+      text = kurz = von.getMonth() === bis.getMonth() ? `Sa./So. ${von.getDate()}./${bis.getDate()}. ${MONATE[bis.getMonth()]}` : `${tagText(von)}/${tagText(bis)}`;
+    } else {
+      kurz = `${von.getDate()}.${von.getMonth() === bis.getMonth() ? '' : ' ' + MONATE[von.getMonth()]}–${bis.getDate()}. ${MONATE[bis.getMonth()]}`;
+      text = `Woche ${kurz}`;
+    }
+    return { von, bis, text, kurz };
+  }
+  // Was gespeichert wird: lesbarer Text mit Datum und der letzte passende Tag
+  function terminSpeichern(tag, zeit) {
+    const z = zeitraum(tag) || zeitraum('Morgen');
+    return { wann: `${z.text}, ${ZEIT_TEXT[zeit] || ZEIT_TEXT.flexibel}`, bis: isoTag(z.bis) };
+  }
+  // Heute oder morgen: in Karten kurz „Morgen, nachmittags“ statt des Datums
+  function relativerTag(g) {
+    if (!g.bis || !g.wann) return '';
+    const datum = g.wann.slice(0, Math.max(0, g.wann.lastIndexOf(', '))) || g.wann;
+    if (/[/–]|^Woche/.test(datum)) return '';
+    const tage = Math.round((ausIso(g.bis) - heute()) / TAG_MS);
+    return tage === 0 ? 'Heute' : tage === 1 ? 'Morgen' : '';
+  }
+  function wannText(g) {
+    const rel = relativerTag(g);
+    if (!rel) return g.wann || '';
+    const i = g.wann.lastIndexOf(', ');
+    return i > 0 ? `${rel}, ${g.wann.slice(i + 2)}` : rel;
+  }
+  const wannLang = (g) => { const rel = relativerTag(g); return rel ? `${rel}, ${g.wann}` : (g.wann || ''); };
+  const abgelaufen = (g) => g.status === 'offen' && !!g.laeuftAb && g.laeuftAb <= Date.now();
+  const sichtbarBis = (g) => g.bis ? tagText(ausIso(g.bis)) : (g.laeuftAb ? tagText(new Date(g.laeuftAb - 1)) : '');
+  const demoAblauf = (bis) => Math.min(Date.now() + MAX_TAGE * TAG_MS, +plusTage(ausIso(bis), 1));
+
   function passt(g) {
     if (ui.kat !== 'alle' && g.kat !== ui.kat) return false;
     const q = ui.suche.trim().toLowerCase();
@@ -268,6 +328,7 @@
   }
   function statusPill(g) {
     if (g.eigen) {
+      if (abgelaufen(g)) return `<span class="pill pill-warn">Abgelaufen</span>`;
       if (g.status === 'offen') return `<span class="pill pill-muted">Sichtbar für Nachbarn</span>`;
       if (g.status === 'zugesagt') return `<span class="pill pill-info">${esc(vorname(g.helferName)) || 'Jemand'} hilft</span>`;
       if (g.status === 'erledigt') return `<span class="pill pill-warn">Bitte bestätigen</span>`;
@@ -315,7 +376,7 @@
   }
 
   async function starteLive() {
-    if (VORSCHAU || !LIVE.url || !LIVE.key) return false;
+    if (VORSCHAU || BEISPIEL_MODUS || !LIVE.url || !LIVE.key) return false;
     try {
       if (!(window.supabase && window.supabase.createClient)) await ladeSkript(SUPABASE_JS);
       db.client = window.supabase.createClient(LIVE.url, LIVE.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
@@ -369,7 +430,8 @@
     await neuLaden();
   }
 
-  const GESUCH_FELDER = 'id, ersteller, kategorie, titel, beschreibung, betrag, wann, dauer, stadtteil, lat, lng, status, helfer, erstellt, ' +
+  // * statt einzelner Spalten: funktioniert mit und ohne die Spalten bis/laeuft_ab (Datenbank-Update vom November 2026)
+  const GESUCH_FELDER = '*, ' +
     'ersteller_profil:profile!gesuche_ersteller_fkey(vorname, nachname_initial, sterne_summe, sterne_anzahl), ' +
     'helfer_profil:profile!gesuche_helfer_fkey(vorname, nachname_initial)';
 
@@ -381,6 +443,8 @@
       stadtteil: r.stadtteil, lat: r.lat, lng: r.lng,
       status: r.status === 'bestaetigt' ? 'bezahlt' : r.status,
       erstellt: Date.parse(r.erstellt) || 0,
+      bis: r.bis || null,
+      laeuftAb: r.laeuft_ab ? Date.parse(r.laeuft_ab) || 0 : 0,
       eigen: !!ich && r.ersteller === ich,
       helfer: ich && r.helfer === ich ? 'ich' : (r.helfer ? 'andere' : null),
       erstellerId: r.ersteller, helferId: r.helfer || null,
@@ -562,7 +626,7 @@
       <span class="card-main">
         <span class="card-title">${esc(g.titel)}</span>
         <span class="card-ort">${icon('ort', 'i-xs')}${esc(g.stadtteil)} · ${distanz(g)}</span>
-        <span class="card-meta">${esc(g.eigen ? 'Dein Gesuch' : g.wer)} · ${esc(g.wann)}</span>
+        <span class="card-meta">${esc(g.eigen ? 'Dein Gesuch' : g.wer)} · ${esc(wannText(g))}</span>
         ${extra}
       </span>
       <span class="price">${euroKurz(g.betrag)}</span>
@@ -571,12 +635,13 @@
 
   function renderKopf() {
     const el = $('#kopf-rechts');
-    if (!istLive()) el.innerHTML = '<span class="pill pill-muted">Demo</span>';
+    if (!istLive()) el.innerHTML = `<span class="pill pill-muted">${BEISPIEL_MODUS ? 'Beispiele' : 'Demo'}</span>`;
     else if (!db.profil) el.innerHTML = '<button type="button" class="btn btn-secondary btn-klein" data-panel="anmelden">Anmelden</button>';
     else el.innerHTML = `<button type="button" class="avatar-btn" data-panel="konto" aria-label="Dein Konto">${esc(kuerzel(db.profil))}</button>`;
     $('#fuss').textContent = istLive()
       ? 'Testphase: Die Aufwandsentschädigung zahlt ihr direkt untereinander. Hand Drauf vermittelt nur und nimmt noch keine Gebühr.'
-      : 'Prototyp mit erfundenen Beispiel-Gesuchen in Garbsen. Es fließt kein echtes Geld.';
+      : BEISPIEL_MODUS ? 'Erfundene Beispiel-Gesuche, damit du siehst, wie Hand Drauf funktioniert. Es fließt kein echtes Geld.'
+        : 'Prototyp mit erfundenen Beispiel-Gesuchen in Garbsen. Es fließt kein echtes Geld.';
     $('#reset-knopf').hidden = istLive();
     $('#adresse-optional').hidden = istLive();
   }
@@ -596,7 +661,7 @@
   }
 
   function renderListe() {
-    const offene = gesuche.filter((g) => !g.eigen && g.status === 'offen');
+    const offene = gesuche.filter((g) => !g.eigen && g.status === 'offen' && !abgelaufen(g));
     const ort = meinOrt();
     $('#h-entdecken').textContent = istLive() ? (db.profil ? `Hallo ${db.profil.vorname}` : 'Hilfe in Garbsen') : 'Hallo Tim';
     const anzahl = `${offene.length} ${offene.length === 1 ? 'Nachbar sucht' : 'Nachbarn suchen'} gerade Hilfe`;
@@ -612,10 +677,22 @@
     if (!treffer.length) {
       const q = ui.suche.trim();
       const wo = ui.stadtteil === 'alle' ? '' : ` in ${esc(ui.stadtteil)}`;
-      const nochNichts = istLive() && !offene.length;
+      if (istLive() && !offene.length) {
+        // Neue Plattform, noch leer: erklären, Anfang machen lassen, Beispiele zeigen (statt einer leeren Seite)
+        const eigenesOffen = gesuche.some((g) => g.eigen && g.status === 'offen' && !abgelaufen(g));
+        $('#liste').innerHTML = `<div class="leer leer-start">
+          <p><strong>${eigenesOffen ? 'Dein Gesuch ist online.' : 'Hand Drauf startet gerade in Garbsen.'}</strong></p>
+          <p>${eigenesOffen ? 'Außer dir sucht gerade niemand Hilfe. Je mehr Nachbarn mitmachen, desto schneller sagt jemand zu.' : 'Noch sucht niemand Hilfe. Mach den Anfang mit einem eigenen Gesuch oder schau dir an, wie es aussieht, wenn Nachbarn mitmachen.'}</p>
+          <div class="leer-knoepfe">
+            ${eigenesOffen ? '<button type="button" class="btn btn-primary btn-auto" data-einladen>Nachbarn einladen</button>' : '<button type="button" class="btn btn-primary btn-auto" data-go="neu">Gesuch erstellen</button>'}
+            <a class="btn btn-secondary btn-auto" href="?beispiele#entdecken">Beispiele ansehen</a>
+          </div>
+        </div>`;
+        return;
+      }
       $('#liste').innerHTML = `<div class="leer">
-        <p><strong>${nochNichts ? 'Noch keine offenen Gesuche in Garbsen.' : `Nichts gefunden${q ? ` für „${esc(q)}“` : ''}${wo}.`}</strong></p>
-        <p>${nochNichts ? 'Mach den Anfang: Wobei könntest du Hilfe gebrauchen?' : 'Probier eine andere Tätigkeit, Kategorie oder einen anderen Stadtteil. Oder such selbst Hilfe.'}</p>
+        <p><strong>Nichts gefunden${q ? ` für „${esc(q)}“` : ''}${wo}.</strong></p>
+        <p>Probier eine andere Tätigkeit, Kategorie oder einen anderen Stadtteil. Oder such selbst Hilfe.</p>
         <button type="button" class="btn btn-secondary btn-auto" data-go="neu">Gesuch erstellen</button>
       </div>`;
       return;
@@ -630,8 +707,9 @@
       let a = null;
       if (g.eigen && g.status === 'erledigt') a = { prio: 1, titel: 'Bitte bestätigen', text: `${wer} hat „${g.titel}“ als erledigt gemeldet.` };
       else if (ungelesen(g)) a = { prio: 2, titel: 'Neue Nachricht', text: `${wer} hat dir zu „${g.titel}“ geschrieben.` };
-      else if (g.helfer === 'ich' && g.status === 'zugesagt') a = { prio: 3, titel: 'Du hilfst', text: `„${g.titel}“ bei ${wer}, ${g.wann}. Danach als erledigt melden.` };
+      else if (g.helfer === 'ich' && g.status === 'zugesagt') a = { prio: 3, titel: 'Du hilfst', text: `„${g.titel}“ bei ${wer}, ${wannText(g)}. Danach als erledigt melden.` };
       else if (g.status === 'bezahlt' && !g.meineBewertung && (g.helfer === 'ich' || (g.eigen && g.helferName))) a = { prio: 4, titel: 'Bewerten', text: `Wie war es mit ${wer}?` };
+      else if (g.eigen && abgelaufen(g)) a = { prio: 5, titel: 'Abgelaufen', text: `„${g.titel}“ sieht gerade niemand. Wähle einen neuen Termin.` };
       if (a) liste.push({ ...a, g });
     });
     return liste.sort((x, y) => x.prio - y.prio);
@@ -826,8 +904,9 @@
   }
 
   function renderKarte() {
-    const sichtbar = gesuche.filter((g) => passt(g) && (g.eigen || g.status === 'offen' || g.helfer === 'ich'));
+    const sichtbar = gesuche.filter((g) => passt(g) && (g.eigen || (g.status === 'offen' && !abgelaufen(g)) || g.helfer === 'ich'));
     $('#karte-anzahl').textContent = `${sichtbar.length} ${sichtbar.length === 1 ? 'Gesuch' : 'Gesuche'}${ui.kat !== 'alle' ? ' · ' + katName(ui.kat) : ''}`;
+    $('#karte-leer').hidden = !(istLive() && db.geladen && !sichtbar.length && ui.kat === 'alle' && !ui.suche.trim());
     const k = kartenStatus;
     if (!k.map) return;
     const L = window.L;
@@ -850,7 +929,7 @@
     }
 
     sichtbar.forEach((g) => {
-      const cls = [g.eigen ? 'pin-eigen' : '', g.helfer === 'ich' ? 'pin-zugesagt' : '', g.id === hervor ? 'is-aktiv' : ''].join(' ');
+      const cls = [g.eigen ? 'pin-eigen' : '', abgelaufen(g) ? 'pin-abgelaufen' : '', g.helfer === 'ich' ? 'pin-zugesagt' : '', g.id === hervor ? 'is-aktiv' : ''].join(' ');
       const m = L.marker([g.lat, g.lng], {
         riseOnHover: true,
         zIndexOffset: g.id === hervor ? 1000 : 0,
@@ -866,7 +945,7 @@
       if (el) {
         el.setAttribute('role', 'button');
         el.setAttribute('tabindex', '0');
-        el.setAttribute('aria-label', `${g.titel}, ${euro(g.betrag)}, ${g.stadtteil}, ${distanz(g)}${g.eigen ? ', dein Gesuch' : ''}`);
+        el.setAttribute('aria-label', `${g.titel}, ${euro(g.betrag)}, ${g.stadtteil}, ${distanz(g)}${g.eigen ? (abgelaufen(g) ? ', dein Gesuch, abgelaufen' : ', dein Gesuch') : ''}`);
         el.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); oeffnen(g.id, el); }
         });
@@ -914,7 +993,8 @@
       <h2 id="sheet-titel">${esc(g.titel)}</h2>`;
 
     if (g.eigen) {
-      html += `<p class="klein">Dein Gesuch · sichtbar für Nachbarn in Garbsen</p>`;
+      const bis = sichtbarBis(g);
+      html += `<p class="klein">Dein Gesuch · ${g.status !== 'offen' ? 'nur für euch beide sichtbar' : abgelaufen(g) ? 'abgelaufen, Nachbarn sehen es nicht mehr' : `sichtbar für Nachbarn${bis ? ` bis einschließlich ${esc(bis)}` : ''}`}</p>`;
     } else {
       const bewertung = g.bewertungen
         ? `${icon('stern', 'i-xs i-fill')}${g.sterne.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} · ${g.bewertungen} ${g.bewertungen === 1 ? 'Bewertung' : 'Bewertungen'}`
@@ -943,7 +1023,7 @@
     <dl class="fakten">
       <div><dt>Stadtteil</dt><dd>${esc(g.stadtteil)}</dd></div>
       <div><dt>Entfernung</dt><dd>${distanz(g)}</dd></div>
-      <div><dt>Wann</dt><dd>${esc(g.wann)}</dd></div>
+      <div><dt>Wann</dt><dd>${esc(wannLang(g))}</dd></div>
       <div><dt>Dauer</dt><dd>${esc(g.dauer)}</dd></div>
     </dl>`;
     if (g.text) html += `<p class="beschreibung">${esc(g.text)}</p>`;
@@ -979,6 +1059,10 @@
 
     if (g.eigen) {
       if (g.status === 'offen') {
+        html += abgelaufen(g)
+          ? `<div class="status-box warn">Der Termin ist vorbei. Nachbarn sehen dein Gesuch nicht mehr.</div>
+            <button type="button" class="btn btn-primary" data-aktion="bearbeiten-termin">Neuen Termin wählen</button>`
+          : `<button type="button" class="btn btn-secondary" data-aktion="bearbeiten">Gesuch bearbeiten</button>`;
         html += ui.rueckzug
           ? `<div class="bestaetigen-box"><p>Gesuch wirklich zurückziehen? Nachbarn sehen es dann nicht mehr.</p>
               <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-aktion="rueckzug" ${dis}>Zurückziehen</button>
@@ -1109,7 +1193,7 @@
       <div class="feld"><label for="konto-stadtteil">Dein Stadtteil</label><select id="konto-stadtteil">${stadtteilOptionen(p.stadtteil, false)}</select></div>
       <button type="button" class="btn btn-secondary" data-einladen>${icon('teilen')}Nachbarn einladen</button>
       <button type="button" class="btn btn-secondary" data-abmelden ${ui.busy ? 'disabled' : ''}>Abmelden</button>
-      <p class="klein recht-links-form"><a href="#nutzung">Nutzungsbedingungen</a> · <a href="#datenschutz">Datenschutz</a> · <a href="#impressum">Impressum</a></p>
+      <p class="klein recht-links-form"><a href="#fragen">Häufige Fragen</a> · <a href="#nutzung">Nutzungsbedingungen</a> · <a href="#datenschutz">Datenschutz</a> · <a href="#impressum">Impressum</a></p>
       ${ui.loeschen
         ? `<div class="bestaetigen-box loeschen-box"><p><strong>Konto wirklich löschen?</strong> Dein Profil, deine Gesuche, Adressen, Nachrichten und Bewertungen werden gelöscht. Laufende Zusagen werden freigegeben. Das lässt sich nicht rückgängig machen.</p>
             <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-konto-loeschen ${ui.busy ? 'disabled aria-busy="true"' : ''}>Endgültig löschen</button>
@@ -1175,6 +1259,16 @@
       <nav class="recht-nav" aria-label="Weitere Rechtstexte">${Object.keys(RECHT).filter((k) => k !== name).map((k) => `<a href="#${k}">${RECHT[k].titel}</a>`).join('')}</nav>`;
   }
 
+  function sheetFragenHTML() {
+    return `<div class="sheet-top">
+        <span class="eyebrow">Hilfe</span>
+        <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
+      </div>
+      <h2 id="sheet-titel">${FRAGEN.titel}</h2>
+      ${FRAGEN.gruppen.map(([titel, fragen]) => `<section class="fragen-gruppe"><h3 class="h-klein">${titel}</h3>${fragen.join('')}</section>`).join('')}
+      <p class="klein">Deine Frage ist nicht dabei? Lies die <a href="#regeln">Regeln für Nachbarn</a> und die <a href="#nutzung">Nutzungsbedingungen</a>.</p>`;
+  }
+
   function sheetAnsichtHTML() {
     const gruppe = (k, titel, hinweis) => `<fieldset class="feld">
         <legend>${titel}</legend>
@@ -1194,7 +1288,10 @@
       ${istLive() && db.profil ? '' : `<div class="feld"><label for="ansicht-ort">Dein Stadtteil</label><select id="ansicht-ort">${gewaehlterOrt ? '' : '<option value="">Bitte wählen</option>'}${stadtteilOptionen(gewaehlterOrt || '', false)}</select><p class="klein">Für die Entfernungen. Deine Adresse brauchen wir dafür nicht.</p></div>`}
       <p class="klein">Gespeichert nur auf diesem Gerät.</p>
       <button type="button" class="btn btn-secondary" data-einladen>${icon('teilen')}Hand Drauf weiterempfehlen</button>
-      <button type="button" class="link-btn" data-start-zeigen>Einführung noch einmal ansehen</button>`;
+      ${installEreignis ? `<button type="button" class="btn btn-secondary" data-installieren>${icon('plus')}Auf den Startbildschirm</button>`
+        : installierenMoeglich() ? `<p class="klein">Als App nutzen: In Safari unten auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.</p>` : ''}
+      <button type="button" class="link-btn" data-start-zeigen>Einführung noch einmal ansehen</button>
+      <a class="link-btn link-als-knopf" href="#fragen">Häufige Fragen</a>`;
   }
 
   // Beim Neuzeichnen bleiben Eingaben, Auswahl und Fokus erhalten (z. B. wenn eine Nachricht eintrifft)
@@ -1227,6 +1324,7 @@
     const zustand = schluessel && schluessel === sheetSchluessel ? sheetZustand() : null;
     let html = '';
     if (RECHT[ui.panel]) html = sheetRechtHTML(ui.panel);
+    else if (ui.panel === 'fragen') html = sheetFragenHTML();
     else if (ui.panel === 'profil') html = sheetProfilHTML();
     else if (ui.panel === 'ansicht') html = sheetAnsichtHTML();
     else if (ui.panel === 'anmelden') html = sheetAnmeldenHTML();
@@ -1249,6 +1347,7 @@
 
   function renderAlles() {
     renderKopf();
+    renderInstallieren();
     renderChips();
     renderListe();
     renderKarte();
@@ -1258,6 +1357,7 @@
 
   /* ===== Navigation ===== */
   function zeige(view) {
+    if (view !== 'neu' && ui.bearbeiten) bearbeitenBeenden();
     ui.view = view;
     VIEWS.forEach((v) => { $('#view-' + v).hidden = v !== view; });
     document.querySelectorAll('.tab').forEach((t) => {
@@ -1278,8 +1378,8 @@
   }
   window.addEventListener('hashchange', () => {
     const v = location.hash.slice(1);
-    if (VIEWS.includes(v)) { if (RECHT[ui.panel]) schliessen(); zeige(v); }
-    else if (RECHT[v]) oeffnePanel(v);
+    if (VIEWS.includes(v)) { if (istSeite(ui.panel)) schliessen(); zeige(v); }
+    else if (istSeite(v)) oeffnePanel(v);
   });
 
   function sheetZeigen() {
@@ -1318,7 +1418,7 @@
     ui.offen = null;
     ui.panel = null;
     sheetSchluessel = null;
-    if (RECHT[location.hash.slice(1)]) history.replaceState(null, '', '#' + ui.view);
+    if (istSeite(location.hash.slice(1))) history.replaceState(null, '', '#' + ui.view);
     $('#backdrop').hidden = true;
     $('#sheet').hidden = true;
     document.body.classList.remove('sheet-offen');
@@ -1408,6 +1508,7 @@
       if (f) f.focus({ preventScroll: true });
       return;
     }
+    if (a === 'bearbeiten' || a === 'bearbeiten-termin') { bearbeitenStarten(g, a === 'bearbeiten-termin' ? 2 : 1); return; }
     if (a === 'melden-frage' || a === 'melden-nein') {
       if (a === 'melden-frage' && istLive() && !db.profil) { oeffnePanel('anmelden', 'Bitte melde dich an, um etwas zu melden.'); return; }
       ui.melden = a === 'melden-frage';
@@ -1599,11 +1700,64 @@
     catch (e) { meldung(`Link zum Teilen: ${url}`); }
   }
 
+  /* ===== Als App auf den Startbildschirm (Web-App, ohne App Store) ===== */
+  const INSTALL_SPEICHER = 'handdrauf-installieren';
+  let installEreignis = null; // Android/Chrome: Systemdialog zum Installieren
+  const istInstalliert = () => (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  const istIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const installierenMoeglich = () => !VORSCHAU && !istInstalliert() && (!!installEreignis || istIOS());
+  function startGesehen() { try { return localStorage.getItem(START_SPEICHER) === '1'; } catch (e) { return true; } }
+  function renderInstallieren() {
+    const el = $('#installieren');
+    let weg = false;
+    try { weg = localStorage.getItem(INSTALL_SPEICHER) === 'nein'; } catch (e) { weg = false; }
+    const zeigen = installierenMoeglich() && !weg && startGesehen();
+    el.hidden = !zeigen;
+    if (!zeigen) { el.innerHTML = ''; return; }
+    el.innerHTML = `<img class="installieren-icon" src="assets/icon-192.png" alt="" width="44" height="44">
+      <div><strong>Hand Drauf auf den Startbildschirm</strong>
+        <p>${installEreignis ? 'Dann öffnest du es mit einem Tipp, wie eine App. Kostenlos und ohne App Store.'
+          : `Tippe in Safari unten auf ${icon('teilen', 'i-xs')} „Teilen“ und dann auf „Zum Home-Bildschirm“. Dann öffnest du es wie eine App.`}</p>
+        <div class="btn-row">${installEreignis ? '<button type="button" class="btn btn-primary btn-auto" data-installieren>Hinzufügen</button>' : ''}
+          <button type="button" class="btn btn-secondary btn-auto" data-installieren-nein>${installEreignis ? 'Nicht jetzt' : 'Verstanden'}</button></div>
+      </div>`;
+  }
+  async function installieren() {
+    if (!installEreignis) { oeffnePanel('fragen'); return; }
+    const e = installEreignis;
+    installEreignis = null;
+    e.prompt();
+    try { await e.userChoice; } catch (err) { /* abgebrochen */ }
+    renderInstallieren();
+    if (ui.panel === 'ansicht') renderSheet();
+  }
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installEreignis = e;
+    renderInstallieren();
+    if (ui.panel === 'ansicht') renderSheet();
+  });
+  window.addEventListener('appinstalled', () => {
+    installEreignis = null;
+    renderInstallieren();
+    meldung('Hand Drauf ist jetzt auf deinem Startbildschirm.');
+  });
+  // Offline-Hülle: nur auf der echten Seite (https), nicht in der Claude-Vorschau
+  if ('serviceWorker' in navigator && !VORSCHAU && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* ohne Offline-Hülle weiter */ }); });
+  }
+
   /* ===== Klicks auf Listen und Filter ===== */
   document.addEventListener('click', (e) => {
     const go = e.target.closest('[data-go]');
     if (go) { gehe(go.dataset.go); return; }
     if (e.target.closest('[data-einladen]')) { einladen(); return; }
+    if (e.target.closest('[data-installieren]')) { installieren(); return; }
+    if (e.target.closest('[data-installieren-nein]')) {
+      try { localStorage.setItem(INSTALL_SPEICHER, 'nein'); } catch (err) { /* nur für diese Sitzung */ }
+      $('#installieren').hidden = true;
+      return;
+    }
     if (e.target.closest('[data-start-zeigen]')) { schliessen(); startZeigen(); return; }
     const auf = e.target.closest('[data-oeffne]');
     if (auf) { oeffnen(auf.dataset.oeffne, auf); return; }
@@ -1768,7 +1922,7 @@
     $('#neu-pruefen').innerHTML =
       zeile('Tätigkeit', `${icon(k, 'i-sm')}${esc(katName(k))}: ${esc($('#neu-titel').value.trim())}`, 1) +
       (text ? zeile('Details', esc(text), 1) : '') +
-      zeile('Wann', `${esc(wahlWert('tag'))}, ${esc(wahlWert('zeit') === 'flexibel' ? 'Uhrzeit flexibel' : wahlWert('zeit'))}`, 2) +
+      zeile('Wann', esc(wannLang({ ...terminSpeichern(wahlWert('tag'), wahlWert('zeit')) })), 2) +
       zeile('Wo', `${esc($('#neu-stadtteil').value)}${adresse ? `<span class="klein">${esc(adresse)}, sieht nur, wer zusagt</span>` : ''}`, 2) +
       zeile('Aufwandsentschädigung', euro(betragWert()), 3);
   }
@@ -1780,6 +1934,7 @@
     $('#neu-zurueck').hidden = n === 1;
     $('#neu-weiter').hidden = n === 4;
     $('#neu-senden').hidden = n !== 4;
+    if (n === 2) renderTage();
     if (n === 3) renderRichtwert();
     if (n === 4) { renderPruefen(); renderKosten(); }
     if (fokus) {
@@ -1792,6 +1947,7 @@
   function pruefeSchritt(n) {
     const fehler = (feld, id) => { feld.setAttribute('aria-invalid', 'true'); $(id).hidden = false; return feld; };
     if (n === 1 && $('#neu-titel').value.trim().length < 3) return fehler($('#neu-titel'), '#fehler-titel');
+    if (n === 2 && !wahlWert('tag')) { $('#fehler-tag').hidden = false; return form.querySelector('input[name="tag"]'); }
     if (n === 2 && istLive() && $('#neu-adresse').value.trim().length < 3) return fehler($('#neu-adresse'), '#fehler-adresse');
     if (n === 3 && !betragGueltig(betragWert())) return fehler(betragInput, '#fehler-betrag');
     return null;
@@ -1823,6 +1979,7 @@
   });
   form.addEventListener('change', (e) => {
     if (e.target.name === 'kat') { renderVorschlaege(); betragGeaendert = false; }
+    if (e.target.name === 'tag') $('#fehler-tag').hidden = true;
   });
   betragInput.addEventListener('input', () => { betragGeaendert = true; renderKosten(); });
   $('#neu-titel').addEventListener('input', (e) => {
@@ -1832,6 +1989,77 @@
     if (e.target.value.trim().length >= 3) { e.target.removeAttribute('aria-invalid'); $('#fehler-adresse').hidden = true; }
   });
   renderVorschlaege();
+
+  // Datum unter „Heute“, „Morgen“ usw., damit klar ist, welcher Tag gemeint ist
+  function renderTage() {
+    form.querySelectorAll('input[name="tag"]').forEach((i) => {
+      const z = zeitraum(i.value);
+      const el = i.parentElement.querySelector('.wahl-datum');
+      if (z && el) el.textContent = z.kurz;
+    });
+  }
+  renderTage();
+
+  /* ----- Eigenes Gesuch bearbeiten: dieselben Schritte, vorausgefüllt ----- */
+  function renderWizardModus() {
+    const b = !!ui.bearbeiten;
+    $('#h-neu').textContent = b ? 'Gesuch bearbeiten' : 'Hilfe suchen';
+    $('#neu-lead').textContent = b
+      ? 'Änderungen sehen Nachbarn sofort. Bearbeiten geht, solange noch niemand zugesagt hat.'
+      : 'In vier kurzen Schritten. Nachbarn in der Nähe sehen dein Gesuch danach auf der Karte.';
+    $('#neu-senden').textContent = b ? 'Änderungen speichern' : 'Gesuch veröffentlichen';
+    $('#neu-abbrechen').hidden = !b;
+  }
+  async function bearbeitenStarten(g, schritt) {
+    let adresse = istLive() ? db.adressen.get(g.id) : g.adresse;
+    if (istLive() && typeof adresse !== 'string') {
+      const { data } = await db.client.from('gesuch_adressen').select('adresse').eq('gesuch_id', g.id).maybeSingle();
+      adresse = data ? data.adresse : '';
+      db.adressen.set(g.id, adresse);
+    }
+    form.reset();
+    ui.bearbeiten = g.id;
+    const kat = $(`#neu-kat-${g.kat}`);
+    if (kat) kat.checked = true;
+    renderVorschlaege();
+    $('#neu-titel').value = g.titel;
+    $('#neu-text').value = g.text || '';
+    // Passt der gespeicherte Termin noch zu einer Auswahl? Sonst neu wählen lassen.
+    const tag = TAG_WAHL.find((w) => g.bis && isoTag(zeitraum(w).bis) === g.bis && !abgelaufen(g));
+    form.querySelectorAll('input[name="tag"]').forEach((i) => { i.checked = i.value === tag; });
+    const zeitTeil = (g.wann || '').slice((g.wann || '').lastIndexOf(', ') + 2);
+    const zeit = Object.keys(ZEIT_TEXT).find((k) => ZEIT_TEXT[k] === zeitTeil || k === zeitTeil);
+    if (zeit) form.querySelectorAll('input[name="zeit"]').forEach((i) => { i.checked = i.value === zeit; });
+    renderStadtteilAuswahl();
+    $('#neu-stadtteil').value = g.stadtteil;
+    $('#neu-adresse').value = istLive() || adresse !== g.stadtteil ? (adresse || '') : '';
+    betragInput.value = g.betrag;
+    betragGeaendert = true;
+    renderKosten();
+    renderWizardModus();
+    ui.zuletzt = null;
+    schliessen();
+    gehe('neu');
+    zeigeSchritt(schritt);
+  }
+  function bearbeitenBeenden() {
+    ui.bearbeiten = null;
+    form.reset();
+    betragGeaendert = false;
+    form.querySelectorAll('[aria-invalid]').forEach((f) => f.removeAttribute('aria-invalid'));
+    form.querySelectorAll('.fehler').forEach((f) => { f.hidden = true; });
+    renderVorschlaege();
+    renderWizardModus();
+    zeigeSchritt(1, false);
+    renderStadtteilAuswahl();
+    renderKosten();
+  }
+  $('#neu-abbrechen').addEventListener('click', () => {
+    const id = ui.bearbeiten;
+    bearbeitenBeenden();
+    gehe('auftraege');
+    if (gesuche.some((g) => g.id === id)) oeffnen(id);
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -1852,31 +2080,48 @@
     const adresse = $('#neu-adresse').value.trim();
     const b = betragWert();
     const stadtteil = $('#neu-stadtteil').value;
-    const wann = `${wahlWert('tag')}, ${wahlWert('zeit')}`;
+    const { wann, bis } = terminSpeichern(wahlWert('tag'), wahlWert('zeit'));
     const text = $('#neu-text').value.trim();
-    let neuId;
+    const bearbeitet = ui.bearbeiten;
+    let neuId = bearbeitet;
 
+    const knopf = $('#neu-senden');
+    const zeigeFehler = (m) => { $('#neu-fehler').textContent = m; $('#neu-fehler').hidden = false; };
     if (istLive()) {
-      const knopf = $('#neu-senden');
       knopf.disabled = true;
       knopf.setAttribute('aria-busy', 'true');
       try {
-        const { data, error } = await db.client.rpc('gesuch_erstellen', {
-          p_kategorie: kat, p_titel: titel, p_beschreibung: text, p_betrag: b,
-          p_wann: wann, p_stadtteil: stadtteil, p_adresse: adresse
-        });
-        if (error) throw error;
-        neuId = data;
+        const felder = { p_kategorie: kat, p_titel: titel, p_beschreibung: text, p_betrag: b, p_wann: wann, p_stadtteil: stadtteil, p_adresse: adresse };
+        // Noch nicht aktualisierte Datenbank kennt p_bis und gesuch_bearbeiten nicht (Fehler PGRST202)
+        const fehlt = (err) => err && (err.code === 'PGRST202' || /could not find the function/i.test(err.message || ''));
+        if (bearbeitet) {
+          const { error } = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis });
+          if (fehlt(error)) throw new Error('Bearbeiten ist noch nicht freigeschaltet. Zieh das Gesuch zurück und erstelle es neu.');
+          if (error) throw error;
+        } else {
+          let r = db.altesSchema ? { error: { code: 'PGRST202' } } : await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis });
+          if (fehlt(r.error)) { db.altesSchema = true; r = await db.client.rpc('gesuch_erstellen', felder); }
+          if (r.error) throw r.error;
+          neuId = r.data;
+        }
         db.adressen.set(neuId, adresse);
         await neuLaden();
       } catch (err) {
-        $('#neu-fehler').textContent = fehlerText(err);
-        $('#neu-fehler').hidden = false;
+        zeigeFehler(fehlerText(err));
         return;
       } finally {
         knopf.disabled = false;
         knopf.removeAttribute('aria-busy');
       }
+    } else if (bearbeitet) {
+      const g = gesuche.find((x) => x.id === bearbeitet);
+      if (!g || g.status !== 'offen') { zeigeFehler('Bearbeiten geht nur, solange noch niemand zugesagt hat.'); return; }
+      if (stadtteil !== g.stadtteil) {
+        const [nord, ost] = EIGEN_VERSATZ[gesuche.indexOf(g) % EIGEN_VERSATZ.length];
+        Object.assign(g, versetze(stadtteil === meinOrt().stadtteil ? meinOrt() : STADTTEILE.find((x) => x.name === stadtteil), nord, ost));
+      }
+      Object.assign(g, { kat, titel, text, betrag: b, wann, bis, laeuftAb: demoAblauf(bis), stadtteil, adresse: adresse || stadtteil });
+      demoSpeichern();
     } else {
       const anzahlEigene = gesuche.filter((g) => g.eigen).length;
       const [nord, ost] = EIGEN_VERSATZ[anzahlEigene % EIGEN_VERSATZ.length];
@@ -1885,34 +2130,33 @@
       neuId = 'e' + Date.now();
       gesuche.unshift({
         id: neuId, eigen: true, kat, titel, wer: 'Du', initialen: CONFIG.ich.initialen, betrag: b,
-        stadtteil, lat: pos.lat, lng: pos.lng, wann, dauer: 'nach Absprache', text,
+        stadtteil, lat: pos.lat, lng: pos.lng, wann, bis, laeuftAb: demoAblauf(bis), dauer: 'nach Absprache', text,
         adresse: adresse || stadtteil, status: 'offen', erstellt: Date.now()
       });
       demoSpeichern();
     }
 
-    form.reset();
-    betragGeaendert = false;
-    renderVorschlaege();
-    zeigeSchritt(1, false);
-    renderStadtteilAuswahl();
-    renderKosten();
+    bearbeitenBeenden();
     ui.kat = 'alle'; ui.suche = ''; $('#suche').value = '';
     ui.zentrieren = neuId;
     renderAlles();
     gehe('karte');
     oeffnen(neuId);
-    meldung('Gesuch veröffentlicht');
+    meldung(bearbeitet ? 'Änderungen gespeichert' : 'Gesuch veröffentlicht');
   });
 
   /* ===== Start ===== */
+  if (BEISPIEL_MODUS) {
+    $('#beispiel-band').hidden = false;
+    $('#beispiel-zurueck').href = location.pathname + '#entdecken';
+  }
   gesuche = demoLaden();
   const start = location.hash.slice(1);
   renderStadtteilAuswahl();
   renderAlles();
   renderKosten();
   zeige(VIEWS.includes(start) ? start : ansicht.start);
-  if (RECHT[start]) oeffnePanel(start);
+  if (istSeite(start)) oeffnePanel(start);
   else {
     let gesehen = false;
     try { gesehen = localStorage.getItem(START_SPEICHER) === '1'; } catch (e) { gesehen = true; }

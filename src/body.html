@@ -21,6 +21,10 @@
 </svg>
 
 <div class="app">
+  <div class="beispiel-band" id="beispiel-band" hidden>
+    <span><strong>Beispiele:</strong> Diese Gesuche sind erfunden.</span>
+    <a href="./" id="beispiel-zurueck">Zu den echten Gesuchen</a>
+  </div>
   <header class="kopf">
     <a class="marke" href="#entdecken" aria-label="Hand Drauf, zur Startseite"><!--KOPFZEICHEN--></a>
     <div class="kopf-rechts">
@@ -61,6 +65,7 @@
         <div><strong>Selbst Hilfe gebraucht?</strong><p>Gesuch in einer Minute erstellen.</p></div>
         <button type="button" class="btn btn-secondary btn-auto" data-go="neu">Hilfe suchen</button>
       </div>
+      <div class="installieren-karte" id="installieren" hidden></div>
       <div class="einladen-karte">
         <div><strong>Je mehr Nachbarn mitmachen, desto schneller findet sich Hilfe.</strong><p>Schick den Link an Nachbarn, Familie oder in die Hausgruppe.</p></div>
         <button type="button" class="btn btn-secondary btn-auto" data-einladen>Nachbarn einladen</button>
@@ -87,6 +92,13 @@
             <button type="button" class="karte-knopf" data-karte="alles" aria-label="Ganz Garbsen zeigen"><svg class="i" aria-hidden="true"><use href="#i-alles"/></svg></button>
           </div>
         </div>
+        <div class="karte-leer" id="karte-leer" hidden>
+          <p><strong>Noch keine Gesuche auf der Karte.</strong> Sobald Nachbarn Hilfe suchen, erscheinen sie hier mit dem Betrag.</p>
+          <div class="leer-knoepfe">
+            <button type="button" class="btn btn-primary btn-auto" data-go="neu">Gesuch erstellen</button>
+            <a class="btn btn-secondary btn-auto" href="?beispiele#karte">Beispiele ansehen</a>
+          </div>
+        </div>
         <div class="karte-fehler" id="karte-fehler" hidden>
           <p>Die Karte konnte nicht geladen werden. Unter „Entdecken“ findest du alle Gesuche als Liste.</p>
         </div>
@@ -109,7 +121,8 @@
       <form class="form wizard" id="neu-form" novalidate>
         <div class="hallo">
           <h1 id="h-neu">Hilfe suchen</h1>
-          <p class="lead">In vier kurzen Schritten. Nachbarn in der Nähe sehen dein Gesuch danach auf der Karte.</p>
+          <p class="lead" id="neu-lead">In vier kurzen Schritten. Nachbarn in der Nähe sehen dein Gesuch danach auf der Karte.</p>
+          <button type="button" class="link-btn" id="neu-abbrechen" hidden>Bearbeiten abbrechen</button>
         </div>
         <div class="wizard-kopf">
           <ol class="wizard-leiste" aria-hidden="true"><li></li><li></li><li></li><li></li></ol>
@@ -141,11 +154,13 @@
           <fieldset class="feld">
             <legend>Wann?</legend>
             <div class="wahl-raster" id="neu-tag">
-              <label class="wahl"><input type="radio" name="tag" value="Heute"><span>Heute</span></label>
-              <label class="wahl"><input type="radio" name="tag" value="Morgen" checked><span>Morgen</span></label>
-              <label class="wahl"><input type="radio" name="tag" value="Dieses Wochenende"><span>Am Wochenende</span></label>
-              <label class="wahl"><input type="radio" name="tag" value="Nächste Woche"><span>Nächste Woche</span></label>
+              <label class="wahl"><input type="radio" name="tag" value="Heute"><span>Heute<small class="wahl-datum"></small></span></label>
+              <label class="wahl"><input type="radio" name="tag" value="Morgen" checked><span>Morgen<small class="wahl-datum"></small></span></label>
+              <label class="wahl"><input type="radio" name="tag" value="Dieses Wochenende"><span>Am Wochenende<small class="wahl-datum"></small></span></label>
+              <label class="wahl"><input type="radio" name="tag" value="Nächste Woche"><span>Nächste Woche<small class="wahl-datum"></small></span></label>
             </div>
+            <p class="fehler" id="fehler-tag" hidden>Bitte wähle, wann du Hilfe brauchst.</p>
+            <p class="feld-hinweis">Ist der Termin vorbei und hat niemand zugesagt, verschwindet das Gesuch von der Karte. Du kannst dann einen neuen Termin wählen.</p>
           </fieldset>
           <fieldset class="feld">
             <legend>Tageszeit</legend>
@@ -221,7 +236,7 @@
     </section>
   </main>
   <footer class="app-fuss">
-    <nav aria-label="Rechtliches"><a href="#impressum">Impressum</a><a href="#datenschutz">Datenschutz</a><a href="#nutzung">Nutzungsbedingungen</a><a href="#regeln">Regeln für Nachbarn</a></nav>
+    <nav aria-label="Hilfe und Rechtliches"><a href="#fragen">Häufige Fragen</a><a href="#impressum">Impressum</a><a href="#datenschutz">Datenschutz</a><a href="#nutzung">Nutzungsbedingungen</a><a href="#regeln">Regeln für Nachbarn</a></nav>
   </footer>
 </div>
 

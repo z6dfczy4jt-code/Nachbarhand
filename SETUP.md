@@ -6,7 +6,16 @@ In `src/app.js` stehen nur die **Project URL** und der **Publishable key**. Beid
 
 ## Noch zu tun im Supabase-Dashboard
 
-### 1. Adresse der App eintragen (wichtig)
+### 1. Datenbank-Update vom November 2026 einspielen (neu)
+
+Damit Gesuche nach ihrem Termin ablaufen und man eigene Gesuche bearbeiten kann, braucht die Datenbank ein kleines Update. Die App läuft auch ohne, nur diese beiden Funktionen fehlen dann („Bearbeiten ist noch nicht freigeschaltet“).
+
+1. Im Projekt **hand-drauf** links **SQL Editor** öffnen.
+2. Den Inhalt von [`supabase/updates/2026-11-termine-und-bearbeiten.sql`](supabase/updates/2026-11-termine-und-bearbeiten.sql) einfügen und **Run** tippen.
+
+Alternativ Claude bitten, das Update über die Supabase-Verbindung einzuspielen. Vorhandene Daten bleiben erhalten, das Skript kann gefahrlos mehrfach laufen.
+
+### 2. Adresse der App eintragen (wichtig)
 
 Sonst führt der Link in der Bestätigungs-E-Mail ins Leere.
 
@@ -15,14 +24,14 @@ Sonst führt der Link in der Bestätigungs-E-Mail ins Leere.
 3. **Site URL**: `https://z6dfczy4jt-code.github.io/Nachbarhand/`
 4. Unter **Redirect URLs** dieselbe Adresse hinzufügen und speichern.
 
-### 2. E-Mail-Versand für alle Nachbarn
+### 3. E-Mail-Versand für alle Nachbarn
 
 Der eingebaute E-Mail-Versand von Supabase schickt Bestätigungs-E-Mails **nur an Mitglieder deines Supabase-Teams** und nur wenige pro Stunde. Zum Ausprobieren mit dem eigenen Konto reicht das. Damit sich Nachbarn registrieren können, gibt es zwei Wege:
 
 - **Empfohlen: eigener E-Mail-Versand.** Ein kostenloses Konto bei einem Versanddienst wie [Brevo](https://www.brevo.com) oder [Resend](https://resend.com) anlegen und dessen SMTP-Daten unter **Authentication** → **Emails** → **SMTP Settings** eintragen. Danach unter **Rate Limits** die Zahl der E-Mails pro Stunde anpassen.
 - **Nur für einen kleinen, geschlossenen Test:** unter **Authentication** → **Sign In / Providers** → **Email** die Option **Confirm email** ausschalten. Dann kann sich aber jeder mit einer fremden E-Mail-Adresse registrieren. Vor dem öffentlichen Start wieder einschalten.
 
-### 3. Betreiber eintragen
+### 4. Betreiber eintragen
 
 Für Impressum und Datenschutzerklärung in `src/app.js` unter `CONFIG.betreiber` Name, ladungsfähige Anschrift und E-Mail eintragen. Solange die Felder leer sind, zeigen die Rechtstexte einen gelben Hinweis.
 
@@ -36,7 +45,9 @@ Nutzer können ein Gesuch oder eine beteiligte Person melden. Die Meldungen sieh
 
 ## Nach einem Update
 
-Wenn sich `supabase/schema.sql` geändert hat, das Skript im **SQL Editor** noch einmal ausführen (oder Claude bitten, es über die Supabase-Verbindung einzuspielen). Vorhandene Daten bleiben erhalten.
+Wenn sich `supabase/schema.sql` geändert hat, das Skript im **SQL Editor** noch einmal ausführen (oder Claude bitten, es über die Supabase-Verbindung einzuspielen). Vorhandene Daten bleiben erhalten. Kleinere Updates liegen zusätzlich einzeln in `supabase/updates/`.
+
+Ändern sich Dateien in `assets/` (Schriften, Icons, Leaflet), in `sw.js` die Versionsnummer `VERSION` erhöhen, damit installierte Apps die neuen Dateien laden. Die Seite selbst lädt die App immer zuerst frisch aus dem Netz.
 
 ## Gut zu wissen
 
@@ -48,6 +59,8 @@ Wenn sich `supabase/schema.sql` geändert hat, das Skript im **SQL Editor** noch
 | Regel | Umsetzung |
 | --- | --- |
 | Adresse nur für Beteiligte | Eigene Tabelle `gesuch_adressen`, lesbar nur für die Person, die das Gesuch erstellt hat, und die Person, die zugesagt hat |
+| Alte Gesuche verschwinden | Offene Gesuche sieht man nur bis Mitternacht nach dem gewünschten Termin, höchstens 21 Tage. Danach kann niemand mehr zusagen. Wer das Gesuch erstellt hat, sieht es weiter und kann einen neuen Termin wählen |
+| Bearbeiten nur vor der Zusage | Eigene Gesuche lassen sich ändern, solange niemand zugesagt hat. Neuer Stadtteil = neue ungefähre Lage |
 | Pin zeigt keine Hausnummer | Die Datenbank setzt die Lage zufällig 100 bis 400 m um die Stadtteilmitte |
 | Helfen erst ab 18 | Wird bei der Registrierung bestätigt und bei jeder Zusage geprüft |
 | Nachbarschaftshilfe bleibt klein | Höchstens 50 € pro Gesuch, 5 laufende Gesuche pro Person, 8 Zusagen in 30 Tagen, höchstens 2 für dieselbe Person in 30 Tagen |

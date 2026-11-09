@@ -5,8 +5,8 @@
 --
 -- Grundsätze
 -- * Lesen: Jeder (auch ohne Konto) sieht offene Gesuche mit Vorname,
---   Anfangsbuchstabe und ungefährer Lage. Laufende Aufträge sehen nur
---   die beiden Beteiligten.
+--   Anfangsbuchstabe und ungefährer Lage, bis der gewünschte Termin vorbei
+--   ist (spätestens 21 Tage). Laufende Aufträge sehen nur die beiden Beteiligten.
 -- * Die genaue Adresse sieht nur, wer das Gesuch erstellt hat, und wer
 --   zugesagt hat.
 -- * Schreiben: Niemand ändert Tabellen direkt. Alles läuft über die
@@ -130,20 +130,28 @@ create table if not exists public.gesuche (
   status text not null default 'offen'
     check (status in ('offen', 'zugesagt', 'erledigt', 'bestaetigt', 'zurueckgezogen')),
   helfer uuid,
+  bis date,                                                         -- letzter Tag des gewünschten Termins
+  laeuft_ab timestamptz not null default (now() + interval '21 days'), -- danach sehen andere das offene Gesuch nicht mehr
   erstellt timestamptz not null default now(),
   geaendert timestamptz not null default now(),
   constraint gesuche_ersteller_fkey foreign key (ersteller) references public.profile (id) on delete cascade,
   constraint gesuche_helfer_fkey foreign key (helfer) references public.profile (id) on delete set null
 );
+-- Für Projekte, die vor dem Ablauf-Ausbau angelegt wurden
+alter table public.gesuche add column if not exists bis date;
+alter table public.gesuche add column if not exists laeuft_ab timestamptz not null default (now() + interval '21 days');
 create index if not exists gesuche_status_idx on public.gesuche (status);
 create index if not exists gesuche_ersteller_idx on public.gesuche (ersteller);
 create index if not exists gesuche_helfer_idx on public.gesuche (helfer);
+create index if not exists gesuche_offen_idx on public.gesuche (laeuft_ab) where status = 'offen';
 
+-- Offene Gesuche sehen alle, bis der Termin vorbei ist (spätestens nach 21 Tagen).
+-- Eigene Gesuche und Zusagen sehen die Beteiligten immer.
 alter table public.gesuche enable row level security;
 drop policy if exists "Offene und eigene Gesuche lesen" on public.gesuche;
 create policy "Offene und eigene Gesuche lesen" on public.gesuche
   for select to anon, authenticated
-  using (status = 'offen' or ersteller = (select auth.uid()) or helfer = (select auth.uid()));
+  using ((status = 'offen' and laeuft_ab > now()) or ersteller = (select auth.uid()) or helfer = (select auth.uid()));
 revoke insert, update, delete on public.gesuche from anon, authenticated;
 grant select on public.gesuche to anon, authenticated;
 
@@ -237,8 +245,59 @@ revoke all on public.meldungen from anon, authenticated;
 -- Funktionen: alle Änderungen laufen hierüber
 -- ---------------------------------------------------------------------
 
--- Neues Gesuch. Die Lage wird zufällig 100 bis 400 m um die Stadtteilmitte gesetzt,
+-- Wann läuft ein offenes Gesuch ab? Um Mitternacht nach dem letzten gewünschten Tag
+-- (deutsche Zeit), spätestens 21 Tage ab jetzt. Ohne Termin: nach 21 Tagen.
+create or replace function public.ablauf(p_bis date)
+returns timestamptz
+language sql
+stable
+set search_path = ''
+as $$
+  select least(
+    now() + interval '21 days',
+    coalesce(((p_bis + 1)::timestamp at time zone 'Europe/Berlin'), now() + interval '21 days')
+  );
+$$;
+
+-- Prüft den Termin: heute oder in den nächsten 60 Tagen
+create or replace function public.termin_pruefen(p_bis date)
+returns void
+language plpgsql
+stable
+set search_path = ''
+as $$
+declare
+  heute date := (now() at time zone 'Europe/Berlin')::date;
+begin
+  if p_bis is not null and (p_bis < heute or p_bis > heute + 60) then
+    raise exception 'Bitte wähle einen Termin ab heute.';
+  end if;
+end;
+$$;
+
+-- Zufällige Lage 100 bis 400 m um die Stadtteilmitte,
 -- damit niemand aus dem Pin auf die Hausnummer schließen kann.
+create or replace function public.ungefaehre_lage(p_stadtteil text, out lat double precision, out lng double precision)
+language plpgsql
+volatile
+set search_path = ''
+as $$
+declare
+  mitte public.stadtteile%rowtype;
+  winkel double precision := random() * 2 * pi();
+  abstand double precision := 100 + random() * 300;
+begin
+  select * into mitte from public.stadtteile where name = p_stadtteil;
+  if not found then
+    raise exception 'Bitte wähle einen Stadtteil von Garbsen.';
+  end if;
+  lat := mitte.lat + abstand * cos(winkel) / 111320;
+  lng := mitte.lng + abstand * sin(winkel) / (111320 * cos(radians(mitte.lat)));
+end;
+$$;
+
+-- Neues Gesuch
+drop function if exists public.gesuch_erstellen(text, text, text, integer, text, text, text);
 create or replace function public.gesuch_erstellen(
   p_kategorie text,
   p_titel text,
@@ -246,7 +305,8 @@ create or replace function public.gesuch_erstellen(
   p_betrag integer,
   p_wann text,
   p_stadtteil text,
-  p_adresse text
+  p_adresse text,
+  p_bis date default null
 )
 returns uuid
 language plpgsql
@@ -255,18 +315,13 @@ set search_path = ''
 as $$
 declare
   ich uuid := auth.uid();
-  mitte public.stadtteile%rowtype;
-  winkel double precision := random() * 2 * pi();
-  abstand double precision := 100 + random() * 300;
+  lage record;
   neu uuid;
 begin
   if ich is null then
     raise exception 'Bitte melde dich zuerst an.';
   end if;
-  select * into mitte from public.stadtteile where name = p_stadtteil;
-  if not found then
-    raise exception 'Bitte wähle einen Stadtteil von Garbsen.';
-  end if;
+  select * into lage from public.ungefaehre_lage(p_stadtteil);
   if (select count(*) from public.gesuche
       where ersteller = ich and status in ('offen', 'zugesagt', 'erledigt')) >= 5 then
     raise exception 'Du hast schon 5 laufende Gesuche. Schließe zuerst eins ab.';
@@ -274,8 +329,9 @@ begin
   if char_length(btrim(coalesce(p_adresse, ''))) < 3 then
     raise exception 'Bitte gib deine Straße und Hausnummer an.';
   end if;
+  perform public.termin_pruefen(p_bis);
 
-  insert into public.gesuche (ersteller, kategorie, titel, beschreibung, betrag, wann, stadtteil, lat, lng)
+  insert into public.gesuche (ersteller, kategorie, titel, beschreibung, betrag, wann, bis, laeuft_ab, stadtteil, lat, lng)
   values (
     ich,
     p_kategorie,
@@ -283,14 +339,78 @@ begin
     btrim(coalesce(p_beschreibung, '')),
     p_betrag,
     btrim(p_wann),
+    p_bis,
+    public.ablauf(p_bis),
     p_stadtteil,
-    mitte.lat + abstand * cos(winkel) / 111320,
-    mitte.lng + abstand * sin(winkel) / (111320 * cos(radians(mitte.lat)))
+    lage.lat,
+    lage.lng
   )
   returning id into neu;
 
   insert into public.gesuch_adressen (gesuch_id, adresse) values (neu, btrim(p_adresse));
   return neu;
+end;
+$$;
+
+-- Eigenes Gesuch bearbeiten, solange noch niemand zugesagt hat. Mit neuem Termin
+-- wird ein abgelaufenes Gesuch wieder sichtbar. Neuer Stadtteil = neue ungefähre Lage.
+create or replace function public.gesuch_bearbeiten(
+  p_id uuid,
+  p_kategorie text,
+  p_titel text,
+  p_beschreibung text,
+  p_betrag integer,
+  p_wann text,
+  p_stadtteil text,
+  p_adresse text,
+  p_bis date default null
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  ich uuid := auth.uid();
+  g public.gesuche%rowtype;
+  lage record;
+begin
+  if ich is null then
+    raise exception 'Bitte melde dich zuerst an.';
+  end if;
+  select * into g from public.gesuche where id = p_id for update;
+  if not found or g.ersteller <> ich then
+    raise exception 'Nur eigene Gesuche können bearbeitet werden.';
+  end if;
+  if g.status <> 'offen' then
+    raise exception 'Bearbeiten geht nur, solange noch niemand zugesagt hat.';
+  end if;
+  if char_length(btrim(coalesce(p_adresse, ''))) < 3 then
+    raise exception 'Bitte gib deine Straße und Hausnummer an.';
+  end if;
+  perform public.termin_pruefen(p_bis);
+  if p_stadtteil is distinct from g.stadtteil then
+    select * into lage from public.ungefaehre_lage(p_stadtteil);
+  else
+    select g.lat as lat, g.lng as lng into lage;
+  end if;
+
+  update public.gesuche set
+    kategorie = p_kategorie,
+    titel = btrim(p_titel),
+    beschreibung = btrim(coalesce(p_beschreibung, '')),
+    betrag = p_betrag,
+    wann = btrim(p_wann),
+    bis = p_bis,
+    laeuft_ab = public.ablauf(p_bis),
+    stadtteil = p_stadtteil,
+    lat = lage.lat,
+    lng = lage.lng,
+    geaendert = now()
+  where id = p_id;
+
+  insert into public.gesuch_adressen (gesuch_id, adresse) values (p_id, btrim(p_adresse))
+  on conflict (gesuch_id) do update set adresse = excluded.adresse;
 end;
 $$;
 
@@ -315,6 +435,9 @@ begin
   select * into g from public.gesuche where id = p_id for update;
   if not found or g.status <> 'offen' then
     raise exception 'Dieses Gesuch ist nicht mehr offen.';
+  end if;
+  if g.laeuft_ab <= now() then
+    raise exception 'Dieses Gesuch ist abgelaufen.';
   end if;
   if g.ersteller = ich then
     raise exception 'Bei deinem eigenen Gesuch kannst du nicht helfen.';
@@ -505,7 +628,7 @@ begin
     raise exception 'Bitte wähle einen Grund.';
   end if;
   select * into g from public.gesuche where id = p_id;
-  if not found or not (g.status = 'offen' or g.ersteller = ich or coalesce(g.helfer = ich, false)) then
+  if not found or not ((g.status = 'offen' and g.laeuft_ab > now()) or g.ersteller = ich or coalesce(g.helfer = ich, false)) then
     raise exception 'Dieses Gesuch gibt es nicht mehr.';
   end if;
   ziel := case when g.ersteller = ich then g.helfer else g.ersteller end;
@@ -547,7 +670,8 @@ end;
 $$;
 
 -- Nur angemeldete Nutzer dürfen die Funktionen aufrufen
-revoke execute on function public.gesuch_erstellen(text, text, text, integer, text, text, text) from public, anon;
+revoke execute on function public.gesuch_erstellen(text, text, text, integer, text, text, text, date) from public, anon;
+revoke execute on function public.gesuch_bearbeiten(uuid, text, text, text, integer, text, text, text, date) from public, anon;
 revoke execute on function public.gesuch_zusagen(uuid) from public, anon;
 revoke execute on function public.gesuch_absagen(uuid) from public, anon;
 revoke execute on function public.gesuch_erledigt(uuid) from public, anon;
@@ -558,7 +682,12 @@ revoke execute on function public.nachricht_senden(uuid, text) from public, anon
 revoke execute on function public.melden(uuid, text, text) from public, anon;
 revoke execute on function public.konto_loeschen() from public, anon;
 revoke execute on function public.neues_profil() from public, anon, authenticated;
-grant execute on function public.gesuch_erstellen(text, text, text, integer, text, text, text) to authenticated;
+-- Hilfsfunktionen nur für die Funktionen oben, nicht direkt aufrufbar
+revoke execute on function public.ablauf(date) from public, anon, authenticated;
+revoke execute on function public.termin_pruefen(date) from public, anon, authenticated;
+revoke execute on function public.ungefaehre_lage(text) from public, anon, authenticated;
+grant execute on function public.gesuch_erstellen(text, text, text, integer, text, text, text, date) to authenticated;
+grant execute on function public.gesuch_bearbeiten(uuid, text, text, text, integer, text, text, text, date) to authenticated;
 grant execute on function public.gesuch_zusagen(uuid) to authenticated;
 grant execute on function public.gesuch_absagen(uuid) to authenticated;
 grant execute on function public.gesuch_erledigt(uuid) to authenticated;
