@@ -61,8 +61,13 @@ create table if not exists public.profile (
   volljaehrig boolean not null default false,
   sterne_summe integer not null default 0,
   sterne_anzahl integer not null default 0,
+  hilfen_anzahl integer not null default 0,   -- bestätigte Aufträge als Helfer
+  gesuche_anzahl integer not null default 0,  -- bestätigte eigene Gesuche
   erstellt timestamptz not null default now()
 );
+-- Für Projekte, die vor dem Profil-Ausbau angelegt wurden
+alter table public.profile add column if not exists hilfen_anzahl integer not null default 0;
+alter table public.profile add column if not exists gesuche_anzahl integer not null default 0;
 
 alter table public.profile enable row level security;
 drop policy if exists "Profile sind lesbar" on public.profile;
@@ -362,18 +367,25 @@ begin
 end;
 $$;
 
--- Erledigten Job bestätigen (nur wer das Gesuch erstellt hat)
+-- Erledigten Job bestätigen (nur wer das Gesuch erstellt hat). Zählt für beide Profile mit.
 create or replace function public.gesuch_bestaetigen(p_id uuid)
 returns void
 language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+  g public.gesuche%rowtype;
 begin
   update public.gesuche set status = 'bestaetigt', geaendert = now()
-  where id = p_id and status = 'erledigt' and ersteller = auth.uid();
+  where id = p_id and status = 'erledigt' and ersteller = auth.uid()
+  returning * into g;
   if not found then
     raise exception 'Bestätigen kann nur, wer das Gesuch erstellt hat, nachdem der Job als erledigt gemeldet wurde.';
+  end if;
+  update public.profile set gesuche_anzahl = gesuche_anzahl + 1 where id = g.ersteller;
+  if g.helfer is not null then
+    update public.profile set hilfen_anzahl = hilfen_anzahl + 1 where id = g.helfer;
   end if;
 end;
 $$;

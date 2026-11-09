@@ -1,5 +1,6 @@
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="i-senden" viewBox="0 0 24 24"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></symbol>
+  <symbol id="i-teilen" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 13v6h14v-6"/></symbol>
   <symbol id="i-sprechblase" viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></symbol>
   <symbol id="i-flagge" viewBox="0 0 24 24"><path d="M6 21V4M6 4.5h11l-2.2 4.2L17 13H6"/></symbol>
   <symbol id="i-ansicht" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></symbol>
@@ -35,6 +36,7 @@
         <h1 id="h-entdecken">Hallo Tim</h1>
         <p class="lead" id="anzahl-text">Garbsen</p>
       </div>
+      <div id="banner-naechstes"></div>
       <div class="suche">
         <label class="sr" for="suche">Tätigkeit suchen</label>
         <svg class="i" aria-hidden="true"><use href="#i-suche"/></svg>
@@ -58,6 +60,10 @@
       <div class="selbst">
         <div><strong>Selbst Hilfe gebraucht?</strong><p>Gesuch in einer Minute erstellen.</p></div>
         <button type="button" class="btn btn-secondary btn-auto" data-go="neu">Hilfe suchen</button>
+      </div>
+      <div class="einladen-karte">
+        <div><strong>Je mehr Nachbarn mitmachen, desto schneller findet sich Hilfe.</strong><p>Schick den Link an Nachbarn, Familie oder in die Hausgruppe.</p></div>
+        <button type="button" class="btn btn-secondary btn-auto" data-einladen>Nachbarn einladen</button>
       </div>
       <p class="fuss" id="fuss">Prototyp mit erfundenen Beispiel-Gesuchen in Garbsen. Es fließt kein echtes Geld.</p>
     </section>
@@ -100,79 +106,108 @@
 
     <!-- ===== Gesuch erstellen ===== -->
     <section id="view-neu" class="view" aria-labelledby="h-neu" hidden>
-      <form class="form" id="neu-form" novalidate>
+      <form class="form wizard" id="neu-form" novalidate>
         <div class="hallo">
           <h1 id="h-neu">Hilfe suchen</h1>
-          <p class="lead">Beschreib kurz, was du brauchst. Nachbarn in der Nähe sehen dein Gesuch auf der Karte.</p>
+          <p class="lead">In vier kurzen Schritten. Nachbarn in der Nähe sehen dein Gesuch danach auf der Karte.</p>
         </div>
-        <fieldset class="feld">
-          <legend>Kategorie</legend>
-          <div class="chips chips-wrap" id="neu-kategorien"></div>
-        </fieldset>
-        <div class="feld">
-          <label for="neu-titel">Was soll gemacht werden?</label>
-          <input id="neu-titel" name="titel" maxlength="60" placeholder="z. B. Hecke schneiden" autocomplete="off" aria-describedby="fehler-titel">
-          <p class="fehler" id="fehler-titel" hidden>Bitte gib einen kurzen Titel ein, mindestens 3 Zeichen.</p>
+        <div class="wizard-kopf">
+          <ol class="wizard-leiste" aria-hidden="true"><li></li><li></li><li></li><li></li></ol>
+          <p class="wizard-stand" id="wizard-stand" aria-live="polite">Schritt 1 von 4: Was?</p>
         </div>
-        <div class="feld">
-          <label for="neu-text">Details <span class="optional">(optional)</span></label>
-          <textarea id="neu-text" name="text" rows="3" maxlength="400" placeholder="z. B. Größe, ob Werkzeug da ist, worauf man achten muss"></textarea>
-        </div>
-        <div class="feld-row">
+
+        <!-- Schritt 1: Was? -->
+        <div class="schritt" data-schritt="1" role="group" aria-labelledby="schritt-1-titel">
+          <h2 class="schritt-titel" id="schritt-1-titel" tabindex="-1">Wobei brauchst du Hilfe?</h2>
+          <fieldset class="feld">
+            <legend class="sr-only">Tätigkeit</legend>
+            <div class="kachel-wahl" id="neu-kategorien"></div>
+          </fieldset>
           <div class="feld">
-            <label for="neu-tag">Wann?</label>
-            <select id="neu-tag" name="tag">
-              <option>Heute</option>
-              <option selected>Morgen</option>
-              <option>Dieses Wochenende</option>
-              <option>Nächste Woche</option>
-            </select>
+            <label for="neu-titel">Was genau soll gemacht werden?</label>
+            <div class="vorschlaege" id="neu-vorschlaege" role="group" aria-label="Vorschläge für den Titel"></div>
+            <input id="neu-titel" name="titel" maxlength="60" placeholder="z. B. Hecke schneiden" autocomplete="off" aria-describedby="fehler-titel">
+            <p class="fehler" id="fehler-titel" hidden>Bitte gib einen kurzen Titel ein, mindestens 3 Zeichen.</p>
           </div>
           <div class="feld">
-            <label for="neu-zeit">Tageszeit</label>
-            <select id="neu-zeit" name="zeit">
-              <option>vormittags</option>
-              <option selected>nachmittags</option>
-              <option>abends</option>
-              <option>flexibel</option>
-            </select>
+            <label for="neu-text">Details <span class="optional">(freiwillig)</span></label>
+            <textarea id="neu-text" name="text" rows="3" maxlength="400" placeholder="z. B. Größe, ob Werkzeug da ist, worauf man achten muss"></textarea>
           </div>
         </div>
-        <div class="feld-row">
+
+        <!-- Schritt 2: Wann und wo? -->
+        <div class="schritt" data-schritt="2" role="group" aria-labelledby="schritt-2-titel" hidden>
+          <h2 class="schritt-titel" id="schritt-2-titel" tabindex="-1">Wann und wo?</h2>
+          <fieldset class="feld">
+            <legend>Wann?</legend>
+            <div class="wahl-raster" id="neu-tag">
+              <label class="wahl"><input type="radio" name="tag" value="Heute"><span>Heute</span></label>
+              <label class="wahl"><input type="radio" name="tag" value="Morgen" checked><span>Morgen</span></label>
+              <label class="wahl"><input type="radio" name="tag" value="Dieses Wochenende"><span>Am Wochenende</span></label>
+              <label class="wahl"><input type="radio" name="tag" value="Nächste Woche"><span>Nächste Woche</span></label>
+            </div>
+          </fieldset>
+          <fieldset class="feld">
+            <legend>Tageszeit</legend>
+            <div class="wahl-raster" id="neu-zeit">
+              <label class="wahl"><input type="radio" name="zeit" value="vormittags"><span>Vormittags</span></label>
+              <label class="wahl"><input type="radio" name="zeit" value="nachmittags" checked><span>Nachmittags</span></label>
+              <label class="wahl"><input type="radio" name="zeit" value="abends"><span>Abends</span></label>
+              <label class="wahl"><input type="radio" name="zeit" value="flexibel"><span>Ist mir egal</span></label>
+            </div>
+          </fieldset>
           <div class="feld">
             <label for="neu-stadtteil">Stadtteil</label>
             <select id="neu-stadtteil" name="stadtteil"></select>
           </div>
           <div class="feld">
-            <label for="neu-adresse">Straße und Hausnummer <span class="optional" id="adresse-optional">(optional)</span></label>
+            <label for="neu-adresse">Straße und Hausnummer <span class="optional" id="adresse-optional">(freiwillig)</span></label>
             <input id="neu-adresse" name="adresse" maxlength="120" autocomplete="street-address" placeholder="z. B. Weberstraße 5" aria-describedby="adresse-hinweis fehler-adresse">
+            <p class="feld-hinweis" id="adresse-hinweis">Die Adresse sieht nur, wer bei dir zusagt. Auf der Karte erscheint nur ein Punkt in deinem Stadtteil.</p>
+            <p class="fehler" id="fehler-adresse" hidden>Bitte gib deine Straße und Hausnummer an.</p>
           </div>
         </div>
-        <p class="feld-hinweis" id="adresse-hinweis">Die Adresse sieht nur, wer bei dir zusagt. Auf der Karte erscheint nur dein Stadtteil.</p>
-        <p class="fehler" id="fehler-adresse" hidden>Bitte gib deine Straße und Hausnummer an.</p>
-        <div class="feld">
-          <label for="neu-betrag">Aufwandsentschädigung</label>
-          <div class="betrag-eingabe">
-            <button type="button" class="step" data-step="-1" aria-label="1 Euro weniger">−</button>
-            <div class="betrag-feld">
-              <input id="neu-betrag" name="betrag" type="number" inputmode="numeric" min="5" max="50" step="1" value="15" aria-describedby="fehler-betrag">
-              <span aria-hidden="true">€</span>
+
+        <!-- Schritt 3: Betrag -->
+        <div class="schritt" data-schritt="3" role="group" aria-labelledby="schritt-3-titel" hidden>
+          <h2 class="schritt-titel" id="schritt-3-titel" tabindex="-1">Wie viel möchtest du geben?</h2>
+          <div class="richtwert" id="neu-richtwert"></div>
+          <div class="feld">
+            <label for="neu-betrag">Aufwandsentschädigung</label>
+            <div class="betrag-eingabe">
+              <button type="button" class="step" data-step="-1" aria-label="1 Euro weniger">−</button>
+              <div class="betrag-feld">
+                <input id="neu-betrag" name="betrag" type="number" inputmode="numeric" min="5" max="50" step="1" value="15" aria-describedby="fehler-betrag">
+                <span aria-hidden="true">€</span>
+              </div>
+              <button type="button" class="step" data-step="1" aria-label="1 Euro mehr">+</button>
             </div>
-            <button type="button" class="step" data-step="1" aria-label="1 Euro mehr">+</button>
+            <div class="schnell" id="neu-schnell"></div>
+            <p class="fehler" id="fehler-betrag" hidden>Bitte einen Betrag zwischen 5 und 50 € wählen.</p>
           </div>
-          <div class="schnell" id="neu-schnell"></div>
-          <p class="fehler" id="fehler-betrag" hidden>Bitte einen Betrag zwischen 5 und 50 € wählen.</p>
+          <div class="regel"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span>Nachbarschaftshilfe bleibt klein: höchstens 50 € pro Auftrag und keine festen, regelmäßigen Termine.</span></div>
         </div>
-        <div class="kosten" id="neu-kosten" aria-live="polite"></div>
-        <div class="regel"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span>Nachbarschaftshilfe bleibt klein: höchstens 50 € pro Auftrag und keine festen, regelmäßigen Termine.</span></div>
-        <p class="fehler" id="neu-fehler" role="alert" hidden></p>
-        <button class="btn btn-primary" type="submit" id="neu-senden">Gesuch veröffentlichen</button>
+
+        <!-- Schritt 4: Prüfen -->
+        <div class="schritt" data-schritt="4" role="group" aria-labelledby="schritt-4-titel" hidden>
+          <h2 class="schritt-titel" id="schritt-4-titel" tabindex="-1">Passt alles?</h2>
+          <dl class="pruefen" id="neu-pruefen"></dl>
+          <div class="kosten" id="neu-kosten" aria-live="polite"></div>
+          <p class="fehler" id="neu-fehler" role="alert" hidden></p>
+        </div>
+
+        <div class="wizard-knoepfe">
+          <button class="btn btn-secondary" type="button" id="neu-zurueck" hidden>Zurück</button>
+          <button class="btn btn-primary" type="button" id="neu-weiter">Weiter</button>
+          <button class="btn btn-primary" type="submit" id="neu-senden" hidden>Gesuch veröffentlichen</button>
+        </div>
       </form>
     </section>
 
     <!-- ===== Meine Aufträge ===== -->
     <section id="view-auftraege" class="view" aria-labelledby="h-auftraege" hidden>
       <h1 id="h-auftraege">Aufträge</h1>
+      <div id="naechstes"></div>
       <div class="summe" id="summe"></div>
       <div class="abschnitt">
         <h2 class="h-klein">Deine Zusagen</h2>
@@ -198,6 +233,10 @@
     <a class="tab" href="#auftraege" data-view="auftraege"><span class="tab-icon"><svg class="i" aria-hidden="true"><use href="#i-liste"/></svg><span class="tab-punkt" id="tab-punkt" hidden></span></span>Aufträge<span class="sr-only" id="tab-punkt-text"></span></a>
   </div>
 </nav>
+
+<div class="start" id="start" role="dialog" aria-modal="true" aria-labelledby="start-titel" hidden>
+  <div class="start-inhalt" id="start-inhalt"></div>
+</div>
 
 <div class="backdrop" id="backdrop" hidden></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-titel" hidden>

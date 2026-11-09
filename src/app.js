@@ -150,7 +150,8 @@
     adressen: new Map(),    // gesuch_id -> Adresse (nur für Beteiligte)
     nachrichten: new Map(), // gesuch_id -> Verlauf (null = wird geladen)
     letzte: new Map(),      // gesuch_id -> Zeit der letzten Nachricht der anderen Person
-    gemeldet: new Set()     // in dieser Sitzung gemeldete Gesuche
+    gemeldet: new Set(),    // in dieser Sitzung gemeldete Gesuche
+    profile: new Map()      // profil_id -> öffentliches Profil (für die Profil-Ansicht)
   };
   const istLive = () => db.modus === 'live';
 
@@ -170,7 +171,7 @@
   }
 
   let gesuche = [];
-  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, zuletzt: null, busy: false };
+  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false };
 
   /* ===== Ansicht: Design, Schriftgröße, Startseite (nur auf diesem Gerät gespeichert) ===== */
   const ANSICHT_SPEICHER = 'handdrauf-ansicht';
@@ -202,6 +203,17 @@
   }
   ansichtAnwenden();
 
+  // Stadtteil aus der Begrüßung (nur auf diesem Gerät). Angemeldet zählt der Stadtteil im Profil.
+  const START_SPEICHER = 'handdrauf-start-gesehen';
+  const ORT_SPEICHER = 'handdrauf-stadtteil';
+  let gewaehlterOrt = null;
+  try { const o = localStorage.getItem(ORT_SPEICHER); if (STADTTEILE.some((x) => x.name === o)) gewaehlterOrt = o; } catch (e) { /* ohne Speicher */ }
+  function ortWaehlen(name) {
+    if (!STADTTEILE.some((x) => x.name === name)) return;
+    gewaehlterOrt = name;
+    try { localStorage.setItem(ORT_SPEICHER, name); } catch (e) { /* nur für diese Sitzung */ }
+  }
+
   /* ===== Hilfsfunktionen ===== */
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const euro = (n) => n.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
@@ -225,13 +237,15 @@
     return { lat: p.lat + nordM / 111320, lng: p.lng + ostM / (111320 * Math.cos(p.lat * Math.PI / 180)) };
   }
   // Wo bin ich? Demo: Tim in Garbsen-Mitte. Live: Mitte des Stadtteils aus dem Profil.
-  function meinOrt() {
-    if (!istLive()) return CONFIG.ich;
-    const name = (db.profil && db.profil.stadtteil) || 'Garbsen-Mitte';
+  function ortVon(name) {
     const s = STADTTEILE.find((x) => x.name === name) || STADTTEILE[0];
     return { lat: s.lat, lng: s.lng, stadtteil: s.name };
   }
-  const zeigeIch = () => !istLive() || !!db.profil;
+  function meinOrt() {
+    if (!istLive()) return gewaehlterOrt && gewaehlterOrt !== CONFIG.ich.stadtteil ? ortVon(gewaehlterOrt) : CONFIG.ich;
+    return ortVon((db.profil && db.profil.stadtteil) || gewaehlterOrt || 'Garbsen-Mitte');
+  }
+  const zeigeIch = () => !istLive() || !!db.profil || !!gewaehlterOrt;
   const meterVonMir = (g) => abstand(meinOrt(), g);
   function distanz(g) {
     if (g.eigen) return 'bei dir';
@@ -369,6 +383,7 @@
       erstellt: Date.parse(r.erstellt) || 0,
       eigen: !!ich && r.ersteller === ich,
       helfer: ich && r.helfer === ich ? 'ich' : (r.helfer ? 'andere' : null),
+      erstellerId: r.ersteller, helferId: r.helfer || null,
       wer: anzeigename(p), initialen: kuerzel(p),
       sterne: p && p.sterne_anzahl ? p.sterne_summe / p.sterne_anzahl : null,
       bewertungen: p ? p.sterne_anzahl : 0,
@@ -608,7 +623,38 @@
     $('#liste').innerHTML = treffer.map((g) => karteHTML(g)).join('');
   }
 
+  function naechsteSchritte() {
+    const liste = [];
+    gesuche.forEach((g) => {
+      const wer = g.eigen ? (vorname(g.helferName) || 'Die helfende Person') : vorname(g.wer);
+      let a = null;
+      if (g.eigen && g.status === 'erledigt') a = { prio: 1, titel: 'Bitte bestätigen', text: `${wer} hat „${g.titel}“ als erledigt gemeldet.` };
+      else if (ungelesen(g)) a = { prio: 2, titel: 'Neue Nachricht', text: `${wer} hat dir zu „${g.titel}“ geschrieben.` };
+      else if (g.helfer === 'ich' && g.status === 'zugesagt') a = { prio: 3, titel: 'Du hilfst', text: `„${g.titel}“ bei ${wer}, ${g.wann}. Danach als erledigt melden.` };
+      else if (g.status === 'bezahlt' && !g.meineBewertung && (g.helfer === 'ich' || (g.eigen && g.helferName))) a = { prio: 4, titel: 'Bewerten', text: `Wie war es mit ${wer}?` };
+      if (a) liste.push({ ...a, g });
+    });
+    return liste.sort((x, y) => x.prio - y.prio);
+  }
+  function renderNaechstes() {
+    const liste = istLive() && !db.profil ? [] : naechsteSchritte();
+    $('#naechstes').innerHTML = liste.length ? `<section class="naechstes" aria-labelledby="h-naechstes">
+        <h2 class="h-klein" id="h-naechstes">Als Nächstes</h2>
+        ${liste.map((a) => `<button type="button" class="aufgabe ${a.prio === 1 ? 'aufgabe-wichtig' : ''}" data-oeffne="${a.g.id}">
+          <span class="ico">${icon(a.g.kat)}</span>
+          <span class="aufgabe-text"><strong>${esc(a.titel)}</strong><span>${esc(a.text)}</span></span>
+          <span class="aufgabe-pfeil" aria-hidden="true">›</span>
+        </button>`).join('')}
+      </section>` : '';
+    const erstes = liste[0];
+    $('#banner-naechstes').innerHTML = erstes ? `<button type="button" class="banner" data-oeffne="${erstes.g.id}">
+        <span class="banner-punkt" aria-hidden="true"></span>
+        <span><strong>${esc(erstes.titel)}:</strong> ${esc(erstes.text)}${liste.length > 1 ? ` <span class="banner-mehr">und ${liste.length - 1} weitere${liste.length === 2 ? 's' : ''}</span>` : ''}</span>
+      </button>` : '';
+  }
+
   function renderAuftraege() {
+    renderNaechstes();
     const neu = gesuche.filter(ungelesen).length;
     $('#tab-punkt').hidden = !neu;
     $('#tab-punkt-text').textContent = neu ? `, ${neu} ${neu === 1 ? 'neue Nachricht' : 'neue Nachrichten'}` : '';
@@ -873,13 +919,14 @@
       const bewertung = g.bewertungen
         ? `${icon('stern', 'i-xs i-fill')}${g.sterne.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} · ${g.bewertungen} ${g.bewertungen === 1 ? 'Bewertung' : 'Bewertungen'}`
         : 'Neu bei Hand Drauf';
-      html += `<div class="person">
+      html += `<button type="button" class="person person-knopf" data-profil aria-label="Profil von ${esc(g.wer)} ansehen">
         <span class="avatar" aria-hidden="true">${esc(g.initialen)}</span>
-        <div>
-          <div class="person-name">${esc(g.wer)}${live ? '' : ` <span class="pill pill-good">${icon('check', 'i-xs')}Verifiziert</span>`}</div>
-          <div class="person-meta">${bewertung}</div>
-        </div>
-      </div>`;
+        <span class="person-text">
+          <span class="person-name">${esc(g.wer)}${live ? '' : ` <span class="pill pill-good">${icon('check', 'i-xs')}Verifiziert</span>`}</span>
+          <span class="person-meta">${bewertung}</span>
+        </span>
+        <span class="person-mehr" aria-hidden="true">Profil</span>
+      </button>`;
     }
 
     let detail;
@@ -1030,7 +1077,7 @@
           <div class="feld"><label for="auth-vorname">Vorname</label><input id="auth-vorname" autocomplete="given-name" maxlength="40" required></div>
           <div class="feld"><label for="auth-initial">Nachname <span class="optional">(nur 1. Buchstabe)</span></label><input id="auth-initial" autocomplete="off" maxlength="1"></div>
         </div>
-        <div class="feld"><label for="auth-stadtteil">Dein Stadtteil</label><select id="auth-stadtteil">${stadtteilOptionen('Garbsen-Mitte', false)}</select></div>` : ''}
+        <div class="feld"><label for="auth-stadtteil">Dein Stadtteil</label><select id="auth-stadtteil">${stadtteilOptionen(gewaehlterOrt || 'Garbsen-Mitte', false)}</select></div>` : ''}
         <div class="feld"><label for="auth-email">E-Mail</label><input id="auth-email" type="email" autocomplete="email" required></div>
         <div class="feld"><label for="auth-passwort">Passwort</label><input id="auth-passwort" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" minlength="8" required>${reg ? '<p class="feld-hinweis" style="margin-top:0">Mindestens 8 Zeichen.</p>' : ''}</div>
         ${reg ? `<label class="check"><input type="checkbox" id="auth-18"><span>Ich bin mindestens 18 Jahre alt.</span></label>
@@ -1060,6 +1107,7 @@
       </div>
       <p class="klein">Angemeldet als ${esc(db.user && db.user.email)}. Andere sehen nur deinen Vornamen, den Anfangsbuchstaben und deinen Stadtteil.</p>
       <div class="feld"><label for="konto-stadtteil">Dein Stadtteil</label><select id="konto-stadtteil">${stadtteilOptionen(p.stadtteil, false)}</select></div>
+      <button type="button" class="btn btn-secondary" data-einladen>${icon('teilen')}Nachbarn einladen</button>
       <button type="button" class="btn btn-secondary" data-abmelden ${ui.busy ? 'disabled' : ''}>Abmelden</button>
       <p class="klein recht-links-form"><a href="#nutzung">Nutzungsbedingungen</a> · <a href="#datenschutz">Datenschutz</a> · <a href="#impressum">Impressum</a></p>
       ${ui.loeschen
@@ -1067,6 +1115,53 @@
             <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-konto-loeschen ${ui.busy ? 'disabled aria-busy="true"' : ''}>Endgültig löschen</button>
             <button type="button" class="btn btn-secondary" data-loeschen-nein>Abbrechen</button></div></div>`
         : `<button type="button" class="link-btn link-melden" data-loeschen-frage>Konto löschen</button>`}`;
+  }
+
+  // Öffentliches Profil (Vorbild: BlaBlaCar D.R.E.A.M.S. und Airbnb): Angaben, Bewertungen, Aktivität
+  const DEMO_DABEI = ['Januar 2025', 'März 2025', 'Mai 2025', 'August 2025', 'Oktober 2025', 'Februar 2026'];
+  function profilDaten(g) {
+    if (!istLive()) {
+      const n = Number(String(g.id).replace(/\D/g, '')) || 0;
+      return { name: g.wer, kuerzel: g.initialen, stadtteil: g.stadtteil, dabei: DEMO_DABEI.at(n % DEMO_DABEI.length),
+        sterne: g.sterne, bewertungen: g.bewertungen || 0, hilfen: Math.max(0, (g.bewertungen || 0) - 3 - (n % 4)), gesuche: Math.min(g.bewertungen || 0, 3 + (n % 5)), volljaehrig: true };
+    }
+    const id = g.eigen ? g.helferId : g.erstellerId;
+    if (!id) return null;
+    if (!db.profile.has(id)) {
+      db.profile.set(id, null);
+      db.client.from('profile').select('vorname, nachname_initial, stadtteil, volljaehrig, sterne_summe, sterne_anzahl, hilfen_anzahl, gesuche_anzahl, erstellt').eq('id', id).maybeSingle()
+        .then(({ data }) => { db.profile.set(id, data || false); if (ui.panel === 'profil') renderSheet(); });
+    }
+    const p = db.profile.get(id);
+    if (!p) return p;
+    const dabei = new Date(p.erstellt).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+    return { name: anzeigename(p), kuerzel: kuerzel(p), stadtteil: p.stadtteil, dabei, sterne: p.sterne_anzahl ? p.sterne_summe / p.sterne_anzahl : null,
+      bewertungen: p.sterne_anzahl, hilfen: p.hilfen_anzahl || 0, gesuche: p.gesuche_anzahl || 0, volljaehrig: p.volljaehrig };
+  }
+  function sheetProfilHTML() {
+    const g = gesuche.find((x) => x.id === ui.profilGesuch);
+    const kopf = `<div class="sheet-top">
+        <button type="button" class="link-btn zurueck" data-zurueck-gesuch><span class="zurueck-pfeil" aria-hidden="true">‹</span>Zurück zum Gesuch</button>
+        <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
+      </div>`;
+    const p = g && profilDaten(g);
+    if (!p) return kopf + `<h2 id="sheet-titel">${p === null ? 'Profil wird geladen …' : 'Profil nicht verfügbar'}</h2>`;
+    const stern = p.bewertungen ? p.sterne.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '–';
+    return kopf + `<div class="profil-kopf">
+        <span class="avatar avatar-gross" aria-hidden="true">${esc(p.kuerzel)}</span>
+        <div><h2 id="sheet-titel">${esc(p.name)}</h2><p class="person-meta">${esc(p.stadtteil)} · dabei seit ${esc(p.dabei)}</p></div>
+      </div>
+      <dl class="profil-zahlen">
+        <div><dt>Bewertung</dt><dd>${p.bewertungen ? icon('stern', 'i-sm i-fill') : ''}${stern}</dd><dd class="klein">${p.bewertungen} ${p.bewertungen === 1 ? 'Bewertung' : 'Bewertungen'}</dd></div>
+        <div><dt>Geholfen</dt><dd>${p.hilfen}</dd><dd class="klein">${p.hilfen === 1 ? 'Auftrag' : 'Aufträge'}</dd></div>
+        <div><dt>Hilfe bekommen</dt><dd>${p.gesuche}</dd><dd class="klein">${p.gesuche === 1 ? 'Auftrag' : 'Aufträge'}</dd></div>
+      </dl>
+      <ul class="profil-belege">
+        ${p.volljaehrig ? `<li>${icon('check', 'i-sm')}Mindestens 18 Jahre, bei der Anmeldung bestätigt</li>` : ''}
+        <li>${icon('check', 'i-sm')}Konto mit E-Mail-Adresse</li>
+        <li>${icon('check', 'i-sm')}Hat den Regeln für Nachbarn zugestimmt</li>
+      </ul>
+      <p class="klein">Andere sehen nur Vorname, Anfangsbuchstabe und Stadtteil. Adresse und E-Mail sieht niemand.</p>`;
   }
 
   function sheetRechtHTML(name) {
@@ -1096,7 +1191,10 @@
       ${gruppe('schrift', 'Schriftgröße', '')}
       <div class="schrift-probe" aria-hidden="true"><span class="price">15 €</span><span><strong>Rasen mähen</strong><br>Berenbostel · Samstag, vormittags</span></div>
       ${gruppe('start', 'Startseite', 'Was du beim Öffnen zuerst siehst.')}
-      <p class="klein">Gespeichert nur auf diesem Gerät.</p>`;
+      ${istLive() && db.profil ? '' : `<div class="feld"><label for="ansicht-ort">Dein Stadtteil</label><select id="ansicht-ort">${gewaehlterOrt ? '' : '<option value="">Bitte wählen</option>'}${stadtteilOptionen(gewaehlterOrt || '', false)}</select><p class="klein">Für die Entfernungen. Deine Adresse brauchen wir dafür nicht.</p></div>`}
+      <p class="klein">Gespeichert nur auf diesem Gerät.</p>
+      <button type="button" class="btn btn-secondary" data-einladen>${icon('teilen')}Hand Drauf weiterempfehlen</button>
+      <button type="button" class="link-btn" data-start-zeigen>Einführung noch einmal ansehen</button>`;
   }
 
   // Beim Neuzeichnen bleiben Eingaben, Auswahl und Fokus erhalten (z. B. wenn eine Nachricht eintrifft)
@@ -1129,6 +1227,7 @@
     const zustand = schluessel && schluessel === sheetSchluessel ? sheetZustand() : null;
     let html = '';
     if (RECHT[ui.panel]) html = sheetRechtHTML(ui.panel);
+    else if (ui.panel === 'profil') html = sheetProfilHTML();
     else if (ui.panel === 'ansicht') html = sheetAnsichtHTML();
     else if (ui.panel === 'anmelden') html = sheetAnmeldenHTML();
     else if (ui.panel === 'konto') html = sheetKontoHTML();
@@ -1246,6 +1345,16 @@
       renderSheet();
       const erstes = $('#auth-form input');
       if (erstes) erstes.focus();
+      return;
+    }
+    if (t.hasAttribute('data-zurueck-gesuch')) { const id = ui.profilGesuch; ui.profilGesuch = null; oeffnen(id); return; }
+    if (t.hasAttribute('data-profil')) {
+      const id = ui.offen;
+      const zuletzt = ui.zuletzt;
+      oeffnePanel('profil');
+      ui.profilGesuch = id;
+      ui.zuletzt = zuletzt;
+      renderSheet();
       return;
     }
     if (t.hasAttribute('data-loeschen-frage') || t.hasAttribute('data-loeschen-nein')) {
@@ -1456,6 +1565,14 @@
   // Stadtteil im Konto ändern
   $('#sheet').addEventListener('change', async (e) => {
     if (e.target.name === 'grund') { const f = $('#melden-fehler'); if (f) f.hidden = true; return; }
+    if (e.target.id === 'ansicht-ort') {
+      ortWaehlen(e.target.value);
+      renderStadtteilAuswahl();
+      renderAlles();
+      if (kartenStatus.map) renderKarte();
+      meldung(`Stadtteil: ${e.target.value}`);
+      return;
+    }
     if (e.target.id !== 'konto-stadtteil' || !db.profil) return;
     const neu = e.target.value;
     const { error } = await db.client.from('profile').update({ stadtteil: neu }).eq('id', db.profil.id);
@@ -1471,10 +1588,25 @@
     if (e.key === 'Escape' && (ui.offen || ui.panel)) schliessen();
   });
 
+  /* ===== Nachbarn einladen (Wachstum über Empfehlungen statt Werbung) ===== */
+  async function einladen() {
+    const url = location.origin + location.pathname;
+    const text = 'Hand Drauf: Nachbarn in Garbsen helfen sich bei kleinen Dingen, gegen eine kleine Aufwandsentschädigung. Schau mal rein:';
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Hand Drauf', text, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    try { await navigator.clipboard.writeText(`${text} ${url}`); meldung('Link kopiert. Füge ihn in eine Nachricht ein.'); }
+    catch (e) { meldung(`Link zum Teilen: ${url}`); }
+  }
+
   /* ===== Klicks auf Listen und Filter ===== */
   document.addEventListener('click', (e) => {
     const go = e.target.closest('[data-go]');
     if (go) { gehe(go.dataset.go); return; }
+    if (e.target.closest('[data-einladen]')) { einladen(); return; }
+    if (e.target.closest('[data-start-zeigen]')) { schliessen(); startZeigen(); return; }
+    const auf = e.target.closest('[data-oeffne]');
+    if (auf) { oeffnen(auf.dataset.oeffne, auf); return; }
     const panel = e.target.closest('[data-panel]');
     if (panel) { oeffnePanel(panel.dataset.panel); return; }
     const opt = e.target.closest('[data-ansicht]');
@@ -1502,18 +1634,105 @@
   $('#sort').addEventListener('change', (e) => { ui.sort = e.target.value; renderListe(); });
   $('#stadtteil').addEventListener('change', (e) => { ui.stadtteil = e.target.value; renderListe(); });
 
-  /* ===== Gesuch erstellen ===== */
+  /* ===== Begrüßung beim ersten Start (Vorbild: Too Good To Go, BlaBlaCar) ===== */
+  let startSeite = 0;
+  function startHTML() {
+    const punkte = (n) => `<div class="start-punkte" aria-hidden="true">${[0, 1, 2].map((i) => `<span class="${i === n ? 'an' : ''}"></span>`).join('')}</div>`;
+    const ueber = `<button type="button" class="link-btn start-ueber" data-start="fertig">Überspringen</button>`;
+    const fuss = (n, knopf, aktion) => `<div class="start-fuss">${punkte(n)}<button type="button" class="btn btn-primary" data-start="${aktion}">${knopf}</button></div>`;
+    if (startSeite === 0) return `${ueber}
+      <div class="start-logo">${$('.marke-logo') ? $('.marke-logo').outerHTML : ''}</div>
+      <h1 id="start-titel" tabindex="-1">Nachbarn helfen Nachbarn</h1>
+      <p class="start-text">Rasen mähen, Einkauf hochtragen, Drucker einrichten: kleine Hilfen in Garbsen, gegen eine kleine Aufwandsentschädigung.</p>
+      <ul class="start-liste">
+        <li>${icon('plus')}<span><strong>Hilfe suchen</strong>Ein Gesuch in vier kurzen Schritten einstellen.</span></li>
+        <li>${icon('karte')}<span><strong>Helfen</strong>Auf der Karte sehen, wo in deiner Nähe Hilfe gebraucht wird.</span></li>
+      </ul>
+      ${fuss(0, 'Weiter', 'weiter')}`;
+    if (startSeite === 1) return `${ueber}
+      <h1 id="start-titel" tabindex="-1">Wo wohnst du?</h1>
+      <p class="start-text">Dann zeigen wir dir zuerst, was in deiner Nähe los ist. Deine Adresse brauchen wir dafür nicht.</p>
+      <div class="start-orte" role="group" aria-label="Stadtteil wählen">${STADTTEIL_NAMEN.map((n) =>
+        `<button type="button" class="wahl-knopf" data-start-ort="${esc(n)}" aria-pressed="${gewaehlterOrt === n}">${esc(n)}</button>`).join('')}</div>
+      ${fuss(1, gewaehlterOrt ? 'Weiter' : 'Ohne Stadtteil weiter', 'weiter')}`;
+    return `${ueber}
+      <h1 id="start-titel" tabindex="-1">So bleibt es sicher</h1>
+      <ul class="start-liste">
+        <li>${icon('schloss')}<span><strong>Adresse erst nach der Zusage</strong>Auf der Karte erscheint nur ein Punkt im Stadtteil.</span></li>
+        <li>${icon('stern')}<span><strong>Echte Profile und Bewertungen</strong>Helfen kann man ab 18. Nach jedem Auftrag bewertet ihr euch gegenseitig.</span></li>
+        <li>${icon('flagge')}<span><strong>Melden in jedem Auftrag</strong>Wir prüfen jede Meldung.</span></li>
+      </ul>
+      ${fuss(2, 'Los geht’s', 'fertig')}`;
+  }
+  function renderStart(fokus) {
+    $('#start-inhalt').innerHTML = startHTML();
+    const f = fokus ? $(fokus) : $('#start-titel');
+    if (f) f.focus({ preventScroll: true });
+  }
+  function startZeigen() {
+    startSeite = 0;
+    $('#start').hidden = false;
+    document.body.classList.add('sheet-offen');
+    renderStart();
+  }
+  function startBeenden() {
+    $('#start').hidden = true;
+    document.body.classList.remove('sheet-offen');
+    try { localStorage.setItem(START_SPEICHER, '1'); } catch (e) { /* nur für diese Sitzung */ }
+    renderStadtteilAuswahl();
+    renderAlles();
+    const h = $(`#h-${ui.view}`);
+    if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
+  }
+  $('#start').addEventListener('click', (e) => {
+    const ort = e.target.closest('[data-start-ort]');
+    if (ort) { ortWaehlen(ort.dataset.startOrt); renderStart(`[data-start-ort="${CSS.escape(ort.dataset.startOrt)}"]`); return; }
+    const a = e.target.closest('[data-start]');
+    if (!a) return;
+    if (a.dataset.start === 'weiter') { startSeite += 1; renderStart(); }
+    else startBeenden();
+  });
+  $('#start').addEventListener('keydown', (e) => { if (e.key === 'Escape') startBeenden(); });
+
+  /* ===== Gesuch erstellen: vier Schritte (Vorbild: TaskRabbit, Kleinanzeigen) ===== */
   const form = $('#neu-form');
   const betragInput = $('#neu-betrag');
+  const SCHRITT_NAMEN = ['Was?', 'Wann und wo?', 'Betrag', 'Prüfen'];
+  // Unser Vorschlag je Tätigkeit, bis genug echte Gesuche aus Garbsen für einen Durchschnitt da sind
+  const RICHTWERTE = { garten: [15, 25], einkaufen: [5, 10], tiere: [8, 15], haushalt: [10, 25], tragen: [10, 20], technik: [10, 20] };
+  const VORSCHLAEGE = {
+    garten: ['Rasen mähen', 'Hecke schneiden', 'Laub rechen'],
+    einkaufen: ['Einkauf mitbringen', 'Getränkekisten hochtragen', 'Medikamente abholen'],
+    tiere: ['Hund ausführen', 'Katze füttern', 'Kleintiere versorgen'],
+    haushalt: ['Möbel aufbauen', 'Lampe anbringen', 'Fenster putzen'],
+    tragen: ['Kartons tragen', 'Möbel tragen', 'Sperrmüll rausstellen'],
+    technik: ['Handy einrichten', 'Drucker einrichten', 'Fahrrad reparieren']
+  };
+  let wizSchritt = 1;
+  let betragGeaendert = false;
+
   $('#neu-kategorien').innerHTML = KATEGORIEN.map((k, i) =>
-    `<label class="chip-radio"><input type="radio" name="kat" id="neu-kat-${k.id}" value="${k.id}" ${i === 0 ? 'checked' : ''}><span class="chip">${icon(k.id, 'i-sm')}${k.name}</span></label>`
+    `<label class="kachel-radio"><input type="radio" name="kat" id="neu-kat-${k.id}" value="${k.id}" ${i === 0 ? 'checked' : ''}><span class="kachel-karte">${icon(k.id)}<span>${k.name}</span></span></label>`
   ).join('');
   $('#neu-schnell').innerHTML = [10, 15, 20, 30].map((n) =>
-    `<button type="button" class="chip" data-schnell="${n}">${n} €</button>`
+    `<button type="button" class="chip" data-schnell="${n}">${n} €</button>`
   ).join('');
 
+  const katWahl = () => form.querySelector('input[name="kat"]:checked').value;
+  const wahlWert = (name) => (form.querySelector(`input[name="${name}"]:checked`) || {}).value || '';
   const betragWert = () => { const v = parseInt(betragInput.value, 10); return Number.isFinite(v) ? v : NaN; };
   const betragGueltig = (b) => b >= CONFIG.minBetrag && b <= CONFIG.maxBetrag;
+
+  function renderVorschlaege() {
+    $('#neu-vorschlaege').innerHTML = (VORSCHLAEGE[katWahl()] || []).map((t) =>
+      `<button type="button" class="chip chip-vorschlag" data-vorschlag="${esc(t)}">${esc(t)}</button>`).join('');
+  }
+  function renderRichtwert() {
+    const k = katWahl();
+    const [lo, hi] = RICHTWERTE[k] || [10, 20];
+    $('#neu-richtwert').innerHTML = `${icon('info', 'i-sm')}<span><strong>Unser Vorschlag für ${esc(katName(k))}: ${lo} bis ${hi} €</strong>Je nach Aufwand. Du entscheidest, was du gibst.</span>`;
+    if (!betragGeaendert) setzeBetrag(Math.round((lo + hi) / 2 / 5) * 5, true);
+  }
   function renderKosten() {
     const b = betragWert();
     const el = $('#neu-kosten');
@@ -1534,54 +1753,106 @@
       <div class="kosten-zeile kosten-summe"><span>Du zahlst</span><span>${euro(b + g)}</span></div>
       <span class="kosten-hinweis">Abgebucht wird erst, wenn du den erledigten Job bestätigst.</span>`;
   }
-  function setzeBetrag(b) {
+  function setzeBetrag(b, automatisch) {
     betragInput.value = Math.min(CONFIG.maxBetrag, Math.max(CONFIG.minBetrag, b));
     betragInput.removeAttribute('aria-invalid');
     $('#fehler-betrag').hidden = true;
+    if (!automatisch) betragGeaendert = true;
     renderKosten();
   }
+  function renderPruefen() {
+    const k = katWahl();
+    const text = $('#neu-text').value.trim();
+    const adresse = $('#neu-adresse').value.trim();
+    const zeile = (dt, dd, n) => `<div><dt>${dt}</dt><dd>${dd}</dd><button type="button" class="link-btn aendern" data-gehe-schritt="${n}" aria-label="${dt} ändern">Ändern</button></div>`;
+    $('#neu-pruefen').innerHTML =
+      zeile('Tätigkeit', `${icon(k, 'i-sm')}${esc(katName(k))}: ${esc($('#neu-titel').value.trim())}`, 1) +
+      (text ? zeile('Details', esc(text), 1) : '') +
+      zeile('Wann', `${esc(wahlWert('tag'))}, ${esc(wahlWert('zeit') === 'flexibel' ? 'Uhrzeit flexibel' : wahlWert('zeit'))}`, 2) +
+      zeile('Wo', `${esc($('#neu-stadtteil').value)}${adresse ? `<span class="klein">${esc(adresse)}, sieht nur, wer zusagt</span>` : ''}`, 2) +
+      zeile('Aufwandsentschädigung', euro(betragWert()), 3);
+  }
+  function zeigeSchritt(n, fokus = true) {
+    wizSchritt = n;
+    form.querySelectorAll('.schritt').forEach((el) => { el.hidden = Number(el.dataset.schritt) !== n; });
+    form.querySelectorAll('.wizard-leiste li').forEach((li, i) => { li.className = i < n ? 'ist-erreicht' : ''; });
+    $('#wizard-stand').textContent = `Schritt ${n} von 4: ${SCHRITT_NAMEN.at(n - 1)}`;
+    $('#neu-zurueck').hidden = n === 1;
+    $('#neu-weiter').hidden = n === 4;
+    $('#neu-senden').hidden = n !== 4;
+    if (n === 3) renderRichtwert();
+    if (n === 4) { renderPruefen(); renderKosten(); }
+    if (fokus) {
+      const h = $(`#schritt-${n}-titel`);
+      if (h) h.focus({ preventScroll: true });
+      $('#h-neu').scrollIntoView({ block: 'start' });
+    }
+  }
+  // Gibt das erste fehlerhafte Feld eines Schritts zurück
+  function pruefeSchritt(n) {
+    const fehler = (feld, id) => { feld.setAttribute('aria-invalid', 'true'); $(id).hidden = false; return feld; };
+    if (n === 1 && $('#neu-titel').value.trim().length < 3) return fehler($('#neu-titel'), '#fehler-titel');
+    if (n === 2 && istLive() && $('#neu-adresse').value.trim().length < 3) return fehler($('#neu-adresse'), '#fehler-adresse');
+    if (n === 3 && !betragGueltig(betragWert())) return fehler(betragInput, '#fehler-betrag');
+    return null;
+  }
+  function weiter() {
+    const f = pruefeSchritt(wizSchritt);
+    if (f) { f.focus(); return; }
+    zeigeSchritt(Math.min(4, wizSchritt + 1));
+  }
+  $('#neu-weiter').addEventListener('click', weiter);
+  $('#neu-zurueck').addEventListener('click', () => zeigeSchritt(Math.max(1, wizSchritt - 1)));
+
   form.addEventListener('click', (e) => {
     const s = e.target.closest('[data-step]');
     if (s) { const b = betragWert(); setzeBetrag((Number.isFinite(b) ? b : 15) + Number(s.dataset.step)); return; }
     const q = e.target.closest('[data-schnell]');
-    if (q) setzeBetrag(Number(q.dataset.schnell));
+    if (q) { setzeBetrag(Number(q.dataset.schnell)); return; }
+    const v = e.target.closest('[data-vorschlag]');
+    if (v) {
+      const t = $('#neu-titel');
+      t.value = v.dataset.vorschlag;
+      t.removeAttribute('aria-invalid');
+      $('#fehler-titel').hidden = true;
+      t.focus();
+      return;
+    }
+    const z = e.target.closest('[data-gehe-schritt]');
+    if (z) zeigeSchritt(Number(z.dataset.geheSchritt));
   });
-  betragInput.addEventListener('input', renderKosten);
+  form.addEventListener('change', (e) => {
+    if (e.target.name === 'kat') { renderVorschlaege(); betragGeaendert = false; }
+  });
+  betragInput.addEventListener('input', () => { betragGeaendert = true; renderKosten(); });
   $('#neu-titel').addEventListener('input', (e) => {
     if (e.target.value.trim().length >= 3) { e.target.removeAttribute('aria-invalid'); $('#fehler-titel').hidden = true; }
   });
   $('#neu-adresse').addEventListener('input', (e) => {
     if (e.target.value.trim().length >= 3) { e.target.removeAttribute('aria-invalid'); $('#fehler-adresse').hidden = true; }
   });
+  renderVorschlaege();
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const titel = $('#neu-titel').value.trim();
-    const adresse = $('#neu-adresse').value.trim();
-    const b = betragWert();
-    let ersterFehler = null;
+    // Enter in einem Feld führt zum nächsten Schritt, veröffentlicht wird erst im letzten
+    if (wizSchritt < 4) { weiter(); return; }
     $('#neu-fehler').hidden = true;
-    if (titel.length < 3) {
-      $('#neu-titel').setAttribute('aria-invalid', 'true'); $('#fehler-titel').hidden = false;
-      ersterFehler = ersterFehler || $('#neu-titel');
+    for (const n of [1, 2, 3]) {
+      const f = pruefeSchritt(n);
+      if (f) { zeigeSchritt(n, false); f.focus(); return; }
     }
-    if (istLive() && adresse.length < 3) {
-      $('#neu-adresse').setAttribute('aria-invalid', 'true'); $('#fehler-adresse').hidden = false;
-      ersterFehler = ersterFehler || $('#neu-adresse');
-    }
-    if (!betragGueltig(b)) {
-      betragInput.setAttribute('aria-invalid', 'true'); $('#fehler-betrag').hidden = false;
-      ersterFehler = ersterFehler || betragInput;
-    }
-    if (ersterFehler) { ersterFehler.focus(); return; }
     if (istLive() && !db.profil) {
       oeffnePanel('anmelden', 'Melde dich an, um dein Gesuch zu veröffentlichen. Deine Eingaben bleiben erhalten.');
       return;
     }
 
-    const kat = form.querySelector('input[name="kat"]:checked').value;
+    const kat = katWahl();
+    const titel = $('#neu-titel').value.trim();
+    const adresse = $('#neu-adresse').value.trim();
+    const b = betragWert();
     const stadtteil = $('#neu-stadtteil').value;
-    const wann = `${$('#neu-tag').value}, ${$('#neu-zeit').value}`;
+    const wann = `${wahlWert('tag')}, ${wahlWert('zeit')}`;
     const text = $('#neu-text').value.trim();
     let neuId;
 
@@ -1609,7 +1880,7 @@
     } else {
       const anzahlEigene = gesuche.filter((g) => g.eigen).length;
       const [nord, ost] = EIGEN_VERSATZ[anzahlEigene % EIGEN_VERSATZ.length];
-      const basis = stadtteil === CONFIG.ich.stadtteil ? CONFIG.ich : STADTTEILE.find((s) => s.name === stadtteil);
+      const basis = stadtteil === meinOrt().stadtteil ? meinOrt() : STADTTEILE.find((x) => x.name === stadtteil);
       const pos = versetze(basis, nord, ost);
       neuId = 'e' + Date.now();
       gesuche.unshift({
@@ -1621,6 +1892,9 @@
     }
 
     form.reset();
+    betragGeaendert = false;
+    renderVorschlaege();
+    zeigeSchritt(1, false);
     renderStadtteilAuswahl();
     renderKosten();
     ui.kat = 'alle'; ui.suche = ''; $('#suche').value = '';
@@ -1639,6 +1913,11 @@
   renderKosten();
   zeige(VIEWS.includes(start) ? start : ansicht.start);
   if (RECHT[start]) oeffnePanel(start);
+  else {
+    let gesehen = false;
+    try { gesehen = localStorage.getItem(START_SPEICHER) === '1'; } catch (e) { gesehen = true; }
+    if (!gesehen) startZeigen();
+  }
   starteLive().then((live) => {
     if (!live) return;
     renderStadtteilAuswahl();

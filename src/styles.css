@@ -405,3 +405,99 @@ body { margin: 0; }
 .recht-nav { display: flex; flex-wrap: wrap; gap: 4px 18px; padding-top: 12px; border-top: 1px solid var(--line); }
 .recht-nav a { display: inline-flex; align-items: center; min-height: 44px; }
 .loeschen-box { background: var(--warn-bg); }
+
+/* ===== Gesuch in vier Schritten ===== */
+.wizard-kopf { display: grid; gap: 8px; }
+.wizard-leiste { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.wizard-leiste li { height: 6px; border-radius: 3px; background: var(--line); }
+.wizard-leiste li.ist-erreicht { background: var(--accent); }
+.wizard-stand { margin: 0; color: var(--muted); font-weight: 700; font-size: 0.875rem; }
+.schritt { display: grid; gap: 18px; }
+.schritt[hidden] { display: none; }
+.schritt-titel { margin: 0; font-family: var(--f-display); font-size: 1.375rem; outline: none; }
+.kachel-wahl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 400px) { .kachel-wahl { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kachel-radio { position: relative; display: block; }
+.kachel-radio input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.kachel-karte { display: grid; justify-items: center; gap: 6px; min-height: 96px; padding: 12px 6px; border-radius: 16px; background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line); font-weight: 700; text-align: center; cursor: pointer; }
+.kachel-karte .ks { width: 44px; height: 44px; }
+.kachel-radio input:checked + .kachel-karte { box-shadow: inset 0 0 0 3px var(--ink); background: var(--tile); }
+.kachel-radio input:focus-visible + .kachel-karte { outline: 3px solid var(--focus); outline-offset: 2px; }
+.vorschlaege { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-vorschlag { min-height: 40px; font-weight: 700; }
+.wahl-raster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.wahl { position: relative; display: block; }
+.wahl input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.wahl span { display: flex; align-items: center; justify-content: center; min-height: 52px; padding: 8px 10px; border-radius: 12px; background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line); font-weight: 700; text-align: center; cursor: pointer; }
+.wahl input:checked + span { background: var(--ink); color: var(--surface); box-shadow: none; }
+.wahl input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
+.richtwert { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px; border-radius: 14px; background: var(--tile); }
+.richtwert strong { display: block; color: var(--ink); }
+.richtwert span { color: var(--muted); font-size: 0.9375rem; }
+.pruefen { display: grid; gap: 0; margin: 0; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); background: var(--surface); }
+.pruefen div { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 12px 14px; border-top: 1px solid var(--line); }
+.pruefen div:first-child { border-top: 0; }
+.pruefen dt { grid-column: 1; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.pruefen dd { grid-column: 1; margin: 0; font-weight: 700; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; }
+.pruefen dd .klein { flex-basis: 100%; font-weight: 400; color: var(--muted); }
+.pruefen .aendern { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-size: 0.875rem; }
+.wizard-knoepfe { display: grid; grid-template-columns: auto 1fr; gap: 10px; }
+.wizard-knoepfe .btn-secondary { width: auto; padding-inline: 20px; }
+.wizard-knoepfe #neu-zurueck[hidden] + .btn, .wizard-knoepfe #neu-zurueck[hidden] ~ #neu-senden { grid-column: 1 / -1; }
+
+/* ===== Begrüßung ===== */
+.start { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; background: var(--paper); padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); overflow-y: auto; }
+.start[hidden] { display: none; }
+.start-inhalt { position: relative; width: 100%; max-width: 440px; display: grid; gap: 18px; padding-top: 40px; }
+.start-ueber { position: absolute; top: 0; right: 0; }
+.start-logo .marke-logo { height: 52px; width: auto; color: var(--ink); }
+.start h1 { margin: 0; font-size: 2rem; line-height: 1.15; outline: none; }
+.start-text { margin: 0; color: var(--muted); font-size: 1.0625rem; line-height: 1.5; }
+.start-liste { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
+.start-liste li { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; border-radius: 16px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+.start-liste li > .i { flex: none; width: 28px; height: 28px; padding: 6px; box-sizing: content-box; border-radius: 12px; background: var(--accent); color: var(--on-accent, #1B1A10); }
+.start-liste strong { display: block; font-size: 1.0625rem; }
+.start-liste span { color: var(--muted); line-height: 1.45; }
+.start-liste strong { color: var(--ink); }
+.start-orte { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.wahl-knopf { min-height: 48px; padding: 8px 10px; border: 0; border-radius: 12px; background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line); color: var(--ink); font-weight: 700; font-size: 0.9375rem; cursor: pointer; }
+.wahl-knopf[aria-pressed="true"] { background: var(--ink); color: var(--surface); box-shadow: none; }
+.start-fuss { display: grid; gap: 16px; padding-top: 4px; }
+.start-punkte { display: flex; justify-content: center; gap: 8px; }
+.start-punkte span { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.start-punkte span.an { width: 24px; border-radius: 4px; background: var(--ink); }
+
+/* ===== Als Nächstes ===== */
+.naechstes { display: grid; gap: 10px; }
+.aufgabe { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border: 0; border-radius: 14px; background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line); color: var(--ink); text-align: left; cursor: pointer; }
+.aufgabe-wichtig { box-shadow: inset 0 0 0 2px var(--accent); background: var(--warn-bg); }
+.aufgabe-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.aufgabe-text span { color: var(--muted); font-size: 0.9375rem; }
+.aufgabe-pfeil { font-size: 1.75rem; line-height: 1; color: var(--muted); }
+.banner { display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 12px 14px; border: 0; border-radius: 14px; background: var(--warn-bg); color: var(--ink); text-align: left; font-size: 0.9375rem; cursor: pointer; }
+.banner-punkt { flex: none; width: 10px; height: 10px; margin-top: 6px; border-radius: 50%; background: var(--crit); }
+.banner-mehr { color: var(--muted); }
+
+/* ===== Profil ===== */
+.person-knopf { width: 100%; padding: 10px 12px; border: 0; border-radius: 14px; background: var(--tile); color: var(--ink); text-align: left; cursor: pointer; }
+.person-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.person-mehr { font-size: 0.875rem; font-weight: 700; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.zurueck { display: inline-flex; align-items: center; gap: 6px; }
+.zurueck-pfeil { font-size: 1.5rem; line-height: 1; text-decoration: none; }
+.profil-kopf { display: flex; align-items: center; gap: 14px; }
+.profil-kopf h2 { margin: 0; }
+.profil-kopf .person-meta { margin: 2px 0 0; }
+.avatar-gross { width: 64px; height: 64px; font-size: 1.25rem; }
+.profil-zahlen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.profil-zahlen div { padding: 12px; border-radius: 14px; background: var(--tile); min-width: 0; }
+.profil-zahlen dt { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.profil-zahlen dd { margin: 4px 0 0; font-family: var(--f-display); font-weight: 800; font-size: 1.5rem; display: flex; align-items: center; gap: 4px; }
+.profil-zahlen dd.klein { margin: 0; font-family: var(--f-body); font-weight: 400; font-size: 0.8125rem; color: var(--muted); }
+.profil-belege { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.profil-belege li { display: flex; gap: 8px; align-items: center; font-weight: 700; }
+.profil-belege .i { color: var(--hedge); }
+
+/* ===== Einladen ===== */
+.einladen-karte { display: grid; gap: 12px; padding: 16px; border-radius: 16px; box-shadow: inset 0 0 0 1.5px var(--line); }
+.einladen-karte p { margin: 4px 0 0; color: var(--muted); font-size: 0.9375rem; }
+.einladen-karte .btn { justify-self: start; }
