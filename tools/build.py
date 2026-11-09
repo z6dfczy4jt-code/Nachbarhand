@@ -14,18 +14,8 @@ WURZEL = pathlib.Path(__file__).resolve().parent.parent
 SRC = WURZEL / 'src'
 LEAFLET_JS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'   # nur Vorschau
 LEAFLET_LOKAL = 'assets/vendor/leaflet-1.9.4.js'                                # GitHub Pages
-# GitHub Pages: Schriften liegen in assets/fonts, damit keine Daten an Google gehen
-SCHRIFTEN_LOKAL = ('<link rel="preload" href="assets/fonts/atkinson-hyperlegible-400.woff" as="font" type="font/woff" crossorigin>\n'
-    '<style>\n'
-    "@font-face { font-family: 'Bricolage Grotesque'; src: url('assets/fonts/bricolage-grotesque.woff') format('woff'); font-weight: 600 800; font-display: swap; }\n"
-    "@font-face { font-family: 'Atkinson Hyperlegible'; src: url('assets/fonts/atkinson-hyperlegible-400.woff') format('woff'); font-weight: 400; font-display: swap; }\n"
-    "@font-face { font-family: 'Atkinson Hyperlegible'; src: url('assets/fonts/atkinson-hyperlegible-700.woff') format('woff'); font-weight: 700; font-display: swap; }\n"
-    '</style>')
-# Vorschau in Claude: Google Fonts (dort sind keine eigenen Dateien möglich)
-FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n'
-         '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
-         '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700'
-         '&family=Bricolage+Grotesque:opsz,wght@12..96,600;800&display=swap">')
+# Schrift: die Systemschrift des Geräts (iPhone: San Francisco, Android: Roboto, Windows: Segoe UI).
+# Keine Webfonts, nichts wird nachgeladen.
 # Setzt Design und Schriftgröße vor dem ersten Zeichnen, damit nichts aufblitzt
 FRUEH = ('<script>try{var a=JSON.parse(localStorage.getItem("handdrauf-ansicht")||"{}"),r=document.documentElement;'
          'if(a.thema==="dunkel"||a.thema==="hell")r.setAttribute("data-theme",a.thema==="dunkel"?"dark":"light");'
@@ -59,20 +49,28 @@ def handschlag():
     return defs, intro, feier
 
 
+def bilder():
+    """Tätigkeits-Bilder (3D-Objekte aus Microsoft Fluent Emoji, MIT-Lizenz) als eingebettete Daten."""
+    import base64
+    eintraege = []
+    for f in sorted((SRC / 'kategorien').glob('*.webp')):
+        eintraege.append(f"  {f.stem}: 'data:image/webp;base64,{base64.b64encode(f.read_bytes()).decode()}'")
+    return '/* Tätigkeits-Bilder: Microsoft Fluent Emoji 3D (MIT), siehe src/kategorien/LIZENZ-fluent-emoji.txt */\nconst KAT_BILDER = {\n' + ',\n'.join(eintraege) + '\n};'
+
+
 def teile(vorschau):
     leaflet_css = (SRC / 'vendor' / 'leaflet-1.9.4.css').read_text()
     styles = (SRC / 'styles.css').read_text()
     body = (SRC / 'body.html').read_text().replace('<!--KOPFZEICHEN-->', (SRC / 'kopfzeichen.svg').read_text().strip())
     defs, intro, feier = handschlag()
     body = body.replace('<!--HANDSCHLAG-DEFS-->', defs).replace('<!--INTRO-SVG-->', intro).replace('<!--FEIER-SVG-->', feier)
-    app = '\n'.join((SRC / n).read_text() for n in ('symbole.js', 'recht.js', 'fragen.js', 'app.js'))
+    app = '\n'.join([bilder()] + [(SRC / n).read_text() for n in ('recht.js', 'fragen.js', 'app.js')])
     if vorschau:
         alt = 'const VORSCHAU = false;'
         assert alt in app
         app = app.replace(alt, 'const VORSCHAU = true;')
-    schriften = FONTS if vorschau else SCHRIFTEN_LOKAL
     leaflet = LEAFLET_JS if vorschau else LEAFLET_LOKAL
-    kopf = f'{FRUEH}\n{schriften}\n<style>\n{leaflet_css}</style>\n<style>\n{styles}</style>'
+    kopf = f'{FRUEH}\n<style>\n{leaflet_css}</style>\n<style>\n{styles}</style>'
     rumpf = f'{body}\n<script src="{leaflet}"></script>\n<script>\n{app}</script>\n'
     return kopf, rumpf
 
@@ -86,7 +84,8 @@ def standalone():
     return ('<!doctype html>\n<html lang="de">\n<head>\n'
             '<meta charset="utf-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
-            '<meta name="theme-color" content="#F3F5F1">\n'
+            '<meta name="theme-color" content="#F5F5F7" media="(prefers-color-scheme: light)">\n'
+            '<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">\n'
             '<meta name="description" content="Nachbarschaftshilfe in Garbsen: kleine Hilfen in deiner Nähe finden oder selbst anfragen.">\n'
             # Link-Vorschau in WhatsApp, Signal, Facebook, Mail (Bild aus design/vorschau.py)
             '<meta property="og:type" content="website">\n'

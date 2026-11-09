@@ -1,46 +1,47 @@
-/* Layout: Handy-zuerst, eine Spalte (max. 520px) auf kühlem Papiergrund.
-   Das gelbe Preisschild ist das einzige laute Element, alles andere bleibt ruhig. */
+/* Layout: Handy-zuerst, eine Spalte (max. 520px).
+   Vorbild Apple: Systemschrift, ruhiges Grau, weiße Gruppen, Farbe nur wo sie etwas bedeutet.
+   Rapsgelb bleibt die Markenfarbe (Preisschilder auf der Karte, Plus-Knopf). */
 :root {
-  --paper: #F3F5F1;
+  --paper: #F5F5F7;
   --surface: #FFFFFF;
-  --ink: #172029;
-  --muted: #5A6570;
-  --line: #DCE2DA;
-  --tile: #EBEFE8;
+  --ink: #1D1D1F;
+  --muted: #6E6E73;
+  --line: #E3E3E8;
+  --tile: #EDEDF0;
   --accent: #F4B400;
   --on-accent: #1B1A10;
-  --hedge: #2D6A4C;
+  --hedge: #1E7B3B;
   --on-hedge: #FFFFFF;
-  --good-bg: #E2F0E7;
-  --warn: #8A5200;
-  --warn-bg: #FFF1D6;
-  --crit: #B3261E;
-  --focus: #2463C9;
-  --you: #2463C9;
-  --map-land: #E8ECE5;
-  --map-area: #D3DCCF;
-  --map-edge: #BCC7B8;
-  --map-label: #4F5B66;
-  --shadow: 0 1px 2px rgba(23,32,41,.06), 0 8px 22px rgba(23,32,41,.10);
-  --f-display: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
-  --f-body: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --good-bg: #E6F4EA;
+  --warn: #8F5300;
+  --warn-bg: #FFF3DC;
+  --crit: #C9221A;
+  --focus: #0066CC;
+  --you: #0071E3;
+  --map-land: #ECEEEA;
+  --map-area: #DDE3DA;
+  --map-edge: #C5CEC2;
+  --map-label: #5A6570;
+  --shadow: 0 1px 2px rgba(0,0,0,.05), 0 6px 20px rgba(0,0,0,.08);
+  --f-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #10151A; --surface: #19212A; --ink: #E8EDF1; --muted: #9BA7B3; --line: #2B3540; --tile: #222B35;
-    --accent: #F4B400; --on-accent: #1B1A10; --hedge: #5DB386; --on-hedge: #0E1A13; --good-bg: #183326;
-    --warn: #F2B35A; --warn-bg: #3A2C12; --crit: #FF8A80; --focus: #7FB0FF; --you: #6FA4FF;
-    --map-land: #161D24; --map-area: #29353F; --map-edge: #3B4955; --map-label: #A3AFBA;
-    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 22px rgba(0,0,0,.4);
+    --paper: #000000; --surface: #1C1C1E; --ink: #F5F5F7; --muted: #98989D; --line: #38383A; --tile: #2C2C2E;
+    --accent: #F4B400; --on-accent: #1B1A10; --hedge: #30D158; --on-hedge: #00210B; --good-bg: #0E2A16;
+    --warn: #FFB340; --warn-bg: #3A2A0C; --crit: #FF6961; --focus: #2997FF; --you: #0A84FF;
+    --map-land: #1C1C1E; --map-area: #2C2C2E; --map-edge: #3A3A3C; --map-label: #98989D;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.5);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --paper: #10151A; --surface: #19212A; --ink: #E8EDF1; --muted: #9BA7B3; --line: #2B3540; --tile: #222B35;
-  --accent: #F4B400; --on-accent: #1B1A10; --hedge: #5DB386; --on-hedge: #0E1A13; --good-bg: #183326;
-  --warn: #F2B35A; --warn-bg: #3A2C12; --crit: #FF8A80; --focus: #7FB0FF; --you: #6FA4FF;
-  --map-land: #161D24; --map-area: #29353F; --map-edge: #3B4955; --map-label: #A3AFBA;
-  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 22px rgba(0,0,0,.4);
+  --paper: #000000; --surface: #1C1C1E; --ink: #F5F5F7; --muted: #98989D; --line: #38383A; --tile: #2C2C2E;
+  --accent: #F4B400; --on-accent: #1B1A10; --hedge: #30D158; --on-hedge: #00210B; --good-bg: #0E2A16;
+  --warn: #FFB340; --warn-bg: #3A2A0C; --crit: #FF6961; --focus: #2997FF; --you: #0A84FF;
+  --map-land: #1C1C1E; --map-area: #2C2C2E; --map-edge: #3A3A3C; --map-label: #98989D;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.5);
   color-scheme: dark;
 }
 
@@ -61,7 +62,7 @@ body {
 }
 body.sheet-offen { overflow: hidden; }
 h1, h2, h3, p { margin: 0; }
-h1, h2 { font-family: var(--f-display); font-weight: 800; letter-spacing: -0.01em; text-wrap: balance; }
+h1, h2 { font-family: var(--f-display); font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
 h1 { font-size: 1.75rem; line-height: 1.1; }
 h2 { font-size: 1.5rem; line-height: 1.15; }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -85,12 +86,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (max-width: 430px) { .ansicht-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .ansicht-btn { padding: 0 10px; } }
 @media (max-width: 350px) { .marke-logo { height: 30px; } }
 
-/* Tätigkeits-Symbole (Linienzeichnung wie das Logo, mit Rapsgelb) */
-.ks { stroke: none; fill: none; }
-.ks .fi { fill: var(--ink); } .ks .fw { fill: var(--surface); } .ks .si { stroke: var(--ink); } .ks .sw { stroke: var(--surface); }
-.ico .ks { width: 34px; height: 34px; }
-.chip .ks { width: 28px; height: 28px; margin: -4px 0 -4px -7px; padding: 2px; border-radius: 50%; background: var(--surface); }
-.eyebrow .ks { width: 24px; height: 24px; }
+/* Tätigkeiten als echte Objekte (3D-Bilder) */
+.bild { display: inline-block; flex: none; width: 24px; height: 24px; object-fit: contain; user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none; }
 
 .pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; line-height: 1.3; white-space: nowrap; }
 .pill-muted { background: var(--tile); color: var(--muted); }
@@ -227,12 +224,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--tile); color: var(--ink); display: grid; place-items: center; cursor: pointer; flex: none; }
 .person { display: flex; align-items: center; gap: 12px; }
-.avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--ink); color: var(--surface); display: grid; place-items: center; font-family: var(--f-display); font-weight: 800; font-size: 0.9375rem; flex: none; }
+.avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--ink); color: var(--surface); display: grid; place-items: center; font-family: var(--f-display); font-weight: 700; font-size: 0.9375rem; flex: none; }
 .person-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 700; }
 .person-meta { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 0.875rem; }
 .person-meta .i { color: var(--accent); }
 .betrag { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 16px; border-radius: 14px; background: var(--tile); }
-.betrag-zahl { font-family: var(--f-display); font-weight: 800; font-size: 2.125rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.betrag-zahl { font-family: var(--f-display); font-weight: 700; font-size: 2.125rem; line-height: 1; font-variant-numeric: tabular-nums; }
 .betrag-label { color: var(--muted); font-size: 0.8125rem; margin-top: 4px; }
 .betrag-detail { text-align: right; font-weight: 700; font-size: 0.9375rem; font-variant-numeric: tabular-nums; }
 .betrag-detail span { display: block; color: var(--muted); font-weight: 400; font-size: 0.8125rem; }
@@ -282,9 +279,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .step { width: 52px; height: 56px; flex: none; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font-size: 1.5rem; font-weight: 700; cursor: pointer; }
 .betrag-feld { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); height: 56px; padding-right: 14px; }
 .betrag-feld:focus-within { border-color: var(--ink); }
-.feld .betrag-feld input { border: 0; background: transparent; padding: 0 4px; height: 100%; text-align: right; width: 4ch; font-family: var(--f-display); font-weight: 800; font-size: 1.75rem; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
+.feld .betrag-feld input { border: 0; background: transparent; padding: 0 4px; height: 100%; text-align: right; width: 4ch; font-family: var(--f-display); font-weight: 700; font-size: 1.75rem; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
 .betrag-feld input::-webkit-outer-spin-button, .betrag-feld input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.betrag-feld span { font-family: var(--f-display); font-weight: 800; font-size: 1.5rem; color: var(--muted); }
+.betrag-feld span { font-family: var(--f-display); font-weight: 700; font-size: 1.5rem; color: var(--muted); }
 .schnell { display: flex; gap: 8px; flex-wrap: wrap; }
 .schnell .chip { padding: 6px 14px; }
 .kosten { display: grid; gap: 6px; padding: 14px 16px; border-radius: 14px; background: var(--tile); font-variant-numeric: tabular-nums; font-size: 0.9375rem; }
@@ -299,7 +296,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* Aufträge */
 .summe { display: grid; gap: 8px; padding: 18px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
-.summe-zahl { font-family: var(--f-display); font-weight: 800; font-size: 2.25rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.summe-zahl { font-family: var(--f-display); font-weight: 700; font-size: 2.25rem; line-height: 1; font-variant-numeric: tabular-nums; }
 .meter { height: 8px; border-radius: 4px; background: var(--tile); overflow: hidden; }
 .meter span { display: block; height: 100%; border-radius: 4px; background: var(--hedge); }
 .summe-hint { font-size: 0.8125rem; color: var(--muted); }
@@ -329,7 +326,7 @@ body { margin: 0; }
 /* Konto und Anmeldung */
 .kopf-rechts, .kopf-konto { display: flex; align-items: center; gap: 6px; }
 .btn-klein { width: auto; padding: 8px 14px; font-size: 0.875rem; border-radius: 999px; }
-.avatar-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--ink); color: var(--surface); font-family: var(--f-display); font-weight: 800; font-size: 0.875rem; cursor: pointer; display: grid; place-items: center; }
+.avatar-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--ink); color: var(--surface); font-family: var(--f-display); font-weight: 700; font-size: 0.875rem; cursor: pointer; display: grid; place-items: center; }
 .umschalter { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 12px; background: var(--tile); }
 .umschalter button { border: 0; background: transparent; padding: 10px; border-radius: 9px; font-weight: 700; color: var(--muted); cursor: pointer; }
 .umschalter button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
@@ -398,7 +395,7 @@ body { margin: 0; }
 .recht-hinweis { padding: 12px 14px; border-radius: 12px; background: var(--warn-bg); color: var(--warn); font-weight: 700; }
 .platzhalter { padding: 0 4px; border-radius: 4px; background: var(--warn-bg); color: var(--warn); font-weight: 700; }
 .recht-stand { color: var(--muted); font-size: 0.875rem; }
-.regel-liste li::marker { font-weight: 800; }
+.regel-liste li::marker { font-weight: 700; }
 .recht-nav { display: flex; flex-wrap: wrap; gap: 4px 18px; padding-top: 12px; border-top: 1px solid var(--line); }
 .recht-nav a { display: inline-flex; align-items: center; min-height: 44px; }
 .loeschen-box { background: var(--warn-bg); }
@@ -488,7 +485,7 @@ body { margin: 0; }
 .profil-zahlen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
 .profil-zahlen div { padding: 12px; border-radius: 14px; background: var(--tile); min-width: 0; }
 .profil-zahlen dt { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-.profil-zahlen dd { margin: 4px 0 0; font-family: var(--f-display); font-weight: 800; font-size: 1.5rem; display: flex; align-items: center; gap: 4px; }
+.profil-zahlen dd { margin: 4px 0 0; font-family: var(--f-display); font-weight: 700; font-size: 1.5rem; display: flex; align-items: center; gap: 4px; }
 .profil-zahlen dd.klein { margin: 0; font-family: var(--f-body); font-weight: 400; font-size: 0.8125rem; color: var(--muted); }
 .profil-belege { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
 .profil-belege li { display: flex; gap: 8px; align-items: center; font-weight: 700; }
@@ -604,7 +601,7 @@ body { margin: 0; }
 .feier-scheibe { width: 168px; height: 168px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; background: var(--accent); color: #172029; }
 .feier-scheibe .hs { width: 136px; height: auto; }
 .feier-scheibe .hs-funken path { stroke: #172029; stroke-width: 12; }
-.feier-titel { margin: 8px 0 0; font-family: var(--f-display); font-weight: 800; font-size: 1.75rem; line-height: 1.1; }
+.feier-titel { margin: 8px 0 0; font-family: var(--f-display); font-weight: 700; font-size: 1.75rem; line-height: 1.1; }
 .feier-text { margin: 0 0 8px; color: var(--muted); font-size: 1rem; }
 .feier.spielt { animation: feier-ein .2s ease both; }
 .feier.spielt .feier-karte { animation: feier-karte .32s cubic-bezier(.2, .9, .3, 1.2) both; }
@@ -628,5 +625,72 @@ body { margin: 0; }
 
 /* ===== Liste nach Termin ===== */
 .liste-kopf { justify-content: flex-start; }
-.liste-gruppe { margin: 14px 0 0; font-family: var(--f-display); font-size: 1.125rem; font-weight: 800; line-height: 1.2; color: var(--ink); }
+.liste-gruppe { margin: 14px 0 0; font-family: var(--f-display); font-size: 1.125rem; font-weight: 700; line-height: 1.2; color: var(--ink); }
 .liste-gruppe:first-child { margin-top: 2px; }
+
+
+/* ===== Gestaltung nach Apple-Vorbild: Systemschrift, Gruppen statt Kärtchen, ruhige Flächen ===== */
+body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; line-height: 1.47; }
+h1, h2 { font-weight: 700; }
+h1 { font-size: 2.125rem; line-height: 1.12; letter-spacing: -0.021em; }
+h2 { font-size: 1.375rem; line-height: 1.2; letter-spacing: -0.016em; }
+.hallo { gap: 2px; }
+.datum { color: var(--muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
+.lead { font-size: 0.9375rem; }
+/* Kleine Überschriften in normaler Schreibweise statt GROSSBUCHSTABEN */
+.h-klein, .eyebrow, .fakten dt { text-transform: none; letter-spacing: 0; font-weight: 600; font-size: 0.875rem; }
+.eyebrow .bild { width: 22px; height: 22px; }
+.bild.i-sm { width: 22px; height: 22px; vertical-align: -5px; }
+
+/* Suchfeld wie in iOS */
+.suche input { height: 46px; border: 0; border-radius: 12px; background: var(--tile); font-size: 1.0625rem; }
+.suche input::placeholder { color: var(--muted); }
+.suche input:focus { outline: none; box-shadow: 0 0 0 2px var(--ink); }
+
+/* Tätigkeiten als Leiste wie bei Airbnb: Bild über Wort, gewählte unterstrichen */
+.kat-leiste { gap: 4px; margin-inline: -16px; padding: 2px 16px 0; border-bottom: 1px solid var(--line); }
+.kat-leiste .chip { flex-direction: column; gap: 4px; min-width: 66px; min-height: 0; padding: 4px 8px 10px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--muted); font-weight: 600; font-size: 0.8125rem; }
+.kat-leiste .chip .bild { width: 34px; height: 34px; transition: transform .15s ease; }
+.kat-leiste .chip:hover { color: var(--ink); border-bottom-color: var(--line); }
+.kat-leiste .chip[aria-pressed="true"] { background: none; color: var(--ink); border-color: transparent; border-bottom-color: var(--ink); }
+.kat-leiste .chip[aria-pressed="true"] .bild { transform: scale(1.08); }
+
+/* Liste als weiße Gruppe mit Trennlinien (wie die Einstellungen am iPhone) */
+.liste { gap: 8px; }
+.zeilen { display: grid; background: var(--surface); border-radius: 14px; overflow: hidden; }
+.zeilen .card { position: relative; gap: 14px; padding: 12px 16px; border: 0; border-radius: 0; background: transparent; }
+.zeilen .card + .card::before { content: ""; position: absolute; top: 0; left: 74px; right: 0; height: 1px; background: var(--line); }
+.zeilen .card:hover { background: color-mix(in srgb, var(--tile) 55%, transparent); border-color: transparent; }
+.ico { width: 44px; height: 44px; border-radius: 0; background: none; }
+.ico .bild { width: 44px; height: 44px; }
+.card-title { font-size: 1.0625rem; font-weight: 600; line-height: 1.3; }
+.card-ort { color: var(--muted); font-weight: 400; }
+.card-ort .i { display: none; }
+.price { padding: 0; background: none; color: var(--ink); font-size: 1.0625rem; font-weight: 600; }
+.liste-gruppe { margin-top: 16px; font-family: var(--f-display); font-size: 1.25rem; font-weight: 700; letter-spacing: -0.012em; }
+.liste-gruppe:first-child { margin-top: 0; }
+.leer, .leer-klein { border: 0; background: var(--surface); }
+.leer-start { background: var(--surface); }
+.filter select { font-weight: 600; color: var(--focus); }
+
+/* Knöpfe: dunkel für das Wichtigste, grau für den Rest */
+.btn { font-weight: 600; font-size: 1.0625rem; border-radius: 12px; }
+.btn-secondary { background: var(--tile); box-shadow: none; }
+.btn-secondary:hover { box-shadow: none; background: color-mix(in srgb, var(--tile) 80%, var(--ink) 8%); }
+.pill { font-weight: 600; letter-spacing: 0; }
+
+/* Flächen ohne Rahmen */
+.summe { border: 0; }
+.einladen-zeile { background: var(--surface); font-weight: 600; }
+.kachel-karte { box-shadow: none; background: var(--surface); font-weight: 600; }
+.kachel-karte .bild { width: 52px; height: 52px; }
+.kachel-radio input:checked + .kachel-karte { box-shadow: inset 0 0 0 2px var(--ink); background: var(--surface); }
+.pruefen { box-shadow: none; }
+.start-liste li { box-shadow: none; }
+.start-liste li > .bild { width: 40px; height: 40px; }
+.start-liste li > .i { background: var(--tile); color: var(--ink); border-radius: 50%; }
+
+/* Navigation unten: durchscheinend wie in iOS */
+.tabs { background: color-mix(in srgb, var(--surface) 82%, transparent); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
+.tab { font-weight: 600; }
+.sheet { border-radius: 16px 16px 0 0; }

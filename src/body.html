@@ -42,6 +42,7 @@
     <!-- ===== Entdecken (Startseite) ===== -->
     <section id="view-entdecken" class="view" aria-labelledby="h-entdecken">
       <div class="hallo">
+        <p class="datum" id="datum"></p>
         <h1 id="h-entdecken">Hallo Tim</h1>
         <p class="lead" id="anzahl-text">Garbsen</p>
       </div>
@@ -51,7 +52,7 @@
         <svg class="i" aria-hidden="true"><use href="#i-suche"/></svg>
         <input id="suche" type="search" placeholder="Tätigkeit suchen, z. B. Rasen oder Einkauf" autocomplete="off">
       </div>
-      <div class="chips" id="chips-liste" role="group" aria-label="Kategorie filtern"></div>
+      <div class="chips kat-leiste" id="chips-liste" role="group" aria-label="Kategorie filtern"></div>
       <div class="liste-kopf">
         <div class="filter">
           <label><span class="sr">Stadtteil</span><select id="stadtteil"></select></label>
@@ -76,7 +77,7 @@
         <h1 id="h-karte">Karte</h1>
         <p class="klein" id="karte-anzahl"></p>
       </div>
-      <div class="chips" id="chips-karte" role="group" aria-label="Kategorie filtern"></div>
+      <div class="chips kat-leiste" id="chips-karte" role="group" aria-label="Kategorie filtern"></div>
       <div class="karte">
         <div id="map" role="region" aria-label="Karte von Garbsen mit Anfragen"></div>
         <div class="karte-knoepfe">

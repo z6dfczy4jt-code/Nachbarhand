@@ -130,7 +130,7 @@
       stadtteil: 'Osterwald O.E.', lat: 52.4623, lng: 9.5926, wann: 'Samstag und Sonntag, abends', dauer: '2 × 15 Min.',
       text: 'Minka braucht abends Futter und frisches Wasser. Ich bin übers Wochenende bei meiner Schwester.',
       adresse: 'Neue Straße, Osterwald O.E.', antwort: 'Danke! Den Schlüssel bekommst du am Freitag von mir.', status: 'offen', erstellt: 4 },
-    { id: 'g11', kat: 'technik', titel: 'Fahrradschlauch wechseln', wer: 'Paul D.', initialen: 'PD', sterne: 4.7, bewertungen: 5, betrag: 10,
+    { id: 'g11', kat: 'haushalt', titel: 'Fahrradschlauch wechseln', wer: 'Paul D.', initialen: 'PD', sterne: 4.7, bewertungen: 5, betrag: 10,
       stadtteil: 'Heitlingen', lat: 52.4676, lng: 9.6166, wann: 'Morgen, ab 16 Uhr', dauer: 'ca. 30 Min.',
       text: 'Platten am Hinterrad vom Kinderrad. Einen Ersatzschlauch habe ich schon gekauft.',
       adresse: 'In den Bornwiesen, Heitlingen', antwort: 'Danke! Das Rad steht im Carport.', status: 'offen', erstellt: 3 },
@@ -238,8 +238,9 @@
   const euro = (n) => n.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
   const euroKurz = (n) => Number.isInteger(n) ? `${n} €` : euro(n);
   const katName = (id) => (KATEGORIEN.find((k) => k.id === id) || {}).name || '';
-  const icon = (id, cls = '') => KAT_SYMBOLE[id]
-    ? `<svg class="i ks ${cls}" viewBox="0 0 48 48" aria-hidden="true" focusable="false">${KAT_SYMBOLE[id]}</svg>`
+  // Tätigkeiten als echte Objekte (Bild), alles andere als feine Linien-Symbole
+  const icon = (id, cls = '') => KAT_BILDER[id]
+    ? `<img class="bild ${cls}" src="${KAT_BILDER[id]}" alt="" width="56" height="56" decoding="async" draggable="false">`
     : `<svg class="i ${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
   const vorname = (name) => String(name || '').split(' ')[0];
   const anzeigename = (p) => p ? `${p.vorname}${p.nachname_initial ? ' ' + p.nachname_initial + '.' : ''}` : 'Unbekannt';
@@ -735,9 +736,10 @@
   /* ===== Darstellung ===== */
   function chipsHTML() {
     return [{ id: 'alle', name: 'Alle' }, ...KATEGORIEN].map((k) =>
-      `<button type="button" class="chip" data-kat="${k.id}" aria-pressed="${ui.kat === k.id}">${k.id === 'alle' ? '' : icon(k.id, 'i-sm')}${k.name}</button>`
+      `<button type="button" class="chip" data-kat="${k.id}" aria-pressed="${ui.kat === k.id}">${icon(k.id)}<span>${k.name}</span></button>`
     ).join('');
   }
+  const zeilen = (liste) => `<div class="zeilen">${liste.join('')}</div>`;
   function karteHTML(g, extra = '') {
     return `<button type="button" class="card" data-id="${g.id}">
       <span class="ico">${icon(g.kat)}</span>
@@ -778,8 +780,9 @@
     const offene = gesuche.filter((g) => !g.eigen && g.status === 'offen' && !abgelaufen(g) && !versteckt(g));
     const ort = meinOrt();
     $('#h-entdecken').textContent = istLive() ? (db.profil ? `Hallo ${db.profil.vorname}` : 'Hilfe in Garbsen') : 'Hallo Tim';
+    $('#datum').textContent = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
     const anzahl = `${offene.length} ${offene.length === 1 ? 'Nachbar sucht' : 'Nachbarn suchen'} gerade Hilfe`;
-    $('#anzahl-text').textContent = zeigeIch() ? `${ort.stadtteil}, Garbsen · ${anzahl}` : `Garbsen · ${anzahl}`;
+    $('#anzahl-text').textContent = zeigeIch() ? `${anzahl} · ${ort.stadtteil}` : `${anzahl} in Garbsen`;
 
     if (istLive() && !db.geladen) {
       $('#liste').innerHTML = db.fehler
@@ -811,12 +814,12 @@
       </div>`;
       return;
     }
-    if (ui.sort !== 'termin') { $('#liste').innerHTML = treffer.map((g) => karteHTML(g)).join(''); return; }
+    if (ui.sort !== 'termin') { $('#liste').innerHTML = zeilen(treffer.map((g) => karteHTML(g))); return; }
     // Nach Termin: Abschnitte Heute, Morgen, Diese Woche, Später, darin die nächsten zuerst
     const gruppen = new Map(TERMIN_GRUPPEN.map((n) => [n, []]));
     treffer.forEach((g) => gruppen.get(terminGruppe(g)).push(g));
     $('#liste').innerHTML = [...gruppen].filter(([, l]) => l.length).map(([name, l]) =>
-      `<h2 class="liste-gruppe">${name}</h2>${l.sort((a, b) => (terminWert(a) - terminWert(b)) || (meterVonMir(a) - meterVonMir(b))).map((g) => karteHTML(g)).join('')}`).join('');
+      `<h2 class="liste-gruppe">${name}</h2>${zeilen(l.sort((a, b) => (terminWert(a) - terminWert(b)) || (meterVonMir(a) - meterVonMir(b))).map((g) => karteHTML(g)))}`).join('');
   }
   const TERMIN_GRUPPEN = ['Heute', 'Morgen', 'Diese Woche', 'Später', 'Ohne festen Termin'];
   const terminWert = (g) => { const t = terminAusText(g.wann); return t ? +t.von : Infinity; };
@@ -907,10 +910,10 @@
       <div class="meter" role="img" aria-label="${euro(verdient)} von ${euro(CONFIG.freigrenze)} steuerfreiem Betrag"><span style="width:${anteil.toFixed(1)}%"></span></div>
       <span class="summe-hint">Steuerfrei bis ${CONFIG.freigrenze} € im Jahr, noch ${euro(rest)} frei.</span>`;
     $('#zusagen').innerHTML = zusagen.length
-      ? zusagen.map((g) => karteHTML(g, pills(g))).join('')
+      ? zeilen(zusagen.map((g) => karteHTML(g, pills(g))))
       : `<p class="leer-klein">Noch keine Zusagen.</p>`;
     $('#eigene').innerHTML = eigene.length
-      ? eigene.map((g) => karteHTML(g, pills(g))).join('')
+      ? zeilen(eigene.map((g) => karteHTML(g, pills(g))))
       : `<p class="leer-klein">Noch keine Anfragen.</p>`;
   }
 
@@ -2161,8 +2164,8 @@
       <h1 id="start-titel" tabindex="-1">Nachbarn helfen Nachbarn</h1>
       <p class="start-text">Rasen mähen, Einkauf hochtragen, Drucker einrichten: kleine Hilfen in Garbsen, gegen eine kleine Aufwandsentschädigung.</p>
       <ul class="start-liste">
-        <li>${icon('plus')}<span><strong>Hilfe suchen</strong>Eine Anfrage in vier kurzen Schritten stellen.</span></li>
-        <li>${icon('karte')}<span><strong>Helfen</strong>Auf der Karte sehen, wo in deiner Nähe Hilfe gebraucht wird.</span></li>
+        <li>${icon('winken')}<span><strong>Hilfe suchen</strong>Eine Anfrage in vier kurzen Schritten stellen.</span></li>
+        <li>${icon('stecknadel')}<span><strong>Helfen</strong>Auf der Karte sehen, wo in deiner Nähe Hilfe gebraucht wird.</span></li>
       </ul>
       ${fuss(0, 'Weiter', 'weiter')}`;
     if (startSeite === 1) return `${ueber}
