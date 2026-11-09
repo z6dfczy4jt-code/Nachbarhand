@@ -25,7 +25,7 @@ function RECHT_TEXTE(b, e) {
         <h3>Verbraucherstreitbeilegung</h3>
         <p>Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
         <h3>Haftung für Inhalte</h3>
-        <p>Gesuche und Nachrichten schreiben die Nutzer selbst. Wir prüfen sie nicht vorab, entfernen aber rechtswidrige Inhalte, sobald wir davon erfahren. Hinweise nehmen wir über „Melden“ in der App oder per E-Mail entgegen.</p>
+        <p>Anfragen und Nachrichten schreiben die Nutzer selbst. Wir prüfen sie nicht vorab, entfernen aber rechtswidrige Inhalte, sobald wir davon erfahren. Hinweise nehmen wir über „Melden“ in der App oder per E-Mail entgegen.</p>
         ${stand}`
     },
 
@@ -49,12 +49,12 @@ function RECHT_TEXTE(b, e) {
         <p>Die App speichert im Browser deines Geräts (localStorage): deine Ansicht-Einstellungen, welche Nachrichten du gelesen hast, die Beispieldaten der Demo und, wenn du angemeldet bist, deine Anmeldung. Diese Daten bleiben auf deinem Gerät. Sie sind für die Funktionen nötig, die du nutzt (§ 25 Abs. 2 Nr. 2 TDDDG). Cookies für Werbung oder Statistik setzen wir nicht.</p>
 
         <h3>5. Wenn du ein Konto hast</h3>
-        <p>Für Konten, Gesuche und Nachrichten nutzen wir Supabase (Supabase Pte. Ltd., Singapur). Die Datenbank liegt in einem Rechenzentrum in Frankfurt am Main. Mit Supabase besteht ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO). Soweit Supabase für Betrieb und Support aus Ländern außerhalb der EU zugreift, gelten EU-Standardvertragsklauseln.</p>
+        <p>Für Konten, Anfragen und Nachrichten nutzen wir Supabase (Supabase Pte. Ltd., Singapur). Die Datenbank liegt in einem Rechenzentrum in Frankfurt am Main. Mit Supabase besteht ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO). Soweit Supabase für Betrieb und Support aus Ländern außerhalb der EU zugreift, gelten EU-Standardvertragsklauseln.</p>
         <p>Gespeichert werden:</p>
         <ul>
           <li>E-Mail-Adresse und Passwort (nur verschlüsselt als Prüfwert)</li>
           <li>Vorname, Anfangsbuchstabe des Nachnamens, Stadtteil und deine Bestätigung, dass du mindestens 18 bist</li>
-          <li>deine Gesuche, die Adresse zu einem Gesuch, deine Zusagen und Bewertungen</li>
+          <li>deine Anfragen, die Adresse zu einer Anfrage, deine Zusagen und Bewertungen</li>
           <li>Nachrichten zu einem Auftrag und Meldungen, die du abschickst</li>
         </ul>
         <p>Rechtsgrundlage ist der Nutzungsvertrag mit dir (Art. 6 Abs. 1 lit. b DSGVO). Meldungen verarbeiten wir außerdem, um rechtswidrige Inhalte zu entfernen und Nutzer zu schützen (Art. 6 Abs. 1 lit. c und f DSGVO). Die Bestätigungs-E-Mail bei der Registrierung verschickt Supabase für uns.</p>
@@ -62,14 +62,14 @@ function RECHT_TEXTE(b, e) {
 
         <h3>6. Wer sieht was?</h3>
         <ul>
-          <li><strong>Alle, auch ohne Konto:</strong> offene Gesuche mit Vorname, Anfangsbuchstabe, Stadtteil, ungefährer Lage (100 bis 400 Meter um die Stadtteilmitte) und Bewertungsschnitt.</li>
+          <li><strong>Alle, auch ohne Konto:</strong> offene Anfragen mit Vorname, Anfangsbuchstabe, Stadtteil, ungefährer Lage (100 bis 400 Meter um die Stadtteilmitte) und Bewertungsschnitt.</li>
           <li><strong>Nur die Person, die zusagt:</strong> die genaue Adresse.</li>
           <li><strong>Nur ihr beide:</strong> eure Nachrichten.</li>
           <li><strong>Nur wir:</strong> Meldungen. Die gemeldete Person erfährt nicht, wer gemeldet hat.</li>
         </ul>
 
         <h3>7. Wie lange?</h3>
-        <p>Dein Konto und deine Daten speichern wir, bis du das Konto löschst. Das geht jederzeit in der App unter „Dein Konto“. Dann löschen wir dein Profil, deine Gesuche, Adressen, Nachrichten und Bewertungen. Meldungen bewahren wir höchstens zwölf Monate nach ihrer Bearbeitung auf, um wiederholte Verstöße erkennen zu können.</p>
+        <p>Dein Konto und deine Daten speichern wir, bis du das Konto löschst. Das geht jederzeit in der App unter „Dein Konto“. Dann löschen wir dein Profil, deine Anfragen, Adressen, Nachrichten und Bewertungen. Meldungen bewahren wir höchstens zwölf Monate nach ihrer Bearbeitung auf, um wiederholte Verstöße erkennen zu können.</p>
 
         <h3>8. Deine Rechte</h3>
         <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Datenübertragbarkeit (Art. 15 bis 20 DSGVO). Verarbeitungen auf Grundlage unseres berechtigten Interesses kannst du widersprechen (Art. 21 DSGVO). Schreib uns dafür an ${mail}.</p>
@@ -86,7 +86,7 @@ function RECHT_TEXTE(b, e) {
         <p class="recht-kurz">Fassung für die Testphase in Garbsen. In dieser Phase ist Hand Drauf kostenlos und vermittelt nur.</p>
 
         <h3>1. Was Hand Drauf ist</h3>
-        <p>Hand Drauf ist eine Plattform, auf der sich Nachbarn in Garbsen bei kleinen Dingen helfen: Wer Hilfe braucht, stellt ein Gesuch ein, wer helfen möchte, sagt zu. Betreiber ist ${name} (siehe ${verweis('impressum', 'Impressum')}).</p>
+        <p>Hand Drauf ist eine Plattform, auf der sich Nachbarn in Garbsen bei kleinen Dingen helfen: Wer Hilfe braucht, stellt eine Anfrage, wer helfen möchte, sagt zu. Betreiber ist ${name} (siehe ${verweis('impressum', 'Impressum')}).</p>
         <p>Die Absprache über eine Hilfe kommt nur zwischen euch Nutzern zustande. Hand Drauf ist nicht Vertragspartner, nicht Arbeitgeber und nicht Auftraggeber.</p>
 
         <h3>2. Kosten</h3>
@@ -102,8 +102,8 @@ function RECHT_TEXTE(b, e) {
         <h3>4. Nachbarschaftshilfe, kein Job</h3>
         <p>Hand Drauf ist für gelegentliche Hilfe gegen eine kleine Aufwandsentschädigung gedacht, nicht für regelmäßige oder gewerbliche Arbeit. Deshalb gilt:</p>
         <ul>
-          <li>höchstens 50 € pro Gesuch,</li>
-          <li>höchstens 5 laufende Gesuche pro Person,</li>
+          <li>höchstens 50 € pro Anfrage,</li>
+          <li>höchstens 5 laufende Anfragen pro Person,</li>
           <li>höchstens 8 Zusagen in 30 Tagen und höchstens 2 für dieselbe Person,</li>
           <li>keine Daueraufträge und keine Leistungen, für die man ein Gewerbe oder eine Ausbildung braucht.</li>
         </ul>
@@ -114,13 +114,13 @@ function RECHT_TEXTE(b, e) {
 
         <h3>6. Umgang miteinander</h3>
         <ul>
-          <li>Bleib freundlich und ehrlich, in Gesuchen wie in Nachrichten. Halte dich an die ${verweis('regeln', 'Regeln für Nachbarn')}.</li>
+          <li>Bleib freundlich und ehrlich, in Anfragen wie in Nachrichten. Halte dich an die ${verweis('regeln', 'Regeln für Nachbarn')}.</li>
           <li>Die Adresse, die du nach einer Zusage siehst, darfst du nur für diesen Auftrag nutzen.</li>
           <li>Keine Werbung, keine Weitergabe von Daten anderer.</li>
         </ul>
 
         <h3>7. Melden und Sperren</h3>
-        <p>Über „Melden“ kannst du Gesuche und beteiligte Personen melden. Wir prüfen jede Meldung. Verstößt etwas gegen Gesetze oder diese Bedingungen, können wir Inhalte entfernen und Konten vorübergehend oder dauerhaft sperren. Wir sagen dir, was wir entschieden haben und warum. Bist du anderer Meinung, schreib uns an ${mail}.</p>
+        <p>Über „Melden“ kannst du Anfragen und beteiligte Personen melden. Wir prüfen jede Meldung. Verstößt etwas gegen Gesetze oder diese Bedingungen, können wir Inhalte entfernen und Konten vorübergehend oder dauerhaft sperren. Wir sagen dir, was wir entschieden haben und warum. Bist du anderer Meinung, schreib uns an ${mail}.</p>
 
         <h3>8. Haftung</h3>
         <p>Für Schäden bei einer Hilfe haftet ihr untereinander nach den gesetzlichen Regeln. Prüf vorher, ob deine private Haftpflichtversicherung Schäden bei Gefälligkeiten abdeckt.</p>

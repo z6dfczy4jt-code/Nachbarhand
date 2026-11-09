@@ -24,7 +24,7 @@
     minBetrag: 5,
     maxBetrag: 50,             // Obergrenze für Nachbarschaftshilfe
     freigrenze: 255,           // § 22 Nr. 3 EStG: unter 256 € Gewinn im Jahr steuerfrei
-    bereichMeter: 250,         // Radius des ungefähren Bereichs um ein Gesuch
+    bereichMeter: 250,         // Radius des ungefähren Bereichs um eine Anfrage
     ich: { name: 'Tim', initialen: 'TS', stadtteil: 'Garbsen-Mitte', lat: 52.4248, lng: 9.5962 }, // Demo-Person
     // Betreiber für Impressum und Datenschutz. Vor dem öffentlichen Start ausfüllen.
     betreiber: { name: '', anschrift: '', email: '', telefon: '' }
@@ -154,9 +154,10 @@
     adressen: new Map(),    // gesuch_id -> Adresse (nur für Beteiligte)
     nachrichten: new Map(), // gesuch_id -> Verlauf (null = wird geladen)
     letzte: new Map(),      // gesuch_id -> Zeit der letzten Nachricht der anderen Person
-    gemeldet: new Set(),    // in dieser Sitzung gemeldete Gesuche
+    gemeldet: new Set(),    // in dieser Sitzung gemeldete Anfragen
     profile: new Map(),     // profil_id -> öffentliches Profil (für die Profil-Ansicht)
-    altesSchema: false      // Datenbank ohne das Update vom November 2026 (kein Termin, kein Bearbeiten)
+    altesSchema: false,     // Datenbank ohne das Update vom November 2026 (kein Termin, kein Bearbeiten)
+    blockiert: new Map()    // profil_id -> Name (von mir blockiert)
   };
   const istLive = () => db.modus === 'live';
 
@@ -176,7 +177,7 @@
   }
 
   let gesuche = [];
-  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false, bearbeiten: null };
+  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false, bearbeiten: null, blockieren: false };
 
   /* ===== Ansicht: Design, Schriftgröße, Startseite (nur auf diesem Gerät gespeichert) ===== */
   const ANSICHT_SPEICHER = 'handdrauf-ansicht';
@@ -262,7 +263,7 @@
   const WOCHENTAGE = ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'];
   const MONATE = ['Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sept.', 'Okt.', 'Nov.', 'Dez.'];
   const TAG_MS = 86400000;
-  const MAX_TAGE = 21; // spätestens dann läuft ein offenes Gesuch ab
+  const MAX_TAGE = 21; // spätestens dann läuft eine offene Anfrage ab
   const TAG_WAHL = ['Heute', 'Morgen', 'Dieses Wochenende', 'Nächste Woche'];
   const ZEIT_TEXT = { vormittags: 'vormittags', nachmittags: 'nachmittags', abends: 'abends', flexibel: 'Uhrzeit flexibel' };
   function heute() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
@@ -294,12 +295,55 @@
     const z = zeitraum(tag) || zeitraum('Morgen');
     return { wann: `${z.text}, ${ZEIT_TEXT[zeit] || ZEIT_TEXT.flexibel}`, bis: isoTag(z.bis) };
   }
-  // Heute oder morgen: in Karten kurz „Morgen, nachmittags“ statt des Datums
+  // Liest den Termin aus dem Wann-Text: „Di. 10. Nov., nachmittags“, „Sa./So. 14./15. Nov.“, „Woche 16.–22. Nov.“,
+  // ältere Texte wie „Samstag, vormittags“ oder „Morgen, ab 16 Uhr“. Ergebnis: erster und letzter Tag, Uhrzeit-Fenster.
+  const MONAT_INDEX = { 'Jan.': 0, 'Feb.': 1, 'März': 2, 'Apr.': 3, 'Mai': 4, 'Juni': 5, 'Juli': 6, 'Aug.': 7, 'Sept.': 8, 'Okt.': 9, 'Nov.': 10, 'Dez.': 11 };
+  const TAGNAMEN = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+  function datumIm(monat, tag) {
+    const h = heute();
+    const d = new Date(h.getFullYear(), monat, tag);
+    return d < plusTage(h, -180) ? new Date(h.getFullYear() + 1, monat, tag) : d; // Jahreswechsel
+  }
+  function terminAusText(wann) {
+    if (!wann) return null;
+    const i = wann.lastIndexOf(', ');
+    const datum = (i > 0 ? wann.slice(0, i) : wann).trim();
+    const zeit = i > 0 ? wann.slice(i + 2) : '';
+    let von = null, bis = null, genau = false;
+    const tage = [...datum.matchAll(/(\d{1,2})\.(?:\s(Jan\.|Feb\.|März|Apr\.|Mai|Juni|Juli|Aug\.|Sept\.|Okt\.|Nov\.|Dez\.))?/g)]
+      .map((m) => [Number(m[1]), m[2] ? MONAT_INDEX[m[2]] : null]);
+    if (tage.some((t) => t[1] !== null)) {
+      for (let k = tage.length - 2; k >= 0; k--) if (tage[k][1] === null) tage[k][1] = tage[k + 1][1];
+      for (let k = 1; k < tage.length; k++) if (tage[k][1] === null) tage[k][1] = tage[k - 1][1];
+      von = datumIm(tage[0][1], tage[0][0]);
+      bis = datumIm(tage.at(-1)[1], tage.at(-1)[0]);
+      if (bis < von) bis = new Date(bis.getFullYear() + 1, bis.getMonth(), bis.getDate());
+      genau = true;
+    } else if (/^Heute/.test(datum)) von = bis = heute();
+    else if (/^Morgen/.test(datum)) von = bis = plusTage(heute(), 1);
+    else if (/Wochenende|^Samstag und Sonntag/.test(datum)) ({ von, bis } = zeitraum('Dieses Wochenende'));
+    else if (/^Nächste Woche/.test(datum)) ({ von, bis } = zeitraum('Nächste Woche'));
+    else if (/^Diese Woche/.test(datum)) { von = heute(); bis = plusTage(von, (7 - von.getDay()) % 7); }
+    else {
+      const t = TAGNAMEN.findIndex((n) => datum.startsWith(n));
+      if (t >= 0) von = bis = plusTage(heute(), (t - heute().getDay() + 7) % 7);
+    }
+    if (!von) return null;
+    let start = null, ende = null;
+    const spanne = zeit.match(/(\d{1,2})(?::(\d\d))?\s*[–-]\s*(\d{1,2})(?::(\d\d))?\s*Uhr/);
+    const ab = zeit.match(/ab\s(\d{1,2})(?::(\d\d))?\s*Uhr/);
+    if (spanne) { start = [+spanne[1], +(spanne[2] || 0)]; ende = [+spanne[3], +(spanne[4] || 0)]; }
+    else if (ab) { start = [+ab[1], +(ab[2] || 0)]; ende = [Math.min(23, +ab[1] + 2), +(ab[2] || 0)]; }
+    else if (/vormittag/.test(zeit)) { start = [9, 0]; ende = [12, 0]; }
+    else if (/nachmittag/.test(zeit)) { start = [14, 0]; ende = [17, 0]; }
+    else if (/abend/.test(zeit)) { start = [18, 0]; ende = [20, 0]; }
+    return { von, bis, zeit, start, ende, genau };
+  }
+  // Heute oder morgen: in Karten kurz „Morgen, nachmittags“ statt des Datums (nur bei Texten mit echtem Datum)
   function relativerTag(g) {
-    if (!g.bis || !g.wann) return '';
-    const datum = g.wann.slice(0, Math.max(0, g.wann.lastIndexOf(', '))) || g.wann;
-    if (/[/–]|^Woche/.test(datum)) return '';
-    const tage = Math.round((ausIso(g.bis) - heute()) / TAG_MS);
+    const t = terminAusText(g.wann);
+    if (!t || !t.genau || +t.von !== +t.bis) return '';
+    const tage = Math.round((t.von - heute()) / TAG_MS);
     return tage === 0 ? 'Heute' : tage === 1 ? 'Morgen' : '';
   }
   function wannText(g) {
@@ -313,6 +357,19 @@
   const sichtbarBis = (g) => g.bis ? tagText(ausIso(g.bis)) : (g.laeuftAb ? tagText(new Date(g.laeuftAb - 1)) : '');
   const demoAblauf = (bis) => Math.min(Date.now() + MAX_TAGE * TAG_MS, +plusTage(ausIso(bis), 1));
 
+  /* ===== Anstößige Wörter (App Store 1.2). Dieselbe Liste prüft die Datenbank in privat.anstoessig. ===== */
+  const ANSTOESSIG = new RegExp('(?<![a-zäöüß])(hure|fotze|wichser|arschloch|spast(i|en)?(?![a-zäöüß])|mongo(?![a-zäöüß])|nutte|(ge)?fick(en|t|st|e|er|te|ten)?(?![a-zäöüß])|bitch|kanake|neger|nigger|schwuchtel|vergewaltig)' +
+    '|hurensohn|schlampe|missgeburt|heil hitler|sieg heil');
+  const anstoessig = (t) => ANSTOESSIG.test(String(t || '').toLowerCase().replace(/[013457@$]/g, (z) => ({ 0: 'o', 1: 'i', 3: 'e', 4: 'a', 5: 's', 7: 't', '@': 'a', $: 's' }[z])));
+
+  // Demo: blockierte Personen nur auf diesem Gerät (nach Namen)
+  const BLOCK_SPEICHER = 'handdrauf-blockiert';
+  let demoBlockiert = [];
+  try { demoBlockiert = JSON.parse(localStorage.getItem(BLOCK_SPEICHER) || '[]') || []; } catch (e) { demoBlockiert = []; }
+  const demoBlockSpeichern = () => { try { localStorage.setItem(BLOCK_SPEICHER, JSON.stringify(demoBlockiert)); } catch (e) { /* nur für diese Sitzung */ } };
+  // Live blendet die Datenbank Blockierte aus, in der Demo macht das die App
+  const versteckt = (g) => !istLive() && !g.eigen && g.helfer !== 'ich' && demoBlockiert.includes(g.wer);
+
   function passt(g) {
     if (ui.kat !== 'alle' && g.kat !== ui.kat) return false;
     const q = ui.suche.trim().toLowerCase();
@@ -323,6 +380,10 @@
     const l = liste.slice();
     if (ui.sort === 'betrag') l.sort((a, b) => b.betrag - a.betrag);
     else if (ui.sort === 'neu') l.sort((a, b) => b.erstellt - a.erstellt);
+    else if (ui.sort === 'termin') {
+      const wann = (g) => { const t = terminAusText(g.wann); return t ? +t.von : Infinity; };
+      l.sort((a, b) => (wann(a) - wann(b)) || (meterVonMir(a) - meterVonMir(b)));
+    }
     else l.sort((a, b) => meterVonMir(a) - meterVonMir(b));
     return l;
   }
@@ -417,6 +478,7 @@
     db.nachrichten.clear();
     db.letzte.clear();
     db.gemeldet.clear();
+    db.blockiert.clear();
     if (uid) {
       const { data } = await db.client.from('profile').select('*').eq('id', uid).maybeSingle();
       db.profil = data || null;
@@ -464,6 +526,8 @@
         .neq('status', 'zurueckgezogen').order('erstellt', { ascending: false }).limit(300);
       if (error) throw error;
       if (db.user) {
+        const bl = await db.client.from('blockiert').select('wen, profil:profile!blockiert_wen_fkey(vorname, nachname_initial)').eq('von', db.user.id);
+        if (!bl.error && bl.data) { db.blockiert.clear(); bl.data.forEach((x) => db.blockiert.set(x.wen, anzeigename(x.profil))); }
         const b = await db.client.from('bewertungen').select('gesuch_id, sterne').eq('von', db.user.id);
         if (!b.error && b.data) b.data.forEach((x) => db.bewertungen.set(x.gesuch_id, x.sterne));
         const n = await db.client.from('nachrichten').select('gesuch_id, erstellt')
@@ -485,9 +549,11 @@
     }
     if (ui.offen && !gesuche.some((g) => g.id === ui.offen)) {
       schliessen();
-      meldung('Dieses Gesuch ist nicht mehr verfügbar.');
+      meldung('Diese Anfrage ist nicht mehr verfügbar.');
     }
     renderAlles();
+    const wartet = linkId(location.hash.slice(1));
+    if (wartet && db.geladen && ui.offen !== wartet && !ui.panel) gesuchAusLink(wartet);
   }
 
   async function ladeAdresse(id) {
@@ -573,6 +639,39 @@
     demoNachricht(g.id, DEMO_ANTWORTEN[(nr - 1) % DEMO_ANTWORTEN.length], 1800);
   }
 
+  /* ===== Blockieren (App Store 1.2): Ihr seht euch gegenseitig nicht mehr, laufende Zusagen enden ===== */
+  async function blockiere(id, name) {
+    if (istLive()) {
+      const { error } = await db.client.rpc('blockieren', { p_person: id });
+      if (error) throw error;
+      db.blockiert.set(id, name);
+      await neuLaden();
+      return;
+    }
+    if (!demoBlockiert.includes(name)) demoBlockiert.push(name);
+    demoBlockSpeichern();
+    gesuche.forEach((g) => { if (g.wer === name && g.helfer === 'ich' && g.status === 'zugesagt') { g.status = 'offen'; g.helfer = null; g.nachrichten = []; } });
+    demoSpeichern();
+  }
+  async function entsperre(id) {
+    if (istLive()) {
+      const { error } = await db.client.rpc('entblocken', { p_person: id });
+      if (error) throw error;
+      db.blockiert.delete(id);
+      await neuLaden();
+      return;
+    }
+    demoBlockiert = demoBlockiert.filter((n) => n !== id);
+    demoBlockSpeichern();
+  }
+  function blockListeHTML() {
+    const liste = istLive() ? [...db.blockiert.entries()] : demoBlockiert.map((n) => [n, n]);
+    if (!liste.length) return '';
+    return `<section class="blockliste" aria-labelledby="h-blockliste"><h3 class="h-klein" id="h-blockliste">Blockiert</h3>
+      ${liste.map(([id, name]) => `<div class="block-zeile"><span>${esc(name)}</span><button type="button" class="link-btn" data-entsperren="${esc(id)}">Entsperren</button></div>`).join('')}
+      <p class="klein">Blockierte sehen deine Anfragen nicht, und du siehst ihre nicht.</p></section>`;
+  }
+
   /* ===== Melden ===== */
   const MELDEGRUENDE = [['betrug', 'Betrug oder Abzocke'], ['unangemessen', 'Beleidigend oder unangemessen'], ['gefaehrlich', 'Gefährlich oder verboten'],
     ['schwarzarbeit', 'Eher ein regelmäßiger Job als Nachbarschaftshilfe'], ['anderes', 'Etwas anderes']];
@@ -626,7 +725,7 @@
       <span class="card-main">
         <span class="card-title">${esc(g.titel)}</span>
         <span class="card-ort">${icon('ort', 'i-xs')}${esc(g.stadtteil)} · ${distanz(g)}</span>
-        <span class="card-meta">${esc(g.eigen ? 'Dein Gesuch' : g.wer)} · ${esc(wannText(g))}</span>
+        <span class="card-meta">${esc(g.eigen ? 'Deine Anfrage' : g.wer)} · ${esc(wannText(g))}</span>
         ${extra}
       </span>
       <span class="price">${euroKurz(g.betrag)}</span>
@@ -640,8 +739,8 @@
     else el.innerHTML = `<button type="button" class="avatar-btn" data-panel="konto" aria-label="Dein Konto">${esc(kuerzel(db.profil))}</button>`;
     $('#fuss').textContent = istLive()
       ? 'Testphase: Die Aufwandsentschädigung zahlt ihr direkt untereinander. Hand Drauf vermittelt nur und nimmt noch keine Gebühr.'
-      : BEISPIEL_MODUS ? 'Erfundene Beispiel-Gesuche, damit du siehst, wie Hand Drauf funktioniert. Es fließt kein echtes Geld.'
-        : 'Prototyp mit erfundenen Beispiel-Gesuchen in Garbsen. Es fließt kein echtes Geld.';
+      : BEISPIEL_MODUS ? 'Erfundene Beispiel-Anfragen, damit du siehst, wie Hand Drauf funktioniert. Es fließt kein echtes Geld.'
+        : 'Prototyp mit erfundenen Beispiel-Anfragen in Garbsen. Es fließt kein echtes Geld.';
     $('#reset-knopf').hidden = istLive();
     $('#adresse-optional').hidden = istLive();
   }
@@ -661,7 +760,7 @@
   }
 
   function renderListe() {
-    const offene = gesuche.filter((g) => !g.eigen && g.status === 'offen' && !abgelaufen(g));
+    const offene = gesuche.filter((g) => !g.eigen && g.status === 'offen' && !abgelaufen(g) && !versteckt(g));
     const ort = meinOrt();
     $('#h-entdecken').textContent = istLive() ? (db.profil ? `Hallo ${db.profil.vorname}` : 'Hilfe in Garbsen') : 'Hallo Tim';
     const anzahl = `${offene.length} ${offene.length === 1 ? 'Nachbar sucht' : 'Nachbarn suchen'} gerade Hilfe`;
@@ -669,8 +768,8 @@
 
     if (istLive() && !db.geladen) {
       $('#liste').innerHTML = db.fehler
-        ? `<div class="leer"><p><strong>Die Gesuche konnten nicht geladen werden.</strong></p><p>${esc(db.fehler)}</p><button type="button" class="btn btn-secondary btn-auto" data-neu-laden>Erneut versuchen</button></div>`
-        : `<p class="lade">Gesuche werden geladen …</p>`;
+        ? `<div class="leer"><p><strong>Die Anfragen konnten nicht geladen werden.</strong></p><p>${esc(db.fehler)}</p><button type="button" class="btn btn-secondary btn-auto" data-neu-laden>Erneut versuchen</button></div>`
+        : `<p class="lade">Anfragen werden geladen …</p>`;
       return;
     }
     const treffer = sortiere(offene.filter((g) => passt(g) && (ui.stadtteil === 'alle' || g.stadtteil === ui.stadtteil)));
@@ -681,10 +780,10 @@
         // Neue Plattform, noch leer: erklären, Anfang machen lassen, Beispiele zeigen (statt einer leeren Seite)
         const eigenesOffen = gesuche.some((g) => g.eigen && g.status === 'offen' && !abgelaufen(g));
         $('#liste').innerHTML = `<div class="leer leer-start">
-          <p><strong>${eigenesOffen ? 'Dein Gesuch ist online.' : 'Hand Drauf startet gerade in Garbsen.'}</strong></p>
-          <p>${eigenesOffen ? 'Außer dir sucht gerade niemand Hilfe. Je mehr Nachbarn mitmachen, desto schneller sagt jemand zu.' : 'Noch sucht niemand Hilfe. Mach den Anfang mit einem eigenen Gesuch oder schau dir an, wie es aussieht, wenn Nachbarn mitmachen.'}</p>
+          <p><strong>${eigenesOffen ? 'Deine Anfrage ist online.' : 'Hand Drauf startet gerade in Garbsen.'}</strong></p>
+          <p>${eigenesOffen ? 'Außer dir sucht gerade niemand Hilfe. Je mehr Nachbarn mitmachen, desto schneller sagt jemand zu.' : 'Noch sucht niemand Hilfe. Mach den Anfang mit einer eigenen Anfrage oder schau dir an, wie es aussieht, wenn Nachbarn mitmachen.'}</p>
           <div class="leer-knoepfe">
-            ${eigenesOffen ? '<button type="button" class="btn btn-primary btn-auto" data-einladen>Nachbarn einladen</button>' : '<button type="button" class="btn btn-primary btn-auto" data-go="neu">Gesuch erstellen</button>'}
+            ${eigenesOffen ? '<button type="button" class="btn btn-primary btn-auto" data-einladen>Nachbarn einladen</button>' : '<button type="button" class="btn btn-primary btn-auto" data-go="neu">Anfrage erstellen</button>'}
             <a class="btn btn-secondary btn-auto" href="?beispiele#entdecken">Beispiele ansehen</a>
           </div>
         </div>`;
@@ -693,7 +792,7 @@
       $('#liste').innerHTML = `<div class="leer">
         <p><strong>Nichts gefunden${q ? ` für „${esc(q)}“` : ''}${wo}.</strong></p>
         <p>Probier eine andere Tätigkeit, Kategorie oder einen anderen Stadtteil. Oder such selbst Hilfe.</p>
-        <button type="button" class="btn btn-secondary btn-auto" data-go="neu">Gesuch erstellen</button>
+        <button type="button" class="btn btn-secondary btn-auto" data-go="neu">Anfrage erstellen</button>
       </div>`;
       return;
     }
@@ -714,8 +813,22 @@
     });
     return liste.sort((x, y) => x.prio - y.prio);
   }
+  // Zahl im Tab-Titel und am App-Symbol (installierte App): nur Dinge, bei denen du etwas tun solltest
+  const SEITENTITEL = document.title || 'Hand Drauf';
+  let letzteZahl = -1;
+  function renderZaehler(liste) {
+    const n = liste.filter((a) => a.prio !== 3).length;
+    if (n === letzteZahl) return;
+    letzteZahl = n;
+    if (!VORSCHAU) document.title = n ? `(${n}) ${SEITENTITEL}` : SEITENTITEL;
+    try {
+      const p = n ? (navigator.setAppBadge && navigator.setAppBadge(n)) : (navigator.clearAppBadge && navigator.clearAppBadge());
+      if (p && p.catch) p.catch(() => { /* ohne Zahl am Symbol */ });
+    } catch (e) { /* ohne Zahl am Symbol */ }
+  }
   function renderNaechstes() {
     const liste = istLive() && !db.profil ? [] : naechsteSchritte();
+    renderZaehler(liste);
     $('#naechstes').innerHTML = liste.length ? `<section class="naechstes" aria-labelledby="h-naechstes">
         <h2 class="h-klein" id="h-naechstes">Als Nächstes</h2>
         ${liste.map((a) => `<button type="button" class="aufgabe ${a.prio === 1 ? 'aufgabe-wichtig' : ''}" data-oeffne="${a.g.id}">
@@ -740,7 +853,7 @@
     const abschnitte = document.querySelectorAll('#view-auftraege .abschnitt');
     if (istLive() && !db.profil) {
       $('#summe').innerHTML = `<span class="h-klein">Deine Aufträge</span>
-        <p>Melde dich an, um deine Gesuche und Zusagen zu sehen.</p>
+        <p>Melde dich an, um deine Anfragen und Zusagen zu sehen.</p>
         <button type="button" class="btn btn-primary" data-panel="anmelden">Anmelden oder registrieren</button>`;
       abschnitte.forEach((a) => { a.hidden = true; });
       return;
@@ -761,7 +874,7 @@
       : `<p class="leer-klein">Noch keine Zusagen. Such dir in der Liste oder auf der Karte einen Job in deiner Nähe.</p>`;
     $('#eigene').innerHTML = eigene.length
       ? eigene.map((g) => karteHTML(g, pills(g))).join('')
-      : `<p class="leer-klein">Du hast noch kein Gesuch erstellt. Über „Hilfe suchen“ geht das in einer Minute.</p>`;
+      : `<p class="leer-klein">Du hast noch keine Anfrage gestellt. Über „Hilfe suchen“ geht das in einer Minute.</p>`;
   }
 
   /* ===== Karte (Leaflet) ===== */
@@ -904,8 +1017,8 @@
   }
 
   function renderKarte() {
-    const sichtbar = gesuche.filter((g) => passt(g) && (g.eigen || (g.status === 'offen' && !abgelaufen(g)) || g.helfer === 'ich'));
-    $('#karte-anzahl').textContent = `${sichtbar.length} ${sichtbar.length === 1 ? 'Gesuch' : 'Gesuche'}${ui.kat !== 'alle' ? ' · ' + katName(ui.kat) : ''}`;
+    const sichtbar = gesuche.filter((g) => passt(g) && !versteckt(g) && (g.eigen || (g.status === 'offen' && !abgelaufen(g)) || g.helfer === 'ich'));
+    $('#karte-anzahl').textContent = `${sichtbar.length} ${sichtbar.length === 1 ? 'Anfrage' : 'Anfragen'}${ui.kat !== 'alle' ? ' · ' + katName(ui.kat) : ''}`;
     $('#karte-leer').hidden = !(istLive() && db.geladen && !sichtbar.length && ui.kat === 'alle' && !ui.suche.trim());
     const k = kartenStatus;
     if (!k.map) return;
@@ -945,7 +1058,7 @@
       if (el) {
         el.setAttribute('role', 'button');
         el.setAttribute('tabindex', '0');
-        el.setAttribute('aria-label', `${g.titel}, ${euro(g.betrag)}, ${g.stadtteil}, ${distanz(g)}${g.eigen ? (abgelaufen(g) ? ', dein Gesuch, abgelaufen' : ', dein Gesuch') : ''}`);
+        el.setAttribute('aria-label', `${g.titel}, ${euro(g.betrag)}, ${g.stadtteil}, ${distanz(g)}${g.eigen ? (abgelaufen(g) ? ', deine Anfrage, abgelaufen' : ', deine Anfrage') : ''}`);
         el.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); oeffnen(g.id, el); }
         });
@@ -994,7 +1107,7 @@
 
     if (g.eigen) {
       const bis = sichtbarBis(g);
-      html += `<p class="klein">Dein Gesuch · ${g.status !== 'offen' ? 'nur für euch beide sichtbar' : abgelaufen(g) ? 'abgelaufen, Nachbarn sehen es nicht mehr' : `sichtbar für Nachbarn${bis ? ` bis einschließlich ${esc(bis)}` : ''}`}</p>`;
+      html += `<p class="klein">Deine Anfrage · ${g.status !== 'offen' ? 'nur für euch beide sichtbar' : abgelaufen(g) ? 'abgelaufen, Nachbarn sehen sie nicht mehr' : `sichtbar für Nachbarn${bis ? ` bis einschließlich ${esc(bis)}` : ''}`}</p>`;
     } else {
       const bewertung = g.bewertungen
         ? `${icon('stern', 'i-xs i-fill')}${g.sterne.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} · ${g.bewertungen} ${g.bewertungen === 1 ? 'Bewertung' : 'Bewertungen'}`
@@ -1027,7 +1140,9 @@
       <div><dt>Dauer</dt><dd>${esc(g.dauer)}</dd></div>
     </dl>`;
     if (g.text) html += `<p class="beschreibung">${esc(g.text)}</p>`;
-    html += `<button type="button" class="link-inline" data-aktion="karte">${icon('karte', 'i-sm')}Auf der Karte zeigen</button>`;
+    const teilbar = g.status === 'offen' && !abgelaufen(g);
+    html += `<div class="link-zeile"><button type="button" class="link-inline" data-aktion="karte">${icon('karte', 'i-sm')}Auf der Karte zeigen</button>${teilbar
+      ? `<button type="button" class="link-inline" data-aktion="teilen">${icon('teilen', 'i-sm')}${g.eigen ? 'Anfrage teilen' : 'Weitersagen'}</button>` : ''}</div>`;
 
     // Adresse: nur für Beteiligte
     const beteiligt = g.eigen || g.helfer === 'ich';
@@ -1060,14 +1175,14 @@
     if (g.eigen) {
       if (g.status === 'offen') {
         html += abgelaufen(g)
-          ? `<div class="status-box warn">Der Termin ist vorbei. Nachbarn sehen dein Gesuch nicht mehr.</div>
+          ? `<div class="status-box warn">Der Termin ist vorbei. Nachbarn sehen deine Anfrage nicht mehr.</div>
             <button type="button" class="btn btn-primary" data-aktion="bearbeiten-termin">Neuen Termin wählen</button>`
-          : `<button type="button" class="btn btn-secondary" data-aktion="bearbeiten">Gesuch bearbeiten</button>`;
+          : `<button type="button" class="btn btn-secondary" data-aktion="bearbeiten">Anfrage bearbeiten</button>`;
         html += ui.rueckzug
-          ? `<div class="bestaetigen-box"><p>Gesuch wirklich zurückziehen? Nachbarn sehen es dann nicht mehr.</p>
+          ? `<div class="bestaetigen-box"><p>Anfrage wirklich zurückziehen? Nachbarn sehen sie dann nicht mehr.</p>
               <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-aktion="rueckzug" ${dis}>Zurückziehen</button>
               <button type="button" class="btn btn-secondary" data-aktion="rueckzug-nein">Abbrechen</button></div></div>`
-          : `<button type="button" class="btn btn-secondary btn-danger" data-aktion="rueckzug-frage">Gesuch zurückziehen</button>`;
+          : `<button type="button" class="btn btn-secondary btn-danger" data-aktion="rueckzug-frage">Anfrage zurückziehen</button>`;
       } else if (g.status === 'zugesagt') {
         html += `<div class="status-box good">${icon('check')}${esc(g.helferName || 'Jemand')} hilft dir</div>
           <p class="klein">Sobald der Job erledigt ist, meldet ${esc(hn)} das hier. Danach bestätigst du.</p>`;
@@ -1088,6 +1203,10 @@
         (live ? '' : `<button type="button" class="btn btn-secondary" data-aktion="bestaetigen">Demo: ${esc(vn)} bestätigt</button>`);
     } else if (g.status === 'bezahlt') {
       html += `<div class="status-box good">${icon('check')}${live ? `${esc(vn)} hat bestätigt` : `${euro(auszahlung(g))} ausgezahlt`}</div>` + sterneHTML(g.meineBewertung || 0, vn);
+    }
+    const kalenderSinnvoll = (g.helfer === 'ich' && g.status === 'zugesagt') || (g.eigen && (g.status === 'zugesagt' || (g.status === 'offen' && !abgelaufen(g))));
+    if (kalenderSinnvoll && terminAusText(g.wann)) {
+      html += `<button type="button" class="btn btn-secondary" data-aktion="kalender">${icon('kalender')}In den Kalender eintragen</button>`;
     }
     if (imChat(g)) {
       html += chatHTML(g);
@@ -1124,7 +1243,7 @@
     if (!meldbar) return '';
     if (live ? db.gemeldet.has(g.id) : g.gemeldet) return `<p class="gemeldet">${icon('flagge', 'i-xs')}Gemeldet. Danke, wir prüfen das.</p>`;
     const wer = g.eigen ? (vorname(g.helferName) || 'Helfer') : vorname(g.wer);
-    if (!ui.melden) return `<button type="button" class="link-btn link-melden" data-aktion="melden-frage">${icon('flagge', 'i-sm')}${g.eigen ? `${esc(wer)} melden` : 'Gesuch melden'}</button>`;
+    if (!ui.melden) return `<button type="button" class="link-btn link-melden" data-aktion="melden-frage">${icon('flagge', 'i-sm')}${g.eigen ? `${esc(wer)} melden` : 'Anfrage melden'}</button>`;
     const dis = ui.busy ? 'disabled aria-busy="true"' : '';
     return `<form class="melden-box" id="melden-form" novalidate>
         <fieldset class="feld"><legend>Was stimmt nicht?</legend>
@@ -1132,6 +1251,7 @@
         </fieldset>
         <div class="feld"><label for="melden-text">Was ist passiert? (freiwillig)</label>
           <textarea id="melden-text" maxlength="500" rows="3"></textarea></div>
+        ${anderePerson(g) ? `<label class="check"><input type="checkbox" id="melden-blockieren"><span>${esc(wer)} außerdem blockieren</span></label>` : ''}
         <p class="fehler" id="melden-fehler" role="alert" hidden></p>
         <div class="btn-row"><button type="submit" class="btn btn-danger-solid" ${dis}>Meldung senden</button>
           <button type="button" class="btn btn-secondary" data-aktion="melden-nein">Abbrechen</button></div>
@@ -1193,9 +1313,10 @@
       <div class="feld"><label for="konto-stadtteil">Dein Stadtteil</label><select id="konto-stadtteil">${stadtteilOptionen(p.stadtteil, false)}</select></div>
       <button type="button" class="btn btn-secondary" data-einladen>${icon('teilen')}Nachbarn einladen</button>
       <button type="button" class="btn btn-secondary" data-abmelden ${ui.busy ? 'disabled' : ''}>Abmelden</button>
-      <p class="klein recht-links-form"><a href="#fragen">Häufige Fragen</a> · <a href="#nutzung">Nutzungsbedingungen</a> · <a href="#datenschutz">Datenschutz</a> · <a href="#impressum">Impressum</a></p>
+      ${blockListeHTML()}
+      <p class="klein recht-links-form"><a href="#fragen">Häufige Fragen</a> · ${kontaktLink()} · <a href="#nutzung">Nutzungsbedingungen</a> · <a href="#datenschutz">Datenschutz</a> · <a href="#impressum">Impressum</a></p>
       ${ui.loeschen
-        ? `<div class="bestaetigen-box loeschen-box"><p><strong>Konto wirklich löschen?</strong> Dein Profil, deine Gesuche, Adressen, Nachrichten und Bewertungen werden gelöscht. Laufende Zusagen werden freigegeben. Das lässt sich nicht rückgängig machen.</p>
+        ? `<div class="bestaetigen-box loeschen-box"><p><strong>Konto wirklich löschen?</strong> Dein Profil, deine Anfragen, Adressen, Nachrichten und Bewertungen werden gelöscht. Laufende Zusagen werden freigegeben. Das lässt sich nicht rückgängig machen.</p>
             <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-konto-loeschen ${ui.busy ? 'disabled aria-busy="true"' : ''}>Endgültig löschen</button>
             <button type="button" class="btn btn-secondary" data-loeschen-nein>Abbrechen</button></div></div>`
         : `<button type="button" class="link-btn link-melden" data-loeschen-frage>Konto löschen</button>`}`;
@@ -1222,10 +1343,26 @@
     return { name: anzeigename(p), kuerzel: kuerzel(p), stadtteil: p.stadtteil, dabei, sterne: p.sterne_anzahl ? p.sterne_summe / p.sterne_anzahl : null,
       bewertungen: p.sterne_anzahl, hilfen: p.hilfen_anzahl || 0, gesuche: p.gesuche_anzahl || 0, volljaehrig: p.volljaehrig };
   }
+  // Die andere Person einer Anfrage: live über die Profil-ID, in der Demo über den Namen
+  function anderePerson(g) {
+    if (!g) return null;
+    const name = g.eigen ? g.helferName : g.wer;
+    const id = istLive() ? (g.eigen ? g.helferId : g.erstellerId) : name;
+    return id && name ? { id, name } : null;
+  }
+  function blockierenHTML(g) {
+    const person = anderePerson(g);
+    if (!person) return '';
+    const vn = esc(vorname(person.name));
+    if (!ui.blockieren) return `<button type="button" class="link-btn link-melden" data-blockieren-frage>${icon('x', 'i-sm')}${vn} blockieren</button>`;
+    return `<div class="bestaetigen-box"><p><strong>${vn} blockieren?</strong> Ihr seht eure Anfragen gegenseitig nicht mehr, und laufende Zusagen zwischen euch enden. ${vn} erfährt davon nichts. Unter „${istLive() ? 'Konto' : 'Ansicht'}“ kannst du das jederzeit aufheben.</p>
+        <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-blockieren ${ui.busy ? 'disabled aria-busy="true"' : ''}>Blockieren</button>
+        <button type="button" class="btn btn-secondary" data-blockieren-nein>Abbrechen</button></div></div>`;
+  }
   function sheetProfilHTML() {
     const g = gesuche.find((x) => x.id === ui.profilGesuch);
     const kopf = `<div class="sheet-top">
-        <button type="button" class="link-btn zurueck" data-zurueck-gesuch><span class="zurueck-pfeil" aria-hidden="true">‹</span>Zurück zum Gesuch</button>
+        <button type="button" class="link-btn zurueck" data-zurueck-gesuch><span class="zurueck-pfeil" aria-hidden="true">‹</span>Zurück zur Anfrage</button>
         <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
       </div>`;
     const p = g && profilDaten(g);
@@ -1245,7 +1382,8 @@
         <li>${icon('check', 'i-sm')}Konto mit E-Mail-Adresse</li>
         <li>${icon('check', 'i-sm')}Hat den Regeln für Nachbarn zugestimmt</li>
       </ul>
-      <p class="klein">Andere sehen nur Vorname, Anfangsbuchstabe und Stadtteil. Adresse und E-Mail sieht niemand.</p>`;
+      <p class="klein">Andere sehen nur Vorname, Anfangsbuchstabe und Stadtteil. Adresse und E-Mail sieht niemand.</p>
+      ${blockierenHTML(g)}`;
   }
 
   function sheetRechtHTML(name) {
@@ -1259,6 +1397,10 @@
       <nav class="recht-nav" aria-label="Weitere Rechtstexte">${Object.keys(RECHT).filter((k) => k !== name).map((k) => `<a href="#${k}">${RECHT[k].titel}</a>`).join('')}</nav>`;
   }
 
+  // Kontakt (App Store 1.2: veröffentlichte Kontaktmöglichkeit). Ohne E-Mail im CONFIG verweist er aufs Impressum.
+  const kontaktLink = () => CONFIG.betreiber.email
+    ? `<a href="mailto:${esc(CONFIG.betreiber.email)}?subject=${encodeURIComponent('Hand Drauf')}">Kontakt</a>`
+    : '<a href="#impressum">Kontakt</a>';
   function sheetFragenHTML() {
     return `<div class="sheet-top">
         <span class="eyebrow">Hilfe</span>
@@ -1266,7 +1408,7 @@
       </div>
       <h2 id="sheet-titel">${FRAGEN.titel}</h2>
       ${FRAGEN.gruppen.map(([titel, fragen]) => `<section class="fragen-gruppe"><h3 class="h-klein">${titel}</h3>${fragen.join('')}</section>`).join('')}
-      <p class="klein">Deine Frage ist nicht dabei? Lies die <a href="#regeln">Regeln für Nachbarn</a> und die <a href="#nutzung">Nutzungsbedingungen</a>.</p>`;
+      <p class="klein">Deine Frage ist nicht dabei? Lies die <a href="#regeln">Regeln für Nachbarn</a> oder schreib uns: ${kontaktLink()}.</p>`;
   }
 
   function sheetAnsichtHTML() {
@@ -1287,6 +1429,7 @@
       ${gruppe('start', 'Startseite', 'Was du beim Öffnen zuerst siehst.')}
       ${istLive() && db.profil ? '' : `<div class="feld"><label for="ansicht-ort">Dein Stadtteil</label><select id="ansicht-ort">${gewaehlterOrt ? '' : '<option value="">Bitte wählen</option>'}${stadtteilOptionen(gewaehlterOrt || '', false)}</select><p class="klein">Für die Entfernungen. Deine Adresse brauchen wir dafür nicht.</p></div>`}
       <p class="klein">Gespeichert nur auf diesem Gerät.</p>
+      ${istLive() ? '' : blockListeHTML()}
       <button type="button" class="btn btn-secondary" data-einladen>${icon('teilen')}Hand Drauf weiterempfehlen</button>
       ${installEreignis ? `<button type="button" class="btn btn-secondary" data-installieren>${icon('plus')}Auf den Startbildschirm</button>`
         : installierenMoeglich() ? `<p class="klein">Als App nutzen: In Safari unten auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.</p>` : ''}
@@ -1380,6 +1523,7 @@
     const v = location.hash.slice(1);
     if (VIEWS.includes(v)) { if (istSeite(ui.panel)) schliessen(); zeige(v); }
     else if (istSeite(v)) oeffnePanel(v);
+    else if (linkId(v)) gesuchAusLink(linkId(v));
   });
 
   function sheetZeigen() {
@@ -1409,6 +1553,7 @@
     ui.loeschen = false;
     ui.authGrund = grund || '';
     ui.authFertig = '';
+    ui.blockieren = false;
     renderSheet();
     sheetZeigen();
     renderKarte();
@@ -1418,7 +1563,7 @@
     ui.offen = null;
     ui.panel = null;
     sheetSchluessel = null;
-    if (istSeite(location.hash.slice(1))) history.replaceState(null, '', '#' + ui.view);
+    if (istSeite(location.hash.slice(1)) || linkId(location.hash.slice(1))) history.replaceState(null, '', '#' + ui.view);
     $('#backdrop').hidden = true;
     $('#sheet').hidden = true;
     document.body.classList.remove('sheet-offen');
@@ -1430,10 +1575,10 @@
 
   const ERFOLG = {
     zusagen: (g) => `Zugesagt. ${vorname(g.wer)} sieht jetzt deinen Namen.`,
-    absagen: () => 'Zusage zurückgezogen. Das Gesuch ist wieder offen.',
+    absagen: () => 'Zusage zurückgezogen. Die Anfrage ist wieder offen.',
     erledigt: (g) => `Gemeldet. ${vorname(g.wer)} muss noch bestätigen.`,
     bestaetigen: (g) => istLive() ? 'Bestätigt. Danke, dass ihr euch geholfen habt!' : `${euro(auszahlung(g))} ausgezahlt`,
-    rueckzug: () => 'Gesuch zurückgezogen'
+    rueckzug: () => 'Anfrage zurückgezogen'
   };
 
   $('#sheet').addEventListener('click', async (e) => {
@@ -1454,6 +1599,40 @@
       oeffnePanel('profil');
       ui.profilGesuch = id;
       ui.zuletzt = zuletzt;
+      renderSheet();
+      return;
+    }
+    if (t.hasAttribute('data-blockieren-frage') || t.hasAttribute('data-blockieren-nein')) {
+      if (istLive() && !db.profil) { oeffnePanel('anmelden', 'Bitte melde dich an, um jemanden zu blockieren.'); return; }
+      ui.blockieren = t.hasAttribute('data-blockieren-frage');
+      renderSheet();
+      const f = $(ui.blockieren ? '#sheet [data-blockieren-nein]' : '#sheet [data-blockieren-frage]');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
+    if (t.hasAttribute('data-blockieren')) {
+      const person = anderePerson(gesuche.find((x) => x.id === ui.profilGesuch));
+      if (!person) return;
+      ui.busy = true; renderSheet();
+      try {
+        await blockiere(person.id, person.name);
+        ui.blockieren = false;
+        ui.busy = false;
+        ui.zuletzt = null;
+        schliessen();
+        renderAlles();
+        meldung(`${vorname(person.name)} ist blockiert. Ihr seht eure Anfragen gegenseitig nicht mehr.`);
+      } catch (err) {
+        ui.busy = false;
+        renderSheet();
+        meldung(fehlerText(err));
+      }
+      return;
+    }
+    if (t.dataset.entsperren) {
+      const id = t.dataset.entsperren;
+      try { await entsperre(id); meldung('Blockierung aufgehoben.'); } catch (err) { meldung(fehlerText(err)); }
+      renderAlles();
       renderSheet();
       return;
     }
@@ -1508,6 +1687,8 @@
       if (f) f.focus({ preventScroll: true });
       return;
     }
+    if (a === 'teilen') { gesuchTeilen(g); return; }
+    if (a === 'kalender') { kalenderLaden(g); return; }
     if (a === 'bearbeiten' || a === 'bearbeiten-termin') { bearbeitenStarten(g, a === 'bearbeiten-termin' ? 2 : 1); return; }
     if (a === 'melden-frage' || a === 'melden-nein') {
       if (a === 'melden-frage' && istLive() && !db.profil) { oeffnePanel('anmelden', 'Bitte melde dich an, um etwas zu melden.'); return; }
@@ -1554,6 +1735,7 @@
     const text = feld.value.trim();
     if (!text) { feld.focus(); return; }
     if (istLive() && !db.profil) { oeffnePanel('anmelden', 'Bitte melde dich an.'); return; }
+    if (anstoessig(text)) { meldung('Bitte schreib freundlich. Beleidigende oder anstößige Wörter werden nicht verschickt.'); feld.focus(); return; }
     $('#chat-form button[type="submit"]').disabled = true;
     try {
       await sendeNachricht(g, text);
@@ -1588,6 +1770,15 @@
     try {
       await melde(g, wahl.value, text);
       ui.melden = false;
+      const person = anderePerson(g);
+      if (person && $('#melden-blockieren') && $('#melden-blockieren').checked) {
+        await blockiere(person.id, person.name);
+        ui.busy = false;
+        schliessen();
+        renderAlles();
+        meldung(`Danke für deine Meldung. ${vorname(person.name)} ist blockiert.`);
+        return;
+      }
       meldung('Danke für deine Meldung. Wir prüfen sie.');
     } catch (err) {
       meldung(fehlerText(err));
@@ -1689,15 +1880,81 @@
     if (e.key === 'Escape' && (ui.offen || ui.panel)) schliessen();
   });
 
-  /* ===== Nachbarn einladen (Wachstum über Empfehlungen statt Werbung) ===== */
-  async function einladen() {
-    const url = location.origin + location.pathname;
-    const text = 'Hand Drauf: Nachbarn in Garbsen helfen sich bei kleinen Dingen, gegen eine kleine Aufwandsentschädigung. Schau mal rein:';
+  /* ===== Teilen: Nachbarn einladen und einzelne Anfragen weitersagen (Wachstum über Empfehlungen statt Werbung) ===== */
+  const appAdresse = () => location.origin + location.pathname + location.search;
+  const gesuchLink = (g) => `${appAdresse()}#anfrage-${encodeURIComponent(g.id)}`;
+  async function teilen(text, url) {
     if (navigator.share) {
       try { await navigator.share({ title: 'Hand Drauf', text, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
     }
     try { await navigator.clipboard.writeText(`${text} ${url}`); meldung('Link kopiert. Füge ihn in eine Nachricht ein.'); }
     catch (e) { meldung(`Link zum Teilen: ${url}`); }
+  }
+  const einladen = () => teilen('Hand Drauf: Nachbarn in Garbsen helfen sich bei kleinen Dingen, gegen eine kleine Aufwandsentschädigung. Schau mal rein:', location.origin + location.pathname);
+  function gesuchTeilen(g) {
+    const was = `„${g.titel}“ in ${g.stadtteil}, ${g.wann}, ${euroKurz(g.betrag)} Aufwandsentschädigung`;
+    teilen(g.eigen ? `Ich suche Hilfe: ${was}. Kannst du helfen oder kennst du jemanden?` : `${vorname(g.wer)} sucht Hilfe: ${was}. Kannst du helfen?`, gesuchLink(g));
+  }
+
+  // Geteilter Link #anfrage-<id> öffnet die Anfrage direkt
+  const GESUCH_LINK = /^(?:anfrage|gesuch)-(.+)$/;
+  const linkId = (hash) => { const m = hash.match(GESUCH_LINK); return m ? decodeURIComponent(m[1]) : null; };
+  function gesuchAusLink(id) {
+    if (gesuche.some((g) => g.id === id)) { oeffnen(id); return; }
+    if (istLive() && !db.geladen) return; // wird nach dem Laden erneut versucht
+    history.replaceState(null, '', '#' + ui.view);
+    meldung('Diese Anfrage ist nicht mehr offen. Schau dir die anderen in deiner Nähe an.');
+  }
+
+  /* ===== Termin in den eigenen Kalender (.ics, funktioniert mit iPhone, Android, Outlook) ===== */
+  function kalenderDatei(g) {
+    const t = terminAusText(g.wann);
+    if (!t) return null;
+    const zwei = (n) => String(n).padStart(2, '0');
+    const tag = (d) => `${d.getFullYear()}${zwei(d.getMonth() + 1)}${zwei(d.getDate())}`;
+    const um = (d, [h, m]) => `${tag(d)}T${zwei(h)}${zwei(m)}00`;
+    const j = new Date();
+    const stempel = `${j.getUTCFullYear()}${zwei(j.getUTCMonth() + 1)}${zwei(j.getUTCDate())}T${zwei(j.getUTCHours())}${zwei(j.getUTCMinutes())}${zwei(j.getUTCSeconds())}Z`;
+    const txt = (x) => String(x).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+    const mitUhrzeit = +t.von === +t.bis && t.start;
+    const mit = g.eigen ? (g.helferName ? ` mit ${vorname(g.helferName)}` : '') : ` bei ${g.wer}`;
+    const beteiligt = g.eigen || g.helfer === 'ich';
+    const adresse = beteiligt ? adresseVon(g) : '';
+    const ort = adresse ? `${adresse}${adresse.includes(g.stadtteil) ? '' : ', ' + g.stadtteil}, Garbsen` : `${g.stadtteil}, Garbsen`;
+    const zeilen = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Hand Drauf//Nachbarschaftshilfe Garbsen//DE', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+      'BEGIN:VEVENT', `UID:${g.id}@hand-drauf`, `DTSTAMP:${stempel}`,
+      ...(mitUhrzeit ? [`DTSTART:${um(t.von, t.start)}`, `DTEND:${um(t.von, t.ende)}`]
+        : [`DTSTART;VALUE=DATE:${tag(t.von)}`, `DTEND;VALUE=DATE:${tag(plusTage(t.bis, 1))}`]),
+      `SUMMARY:${txt(`Hand Drauf: ${g.titel}${mit}`)}`,
+      `LOCATION:${txt(ort)}`,
+      `DESCRIPTION:${txt([`Wann: ${g.wann}`, `Aufwandsentschädigung: ${euroKurz(g.betrag)}`, g.text, `In der App: ${gesuchLink(g)}`].filter(Boolean).join('\n'))}`,
+      `URL:${gesuchLink(g)}`,
+      'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${txt(g.titel)}`, mitUhrzeit ? 'TRIGGER:-PT1H' : 'TRIGGER:PT8H', 'END:VALARM',
+      'END:VEVENT', 'END:VCALENDAR'];
+    // Zeilen über 75 Bytes werden nach dem Kalender-Standard umgebrochen
+    const bytes = (x) => new TextEncoder().encode(x).length;
+    const falten = (z) => {
+      if (bytes(z) <= 75) return z;
+      const teile = [];
+      let akt = '';
+      for (const ch of z) { if (bytes(akt + ch) > (teile.length ? 74 : 75)) { teile.push(akt); akt = ch; } else akt += ch; }
+      teile.push(akt);
+      return teile.join('\r\n ');
+    };
+    return zeilen.map(falten).join('\r\n') + '\r\n';
+  }
+  function kalenderLaden(g) {
+    const ics = kalenderDatei(g);
+    if (!ics) return;
+    const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hand-drauf-${g.titel.toLowerCase().replace(/[äöüß]/g, (c) => ({ ä: 'ae', ö: 'oe', ü: 'ue', ß: 'ss' }[c])).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'termin'}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 20000);
+    meldung('Termin geladen. Öffne die Datei, um ihn in deinen Kalender zu übernehmen.');
   }
 
   /* ===== Als App auf den Startbildschirm (Web-App, ohne App Store) ===== */
@@ -1799,7 +2056,7 @@
       <h1 id="start-titel" tabindex="-1">Nachbarn helfen Nachbarn</h1>
       <p class="start-text">Rasen mähen, Einkauf hochtragen, Drucker einrichten: kleine Hilfen in Garbsen, gegen eine kleine Aufwandsentschädigung.</p>
       <ul class="start-liste">
-        <li>${icon('plus')}<span><strong>Hilfe suchen</strong>Ein Gesuch in vier kurzen Schritten einstellen.</span></li>
+        <li>${icon('plus')}<span><strong>Hilfe suchen</strong>Eine Anfrage in vier kurzen Schritten stellen.</span></li>
         <li>${icon('karte')}<span><strong>Helfen</strong>Auf der Karte sehen, wo in deiner Nähe Hilfe gebraucht wird.</span></li>
       </ul>
       ${fuss(0, 'Weiter', 'weiter')}`;
@@ -1848,11 +2105,11 @@
   });
   $('#start').addEventListener('keydown', (e) => { if (e.key === 'Escape') startBeenden(); });
 
-  /* ===== Gesuch erstellen: vier Schritte (Vorbild: TaskRabbit, Kleinanzeigen) ===== */
+  /* ===== Anfrage erstellen: vier Schritte (Vorbild: TaskRabbit, Kleinanzeigen) ===== */
   const form = $('#neu-form');
   const betragInput = $('#neu-betrag');
   const SCHRITT_NAMEN = ['Was?', 'Wann und wo?', 'Betrag', 'Prüfen'];
-  // Unser Vorschlag je Tätigkeit, bis genug echte Gesuche aus Garbsen für einen Durchschnitt da sind
+  // Unser Vorschlag je Tätigkeit, bis genug echte Anfragen aus Garbsen für einen Durchschnitt da sind
   const RICHTWERTE = { garten: [15, 25], einkaufen: [5, 10], tiere: [8, 15], haushalt: [10, 25], tragen: [10, 20], technik: [10, 20] };
   const VORSCHLAEGE = {
     garten: ['Rasen mähen', 'Hecke schneiden', 'Laub rechen'],
@@ -1947,6 +2204,7 @@
   function pruefeSchritt(n) {
     const fehler = (feld, id) => { feld.setAttribute('aria-invalid', 'true'); $(id).hidden = false; return feld; };
     if (n === 1 && $('#neu-titel').value.trim().length < 3) return fehler($('#neu-titel'), '#fehler-titel');
+    if (n === 1 && anstoessig(`${$('#neu-titel').value} ${$('#neu-text').value}`)) return fehler(anstoessig($('#neu-titel').value) ? $('#neu-titel') : $('#neu-text'), '#fehler-wort');
     if (n === 2 && !wahlWert('tag')) { $('#fehler-tag').hidden = false; return form.querySelector('input[name="tag"]'); }
     if (n === 2 && istLive() && $('#neu-adresse').value.trim().length < 3) return fehler($('#neu-adresse'), '#fehler-adresse');
     if (n === 3 && !betragGueltig(betragWert())) return fehler(betragInput, '#fehler-betrag');
@@ -1984,7 +2242,9 @@
   betragInput.addEventListener('input', () => { betragGeaendert = true; renderKosten(); });
   $('#neu-titel').addEventListener('input', (e) => {
     if (e.target.value.trim().length >= 3) { e.target.removeAttribute('aria-invalid'); $('#fehler-titel').hidden = true; }
+    $('#fehler-wort').hidden = true;
   });
+  $('#neu-text').addEventListener('input', (e) => { e.target.removeAttribute('aria-invalid'); $('#fehler-wort').hidden = true; });
   $('#neu-adresse').addEventListener('input', (e) => {
     if (e.target.value.trim().length >= 3) { e.target.removeAttribute('aria-invalid'); $('#fehler-adresse').hidden = true; }
   });
@@ -2000,14 +2260,14 @@
   }
   renderTage();
 
-  /* ----- Eigenes Gesuch bearbeiten: dieselben Schritte, vorausgefüllt ----- */
+  /* ----- Eigene Anfrage bearbeiten: dieselben Schritte, vorausgefüllt ----- */
   function renderWizardModus() {
     const b = !!ui.bearbeiten;
-    $('#h-neu').textContent = b ? 'Gesuch bearbeiten' : 'Hilfe suchen';
+    $('#h-neu').textContent = b ? 'Anfrage bearbeiten' : 'Hilfe suchen';
     $('#neu-lead').textContent = b
       ? 'Änderungen sehen Nachbarn sofort. Bearbeiten geht, solange noch niemand zugesagt hat.'
-      : 'In vier kurzen Schritten. Nachbarn in der Nähe sehen dein Gesuch danach auf der Karte.';
-    $('#neu-senden').textContent = b ? 'Änderungen speichern' : 'Gesuch veröffentlichen';
+      : 'In vier kurzen Schritten. Nachbarn in der Nähe sehen deine Anfrage danach auf der Karte.';
+    $('#neu-senden').textContent = b ? 'Änderungen speichern' : 'Anfrage veröffentlichen';
     $('#neu-abbrechen').hidden = !b;
   }
   async function bearbeitenStarten(g, schritt) {
@@ -2071,7 +2331,7 @@
       if (f) { zeigeSchritt(n, false); f.focus(); return; }
     }
     if (istLive() && !db.profil) {
-      oeffnePanel('anmelden', 'Melde dich an, um dein Gesuch zu veröffentlichen. Deine Eingaben bleiben erhalten.');
+      oeffnePanel('anmelden', 'Melde dich an, um deine Anfrage zu veröffentlichen. Deine Eingaben bleiben erhalten.');
       return;
     }
 
@@ -2096,7 +2356,7 @@
         const fehlt = (err) => err && (err.code === 'PGRST202' || /could not find the function/i.test(err.message || ''));
         if (bearbeitet) {
           const { error } = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis });
-          if (fehlt(error)) throw new Error('Bearbeiten ist noch nicht freigeschaltet. Zieh das Gesuch zurück und erstelle es neu.');
+          if (fehlt(error)) throw new Error('Bearbeiten ist noch nicht freigeschaltet. Zieh die Anfrage zurück und stelle sie neu.');
           if (error) throw error;
         } else {
           let r = db.altesSchema ? { error: { code: 'PGRST202' } } : await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis });
@@ -2142,7 +2402,7 @@
     renderAlles();
     gehe('karte');
     oeffnen(neuId);
-    meldung(bearbeitet ? 'Änderungen gespeichert' : 'Gesuch veröffentlicht');
+    meldung(bearbeitet ? 'Änderungen gespeichert' : 'Anfrage veröffentlicht');
   });
 
   /* ===== Start ===== */
@@ -2157,13 +2417,14 @@
   renderKosten();
   zeige(VIEWS.includes(start) ? start : ansicht.start);
   if (istSeite(start)) oeffnePanel(start);
+  else if (linkId(start)) { /* geteilte Anfrage: erst die Anfrage zeigen, die Begrüßung kommt beim nächsten Besuch */ }
   else {
     let gesehen = false;
     try { gesehen = localStorage.getItem(START_SPEICHER) === '1'; } catch (e) { gesehen = true; }
     if (!gesehen) startZeigen();
   }
   starteLive().then((live) => {
-    if (!live) return;
+    if (!live) { if (linkId(start)) gesuchAusLink(linkId(start)); return; }
     renderStadtteilAuswahl();
     renderKosten();
   });

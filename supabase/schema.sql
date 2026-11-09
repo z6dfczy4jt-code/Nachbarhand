@@ -14,6 +14,8 @@
 --   Nachbarschaftshilfe, erlaubte Statuswechsel).
 -- * Nachrichten lesen und schreiben nur die beiden Beteiligten eines
 --   Auftrags. Meldungen kann über die App niemand lesen.
+-- * Wer jemanden blockiert, sieht dessen Anfragen nicht mehr (und umgekehrt).
+--   Beleidigende Wörter in Anfragen und Nachrichten werden abgelehnt.
 -- * Testphase (Weg 1): Die App vermittelt nur. Die Aufwandsentschädigung
 --   zahlen die Beteiligten direkt untereinander.
 -- =====================================================================
@@ -113,6 +115,61 @@ create trigger beim_registrieren
   for each row execute function public.neues_profil();
 
 -- ---------------------------------------------------------------------
+-- Blockieren (App Store 1.2): Wer jemanden blockiert, sieht dessen Anfragen
+-- nicht mehr und umgekehrt. Zusagen und Nachrichten zwischen beiden gehen nicht.
+-- Die blockierte Person erfährt davon nichts.
+-- ---------------------------------------------------------------------
+create table if not exists public.blockiert (
+  von uuid not null references public.profile (id) on delete cascade,
+  wen uuid not null references public.profile (id) on delete cascade,
+  erstellt timestamptz not null default now(),
+  primary key (von, wen),
+  constraint blockiert_nicht_selbst check (von <> wen)
+);
+create index if not exists blockiert_wen_idx on public.blockiert (wen);
+alter table public.blockiert enable row level security;
+drop policy if exists "Eigene Blockierungen lesen" on public.blockiert;
+create policy "Eigene Blockierungen lesen" on public.blockiert
+  for select to authenticated using (von = (select auth.uid()));
+revoke all on public.blockiert from anon;
+revoke insert, update, delete on public.blockiert from authenticated;
+grant select on public.blockiert to authenticated;
+
+-- Hilfsfunktionen im Schema „privat“: Supabase stellt es nicht über die API bereit,
+-- die Zugriffsregeln können sie trotzdem nutzen.
+create schema if not exists privat;
+grant usage on schema privat to anon, authenticated;
+
+-- Hat eine der beiden Personen die andere blockiert?
+create or replace function privat.ist_blockiert(a uuid, b uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select a is not null and b is not null and exists (
+    select 1 from public.blockiert
+    where (von = a and wen = b) or (von = b and wen = a)
+  );
+$$;
+
+-- Filter für anstößige Wörter (App Store 1.2). Dieselbe Liste steht in src/app.js.
+create or replace function privat.anstoessig(p_text text)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select coalesce(
+    translate(lower(p_text), '013457@$', 'oieastas') ~
+      '(\mhure|hurensohn|\mfotze|\mwichser|\marschloch|schlampe|missgeburt|\mspast(i|en)?\M|\mmongo\M|\mnutte|\m(ge)?fick(en|t|st|e|er|te|ten)?\M|\mbitch|heil hitler|sieg heil|\mkanake|\mneger|\mnigger|\mschwuchtel|\mvergewaltig)',
+    false);
+$$;
+revoke execute on all functions in schema privat from public, anon, authenticated;
+grant execute on function privat.ist_blockiert(uuid, uuid) to anon, authenticated;
+
+-- ---------------------------------------------------------------------
 -- Gesuche
 -- ---------------------------------------------------------------------
 create table if not exists public.gesuche (
@@ -151,7 +208,10 @@ alter table public.gesuche enable row level security;
 drop policy if exists "Offene und eigene Gesuche lesen" on public.gesuche;
 create policy "Offene und eigene Gesuche lesen" on public.gesuche
   for select to anon, authenticated
-  using ((status = 'offen' and laeuft_ab > now()) or ersteller = (select auth.uid()) or helfer = (select auth.uid()));
+  using (
+    (status = 'offen' and laeuft_ab > now() and not privat.ist_blockiert((select auth.uid()), ersteller))
+    or ersteller = (select auth.uid()) or helfer = (select auth.uid())
+  );
 revoke insert, update, delete on public.gesuche from anon, authenticated;
 grant select on public.gesuche to anon, authenticated;
 
@@ -324,12 +384,15 @@ begin
   select * into lage from public.ungefaehre_lage(p_stadtteil);
   if (select count(*) from public.gesuche
       where ersteller = ich and status in ('offen', 'zugesagt', 'erledigt')) >= 5 then
-    raise exception 'Du hast schon 5 laufende Gesuche. Schließe zuerst eins ab.';
+    raise exception 'Du hast schon 5 laufende Anfragen. Schließe zuerst eine ab.';
   end if;
   if char_length(btrim(coalesce(p_adresse, ''))) < 3 then
     raise exception 'Bitte gib deine Straße und Hausnummer an.';
   end if;
   perform public.termin_pruefen(p_bis);
+  if privat.anstoessig(p_titel || ' ' || coalesce(p_beschreibung, '')) then
+    raise exception 'Bitte formuliere deine Anfrage ohne beleidigende oder anstößige Wörter.';
+  end if;
 
   insert into public.gesuche (ersteller, kategorie, titel, beschreibung, betrag, wann, bis, laeuft_ab, stadtteil, lat, lng)
   values (
@@ -380,7 +443,7 @@ begin
   end if;
   select * into g from public.gesuche where id = p_id for update;
   if not found or g.ersteller <> ich then
-    raise exception 'Nur eigene Gesuche können bearbeitet werden.';
+    raise exception 'Nur eigene Anfragen können bearbeitet werden.';
   end if;
   if g.status <> 'offen' then
     raise exception 'Bearbeiten geht nur, solange noch niemand zugesagt hat.';
@@ -389,6 +452,9 @@ begin
     raise exception 'Bitte gib deine Straße und Hausnummer an.';
   end if;
   perform public.termin_pruefen(p_bis);
+  if privat.anstoessig(p_titel || ' ' || coalesce(p_beschreibung, '')) then
+    raise exception 'Bitte formuliere deine Anfrage ohne beleidigende oder anstößige Wörter.';
+  end if;
   if p_stadtteil is distinct from g.stadtteil then
     select * into lage from public.ungefaehre_lage(p_stadtteil);
   else
@@ -434,13 +500,16 @@ begin
   end if;
   select * into g from public.gesuche where id = p_id for update;
   if not found or g.status <> 'offen' then
-    raise exception 'Dieses Gesuch ist nicht mehr offen.';
+    raise exception 'Diese Anfrage ist nicht mehr offen.';
   end if;
   if g.laeuft_ab <= now() then
-    raise exception 'Dieses Gesuch ist abgelaufen.';
+    raise exception 'Diese Anfrage ist abgelaufen.';
   end if;
   if g.ersteller = ich then
-    raise exception 'Bei deinem eigenen Gesuch kannst du nicht helfen.';
+    raise exception 'Bei deiner eigenen Anfrage kannst du nicht helfen.';
+  end if;
+  if privat.ist_blockiert(ich, g.ersteller) then
+    raise exception 'Diese Anfrage ist nicht mehr offen.';
   end if;
   if (select count(*) from public.gesuche
       where helfer = ich and status <> 'zurueckgezogen'
@@ -504,7 +573,7 @@ begin
   where id = p_id and status = 'erledigt' and ersteller = auth.uid()
   returning * into g;
   if not found then
-    raise exception 'Bestätigen kann nur, wer das Gesuch erstellt hat, nachdem der Job als erledigt gemeldet wurde.';
+    raise exception 'Bestätigen kann nur, wer die Anfrage gestellt hat, nachdem der Job als erledigt gemeldet wurde.';
   end if;
   update public.profile set gesuche_anzahl = gesuche_anzahl + 1 where id = g.ersteller;
   if g.helfer is not null then
@@ -524,7 +593,7 @@ begin
   update public.gesuche set status = 'zurueckgezogen', geaendert = now()
   where id = p_id and status = 'offen' and ersteller = auth.uid();
   if not found then
-    raise exception 'Nur offene eigene Gesuche können zurückgezogen werden.';
+    raise exception 'Nur offene eigene Anfragen können zurückgezogen werden.';
   end if;
 end;
 $$;
@@ -600,6 +669,12 @@ begin
   if char_length(t) > 1000 then
     raise exception 'Die Nachricht ist zu lang (höchstens 1000 Zeichen).';
   end if;
+  if privat.ist_blockiert(g.ersteller, g.helfer) then
+    raise exception 'Ihr könnt euch hier keine Nachrichten mehr schreiben.';
+  end if;
+  if privat.anstoessig(t) then
+    raise exception 'Bitte schreib freundlich. Beleidigende oder anstößige Wörter werden nicht verschickt.';
+  end if;
   if (select count(*) from public.nachrichten
       where von = ich and erstellt > now() - interval '10 minutes') >= 30 then
     raise exception 'Du hast gerade sehr viele Nachrichten geschickt. Warte bitte ein paar Minuten.';
@@ -629,7 +704,7 @@ begin
   end if;
   select * into g from public.gesuche where id = p_id;
   if not found or not ((g.status = 'offen' and g.laeuft_ab > now()) or g.ersteller = ich or coalesce(g.helfer = ich, false)) then
-    raise exception 'Dieses Gesuch gibt es nicht mehr.';
+    raise exception 'Diese Anfrage gibt es nicht mehr.';
   end if;
   ziel := case when g.ersteller = ich then g.helfer else g.ersteller end;
   if ziel is null then
@@ -643,6 +718,47 @@ begin
   values (p_id, ziel, ich, p_grund, left(btrim(coalesce(p_text, '')), 500))
   on conflict on constraint meldungen_einmal
   do update set grund = excluded.grund, text = excluded.text, status = 'neu', erstellt = now();
+end;
+$$;
+
+-- Person blockieren. Laufende Zusagen zwischen beiden enden: Die Anfrage ist wieder offen,
+-- der Nachrichtenverlauf wird gelöscht.
+create or replace function public.blockieren(p_person uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  ich uuid := auth.uid();
+begin
+  if ich is null then
+    raise exception 'Bitte melde dich zuerst an.';
+  end if;
+  if p_person is null or p_person = ich or not exists (select 1 from public.profile where id = p_person) then
+    raise exception 'Diese Person gibt es nicht.';
+  end if;
+  insert into public.blockiert (von, wen) values (ich, p_person) on conflict do nothing;
+  delete from public.nachrichten where gesuch_id in (
+    select id from public.gesuche
+    where status = 'zugesagt' and ((ersteller = ich and helfer = p_person) or (ersteller = p_person and helfer = ich)));
+  update public.gesuche set status = 'offen', helfer = null, geaendert = now()
+  where status = 'zugesagt' and ((ersteller = ich and helfer = p_person) or (ersteller = p_person and helfer = ich));
+end;
+$$;
+
+-- Blockierung aufheben
+create or replace function public.entblocken(p_person uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Bitte melde dich zuerst an.';
+  end if;
+  delete from public.blockiert where von = auth.uid() and wen = p_person;
 end;
 $$;
 
@@ -681,6 +797,8 @@ revoke execute on function public.bewerten(uuid, integer) from public, anon;
 revoke execute on function public.nachricht_senden(uuid, text) from public, anon;
 revoke execute on function public.melden(uuid, text, text) from public, anon;
 revoke execute on function public.konto_loeschen() from public, anon;
+revoke execute on function public.blockieren(uuid) from public, anon;
+revoke execute on function public.entblocken(uuid) from public, anon;
 revoke execute on function public.neues_profil() from public, anon, authenticated;
 -- Hilfsfunktionen nur für die Funktionen oben, nicht direkt aufrufbar
 revoke execute on function public.ablauf(date) from public, anon, authenticated;
@@ -697,6 +815,8 @@ grant execute on function public.bewerten(uuid, integer) to authenticated;
 grant execute on function public.nachricht_senden(uuid, text) to authenticated;
 grant execute on function public.melden(uuid, text, text) to authenticated;
 grant execute on function public.konto_loeschen() to authenticated;
+grant execute on function public.blockieren(uuid) to authenticated;
+grant execute on function public.entblocken(uuid) to authenticated;
 
 -- ---------------------------------------------------------------------
 -- Live-Aktualisierung: Änderungen an Gesuchen und neue Nachrichten sofort an die Geräte senden

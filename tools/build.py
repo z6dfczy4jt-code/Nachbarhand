@@ -47,13 +47,29 @@ def teile(vorschau):
     return kopf, rumpf
 
 
+# Öffentliche Adresse der App (für die Link-Vorschau, dort sind nur volle Adressen erlaubt)
+ADRESSE = 'https://z6dfczy4jt-code.github.io/Nachbarhand/'
+
+
 def standalone():
     kopf, rumpf = teile(False)
     return ('<!doctype html>\n<html lang="de">\n<head>\n'
             '<meta charset="utf-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#F3F5F1">\n'
-            '<meta name="description" content="Nachbarschaftshilfe in Garbsen: kleine Jobs in deiner Nähe finden oder Hilfe suchen.">\n'
+            '<meta name="description" content="Nachbarschaftshilfe in Garbsen: kleine Hilfen in deiner Nähe finden oder selbst anfragen.">\n'
+            # Link-Vorschau in WhatsApp, Signal, Facebook, Mail (Bild aus design/vorschau.py)
+            '<meta property="og:type" content="website">\n'
+            '<meta property="og:site_name" content="Hand Drauf">\n'
+            '<meta property="og:locale" content="de_DE">\n'
+            '<meta property="og:title" content="Hand Drauf: Nachbarn helfen Nachbarn in Garbsen">\n'
+            '<meta property="og:description" content="Rasen mähen, Einkauf hochtragen, Drucker einrichten: kleine Hilfen in deiner Nähe, gegen eine kleine Aufwandsentschädigung.">\n'
+            f'<meta property="og:url" content="{ADRESSE}">\n'
+            f'<meta property="og:image" content="{ADRESSE}assets/vorschau.png">\n'
+            '<meta property="og:image:width" content="1200">\n'
+            '<meta property="og:image:height" content="630">\n'
+            '<meta property="og:image:alt" content="Hand Drauf: Karte von Garbsen mit Anfragen und Beträgen">\n'
+            '<meta name="twitter:card" content="summary_large_image">\n'
             '<title>Hand Drauf</title>\n'
             '<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">\n'
             '<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">\n'

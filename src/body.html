@@ -17,13 +17,14 @@
   <symbol id="i-ort" viewBox="0 0 24 24"><path d="M12 20.5s6.5-5.6 6.5-11a6.5 6.5 0 0 0-13 0c0 5.4 6.5 11 6.5 11Z"/><circle cx="12" cy="9.5" r="2.3"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-kalender" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4M8 14h2.5M13.5 14H16M8 17h2.5"/></symbol>
   <symbol id="i-stern" viewBox="0 0 24 24"><path d="m12 4 2.4 5 5.4.6-4 3.7 1.1 5.4L12 16l-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z"/></symbol>
 </svg>
 
 <div class="app">
   <div class="beispiel-band" id="beispiel-band" hidden>
-    <span><strong>Beispiele:</strong> Diese Gesuche sind erfunden.</span>
-    <a href="./" id="beispiel-zurueck">Zu den echten Gesuchen</a>
+    <span><strong>Beispiele:</strong> Diese Anfragen sind erfunden.</span>
+    <a href="./" id="beispiel-zurueck">Zu den echten Anfragen</a>
   </div>
   <header class="kopf">
     <a class="marke" href="#entdecken" aria-label="Hand Drauf, zur Startseite"><!--KOPFZEICHEN--></a>
@@ -55,6 +56,7 @@
             <select id="sort">
               <option value="naehe">Nächste zuerst</option>
               <option value="betrag">Höchster Betrag</option>
+              <option value="termin">Nächster Termin</option>
               <option value="neu">Neueste</option>
             </select>
           </label>
@@ -62,7 +64,7 @@
       </div>
       <div class="liste" id="liste"></div>
       <div class="selbst">
-        <div><strong>Selbst Hilfe gebraucht?</strong><p>Gesuch in einer Minute erstellen.</p></div>
+        <div><strong>Selbst Hilfe gebraucht?</strong><p>Anfrage in einer Minute stellen.</p></div>
         <button type="button" class="btn btn-secondary btn-auto" data-go="neu">Hilfe suchen</button>
       </div>
       <div class="installieren-karte" id="installieren" hidden></div>
@@ -70,7 +72,7 @@
         <div><strong>Je mehr Nachbarn mitmachen, desto schneller findet sich Hilfe.</strong><p>Schick den Link an Nachbarn, Familie oder in die Hausgruppe.</p></div>
         <button type="button" class="btn btn-secondary btn-auto" data-einladen>Nachbarn einladen</button>
       </div>
-      <p class="fuss" id="fuss">Prototyp mit erfundenen Beispiel-Gesuchen in Garbsen. Es fließt kein echtes Geld.</p>
+      <p class="fuss" id="fuss">Prototyp mit erfundenen Beispiel-Anfragen in Garbsen. Es fließt kein echtes Geld.</p>
     </section>
 
     <!-- ===== Karte ===== -->
@@ -81,7 +83,7 @@
       </div>
       <div class="chips" id="chips-karte" role="group" aria-label="Kategorie filtern"></div>
       <div class="karte">
-        <div id="map" role="region" aria-label="Karte von Garbsen mit Gesuchen"></div>
+        <div id="map" role="region" aria-label="Karte von Garbsen mit Anfragen"></div>
         <div class="karte-knoepfe">
           <div class="knopf-gruppe">
             <button type="button" class="karte-knopf" data-karte="rein" aria-label="Hineinzoomen"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
@@ -93,19 +95,19 @@
           </div>
         </div>
         <div class="karte-leer" id="karte-leer" hidden>
-          <p><strong>Noch keine Gesuche auf der Karte.</strong> Sobald Nachbarn Hilfe suchen, erscheinen sie hier mit dem Betrag.</p>
+          <p><strong>Noch keine Anfragen auf der Karte.</strong> Sobald Nachbarn Hilfe suchen, erscheinen sie hier mit dem Betrag.</p>
           <div class="leer-knoepfe">
-            <button type="button" class="btn btn-primary btn-auto" data-go="neu">Gesuch erstellen</button>
+            <button type="button" class="btn btn-primary btn-auto" data-go="neu">Anfrage erstellen</button>
             <a class="btn btn-secondary btn-auto" href="?beispiele#karte">Beispiele ansehen</a>
           </div>
         </div>
         <div class="karte-fehler" id="karte-fehler" hidden>
-          <p>Die Karte konnte nicht geladen werden. Unter „Entdecken“ findest du alle Gesuche als Liste.</p>
+          <p>Die Karte konnte nicht geladen werden. Unter „Entdecken“ findest du alle Anfragen als Liste.</p>
         </div>
       </div>
       <div class="legende" aria-label="Legende">
         <span><i class="sw sw-offen"></i>Sucht Hilfe</span>
-        <span><i class="sw sw-eigen"></i>Dein Gesuch</span>
+        <span><i class="sw sw-eigen"></i>Deine Anfrage</span>
         <span><i class="sw sw-zugesagt"></i>Deine Zusage</span>
         <span id="legende-stadtteil" hidden><i class="sw sw-stadtteil"></i>Stadtteil (ungefähr)</span>
       </div>
@@ -116,12 +118,12 @@
       </div>
     </section>
 
-    <!-- ===== Gesuch erstellen ===== -->
+    <!-- ===== Anfrage erstellen ===== -->
     <section id="view-neu" class="view" aria-labelledby="h-neu" hidden>
       <form class="form wizard" id="neu-form" novalidate>
         <div class="hallo">
           <h1 id="h-neu">Hilfe suchen</h1>
-          <p class="lead" id="neu-lead">In vier kurzen Schritten. Nachbarn in der Nähe sehen dein Gesuch danach auf der Karte.</p>
+          <p class="lead" id="neu-lead">In vier kurzen Schritten. Nachbarn in der Nähe sehen deine Anfrage danach auf der Karte.</p>
           <button type="button" class="link-btn" id="neu-abbrechen" hidden>Bearbeiten abbrechen</button>
         </div>
         <div class="wizard-kopf">
@@ -145,6 +147,7 @@
           <div class="feld">
             <label for="neu-text">Details <span class="optional">(freiwillig)</span></label>
             <textarea id="neu-text" name="text" rows="3" maxlength="400" placeholder="z. B. Größe, ob Werkzeug da ist, worauf man achten muss"></textarea>
+            <p class="fehler" id="fehler-wort" hidden>Bitte formuliere deine Anfrage ohne beleidigende oder anstößige Wörter.</p>
           </div>
         </div>
 
@@ -160,7 +163,7 @@
               <label class="wahl"><input type="radio" name="tag" value="Nächste Woche"><span>Nächste Woche<small class="wahl-datum"></small></span></label>
             </div>
             <p class="fehler" id="fehler-tag" hidden>Bitte wähle, wann du Hilfe brauchst.</p>
-            <p class="feld-hinweis">Ist der Termin vorbei und hat niemand zugesagt, verschwindet das Gesuch von der Karte. Du kannst dann einen neuen Termin wählen.</p>
+            <p class="feld-hinweis">Ist der Termin vorbei und hat niemand zugesagt, verschwindet die Anfrage von der Karte. Du kannst dann einen neuen Termin wählen.</p>
           </fieldset>
           <fieldset class="feld">
             <legend>Tageszeit</legend>
@@ -214,7 +217,7 @@
         <div class="wizard-knoepfe">
           <button class="btn btn-secondary" type="button" id="neu-zurueck" hidden>Zurück</button>
           <button class="btn btn-primary" type="button" id="neu-weiter">Weiter</button>
-          <button class="btn btn-primary" type="submit" id="neu-senden" hidden>Gesuch veröffentlichen</button>
+          <button class="btn btn-primary" type="submit" id="neu-senden" hidden>Anfrage veröffentlichen</button>
         </div>
       </form>
     </section>
@@ -229,7 +232,7 @@
         <div class="liste" id="zusagen"></div>
       </div>
       <div class="abschnitt">
-        <h2 class="h-klein">Deine Gesuche</h2>
+        <h2 class="h-klein">Deine Anfragen</h2>
         <div class="liste" id="eigene"></div>
       </div>
       <button type="button" class="link-btn" data-reset id="reset-knopf">Beispieldaten zurücksetzen</button>

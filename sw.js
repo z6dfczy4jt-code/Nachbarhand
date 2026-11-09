@@ -1,10 +1,10 @@
 /* Hand Drauf: Offline-Hülle
  * - Die Seite selbst: immer zuerst aus dem Netz (damit Updates sofort ankommen), ohne Netz aus dem Speicher.
  * - Schriften, Bilder, Leaflet und supabase-js: einmal laden, dann aus dem Speicher (die Dateien ändern sich nicht).
- * - Gesuche, Nachrichten und Kartenkacheln: nie zwischenspeichern, die kommen immer frisch aus dem Netz.
+ * - Anfragen, Nachrichten und Kartenkacheln: nie zwischenspeichern, die kommen immer frisch aus dem Netz.
  * Nach Änderungen an Dateien in assets/ die Versionsnummer erhöhen.
  */
-const VERSION = 'handdrauf-2026-11-1';
+const VERSION = 'handdrauf-2026-11-2';
 const HUELLE = [
   './',
   'manifest.webmanifest',

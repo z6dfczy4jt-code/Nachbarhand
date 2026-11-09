@@ -1,7 +1,7 @@
--- Hand Drauf: Datenbank-Update November 2026
+-- Hand Drauf: Datenbank-Update November 2026, Teil 1 (eingespielt am 9. November 2026)
 -- Termine mit echtem Datum, Ablauf offener Gesuche, eigene Gesuche bearbeiten.
 -- Im Supabase-Dashboard unter "SQL Editor" einfügen und "Run" tippen. Kann gefahrlos mehrfach laufen.
--- Die App funktioniert auch ohne dieses Update, nur Bearbeiten und Ablauf fehlen dann.
+-- Die App funktioniert auch ohne dieses Update, nur Bearbeiten und Ablauf fehlen dann. Teil 2: 2026-11-blockieren-und-filter.sql
 
 alter table public.gesuche add column if not exists bis date;
 alter table public.gesuche add column if not exists laeuft_ab timestamptz not null default (now() + interval '21 days');

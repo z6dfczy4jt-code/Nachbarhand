@@ -4,7 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F3F5F1">
-<meta name="description" content="Nachbarschaftshilfe in Garbsen: kleine Jobs in deiner Nähe finden oder Hilfe suchen.">
+<meta name="description" content="Nachbarschaftshilfe in Garbsen: kleine Hilfen in deiner Nähe finden oder selbst anfragen.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Hand Drauf">
+<meta property="og:locale" content="de_DE">
+<meta property="og:title" content="Hand Drauf: Nachbarn helfen Nachbarn in Garbsen">
+<meta property="og:description" content="Rasen mähen, Einkauf hochtragen, Drucker einrichten: kleine Hilfen in deiner Nähe, gegen eine kleine Aufwandsentschädigung.">
+<meta property="og:url" content="https://z6dfczy4jt-code.github.io/Nachbarhand/">
+<meta property="og:image" content="https://z6dfczy4jt-code.github.io/Nachbarhand/assets/vorschau.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Hand Drauf: Karte von Garbsen mit Anfragen und Beträgen">
+<meta name="twitter:card" content="summary_large_image">
 <title>Hand Drauf</title>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
@@ -1213,6 +1224,15 @@ body { margin: 0; }
 .link-als-knopf { display: inline-flex; align-items: center; }
 .wahl-raster ~ .feld-hinweis, .wahl-raster ~ .fehler { margin-top: 8px; }
 .leer-knoepfe { justify-self: stretch; }
+
+/* ===== Gesuch: Karte und Teilen nebeneinander ===== */
+.link-zeile { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.link-zeile .link-inline { min-height: 44px; }
+
+/* ===== Blockierte Personen ===== */
+.blockliste { display: grid; gap: 4px; padding-top: 6px; }
+.block-zeile { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--line); font-weight: 700; }
+.block-zeile .link-btn { justify-self: end; }
 </style>
 </head>
 <body>
@@ -1235,13 +1255,14 @@ body { margin: 0; }
   <symbol id="i-ort" viewBox="0 0 24 24"><path d="M12 20.5s6.5-5.6 6.5-11a6.5 6.5 0 0 0-13 0c0 5.4 6.5 11 6.5 11Z"/><circle cx="12" cy="9.5" r="2.3"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-kalender" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4M8 14h2.5M13.5 14H16M8 17h2.5"/></symbol>
   <symbol id="i-stern" viewBox="0 0 24 24"><path d="m12 4 2.4 5 5.4.6-4 3.7 1.1 5.4L12 16l-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z"/></symbol>
 </svg>
 
 <div class="app">
   <div class="beispiel-band" id="beispiel-band" hidden>
-    <span><strong>Beispiele:</strong> Diese Gesuche sind erfunden.</span>
-    <a href="./" id="beispiel-zurueck">Zu den echten Gesuchen</a>
+    <span><strong>Beispiele:</strong> Diese Anfragen sind erfunden.</span>
+    <a href="./" id="beispiel-zurueck">Zu den echten Anfragen</a>
   </div>
   <header class="kopf">
     <a class="marke" href="#entdecken" aria-label="Hand Drauf, zur Startseite"><svg viewBox="0 0 970.5 189.8" class="marke-logo" aria-hidden="true" focusable="false"><path transform="translate(0.0 0.0) scale(0.8) translate(-9.8 -10.3)" d="M417.8 103.7Q417.9 102.8 417.5 101.6Q417.2 100.3 416.3 99.5Q415.5 98.6 414.8 98.4Q414.2 98.1 413.4 98.0Q412.6 97.8 411.3 98.0Q410.1 98.2 406.1 100.1Q402.1 102.1 379.2 112.3Q356.3 122.6 352.0 124.8Q347.6 127.0 343.3 129.7Q339.1 132.3 335.6 135.3Q332.2 138.3 327.6 143.0Q323.0 147.7 322.5 148.1Q322.0 148.5 321.5 148.6Q321.1 148.7 320.4 148.4Q319.7 148.0 307.1 136.7Q294.6 125.3 288.5 120.0Q282.5 114.7 282.0 114.0Q281.5 113.3 281.5 113.0Q281.5 112.7 281.9 112.5Q282.2 112.4 285.6 112.3Q289.1 112.3 292.1 111.9Q295.2 111.5 300.3 110.1Q305.3 108.7 306.5 108.2Q307.7 107.6 308.4 107.1Q309.1 106.6 309.6 105.9Q310.1 105.2 310.4 104.6Q310.7 104.0 310.8 103.3Q310.8 102.6 310.7 101.8Q310.6 101.0 310.1 100.0Q309.7 99.1 309.0 98.4Q308.2 97.8 307.5 97.5Q306.8 97.2 305.6 97.2Q304.3 97.1 300.5 98.4Q296.6 99.6 292.8 100.1Q289.1 100.7 286.0 100.6Q283.0 100.6 280.6 100.2Q278.3 99.8 275.1 98.8Q271.8 97.8 268.7 96.3Q265.6 94.7 261.6 92.3Q257.7 89.8 252.8 86.3Q248.0 82.8 246.6 82.1Q245.3 81.4 243.8 80.7Q242.3 80.1 240.7 79.7Q239.1 79.3 237.0 79.1Q235.0 78.8 233.1 78.8Q231.2 78.8 229.5 79.0Q227.7 79.2 225.6 79.6Q223.6 80.0 221.2 80.9Q218.8 81.8 215.8 84.0Q212.8 86.1 209.5 89.4Q206.2 92.6 203.0 95.4Q199.8 98.1 197.8 99.5Q195.8 100.9 193.8 101.9Q191.8 102.9 190.3 103.3Q188.7 103.8 187.0 104.1Q185.2 104.3 182.3 104.3Q179.5 104.2 178.1 104.0Q176.8 103.8 175.5 103.4Q174.1 102.9 173.1 102.3Q172.2 101.8 171.7 101.2Q171.3 100.7 171.2 100.1Q171.2 99.5 171.6 98.8Q172.0 98.1 184.1 82.7Q196.2 67.3 197.8 65.6Q199.5 63.8 200.5 62.9Q201.6 62.0 204.5 60.2Q207.3 58.4 214.3 55.7Q221.3 53.0 229.0 50.4Q236.7 47.7 240.1 46.9Q243.5 46.0 247.3 45.6Q251.1 45.1 253.8 45.1Q256.5 45.1 259.1 45.4Q261.7 45.7 269.3 47.2Q276.8 48.8 281.0 49.4Q285.1 50.0 287.9 50.2Q290.7 50.5 294.5 50.5Q298.2 50.5 301.9 50.0Q305.6 49.6 308.3 49.0Q311.0 48.4 316.5 46.5Q322.1 44.6 327.9 42.2Q333.7 39.7 353.1 30.5Q372.5 21.2 373.1 20.7Q373.8 20.2 374.4 19.6Q374.9 19.0 375.2 18.2Q375.6 17.5 375.7 16.5Q375.8 15.5 375.7 14.6Q375.5 13.7 375.1 13.0Q374.7 12.3 374.1 11.8Q373.5 11.2 372.7 10.9Q372.0 10.6 371.0 10.5Q370.1 10.3 368.6 10.7Q367.2 11.0 355.3 16.8Q343.3 22.7 331.2 28.3Q319.1 33.9 314.8 35.4Q310.6 36.9 306.6 37.8Q302.7 38.7 300.1 39.0Q297.6 39.2 293.6 39.1Q289.6 39.1 285.3 38.5Q281.0 38.0 276.1 36.9Q271.2 35.8 267.3 35.1Q263.5 34.4 260.3 34.2Q257.2 34.0 254.3 34.0Q251.3 34.0 248.0 34.2Q244.6 34.5 241.2 35.3Q237.8 36.0 227.2 39.5Q216.6 43.1 215.6 43.3Q214.6 43.5 207.1 41.9Q199.6 40.3 195.6 39.9Q191.6 39.6 188.3 39.6Q185.1 39.6 179.7 40.1Q174.3 40.5 168.0 41.7Q161.6 42.9 156.8 43.3Q152.0 43.8 149.6 43.8Q147.3 43.8 142.4 43.3Q137.5 42.7 134.1 42.1Q130.8 41.4 126.3 40.2Q121.8 39.0 115.0 36.1Q108.1 33.3 99.9 29.6Q91.7 25.8 82.3 21.2Q72.8 16.6 66.7 13.9Q60.6 11.1 59.7 10.9Q58.8 10.6 57.8 10.6Q56.8 10.6 56.1 10.8Q55.5 11.0 54.6 11.5Q53.7 12.0 53.2 12.5Q52.8 13.1 52.5 13.7Q52.2 14.3 52.1 15.5Q52.1 16.7 52.2 17.2Q52.3 17.7 53.0 18.8Q53.7 19.9 55.7 21.2Q57.7 22.5 65.0 25.8Q72.3 29.1 86.4 35.7Q100.5 42.4 108.1 45.5Q115.7 48.6 120.5 50.1Q125.3 51.7 131.3 53.0Q137.2 54.2 139.8 54.5Q142.3 54.8 147.1 55.0Q152.0 55.1 156.1 54.7Q160.2 54.4 167.5 53.1Q174.8 51.9 178.5 51.5Q182.1 51.1 186.1 51.0Q190.1 51.0 191.5 51.1Q193.0 51.2 193.7 51.4Q194.5 51.6 194.7 51.9Q194.9 52.2 194.7 52.6Q194.6 53.0 192.2 55.1Q189.8 57.3 187.9 59.6Q186.0 61.8 173.3 78.3Q160.5 94.7 160.0 95.8Q159.4 97.0 159.1 98.1Q158.8 99.2 158.8 101.0Q158.9 102.8 159.5 104.3Q160.1 105.8 161.4 107.3Q162.6 108.7 163.6 109.6Q164.7 110.5 166.6 111.7Q168.6 112.9 169.8 113.5Q171.1 114.0 173.3 114.6Q175.6 115.3 178.8 115.5Q182.0 115.8 184.6 115.6Q187.2 115.5 189.5 115.1Q191.8 114.7 195.0 113.6Q198.1 112.6 202.0 110.1Q206.0 107.7 209.1 105.1Q212.3 102.5 216.5 98.3Q220.7 94.1 222.3 92.8Q224.0 91.6 224.8 91.2Q225.7 90.8 227.4 90.5Q229.1 90.2 231.9 90.1Q234.7 90.1 235.5 90.2Q236.3 90.4 237.0 90.7Q237.6 91.1 250.1 101.7Q262.7 112.4 290.7 137.1Q318.6 161.8 319.6 163.3Q320.5 164.8 320.8 166.2Q321.1 167.6 320.9 169.2Q320.8 170.8 320.0 172.5Q319.2 174.2 318.1 175.2Q317.0 176.2 315.3 177.0Q313.7 177.7 312.0 177.8Q310.2 178.0 309.1 177.7Q308.0 177.5 306.9 177.0Q305.8 176.6 305.0 176.0Q304.1 175.4 290.3 163.7Q276.5 152.0 268.7 145.2Q261.0 138.5 260.0 137.9Q259.0 137.4 258.0 137.3Q257.1 137.1 256.1 137.3Q255.1 137.5 254.1 138.1Q253.2 138.6 252.6 139.5Q252.0 140.3 251.6 141.6Q251.3 142.8 251.5 143.7Q251.6 144.6 252.1 145.4Q252.6 146.2 253.7 147.3Q254.7 148.4 266.8 158.4Q278.8 168.4 286.1 174.7Q293.3 181.1 294.4 182.4Q295.5 183.7 296.1 184.9Q296.8 186.1 297.0 187.1Q297.2 188.2 297.1 189.5Q297.0 190.8 296.6 192.0Q296.3 193.2 295.8 194.0Q295.3 194.8 294.4 195.8Q293.5 196.8 292.5 197.4Q291.5 198.1 290.1 198.5Q288.8 198.9 287.7 198.9Q286.6 199.0 285.5 198.8Q284.3 198.6 283.5 198.3Q282.7 197.9 281.4 197.1Q280.1 196.3 272.9 190.3Q265.7 184.4 255.6 175.7Q245.6 167.1 243.3 165.0Q241.0 162.8 239.8 162.1Q238.6 161.3 238.0 161.1Q237.3 160.9 236.2 160.9Q235.1 160.9 234.1 161.3Q233.1 161.7 232.4 162.3Q231.7 163.0 231.2 164.0Q230.8 165.1 230.9 166.5Q231.0 168.0 231.4 168.8Q231.9 169.7 233.2 171.0Q234.6 172.4 248.8 184.6Q263.0 196.8 265.3 198.9Q267.6 201.1 268.6 202.5Q269.7 203.8 270.1 205.3Q270.6 206.8 270.5 208.0Q270.5 209.2 270.1 210.5Q269.7 211.7 268.9 212.8Q268.1 214.0 267.1 214.8Q266.1 215.7 265.2 216.2Q264.3 216.6 263.3 216.9Q262.2 217.1 260.8 217.0Q259.5 216.9 258.1 216.6Q256.8 216.2 256.0 215.8Q255.1 215.4 254.0 214.6Q253.0 213.9 236.5 200.2Q220.1 186.6 219.1 186.1Q218.2 185.5 217.6 185.4Q217.0 185.2 215.8 185.3Q214.7 185.4 213.8 185.7Q213.0 186.0 212.2 186.9Q211.4 187.7 211.0 188.7Q210.6 189.7 210.7 191.0Q210.8 192.2 211.4 193.2Q211.9 194.2 218.9 200.2Q225.8 206.2 229.5 209.1Q233.1 212.0 237.0 215.5Q240.8 219.0 241.5 219.9Q242.2 220.8 242.5 221.9Q242.7 223.0 242.6 223.7Q242.5 224.5 242.3 225.3Q242.0 226.1 241.6 226.7Q241.1 227.3 240.6 227.9Q240.0 228.4 238.9 229.1Q237.8 229.7 237.0 230.0Q236.1 230.3 234.8 230.5Q233.6 230.7 232.5 230.7Q231.3 230.6 230.3 230.4Q229.3 230.2 226.7 229.1Q224.1 228.1 220.5 225.7Q217.0 223.4 215.0 221.9Q213.1 220.3 212.8 219.7Q212.5 219.1 212.8 216.3Q213.1 213.6 212.9 211.4Q212.7 209.2 212.2 207.5Q211.6 205.8 210.7 204.0Q209.7 202.2 208.6 200.8Q207.5 199.5 206.0 198.1Q204.5 196.7 202.8 195.8Q201.2 194.9 199.5 194.3Q197.8 193.7 197.3 193.3Q196.8 192.9 196.6 192.4Q196.5 192.0 196.5 189.5Q196.5 187.1 196.3 185.8Q196.1 184.6 195.4 182.8Q194.8 181.0 194.0 179.6Q193.2 178.2 191.8 176.7Q190.5 175.2 188.7 173.8Q187.0 172.4 185.4 171.6Q183.8 170.8 181.1 170.0Q178.5 169.1 178.0 168.8Q177.5 168.5 177.2 168.0Q177.0 167.5 176.5 164.3Q176.1 161.2 175.2 159.3Q174.4 157.5 173.3 156.0Q172.3 154.5 171.2 153.3Q170.2 152.2 168.8 151.0Q167.5 149.9 166.5 149.3Q165.6 148.7 163.6 147.9Q161.7 147.1 158.8 146.8Q155.8 146.5 153.2 146.9Q150.6 147.3 148.7 148.1Q146.8 148.9 145.4 149.6Q144.0 150.4 143.5 150.5Q143.1 150.5 142.7 150.2Q142.3 150.0 140.7 147.5Q139.0 145.0 137.1 143.1Q135.2 141.3 133.0 140.2Q130.8 139.0 128.5 138.5Q126.1 138.0 123.8 138.1Q121.6 138.2 119.1 138.9Q116.6 139.5 114.3 140.8Q112.1 142.1 110.0 143.9Q108.0 145.7 107.3 145.8Q106.7 145.9 106.1 145.5Q105.5 145.1 103.3 142.9Q101.1 140.6 97.8 137.9Q94.5 135.1 91.6 133.1Q88.8 131.2 85.3 129.2Q81.8 127.2 76.6 124.7Q71.3 122.2 48.0 111.9Q24.6 101.6 21.8 100.2Q19.0 98.8 17.3 98.4Q15.6 98.0 14.8 98.0Q14.0 98.1 13.1 98.4Q12.3 98.8 11.7 99.2Q11.1 99.7 10.8 100.3Q10.4 101.0 10.1 101.7Q9.9 102.5 9.9 103.2Q9.8 104.0 10.0 104.7Q10.2 105.5 10.8 106.3Q11.3 107.1 12.3 107.8Q13.2 108.5 15.2 109.6Q17.2 110.8 29.4 116.0Q41.6 121.3 55.7 127.7Q69.8 134.1 74.8 136.6Q79.8 139.1 82.0 140.5Q84.1 141.8 86.5 143.7Q89.0 145.5 91.4 147.8Q93.8 150.1 95.2 151.6Q96.5 153.1 97.2 154.1Q97.9 155.2 97.9 155.8Q97.8 156.3 96.8 159.0Q95.8 161.6 95.5 163.7Q95.1 165.8 95.2 168.4Q95.4 171.0 95.8 172.6Q96.2 174.2 96.8 175.5Q97.4 176.8 98.4 178.4Q99.4 180.0 101.3 181.7Q103.2 183.5 105.3 184.6Q107.3 185.8 109.9 186.4Q112.5 187.1 113.1 187.5Q113.8 187.8 114.0 188.5Q114.3 189.1 114.5 191.3Q114.7 193.5 115.0 194.9Q115.4 196.3 116.3 198.1Q117.2 200.0 118.7 202.0Q120.2 204.0 122.2 205.6Q124.2 207.2 126.6 208.4Q129.0 209.5 130.6 209.9Q132.2 210.2 134.8 210.3Q137.3 210.3 137.8 210.4Q138.3 210.6 138.7 211.0Q139.1 211.5 139.6 213.3Q140.1 215.2 141.1 217.0Q142.0 218.8 143.2 220.3Q144.5 221.8 145.8 223.0Q147.2 224.2 148.6 225.0Q150.0 225.8 152.0 226.5Q154.1 227.3 155.7 227.6Q157.3 227.8 159.5 227.7Q161.7 227.6 162.3 227.7Q162.8 227.8 163.3 228.3Q163.9 228.8 164.5 230.7Q165.2 232.6 165.9 233.6Q166.5 234.7 167.8 236.3Q169.1 238.0 170.1 238.9Q171.1 239.8 172.6 240.7Q174.1 241.7 175.4 242.3Q176.7 242.8 178.3 243.2Q179.8 243.6 181.8 243.7Q183.7 243.8 185.2 243.7Q186.7 243.5 188.1 243.2Q189.5 242.8 192.0 241.7Q194.5 240.5 196.1 239.2Q197.8 237.8 201.2 234.3Q204.6 230.7 205.2 230.3Q205.8 230.0 206.5 230.1Q207.1 230.3 211.9 233.4Q216.7 236.5 220.1 238.4Q223.6 240.3 226.3 241.0Q229.0 241.7 231.7 241.8Q234.5 241.8 235.9 241.7Q237.3 241.5 239.0 241.1Q240.6 240.7 242.0 240.2Q243.3 239.7 244.6 238.9Q245.8 238.2 246.9 237.3Q248.0 236.5 249.3 235.0Q250.7 233.5 251.2 232.5Q251.8 231.6 252.4 230.1Q253.0 228.6 253.5 228.1Q254.0 227.7 254.3 227.7Q254.7 227.6 257.8 228.0Q261.0 228.3 262.8 228.2Q264.7 228.1 266.8 227.6Q269.0 227.0 270.6 226.3Q272.2 225.5 273.6 224.5Q275.1 223.5 276.6 221.9Q278.1 220.3 279.2 218.4Q280.3 216.5 281.1 214.0Q281.9 211.6 282.2 211.1Q282.6 210.5 283.2 210.3Q283.8 210.1 286.5 210.2Q289.1 210.3 290.7 210.0Q292.3 209.8 293.8 209.3Q295.2 208.9 297.0 207.9Q298.7 207.0 300.6 205.4Q302.6 203.8 304.1 201.9Q305.6 200.0 306.6 198.2Q307.5 196.5 308.1 193.8Q308.8 191.1 309.1 190.6Q309.5 190.0 310.1 189.8Q310.7 189.6 313.8 189.1Q316.8 188.7 318.6 188.0Q320.5 187.4 322.5 186.2Q324.6 184.9 326.2 183.4Q327.9 181.8 328.9 180.4Q329.9 179.0 330.5 177.8Q331.0 176.7 331.5 175.0Q332.0 173.3 332.3 171.7Q332.6 170.1 332.6 169.1Q332.7 168.1 332.4 165.8Q332.1 163.6 331.2 160.9Q330.3 158.2 330.3 157.5Q330.4 156.7 330.9 156.0Q331.5 155.2 335.2 151.5Q339.0 147.7 341.4 145.5Q343.8 143.3 347.1 140.9Q350.3 138.5 353.6 136.7Q356.8 134.9 373.1 127.4Q389.5 119.9 398.3 116.0Q407.1 112.2 410.5 110.5Q414.0 108.8 415.0 108.1Q416.1 107.4 416.6 106.8Q417.2 106.2 417.5 105.4Q417.8 104.6 417.8 103.7ZM197.4 205.8Q198.3 206.3 199.0 207.0Q199.7 207.7 200.2 208.6Q200.7 209.5 201.1 211.0Q201.5 212.6 201.5 213.6Q201.5 214.6 201.3 215.4Q201.1 216.2 200.8 217.0Q200.4 217.8 199.7 218.8Q199.0 219.7 195.2 223.9Q191.3 228.0 190.1 229.1Q189.0 230.1 187.7 231.0Q186.5 231.9 185.2 232.2Q184.0 232.5 182.8 232.4Q181.7 232.3 180.6 231.9Q179.5 231.6 178.6 231.0Q177.7 230.4 176.4 228.7Q175.2 227.1 174.8 225.3Q174.3 223.5 174.4 222.6Q174.5 221.7 174.8 220.9Q175.1 220.1 176.2 218.5Q177.4 216.8 182.6 211.7Q187.8 206.6 188.9 205.9Q190.0 205.2 190.8 204.9Q191.6 204.6 193.0 204.6Q194.3 204.6 195.4 205.0Q196.5 205.3 197.4 205.8ZM181.0 182.4Q182.1 183.2 182.8 183.9Q183.5 184.7 183.8 185.3Q184.1 186.0 184.4 186.9Q184.6 187.8 184.7 189.1Q184.7 190.3 184.5 191.3Q184.2 192.3 183.8 193.2Q183.4 194.1 181.9 195.8Q180.5 197.6 174.8 203.6Q169.1 209.6 166.0 212.4Q163.0 215.1 161.6 215.6Q160.2 216.1 158.8 216.1Q157.5 216.1 156.3 215.8Q155.2 215.4 154.1 214.7Q153.1 214.0 152.0 212.5Q150.9 211.1 150.5 210.2Q150.2 209.3 150.1 208.5Q150.0 207.6 150.2 206.2Q150.4 204.8 150.9 203.8Q151.4 202.8 152.1 202.0Q152.7 201.2 160.4 193.3Q168.1 185.5 170.2 183.6Q172.3 181.8 173.6 181.3Q175.0 180.8 176.2 180.8Q177.5 180.8 178.6 181.2Q179.8 181.6 181.0 182.4ZM161.0 159.7Q162.2 160.4 163.1 161.5Q164.0 162.6 164.5 163.6Q164.9 164.7 165.1 166.3Q165.3 167.8 165.0 169.3Q164.7 170.8 163.8 172.5Q162.8 174.1 157.9 179.3Q153.1 184.6 147.8 189.8Q142.6 195.1 141.1 196.3Q139.7 197.6 138.9 198.1Q138.1 198.6 136.9 198.9Q135.7 199.2 134.4 199.1Q133.1 198.9 131.8 198.4Q130.6 197.9 129.5 197.1Q128.3 196.2 127.6 195.3Q126.9 194.3 126.4 193.2Q125.8 192.1 125.6 191.1Q125.5 190.1 125.5 188.9Q125.6 187.7 125.9 186.8Q126.2 186.0 126.8 185.0Q127.3 184.1 129.3 181.8Q131.2 179.6 140.0 170.6Q148.7 161.7 150.3 160.5Q151.8 159.3 153.0 158.8Q154.1 158.3 155.4 158.2Q156.7 158.1 158.3 158.5Q159.8 158.9 161.0 159.7ZM127.2 150.0Q128.0 150.4 128.7 151.0Q129.5 151.6 130.1 152.3Q130.7 153.1 131.2 154.0Q131.8 155.0 132.0 155.8Q132.3 156.6 132.3 157.7Q132.3 158.8 132.1 160.0Q131.9 161.1 131.3 162.4Q130.6 163.7 126.6 168.0Q122.6 172.3 121.0 173.6Q119.3 174.9 118.6 175.3Q117.8 175.6 116.5 175.8Q115.1 176.0 114.0 175.7Q112.8 175.5 111.6 174.9Q110.5 174.3 109.2 173.1Q107.9 171.8 107.5 171.0Q107.0 170.2 106.8 169.3Q106.5 168.5 106.5 167.5Q106.5 166.6 106.6 165.7Q106.7 164.8 107.5 163.3Q108.2 161.7 112.6 157.2Q117.0 152.7 118.6 151.5Q120.2 150.3 121.3 149.8Q122.3 149.4 123.5 149.3Q124.6 149.2 125.5 149.4Q126.5 149.6 127.2 150.0Z" fill="currentColor" fill-rule="evenodd"/><g fill="currentColor" transform="translate(363.2 131.4)"><path d="M58.7 0.0V-73.0H75.6V0.0ZM8.6 0.0V-73.0H25.5V0.0ZM24.2 -29.9V-44.1H59.9V-29.9ZM126.1 0.0V-10.9L125.1 -13.3V-32.9Q125.1 -38.2 121.9 -41.0Q118.7 -43.9 112.1 -43.9Q107.7 -43.9 103.4 -42.5Q99.0 -41.1 96.0 -38.7L90.1 -50.1Q94.8 -53.4 101.2 -55.1Q107.7 -56.8 114.3 -56.8Q127.2 -56.8 134.3 -50.8Q141.4 -44.8 141.4 -32.0V0.0ZM109.0 0.7Q102.5 0.7 97.8 -1.4Q93.1 -3.6 90.6 -7.4Q88.1 -11.3 88.1 -16.1Q88.1 -21.1 90.6 -24.9Q93.0 -28.6 98.3 -30.8Q103.6 -32.9 112.2 -32.9H127.0V-23.4H114.0Q108.2 -23.4 106.1 -21.6Q104.0 -19.7 104.0 -16.8Q104.0 -13.7 106.4 -11.9Q108.8 -10.1 113.0 -10.1Q117.1 -10.1 120.4 -12.0Q123.7 -13.9 125.1 -17.7L127.6 -10.1Q125.8 -4.8 121.1 -2.0Q116.4 0.7 109.0 0.7ZM156.1 0.0V-56.1H171.6V-40.5L168.7 -45.2Q171.7 -50.9 177.3 -53.9Q183.0 -56.8 190.1 -56.8Q196.8 -56.8 202.1 -54.2Q207.3 -51.6 210.4 -46.1Q213.4 -40.6 213.4 -32.0V0.0H197.2V-29.6Q197.2 -36.4 194.2 -39.6Q191.2 -42.8 185.8 -42.8Q181.9 -42.8 178.8 -41.2Q175.8 -39.6 174.1 -36.2Q172.4 -32.9 172.4 -27.7V0.0ZM252.6 0.7Q244.8 0.7 238.4 -2.7Q232.0 -6.3 228.3 -12.8Q224.6 -19.2 224.6 -28.0Q224.6 -36.8 228.3 -43.3Q232.0 -49.8 238.4 -53.3Q244.8 -56.8 252.6 -56.8Q259.7 -56.8 265.0 -53.7Q270.3 -50.6 273.3 -44.2Q276.2 -37.9 276.2 -28.0Q276.2 -18.2 273.4 -11.8Q270.6 -5.4 265.3 -2.3Q260.0 0.7 252.6 0.7ZM255.4 -12.5Q259.5 -12.5 262.7 -14.3Q265.9 -16.2 267.8 -19.7Q269.7 -23.2 269.7 -28.0Q269.7 -32.9 267.8 -36.4Q265.9 -39.8 262.7 -41.7Q259.5 -43.5 255.4 -43.5Q251.3 -43.5 248.1 -41.7Q244.9 -39.8 243.0 -36.4Q241.1 -32.9 241.1 -28.0Q241.1 -23.2 243.0 -19.7Q244.9 -16.2 248.1 -14.3Q251.3 -12.5 255.4 -12.5ZM270.2 0.0V-11.4L270.5 -28.1L269.4 -44.7V-77.3H285.7V0.0Z"/><path transform="translate(304.1 0)" d="M11.9 0.0V-73.0H41.6Q53.3 -73.0 62.1 -68.3Q70.9 -63.6 75.8 -55.4Q80.7 -47.2 80.7 -36.5Q80.7 -25.7 75.8 -17.5Q70.9 -9.3 62.1 -4.6Q53.3 0.0 41.6 0.0ZM19.5 -6.7H41.1Q50.9 -6.7 58.0 -10.5Q65.2 -14.3 69.1 -21.0Q73.0 -27.7 73.0 -36.5Q73.0 -45.3 69.1 -52.0Q65.2 -58.6 58.0 -62.4Q50.9 -66.2 41.1 -66.2H19.5ZM96.4 0.0V-54.8H103.5V-39.8L102.8 -42.4Q105.1 -48.6 110.5 -51.9Q115.9 -55.2 124.0 -55.2V-48.0Q123.5 -48.1 123.1 -48.1Q122.7 -48.1 122.2 -48.1Q113.7 -48.1 108.8 -42.9Q103.8 -37.6 103.8 -27.9V0.0ZM168.3 0.0V-12.0L168.0 -14.1V-34.3Q168.0 -41.3 164.0 -45.0Q160.1 -48.8 152.4 -48.8Q147.1 -48.8 142.3 -47.0Q137.5 -45.2 134.2 -42.3L130.9 -47.8Q135.0 -51.3 140.9 -53.3Q146.7 -55.2 153.1 -55.2Q163.8 -55.2 169.6 -49.9Q175.4 -44.6 175.4 -33.9V0.0ZM149.4 0.4Q143.2 0.4 138.7 -1.5Q134.2 -3.5 131.8 -7.1Q129.3 -10.7 129.3 -15.3Q129.3 -19.6 131.4 -23.1Q133.4 -26.7 138.1 -28.8Q142.7 -31.0 150.5 -31.0H169.4V-25.4H150.8Q142.8 -25.4 139.7 -22.6Q136.7 -19.8 136.7 -15.6Q136.7 -10.9 140.3 -8.1Q144.0 -5.3 150.5 -5.3Q156.8 -5.3 161.3 -8.1Q165.8 -11.0 168.0 -16.4L169.6 -11.3Q167.5 -5.8 162.4 -2.7Q157.2 0.4 149.4 0.4ZM218.2 0.4Q211.1 0.4 205.9 -2.0Q200.7 -4.6 197.8 -9.9Q194.9 -15.1 194.9 -22.9V-54.8H202.3V-23.7Q202.3 -15.0 206.7 -10.6Q211.0 -6.1 218.9 -6.1Q224.6 -6.1 228.8 -8.5Q233.0 -10.8 235.3 -15.3Q237.6 -19.8 237.6 -26.0V-54.8H245.0V0.0H237.8V-14.9L239.0 -12.2Q236.4 -6.2 230.9 -2.8Q225.4 0.4 218.2 0.4ZM266.8 0.0V-61.6Q266.8 -68.9 271.1 -73.4Q275.4 -77.8 283.3 -77.8Q286.5 -77.8 289.4 -77.0Q292.4 -76.2 294.4 -74.4L291.8 -68.8Q290.3 -70.2 288.2 -70.9Q286.1 -71.6 283.7 -71.6Q279.0 -71.6 276.5 -69.0Q274.1 -66.4 274.1 -61.3V-52.9L274.2 -49.5V0.0ZM257.0 -48.6V-54.8H290.9V-48.6Z"/></g></svg></a>
@@ -1273,6 +1294,7 @@ body { margin: 0; }
             <select id="sort">
               <option value="naehe">Nächste zuerst</option>
               <option value="betrag">Höchster Betrag</option>
+              <option value="termin">Nächster Termin</option>
               <option value="neu">Neueste</option>
             </select>
           </label>
@@ -1280,7 +1302,7 @@ body { margin: 0; }
       </div>
       <div class="liste" id="liste"></div>
       <div class="selbst">
-        <div><strong>Selbst Hilfe gebraucht?</strong><p>Gesuch in einer Minute erstellen.</p></div>
+        <div><strong>Selbst Hilfe gebraucht?</strong><p>Anfrage in einer Minute stellen.</p></div>
         <button type="button" class="btn btn-secondary btn-auto" data-go="neu">Hilfe suchen</button>
       </div>
       <div class="installieren-karte" id="installieren" hidden></div>
@@ -1288,7 +1310,7 @@ body { margin: 0; }
         <div><strong>Je mehr Nachbarn mitmachen, desto schneller findet sich Hilfe.</strong><p>Schick den Link an Nachbarn, Familie oder in die Hausgruppe.</p></div>
         <button type="button" class="btn btn-secondary btn-auto" data-einladen>Nachbarn einladen</button>
       </div>
-      <p class="fuss" id="fuss">Prototyp mit erfundenen Beispiel-Gesuchen in Garbsen. Es fließt kein echtes Geld.</p>
+      <p class="fuss" id="fuss">Prototyp mit erfundenen Beispiel-Anfragen in Garbsen. Es fließt kein echtes Geld.</p>
     </section>
 
     <!-- ===== Karte ===== -->
@@ -1299,7 +1321,7 @@ body { margin: 0; }
       </div>
       <div class="chips" id="chips-karte" role="group" aria-label="Kategorie filtern"></div>
       <div class="karte">
-        <div id="map" role="region" aria-label="Karte von Garbsen mit Gesuchen"></div>
+        <div id="map" role="region" aria-label="Karte von Garbsen mit Anfragen"></div>
         <div class="karte-knoepfe">
           <div class="knopf-gruppe">
             <button type="button" class="karte-knopf" data-karte="rein" aria-label="Hineinzoomen"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
@@ -1311,19 +1333,19 @@ body { margin: 0; }
           </div>
         </div>
         <div class="karte-leer" id="karte-leer" hidden>
-          <p><strong>Noch keine Gesuche auf der Karte.</strong> Sobald Nachbarn Hilfe suchen, erscheinen sie hier mit dem Betrag.</p>
+          <p><strong>Noch keine Anfragen auf der Karte.</strong> Sobald Nachbarn Hilfe suchen, erscheinen sie hier mit dem Betrag.</p>
           <div class="leer-knoepfe">
-            <button type="button" class="btn btn-primary btn-auto" data-go="neu">Gesuch erstellen</button>
+            <button type="button" class="btn btn-primary btn-auto" data-go="neu">Anfrage erstellen</button>
             <a class="btn btn-secondary btn-auto" href="?beispiele#karte">Beispiele ansehen</a>
           </div>
         </div>
         <div class="karte-fehler" id="karte-fehler" hidden>
-          <p>Die Karte konnte nicht geladen werden. Unter „Entdecken“ findest du alle Gesuche als Liste.</p>
+          <p>Die Karte konnte nicht geladen werden. Unter „Entdecken“ findest du alle Anfragen als Liste.</p>
         </div>
       </div>
       <div class="legende" aria-label="Legende">
         <span><i class="sw sw-offen"></i>Sucht Hilfe</span>
-        <span><i class="sw sw-eigen"></i>Dein Gesuch</span>
+        <span><i class="sw sw-eigen"></i>Deine Anfrage</span>
         <span><i class="sw sw-zugesagt"></i>Deine Zusage</span>
         <span id="legende-stadtteil" hidden><i class="sw sw-stadtteil"></i>Stadtteil (ungefähr)</span>
       </div>
@@ -1334,12 +1356,12 @@ body { margin: 0; }
       </div>
     </section>
 
-    <!-- ===== Gesuch erstellen ===== -->
+    <!-- ===== Anfrage erstellen ===== -->
     <section id="view-neu" class="view" aria-labelledby="h-neu" hidden>
       <form class="form wizard" id="neu-form" novalidate>
         <div class="hallo">
           <h1 id="h-neu">Hilfe suchen</h1>
-          <p class="lead" id="neu-lead">In vier kurzen Schritten. Nachbarn in der Nähe sehen dein Gesuch danach auf der Karte.</p>
+          <p class="lead" id="neu-lead">In vier kurzen Schritten. Nachbarn in der Nähe sehen deine Anfrage danach auf der Karte.</p>
           <button type="button" class="link-btn" id="neu-abbrechen" hidden>Bearbeiten abbrechen</button>
         </div>
         <div class="wizard-kopf">
@@ -1363,6 +1385,7 @@ body { margin: 0; }
           <div class="feld">
             <label for="neu-text">Details <span class="optional">(freiwillig)</span></label>
             <textarea id="neu-text" name="text" rows="3" maxlength="400" placeholder="z. B. Größe, ob Werkzeug da ist, worauf man achten muss"></textarea>
+            <p class="fehler" id="fehler-wort" hidden>Bitte formuliere deine Anfrage ohne beleidigende oder anstößige Wörter.</p>
           </div>
         </div>
 
@@ -1378,7 +1401,7 @@ body { margin: 0; }
               <label class="wahl"><input type="radio" name="tag" value="Nächste Woche"><span>Nächste Woche<small class="wahl-datum"></small></span></label>
             </div>
             <p class="fehler" id="fehler-tag" hidden>Bitte wähle, wann du Hilfe brauchst.</p>
-            <p class="feld-hinweis">Ist der Termin vorbei und hat niemand zugesagt, verschwindet das Gesuch von der Karte. Du kannst dann einen neuen Termin wählen.</p>
+            <p class="feld-hinweis">Ist der Termin vorbei und hat niemand zugesagt, verschwindet die Anfrage von der Karte. Du kannst dann einen neuen Termin wählen.</p>
           </fieldset>
           <fieldset class="feld">
             <legend>Tageszeit</legend>
@@ -1432,7 +1455,7 @@ body { margin: 0; }
         <div class="wizard-knoepfe">
           <button class="btn btn-secondary" type="button" id="neu-zurueck" hidden>Zurück</button>
           <button class="btn btn-primary" type="button" id="neu-weiter">Weiter</button>
-          <button class="btn btn-primary" type="submit" id="neu-senden" hidden>Gesuch veröffentlichen</button>
+          <button class="btn btn-primary" type="submit" id="neu-senden" hidden>Anfrage veröffentlichen</button>
         </div>
       </form>
     </section>
@@ -1447,7 +1470,7 @@ body { margin: 0; }
         <div class="liste" id="zusagen"></div>
       </div>
       <div class="abschnitt">
-        <h2 class="h-klein">Deine Gesuche</h2>
+        <h2 class="h-klein">Deine Anfragen</h2>
         <div class="liste" id="eigene"></div>
       </div>
       <button type="button" class="link-btn" data-reset id="reset-knopf">Beispieldaten zurücksetzen</button>
@@ -1518,7 +1541,7 @@ function RECHT_TEXTE(b, e) {
         <h3>Verbraucherstreitbeilegung</h3>
         <p>Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
         <h3>Haftung für Inhalte</h3>
-        <p>Gesuche und Nachrichten schreiben die Nutzer selbst. Wir prüfen sie nicht vorab, entfernen aber rechtswidrige Inhalte, sobald wir davon erfahren. Hinweise nehmen wir über „Melden“ in der App oder per E-Mail entgegen.</p>
+        <p>Anfragen und Nachrichten schreiben die Nutzer selbst. Wir prüfen sie nicht vorab, entfernen aber rechtswidrige Inhalte, sobald wir davon erfahren. Hinweise nehmen wir über „Melden“ in der App oder per E-Mail entgegen.</p>
         ${stand}`
     },
 
@@ -1542,12 +1565,12 @@ function RECHT_TEXTE(b, e) {
         <p>Die App speichert im Browser deines Geräts (localStorage): deine Ansicht-Einstellungen, welche Nachrichten du gelesen hast, die Beispieldaten der Demo und, wenn du angemeldet bist, deine Anmeldung. Diese Daten bleiben auf deinem Gerät. Sie sind für die Funktionen nötig, die du nutzt (§ 25 Abs. 2 Nr. 2 TDDDG). Cookies für Werbung oder Statistik setzen wir nicht.</p>
 
         <h3>5. Wenn du ein Konto hast</h3>
-        <p>Für Konten, Gesuche und Nachrichten nutzen wir Supabase (Supabase Pte. Ltd., Singapur). Die Datenbank liegt in einem Rechenzentrum in Frankfurt am Main. Mit Supabase besteht ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO). Soweit Supabase für Betrieb und Support aus Ländern außerhalb der EU zugreift, gelten EU-Standardvertragsklauseln.</p>
+        <p>Für Konten, Anfragen und Nachrichten nutzen wir Supabase (Supabase Pte. Ltd., Singapur). Die Datenbank liegt in einem Rechenzentrum in Frankfurt am Main. Mit Supabase besteht ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO). Soweit Supabase für Betrieb und Support aus Ländern außerhalb der EU zugreift, gelten EU-Standardvertragsklauseln.</p>
         <p>Gespeichert werden:</p>
         <ul>
           <li>E-Mail-Adresse und Passwort (nur verschlüsselt als Prüfwert)</li>
           <li>Vorname, Anfangsbuchstabe des Nachnamens, Stadtteil und deine Bestätigung, dass du mindestens 18 bist</li>
-          <li>deine Gesuche, die Adresse zu einem Gesuch, deine Zusagen und Bewertungen</li>
+          <li>deine Anfragen, die Adresse zu einer Anfrage, deine Zusagen und Bewertungen</li>
           <li>Nachrichten zu einem Auftrag und Meldungen, die du abschickst</li>
         </ul>
         <p>Rechtsgrundlage ist der Nutzungsvertrag mit dir (Art. 6 Abs. 1 lit. b DSGVO). Meldungen verarbeiten wir außerdem, um rechtswidrige Inhalte zu entfernen und Nutzer zu schützen (Art. 6 Abs. 1 lit. c und f DSGVO). Die Bestätigungs-E-Mail bei der Registrierung verschickt Supabase für uns.</p>
@@ -1555,14 +1578,14 @@ function RECHT_TEXTE(b, e) {
 
         <h3>6. Wer sieht was?</h3>
         <ul>
-          <li><strong>Alle, auch ohne Konto:</strong> offene Gesuche mit Vorname, Anfangsbuchstabe, Stadtteil, ungefährer Lage (100 bis 400 Meter um die Stadtteilmitte) und Bewertungsschnitt.</li>
+          <li><strong>Alle, auch ohne Konto:</strong> offene Anfragen mit Vorname, Anfangsbuchstabe, Stadtteil, ungefährer Lage (100 bis 400 Meter um die Stadtteilmitte) und Bewertungsschnitt.</li>
           <li><strong>Nur die Person, die zusagt:</strong> die genaue Adresse.</li>
           <li><strong>Nur ihr beide:</strong> eure Nachrichten.</li>
           <li><strong>Nur wir:</strong> Meldungen. Die gemeldete Person erfährt nicht, wer gemeldet hat.</li>
         </ul>
 
         <h3>7. Wie lange?</h3>
-        <p>Dein Konto und deine Daten speichern wir, bis du das Konto löschst. Das geht jederzeit in der App unter „Dein Konto“. Dann löschen wir dein Profil, deine Gesuche, Adressen, Nachrichten und Bewertungen. Meldungen bewahren wir höchstens zwölf Monate nach ihrer Bearbeitung auf, um wiederholte Verstöße erkennen zu können.</p>
+        <p>Dein Konto und deine Daten speichern wir, bis du das Konto löschst. Das geht jederzeit in der App unter „Dein Konto“. Dann löschen wir dein Profil, deine Anfragen, Adressen, Nachrichten und Bewertungen. Meldungen bewahren wir höchstens zwölf Monate nach ihrer Bearbeitung auf, um wiederholte Verstöße erkennen zu können.</p>
 
         <h3>8. Deine Rechte</h3>
         <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Datenübertragbarkeit (Art. 15 bis 20 DSGVO). Verarbeitungen auf Grundlage unseres berechtigten Interesses kannst du widersprechen (Art. 21 DSGVO). Schreib uns dafür an ${mail}.</p>
@@ -1579,7 +1602,7 @@ function RECHT_TEXTE(b, e) {
         <p class="recht-kurz">Fassung für die Testphase in Garbsen. In dieser Phase ist Hand Drauf kostenlos und vermittelt nur.</p>
 
         <h3>1. Was Hand Drauf ist</h3>
-        <p>Hand Drauf ist eine Plattform, auf der sich Nachbarn in Garbsen bei kleinen Dingen helfen: Wer Hilfe braucht, stellt ein Gesuch ein, wer helfen möchte, sagt zu. Betreiber ist ${name} (siehe ${verweis('impressum', 'Impressum')}).</p>
+        <p>Hand Drauf ist eine Plattform, auf der sich Nachbarn in Garbsen bei kleinen Dingen helfen: Wer Hilfe braucht, stellt eine Anfrage, wer helfen möchte, sagt zu. Betreiber ist ${name} (siehe ${verweis('impressum', 'Impressum')}).</p>
         <p>Die Absprache über eine Hilfe kommt nur zwischen euch Nutzern zustande. Hand Drauf ist nicht Vertragspartner, nicht Arbeitgeber und nicht Auftraggeber.</p>
 
         <h3>2. Kosten</h3>
@@ -1595,8 +1618,8 @@ function RECHT_TEXTE(b, e) {
         <h3>4. Nachbarschaftshilfe, kein Job</h3>
         <p>Hand Drauf ist für gelegentliche Hilfe gegen eine kleine Aufwandsentschädigung gedacht, nicht für regelmäßige oder gewerbliche Arbeit. Deshalb gilt:</p>
         <ul>
-          <li>höchstens 50 € pro Gesuch,</li>
-          <li>höchstens 5 laufende Gesuche pro Person,</li>
+          <li>höchstens 50 € pro Anfrage,</li>
+          <li>höchstens 5 laufende Anfragen pro Person,</li>
           <li>höchstens 8 Zusagen in 30 Tagen und höchstens 2 für dieselbe Person,</li>
           <li>keine Daueraufträge und keine Leistungen, für die man ein Gewerbe oder eine Ausbildung braucht.</li>
         </ul>
@@ -1607,13 +1630,13 @@ function RECHT_TEXTE(b, e) {
 
         <h3>6. Umgang miteinander</h3>
         <ul>
-          <li>Bleib freundlich und ehrlich, in Gesuchen wie in Nachrichten. Halte dich an die ${verweis('regeln', 'Regeln für Nachbarn')}.</li>
+          <li>Bleib freundlich und ehrlich, in Anfragen wie in Nachrichten. Halte dich an die ${verweis('regeln', 'Regeln für Nachbarn')}.</li>
           <li>Die Adresse, die du nach einer Zusage siehst, darfst du nur für diesen Auftrag nutzen.</li>
           <li>Keine Werbung, keine Weitergabe von Daten anderer.</li>
         </ul>
 
         <h3>7. Melden und Sperren</h3>
-        <p>Über „Melden“ kannst du Gesuche und beteiligte Personen melden. Wir prüfen jede Meldung. Verstößt etwas gegen Gesetze oder diese Bedingungen, können wir Inhalte entfernen und Konten vorübergehend oder dauerhaft sperren. Wir sagen dir, was wir entschieden haben und warum. Bist du anderer Meinung, schreib uns an ${mail}.</p>
+        <p>Über „Melden“ kannst du Anfragen und beteiligte Personen melden. Wir prüfen jede Meldung. Verstößt etwas gegen Gesetze oder diese Bedingungen, können wir Inhalte entfernen und Konten vorübergehend oder dauerhaft sperren. Wir sagen dir, was wir entschieden haben und warum. Bist du anderer Meinung, schreib uns an ${mail}.</p>
 
         <h3>8. Haftung</h3>
         <p>Für Schäden bei einer Hilfe haftet ihr untereinander nach den gesetzlichen Regeln. Prüf vorher, ob deine private Haftpflichtversicherung Schäden bei Gefälligkeiten abdeckt.</p>
@@ -1660,7 +1683,7 @@ function FRAGEN_TEXTE(c) {
     gruppen: [
       ['Kosten und Geld', [
         frage('Was kostet Hand Drauf?',
-          `<p>In der Testphase nichts. Ihr zahlt nur die Aufwandsentschädigung, die im Gesuch steht.</p>
+          `<p>In der Testphase nichts. Ihr zahlt nur die Aufwandsentschädigung, die in der Anfrage steht.</p>
            <p>Später ist eine kleine Servicegebühr geplant: ${euro(c.gebuehrAuftraggeber)} für die Person, die Hilfe sucht, und ${Math.round(c.provisionHelfer * 100)} % für die Person, die hilft. Bevor sie kommt, sagen wir dir Bescheid.</p>`),
         frage('Wie wird bezahlt?',
           `<p>Direkt untereinander, nach der Hilfe: bar, per Überweisung oder wie ihr es abmacht. Zahl nie im Voraus, und teile keine Bank- oder Passwortdaten in den Nachrichten.</p>`),
@@ -1672,23 +1695,27 @@ function FRAGEN_TEXTE(c) {
       ]],
       ['Sicherheit', [
         frage('Wer sieht meine Adresse?',
-          `<p>Nur die Person, die bei deinem Gesuch zusagt. Auf der Karte erscheint nur ein Punkt ungefähr in deinem Stadtteil, 100 bis 400 Meter neben der echten Lage. Deine E-Mail-Adresse sieht niemand.</p>`),
+          `<p>Nur die Person, die bei deiner Anfrage zusagt. Auf der Karte erscheint nur ein Punkt ungefähr in deinem Stadtteil, 100 bis 400 Meter neben der echten Lage. Deine E-Mail-Adresse sieht niemand.</p>`),
         frage('Was ist, wenn etwas kaputtgeht?',
           `<p>Dann klärt ihr das untereinander, wie unter Nachbarn sonst auch. Hand Drauf hat keine eigene Versicherung. Ob deine private Haftpflichtversicherung zahlt, hängt vom Vertrag. Viele Tarife decken auch Schäden bei Gefälligkeiten ab. Frag am besten vorher kurz nach.</p>`),
         frage('Was darf man nicht anbieten?',
           `<p>Keine Arbeiten an Strom, Gas oder Wasser, nichts in gefährlicher Höhe, keine Fahrten gegen Geld, keine Pflege und keine Kinderbetreuung ohne die Eltern. Auch keine regelmäßigen Jobs: Hand Drauf ist Nachbarschaftshilfe, kein Nebenjob.</p>`),
         frage('Etwas stimmt nicht. Was kann ich tun?',
-          `<p>Unten in jedem Gesuch und jedem Auftrag steht „Melden“. Wir prüfen jede Meldung, und die andere Person erfährt nicht, wer gemeldet hat. Bei Gefahr ruf die Polizei unter 110 an.</p>`),
+          `<p>Unten in jeder Anfrage und jedem Auftrag steht „Melden“. Wir prüfen jede Meldung, und die andere Person erfährt nicht, wer gemeldet hat. Bei Gefahr ruf die Polizei unter 110 an.</p>`),
+        frage('Wie blockiere ich jemanden?',
+          `<p>Tippe in der Anfrage auf den Namen und dann unten auf „blockieren“. Ihr seht eure Anfragen danach gegenseitig nicht mehr, und laufende Zusagen zwischen euch enden. Die Person erfährt davon nichts. Aufheben kannst du das unter „Konto“.</p>`),
+        frage('Was passiert mit beleidigenden Wörtern?',
+          `<p>Anfragen und Nachrichten mit beleidigenden oder anstößigen Wörtern werden nicht veröffentlicht. Rutscht trotzdem etwas durch, melde es bitte.</p>`),
         frage('Ab welchem Alter geht das?',
           `<p>Ab 18 Jahren. Das bestätigst du bei der Anmeldung.</p>`)
       ]],
-      ['Gesuche', [
-        frage('Wie lange ist mein Gesuch sichtbar?',
+      ['Anfragen', [
+        frage('Wie lange ist meine Anfrage sichtbar?',
           `<p>Bis der gewählte Termin vorbei ist, höchstens drei Wochen. Hat bis dahin niemand zugesagt, verschwindet es von der Karte. Unter „Aufträge“ kannst du dann einen neuen Termin wählen.</p>`),
-        frage('Kann ich mein Gesuch ändern?',
-          `<p>Ja, solange noch niemand zugesagt hat: Gesuch öffnen und „Gesuch bearbeiten“ tippen. Danach sprecht ihr Änderungen in den Nachrichten ab.</p>`),
+        frage('Kann ich meine Anfrage ändern?',
+          `<p>Ja, solange noch niemand zugesagt hat: Anfrage öffnen und „Anfrage bearbeiten“ tippen. Danach sprecht ihr Änderungen in den Nachrichten ab.</p>`),
         frage('Was passiert, wenn jemand absagt?',
-          `<p>Dann ist dein Gesuch wieder offen und andere können zusagen. Der alte Nachrichtenverlauf wird gelöscht.</p>`)
+          `<p>Dann ist deine Anfrage wieder offen und andere können zusagen. Der alte Nachrichtenverlauf wird gelöscht.</p>`)
       ]],
       ['App und Konto', [
         frage('Gibt es Hand Drauf im App Store?',
@@ -1696,7 +1723,9 @@ function FRAGEN_TEXTE(c) {
            <ul><li><strong>iPhone:</strong> In Safari unten auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.</li>
            <li><strong>Android:</strong> In Chrome oben rechts das Menü öffnen, dann „App installieren“ oder „Zum Startbildschirm hinzufügen“.</li></ul>`),
         frage('Wie lösche ich mein Konto?',
-          `<p>Oben rechts auf dein Kürzel tippen, dann ganz unten „Konto löschen“. Profil, Gesuche, Adressen, Nachrichten und Bewertungen werden sofort gelöscht.</p>`),
+          `<p>Oben rechts auf dein Kürzel tippen, dann ganz unten „Konto löschen“. Profil, Anfragen, Adressen, Nachrichten und Bewertungen werden sofort gelöscht.</p>`),
+        frage('Wie erreiche ich euch?',
+          `<p>${c.betreiber.email ? `Per E-Mail an <a href="mailto:${c.betreiber.email}">${c.betreiber.email}</a>.` : 'Die Kontaktdaten stehen im <a href="#impressum">Impressum</a>.'} Geht es um eine bestimmte Person oder Anfrage, nutze am besten „Melden“ direkt dort.</p>`),
         frage('Wie wird die Schrift größer?',
           `<p>Oben auf „Ansicht“ tippen. Dort stellst du Schriftgröße, hell oder dunkel und die Startseite ein.</p>`)
       ]]
@@ -1730,7 +1759,7 @@ function FRAGEN_TEXTE(c) {
     minBetrag: 5,
     maxBetrag: 50,             // Obergrenze für Nachbarschaftshilfe
     freigrenze: 255,           // § 22 Nr. 3 EStG: unter 256 € Gewinn im Jahr steuerfrei
-    bereichMeter: 250,         // Radius des ungefähren Bereichs um ein Gesuch
+    bereichMeter: 250,         // Radius des ungefähren Bereichs um eine Anfrage
     ich: { name: 'Tim', initialen: 'TS', stadtteil: 'Garbsen-Mitte', lat: 52.4248, lng: 9.5962 }, // Demo-Person
     // Betreiber für Impressum und Datenschutz. Vor dem öffentlichen Start ausfüllen.
     betreiber: { name: '', anschrift: '', email: '', telefon: '' }
@@ -1860,9 +1889,10 @@ function FRAGEN_TEXTE(c) {
     adressen: new Map(),    // gesuch_id -> Adresse (nur für Beteiligte)
     nachrichten: new Map(), // gesuch_id -> Verlauf (null = wird geladen)
     letzte: new Map(),      // gesuch_id -> Zeit der letzten Nachricht der anderen Person
-    gemeldet: new Set(),    // in dieser Sitzung gemeldete Gesuche
+    gemeldet: new Set(),    // in dieser Sitzung gemeldete Anfragen
     profile: new Map(),     // profil_id -> öffentliches Profil (für die Profil-Ansicht)
-    altesSchema: false      // Datenbank ohne das Update vom November 2026 (kein Termin, kein Bearbeiten)
+    altesSchema: false,     // Datenbank ohne das Update vom November 2026 (kein Termin, kein Bearbeiten)
+    blockiert: new Map()    // profil_id -> Name (von mir blockiert)
   };
   const istLive = () => db.modus === 'live';
 
@@ -1882,7 +1912,7 @@ function FRAGEN_TEXTE(c) {
   }
 
   let gesuche = [];
-  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false, bearbeiten: null };
+  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false, bearbeiten: null, blockieren: false };
 
   /* ===== Ansicht: Design, Schriftgröße, Startseite (nur auf diesem Gerät gespeichert) ===== */
   const ANSICHT_SPEICHER = 'handdrauf-ansicht';
@@ -1968,7 +1998,7 @@ function FRAGEN_TEXTE(c) {
   const WOCHENTAGE = ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'];
   const MONATE = ['Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sept.', 'Okt.', 'Nov.', 'Dez.'];
   const TAG_MS = 86400000;
-  const MAX_TAGE = 21; // spätestens dann läuft ein offenes Gesuch ab
+  const MAX_TAGE = 21; // spätestens dann läuft eine offene Anfrage ab
   const TAG_WAHL = ['Heute', 'Morgen', 'Dieses Wochenende', 'Nächste Woche'];
   const ZEIT_TEXT = { vormittags: 'vormittags', nachmittags: 'nachmittags', abends: 'abends', flexibel: 'Uhrzeit flexibel' };
   function heute() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
@@ -2000,12 +2030,55 @@ function FRAGEN_TEXTE(c) {
     const z = zeitraum(tag) || zeitraum('Morgen');
     return { wann: `${z.text}, ${ZEIT_TEXT[zeit] || ZEIT_TEXT.flexibel}`, bis: isoTag(z.bis) };
   }
-  // Heute oder morgen: in Karten kurz „Morgen, nachmittags“ statt des Datums
+  // Liest den Termin aus dem Wann-Text: „Di. 10. Nov., nachmittags“, „Sa./So. 14./15. Nov.“, „Woche 16.–22. Nov.“,
+  // ältere Texte wie „Samstag, vormittags“ oder „Morgen, ab 16 Uhr“. Ergebnis: erster und letzter Tag, Uhrzeit-Fenster.
+  const MONAT_INDEX = { 'Jan.': 0, 'Feb.': 1, 'März': 2, 'Apr.': 3, 'Mai': 4, 'Juni': 5, 'Juli': 6, 'Aug.': 7, 'Sept.': 8, 'Okt.': 9, 'Nov.': 10, 'Dez.': 11 };
+  const TAGNAMEN = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+  function datumIm(monat, tag) {
+    const h = heute();
+    const d = new Date(h.getFullYear(), monat, tag);
+    return d < plusTage(h, -180) ? new Date(h.getFullYear() + 1, monat, tag) : d; // Jahreswechsel
+  }
+  function terminAusText(wann) {
+    if (!wann) return null;
+    const i = wann.lastIndexOf(', ');
+    const datum = (i > 0 ? wann.slice(0, i) : wann).trim();
+    const zeit = i > 0 ? wann.slice(i + 2) : '';
+    let von = null, bis = null, genau = false;
+    const tage = [...datum.matchAll(/(\d{1,2})\.(?:\s(Jan\.|Feb\.|März|Apr\.|Mai|Juni|Juli|Aug\.|Sept\.|Okt\.|Nov\.|Dez\.))?/g)]
+      .map((m) => [Number(m[1]), m[2] ? MONAT_INDEX[m[2]] : null]);
+    if (tage.some((t) => t[1] !== null)) {
+      for (let k = tage.length - 2; k >= 0; k--) if (tage[k][1] === null) tage[k][1] = tage[k + 1][1];
+      for (let k = 1; k < tage.length; k++) if (tage[k][1] === null) tage[k][1] = tage[k - 1][1];
+      von = datumIm(tage[0][1], tage[0][0]);
+      bis = datumIm(tage.at(-1)[1], tage.at(-1)[0]);
+      if (bis < von) bis = new Date(bis.getFullYear() + 1, bis.getMonth(), bis.getDate());
+      genau = true;
+    } else if (/^Heute/.test(datum)) von = bis = heute();
+    else if (/^Morgen/.test(datum)) von = bis = plusTage(heute(), 1);
+    else if (/Wochenende|^Samstag und Sonntag/.test(datum)) ({ von, bis } = zeitraum('Dieses Wochenende'));
+    else if (/^Nächste Woche/.test(datum)) ({ von, bis } = zeitraum('Nächste Woche'));
+    else if (/^Diese Woche/.test(datum)) { von = heute(); bis = plusTage(von, (7 - von.getDay()) % 7); }
+    else {
+      const t = TAGNAMEN.findIndex((n) => datum.startsWith(n));
+      if (t >= 0) von = bis = plusTage(heute(), (t - heute().getDay() + 7) % 7);
+    }
+    if (!von) return null;
+    let start = null, ende = null;
+    const spanne = zeit.match(/(\d{1,2})(?::(\d\d))?\s*[–-]\s*(\d{1,2})(?::(\d\d))?\s*Uhr/);
+    const ab = zeit.match(/ab\s(\d{1,2})(?::(\d\d))?\s*Uhr/);
+    if (spanne) { start = [+spanne[1], +(spanne[2] || 0)]; ende = [+spanne[3], +(spanne[4] || 0)]; }
+    else if (ab) { start = [+ab[1], +(ab[2] || 0)]; ende = [Math.min(23, +ab[1] + 2), +(ab[2] || 0)]; }
+    else if (/vormittag/.test(zeit)) { start = [9, 0]; ende = [12, 0]; }
+    else if (/nachmittag/.test(zeit)) { start = [14, 0]; ende = [17, 0]; }
+    else if (/abend/.test(zeit)) { start = [18, 0]; ende = [20, 0]; }
+    return { von, bis, zeit, start, ende, genau };
+  }
+  // Heute oder morgen: in Karten kurz „Morgen, nachmittags“ statt des Datums (nur bei Texten mit echtem Datum)
   function relativerTag(g) {
-    if (!g.bis || !g.wann) return '';
-    const datum = g.wann.slice(0, Math.max(0, g.wann.lastIndexOf(', '))) || g.wann;
-    if (/[/–]|^Woche/.test(datum)) return '';
-    const tage = Math.round((ausIso(g.bis) - heute()) / TAG_MS);
+    const t = terminAusText(g.wann);
+    if (!t || !t.genau || +t.von !== +t.bis) return '';
+    const tage = Math.round((t.von - heute()) / TAG_MS);
     return tage === 0 ? 'Heute' : tage === 1 ? 'Morgen' : '';
   }
   function wannText(g) {
@@ -2019,6 +2092,19 @@ function FRAGEN_TEXTE(c) {
   const sichtbarBis = (g) => g.bis ? tagText(ausIso(g.bis)) : (g.laeuftAb ? tagText(new Date(g.laeuftAb - 1)) : '');
   const demoAblauf = (bis) => Math.min(Date.now() + MAX_TAGE * TAG_MS, +plusTage(ausIso(bis), 1));
 
+  /* ===== Anstößige Wörter (App Store 1.2). Dieselbe Liste prüft die Datenbank in privat.anstoessig. ===== */
+  const ANSTOESSIG = new RegExp('(?<![a-zäöüß])(hure|fotze|wichser|arschloch|spast(i|en)?(?![a-zäöüß])|mongo(?![a-zäöüß])|nutte|(ge)?fick(en|t|st|e|er|te|ten)?(?![a-zäöüß])|bitch|kanake|neger|nigger|schwuchtel|vergewaltig)' +
+    '|hurensohn|schlampe|missgeburt|heil hitler|sieg heil');
+  const anstoessig = (t) => ANSTOESSIG.test(String(t || '').toLowerCase().replace(/[013457@$]/g, (z) => ({ 0: 'o', 1: 'i', 3: 'e', 4: 'a', 5: 's', 7: 't', '@': 'a', $: 's' }[z])));
+
+  // Demo: blockierte Personen nur auf diesem Gerät (nach Namen)
+  const BLOCK_SPEICHER = 'handdrauf-blockiert';
+  let demoBlockiert = [];
+  try { demoBlockiert = JSON.parse(localStorage.getItem(BLOCK_SPEICHER) || '[]') || []; } catch (e) { demoBlockiert = []; }
+  const demoBlockSpeichern = () => { try { localStorage.setItem(BLOCK_SPEICHER, JSON.stringify(demoBlockiert)); } catch (e) { /* nur für diese Sitzung */ } };
+  // Live blendet die Datenbank Blockierte aus, in der Demo macht das die App
+  const versteckt = (g) => !istLive() && !g.eigen && g.helfer !== 'ich' && demoBlockiert.includes(g.wer);
+
   function passt(g) {
     if (ui.kat !== 'alle' && g.kat !== ui.kat) return false;
     const q = ui.suche.trim().toLowerCase();
@@ -2029,6 +2115,10 @@ function FRAGEN_TEXTE(c) {
     const l = liste.slice();
     if (ui.sort === 'betrag') l.sort((a, b) => b.betrag - a.betrag);
     else if (ui.sort === 'neu') l.sort((a, b) => b.erstellt - a.erstellt);
+    else if (ui.sort === 'termin') {
+      const wann = (g) => { const t = terminAusText(g.wann); return t ? +t.von : Infinity; };
+      l.sort((a, b) => (wann(a) - wann(b)) || (meterVonMir(a) - meterVonMir(b)));
+    }
     else l.sort((a, b) => meterVonMir(a) - meterVonMir(b));
     return l;
   }
@@ -2123,6 +2213,7 @@ function FRAGEN_TEXTE(c) {
     db.nachrichten.clear();
     db.letzte.clear();
     db.gemeldet.clear();
+    db.blockiert.clear();
     if (uid) {
       const { data } = await db.client.from('profile').select('*').eq('id', uid).maybeSingle();
       db.profil = data || null;
@@ -2170,6 +2261,8 @@ function FRAGEN_TEXTE(c) {
         .neq('status', 'zurueckgezogen').order('erstellt', { ascending: false }).limit(300);
       if (error) throw error;
       if (db.user) {
+        const bl = await db.client.from('blockiert').select('wen, profil:profile!blockiert_wen_fkey(vorname, nachname_initial)').eq('von', db.user.id);
+        if (!bl.error && bl.data) { db.blockiert.clear(); bl.data.forEach((x) => db.blockiert.set(x.wen, anzeigename(x.profil))); }
         const b = await db.client.from('bewertungen').select('gesuch_id, sterne').eq('von', db.user.id);
         if (!b.error && b.data) b.data.forEach((x) => db.bewertungen.set(x.gesuch_id, x.sterne));
         const n = await db.client.from('nachrichten').select('gesuch_id, erstellt')
@@ -2191,9 +2284,11 @@ function FRAGEN_TEXTE(c) {
     }
     if (ui.offen && !gesuche.some((g) => g.id === ui.offen)) {
       schliessen();
-      meldung('Dieses Gesuch ist nicht mehr verfügbar.');
+      meldung('Diese Anfrage ist nicht mehr verfügbar.');
     }
     renderAlles();
+    const wartet = linkId(location.hash.slice(1));
+    if (wartet && db.geladen && ui.offen !== wartet && !ui.panel) gesuchAusLink(wartet);
   }
 
   async function ladeAdresse(id) {
@@ -2279,6 +2374,39 @@ function FRAGEN_TEXTE(c) {
     demoNachricht(g.id, DEMO_ANTWORTEN[(nr - 1) % DEMO_ANTWORTEN.length], 1800);
   }
 
+  /* ===== Blockieren (App Store 1.2): Ihr seht euch gegenseitig nicht mehr, laufende Zusagen enden ===== */
+  async function blockiere(id, name) {
+    if (istLive()) {
+      const { error } = await db.client.rpc('blockieren', { p_person: id });
+      if (error) throw error;
+      db.blockiert.set(id, name);
+      await neuLaden();
+      return;
+    }
+    if (!demoBlockiert.includes(name)) demoBlockiert.push(name);
+    demoBlockSpeichern();
+    gesuche.forEach((g) => { if (g.wer === name && g.helfer === 'ich' && g.status === 'zugesagt') { g.status = 'offen'; g.helfer = null; g.nachrichten = []; } });
+    demoSpeichern();
+  }
+  async function entsperre(id) {
+    if (istLive()) {
+      const { error } = await db.client.rpc('entblocken', { p_person: id });
+      if (error) throw error;
+      db.blockiert.delete(id);
+      await neuLaden();
+      return;
+    }
+    demoBlockiert = demoBlockiert.filter((n) => n !== id);
+    demoBlockSpeichern();
+  }
+  function blockListeHTML() {
+    const liste = istLive() ? [...db.blockiert.entries()] : demoBlockiert.map((n) => [n, n]);
+    if (!liste.length) return '';
+    return `<section class="blockliste" aria-labelledby="h-blockliste"><h3 class="h-klein" id="h-blockliste">Blockiert</h3>
+      ${liste.map(([id, name]) => `<div class="block-zeile"><span>${esc(name)}</span><button type="button" class="link-btn" data-entsperren="${esc(id)}">Entsperren</button></div>`).join('')}
+      <p class="klein">Blockierte sehen deine Anfragen nicht, und du siehst ihre nicht.</p></section>`;
+  }
+
   /* ===== Melden ===== */
   const MELDEGRUENDE = [['betrug', 'Betrug oder Abzocke'], ['unangemessen', 'Beleidigend oder unangemessen'], ['gefaehrlich', 'Gefährlich oder verboten'],
     ['schwarzarbeit', 'Eher ein regelmäßiger Job als Nachbarschaftshilfe'], ['anderes', 'Etwas anderes']];
@@ -2332,7 +2460,7 @@ function FRAGEN_TEXTE(c) {
       <span class="card-main">
         <span class="card-title">${esc(g.titel)}</span>
         <span class="card-ort">${icon('ort', 'i-xs')}${esc(g.stadtteil)} · ${distanz(g)}</span>
-        <span class="card-meta">${esc(g.eigen ? 'Dein Gesuch' : g.wer)} · ${esc(wannText(g))}</span>
+        <span class="card-meta">${esc(g.eigen ? 'Deine Anfrage' : g.wer)} · ${esc(wannText(g))}</span>
         ${extra}
       </span>
       <span class="price">${euroKurz(g.betrag)}</span>
@@ -2346,8 +2474,8 @@ function FRAGEN_TEXTE(c) {
     else el.innerHTML = `<button type="button" class="avatar-btn" data-panel="konto" aria-label="Dein Konto">${esc(kuerzel(db.profil))}</button>`;
     $('#fuss').textContent = istLive()
       ? 'Testphase: Die Aufwandsentschädigung zahlt ihr direkt untereinander. Hand Drauf vermittelt nur und nimmt noch keine Gebühr.'
-      : BEISPIEL_MODUS ? 'Erfundene Beispiel-Gesuche, damit du siehst, wie Hand Drauf funktioniert. Es fließt kein echtes Geld.'
-        : 'Prototyp mit erfundenen Beispiel-Gesuchen in Garbsen. Es fließt kein echtes Geld.';
+      : BEISPIEL_MODUS ? 'Erfundene Beispiel-Anfragen, damit du siehst, wie Hand Drauf funktioniert. Es fließt kein echtes Geld.'
+        : 'Prototyp mit erfundenen Beispiel-Anfragen in Garbsen. Es fließt kein echtes Geld.';
     $('#reset-knopf').hidden = istLive();
     $('#adresse-optional').hidden = istLive();
   }
@@ -2367,7 +2495,7 @@ function FRAGEN_TEXTE(c) {
   }
 
   function renderListe() {
-    const offene = gesuche.filter((g) => !g.eigen && g.status === 'offen' && !abgelaufen(g));
+    const offene = gesuche.filter((g) => !g.eigen && g.status === 'offen' && !abgelaufen(g) && !versteckt(g));
     const ort = meinOrt();
     $('#h-entdecken').textContent = istLive() ? (db.profil ? `Hallo ${db.profil.vorname}` : 'Hilfe in Garbsen') : 'Hallo Tim';
     const anzahl = `${offene.length} ${offene.length === 1 ? 'Nachbar sucht' : 'Nachbarn suchen'} gerade Hilfe`;
@@ -2375,8 +2503,8 @@ function FRAGEN_TEXTE(c) {
 
     if (istLive() && !db.geladen) {
       $('#liste').innerHTML = db.fehler
-        ? `<div class="leer"><p><strong>Die Gesuche konnten nicht geladen werden.</strong></p><p>${esc(db.fehler)}</p><button type="button" class="btn btn-secondary btn-auto" data-neu-laden>Erneut versuchen</button></div>`
-        : `<p class="lade">Gesuche werden geladen …</p>`;
+        ? `<div class="leer"><p><strong>Die Anfragen konnten nicht geladen werden.</strong></p><p>${esc(db.fehler)}</p><button type="button" class="btn btn-secondary btn-auto" data-neu-laden>Erneut versuchen</button></div>`
+        : `<p class="lade">Anfragen werden geladen …</p>`;
       return;
     }
     const treffer = sortiere(offene.filter((g) => passt(g) && (ui.stadtteil === 'alle' || g.stadtteil === ui.stadtteil)));
@@ -2387,10 +2515,10 @@ function FRAGEN_TEXTE(c) {
         // Neue Plattform, noch leer: erklären, Anfang machen lassen, Beispiele zeigen (statt einer leeren Seite)
         const eigenesOffen = gesuche.some((g) => g.eigen && g.status === 'offen' && !abgelaufen(g));
         $('#liste').innerHTML = `<div class="leer leer-start">
-          <p><strong>${eigenesOffen ? 'Dein Gesuch ist online.' : 'Hand Drauf startet gerade in Garbsen.'}</strong></p>
-          <p>${eigenesOffen ? 'Außer dir sucht gerade niemand Hilfe. Je mehr Nachbarn mitmachen, desto schneller sagt jemand zu.' : 'Noch sucht niemand Hilfe. Mach den Anfang mit einem eigenen Gesuch oder schau dir an, wie es aussieht, wenn Nachbarn mitmachen.'}</p>
+          <p><strong>${eigenesOffen ? 'Deine Anfrage ist online.' : 'Hand Drauf startet gerade in Garbsen.'}</strong></p>
+          <p>${eigenesOffen ? 'Außer dir sucht gerade niemand Hilfe. Je mehr Nachbarn mitmachen, desto schneller sagt jemand zu.' : 'Noch sucht niemand Hilfe. Mach den Anfang mit einer eigenen Anfrage oder schau dir an, wie es aussieht, wenn Nachbarn mitmachen.'}</p>
           <div class="leer-knoepfe">
-            ${eigenesOffen ? '<button type="button" class="btn btn-primary btn-auto" data-einladen>Nachbarn einladen</button>' : '<button type="button" class="btn btn-primary btn-auto" data-go="neu">Gesuch erstellen</button>'}
+            ${eigenesOffen ? '<button type="button" class="btn btn-primary btn-auto" data-einladen>Nachbarn einladen</button>' : '<button type="button" class="btn btn-primary btn-auto" data-go="neu">Anfrage erstellen</button>'}
             <a class="btn btn-secondary btn-auto" href="?beispiele#entdecken">Beispiele ansehen</a>
           </div>
         </div>`;
@@ -2399,7 +2527,7 @@ function FRAGEN_TEXTE(c) {
       $('#liste').innerHTML = `<div class="leer">
         <p><strong>Nichts gefunden${q ? ` für „${esc(q)}“` : ''}${wo}.</strong></p>
         <p>Probier eine andere Tätigkeit, Kategorie oder einen anderen Stadtteil. Oder such selbst Hilfe.</p>
-        <button type="button" class="btn btn-secondary btn-auto" data-go="neu">Gesuch erstellen</button>
+        <button type="button" class="btn btn-secondary btn-auto" data-go="neu">Anfrage erstellen</button>
       </div>`;
       return;
     }
@@ -2420,8 +2548,22 @@ function FRAGEN_TEXTE(c) {
     });
     return liste.sort((x, y) => x.prio - y.prio);
   }
+  // Zahl im Tab-Titel und am App-Symbol (installierte App): nur Dinge, bei denen du etwas tun solltest
+  const SEITENTITEL = document.title || 'Hand Drauf';
+  let letzteZahl = -1;
+  function renderZaehler(liste) {
+    const n = liste.filter((a) => a.prio !== 3).length;
+    if (n === letzteZahl) return;
+    letzteZahl = n;
+    if (!VORSCHAU) document.title = n ? `(${n}) ${SEITENTITEL}` : SEITENTITEL;
+    try {
+      const p = n ? (navigator.setAppBadge && navigator.setAppBadge(n)) : (navigator.clearAppBadge && navigator.clearAppBadge());
+      if (p && p.catch) p.catch(() => { /* ohne Zahl am Symbol */ });
+    } catch (e) { /* ohne Zahl am Symbol */ }
+  }
   function renderNaechstes() {
     const liste = istLive() && !db.profil ? [] : naechsteSchritte();
+    renderZaehler(liste);
     $('#naechstes').innerHTML = liste.length ? `<section class="naechstes" aria-labelledby="h-naechstes">
         <h2 class="h-klein" id="h-naechstes">Als Nächstes</h2>
         ${liste.map((a) => `<button type="button" class="aufgabe ${a.prio === 1 ? 'aufgabe-wichtig' : ''}" data-oeffne="${a.g.id}">
@@ -2446,7 +2588,7 @@ function FRAGEN_TEXTE(c) {
     const abschnitte = document.querySelectorAll('#view-auftraege .abschnitt');
     if (istLive() && !db.profil) {
       $('#summe').innerHTML = `<span class="h-klein">Deine Aufträge</span>
-        <p>Melde dich an, um deine Gesuche und Zusagen zu sehen.</p>
+        <p>Melde dich an, um deine Anfragen und Zusagen zu sehen.</p>
         <button type="button" class="btn btn-primary" data-panel="anmelden">Anmelden oder registrieren</button>`;
       abschnitte.forEach((a) => { a.hidden = true; });
       return;
@@ -2467,7 +2609,7 @@ function FRAGEN_TEXTE(c) {
       : `<p class="leer-klein">Noch keine Zusagen. Such dir in der Liste oder auf der Karte einen Job in deiner Nähe.</p>`;
     $('#eigene').innerHTML = eigene.length
       ? eigene.map((g) => karteHTML(g, pills(g))).join('')
-      : `<p class="leer-klein">Du hast noch kein Gesuch erstellt. Über „Hilfe suchen“ geht das in einer Minute.</p>`;
+      : `<p class="leer-klein">Du hast noch keine Anfrage gestellt. Über „Hilfe suchen“ geht das in einer Minute.</p>`;
   }
 
   /* ===== Karte (Leaflet) ===== */
@@ -2610,8 +2752,8 @@ function FRAGEN_TEXTE(c) {
   }
 
   function renderKarte() {
-    const sichtbar = gesuche.filter((g) => passt(g) && (g.eigen || (g.status === 'offen' && !abgelaufen(g)) || g.helfer === 'ich'));
-    $('#karte-anzahl').textContent = `${sichtbar.length} ${sichtbar.length === 1 ? 'Gesuch' : 'Gesuche'}${ui.kat !== 'alle' ? ' · ' + katName(ui.kat) : ''}`;
+    const sichtbar = gesuche.filter((g) => passt(g) && !versteckt(g) && (g.eigen || (g.status === 'offen' && !abgelaufen(g)) || g.helfer === 'ich'));
+    $('#karte-anzahl').textContent = `${sichtbar.length} ${sichtbar.length === 1 ? 'Anfrage' : 'Anfragen'}${ui.kat !== 'alle' ? ' · ' + katName(ui.kat) : ''}`;
     $('#karte-leer').hidden = !(istLive() && db.geladen && !sichtbar.length && ui.kat === 'alle' && !ui.suche.trim());
     const k = kartenStatus;
     if (!k.map) return;
@@ -2651,7 +2793,7 @@ function FRAGEN_TEXTE(c) {
       if (el) {
         el.setAttribute('role', 'button');
         el.setAttribute('tabindex', '0');
-        el.setAttribute('aria-label', `${g.titel}, ${euro(g.betrag)}, ${g.stadtteil}, ${distanz(g)}${g.eigen ? (abgelaufen(g) ? ', dein Gesuch, abgelaufen' : ', dein Gesuch') : ''}`);
+        el.setAttribute('aria-label', `${g.titel}, ${euro(g.betrag)}, ${g.stadtteil}, ${distanz(g)}${g.eigen ? (abgelaufen(g) ? ', deine Anfrage, abgelaufen' : ', deine Anfrage') : ''}`);
         el.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); oeffnen(g.id, el); }
         });
@@ -2700,7 +2842,7 @@ function FRAGEN_TEXTE(c) {
 
     if (g.eigen) {
       const bis = sichtbarBis(g);
-      html += `<p class="klein">Dein Gesuch · ${g.status !== 'offen' ? 'nur für euch beide sichtbar' : abgelaufen(g) ? 'abgelaufen, Nachbarn sehen es nicht mehr' : `sichtbar für Nachbarn${bis ? ` bis einschließlich ${esc(bis)}` : ''}`}</p>`;
+      html += `<p class="klein">Deine Anfrage · ${g.status !== 'offen' ? 'nur für euch beide sichtbar' : abgelaufen(g) ? 'abgelaufen, Nachbarn sehen sie nicht mehr' : `sichtbar für Nachbarn${bis ? ` bis einschließlich ${esc(bis)}` : ''}`}</p>`;
     } else {
       const bewertung = g.bewertungen
         ? `${icon('stern', 'i-xs i-fill')}${g.sterne.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} · ${g.bewertungen} ${g.bewertungen === 1 ? 'Bewertung' : 'Bewertungen'}`
@@ -2733,7 +2875,9 @@ function FRAGEN_TEXTE(c) {
       <div><dt>Dauer</dt><dd>${esc(g.dauer)}</dd></div>
     </dl>`;
     if (g.text) html += `<p class="beschreibung">${esc(g.text)}</p>`;
-    html += `<button type="button" class="link-inline" data-aktion="karte">${icon('karte', 'i-sm')}Auf der Karte zeigen</button>`;
+    const teilbar = g.status === 'offen' && !abgelaufen(g);
+    html += `<div class="link-zeile"><button type="button" class="link-inline" data-aktion="karte">${icon('karte', 'i-sm')}Auf der Karte zeigen</button>${teilbar
+      ? `<button type="button" class="link-inline" data-aktion="teilen">${icon('teilen', 'i-sm')}${g.eigen ? 'Anfrage teilen' : 'Weitersagen'}</button>` : ''}</div>`;
 
     // Adresse: nur für Beteiligte
     const beteiligt = g.eigen || g.helfer === 'ich';
@@ -2766,14 +2910,14 @@ function FRAGEN_TEXTE(c) {
     if (g.eigen) {
       if (g.status === 'offen') {
         html += abgelaufen(g)
-          ? `<div class="status-box warn">Der Termin ist vorbei. Nachbarn sehen dein Gesuch nicht mehr.</div>
+          ? `<div class="status-box warn">Der Termin ist vorbei. Nachbarn sehen deine Anfrage nicht mehr.</div>
             <button type="button" class="btn btn-primary" data-aktion="bearbeiten-termin">Neuen Termin wählen</button>`
-          : `<button type="button" class="btn btn-secondary" data-aktion="bearbeiten">Gesuch bearbeiten</button>`;
+          : `<button type="button" class="btn btn-secondary" data-aktion="bearbeiten">Anfrage bearbeiten</button>`;
         html += ui.rueckzug
-          ? `<div class="bestaetigen-box"><p>Gesuch wirklich zurückziehen? Nachbarn sehen es dann nicht mehr.</p>
+          ? `<div class="bestaetigen-box"><p>Anfrage wirklich zurückziehen? Nachbarn sehen sie dann nicht mehr.</p>
               <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-aktion="rueckzug" ${dis}>Zurückziehen</button>
               <button type="button" class="btn btn-secondary" data-aktion="rueckzug-nein">Abbrechen</button></div></div>`
-          : `<button type="button" class="btn btn-secondary btn-danger" data-aktion="rueckzug-frage">Gesuch zurückziehen</button>`;
+          : `<button type="button" class="btn btn-secondary btn-danger" data-aktion="rueckzug-frage">Anfrage zurückziehen</button>`;
       } else if (g.status === 'zugesagt') {
         html += `<div class="status-box good">${icon('check')}${esc(g.helferName || 'Jemand')} hilft dir</div>
           <p class="klein">Sobald der Job erledigt ist, meldet ${esc(hn)} das hier. Danach bestätigst du.</p>`;
@@ -2794,6 +2938,10 @@ function FRAGEN_TEXTE(c) {
         (live ? '' : `<button type="button" class="btn btn-secondary" data-aktion="bestaetigen">Demo: ${esc(vn)} bestätigt</button>`);
     } else if (g.status === 'bezahlt') {
       html += `<div class="status-box good">${icon('check')}${live ? `${esc(vn)} hat bestätigt` : `${euro(auszahlung(g))} ausgezahlt`}</div>` + sterneHTML(g.meineBewertung || 0, vn);
+    }
+    const kalenderSinnvoll = (g.helfer === 'ich' && g.status === 'zugesagt') || (g.eigen && (g.status === 'zugesagt' || (g.status === 'offen' && !abgelaufen(g))));
+    if (kalenderSinnvoll && terminAusText(g.wann)) {
+      html += `<button type="button" class="btn btn-secondary" data-aktion="kalender">${icon('kalender')}In den Kalender eintragen</button>`;
     }
     if (imChat(g)) {
       html += chatHTML(g);
@@ -2830,7 +2978,7 @@ function FRAGEN_TEXTE(c) {
     if (!meldbar) return '';
     if (live ? db.gemeldet.has(g.id) : g.gemeldet) return `<p class="gemeldet">${icon('flagge', 'i-xs')}Gemeldet. Danke, wir prüfen das.</p>`;
     const wer = g.eigen ? (vorname(g.helferName) || 'Helfer') : vorname(g.wer);
-    if (!ui.melden) return `<button type="button" class="link-btn link-melden" data-aktion="melden-frage">${icon('flagge', 'i-sm')}${g.eigen ? `${esc(wer)} melden` : 'Gesuch melden'}</button>`;
+    if (!ui.melden) return `<button type="button" class="link-btn link-melden" data-aktion="melden-frage">${icon('flagge', 'i-sm')}${g.eigen ? `${esc(wer)} melden` : 'Anfrage melden'}</button>`;
     const dis = ui.busy ? 'disabled aria-busy="true"' : '';
     return `<form class="melden-box" id="melden-form" novalidate>
         <fieldset class="feld"><legend>Was stimmt nicht?</legend>
@@ -2838,6 +2986,7 @@ function FRAGEN_TEXTE(c) {
         </fieldset>
         <div class="feld"><label for="melden-text">Was ist passiert? (freiwillig)</label>
           <textarea id="melden-text" maxlength="500" rows="3"></textarea></div>
+        ${anderePerson(g) ? `<label class="check"><input type="checkbox" id="melden-blockieren"><span>${esc(wer)} außerdem blockieren</span></label>` : ''}
         <p class="fehler" id="melden-fehler" role="alert" hidden></p>
         <div class="btn-row"><button type="submit" class="btn btn-danger-solid" ${dis}>Meldung senden</button>
           <button type="button" class="btn btn-secondary" data-aktion="melden-nein">Abbrechen</button></div>
@@ -2899,9 +3048,10 @@ function FRAGEN_TEXTE(c) {
       <div class="feld"><label for="konto-stadtteil">Dein Stadtteil</label><select id="konto-stadtteil">${stadtteilOptionen(p.stadtteil, false)}</select></div>
       <button type="button" class="btn btn-secondary" data-einladen>${icon('teilen')}Nachbarn einladen</button>
       <button type="button" class="btn btn-secondary" data-abmelden ${ui.busy ? 'disabled' : ''}>Abmelden</button>
-      <p class="klein recht-links-form"><a href="#fragen">Häufige Fragen</a> · <a href="#nutzung">Nutzungsbedingungen</a> · <a href="#datenschutz">Datenschutz</a> · <a href="#impressum">Impressum</a></p>
+      ${blockListeHTML()}
+      <p class="klein recht-links-form"><a href="#fragen">Häufige Fragen</a> · ${kontaktLink()} · <a href="#nutzung">Nutzungsbedingungen</a> · <a href="#datenschutz">Datenschutz</a> · <a href="#impressum">Impressum</a></p>
       ${ui.loeschen
-        ? `<div class="bestaetigen-box loeschen-box"><p><strong>Konto wirklich löschen?</strong> Dein Profil, deine Gesuche, Adressen, Nachrichten und Bewertungen werden gelöscht. Laufende Zusagen werden freigegeben. Das lässt sich nicht rückgängig machen.</p>
+        ? `<div class="bestaetigen-box loeschen-box"><p><strong>Konto wirklich löschen?</strong> Dein Profil, deine Anfragen, Adressen, Nachrichten und Bewertungen werden gelöscht. Laufende Zusagen werden freigegeben. Das lässt sich nicht rückgängig machen.</p>
             <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-konto-loeschen ${ui.busy ? 'disabled aria-busy="true"' : ''}>Endgültig löschen</button>
             <button type="button" class="btn btn-secondary" data-loeschen-nein>Abbrechen</button></div></div>`
         : `<button type="button" class="link-btn link-melden" data-loeschen-frage>Konto löschen</button>`}`;
@@ -2928,10 +3078,26 @@ function FRAGEN_TEXTE(c) {
     return { name: anzeigename(p), kuerzel: kuerzel(p), stadtteil: p.stadtteil, dabei, sterne: p.sterne_anzahl ? p.sterne_summe / p.sterne_anzahl : null,
       bewertungen: p.sterne_anzahl, hilfen: p.hilfen_anzahl || 0, gesuche: p.gesuche_anzahl || 0, volljaehrig: p.volljaehrig };
   }
+  // Die andere Person einer Anfrage: live über die Profil-ID, in der Demo über den Namen
+  function anderePerson(g) {
+    if (!g) return null;
+    const name = g.eigen ? g.helferName : g.wer;
+    const id = istLive() ? (g.eigen ? g.helferId : g.erstellerId) : name;
+    return id && name ? { id, name } : null;
+  }
+  function blockierenHTML(g) {
+    const person = anderePerson(g);
+    if (!person) return '';
+    const vn = esc(vorname(person.name));
+    if (!ui.blockieren) return `<button type="button" class="link-btn link-melden" data-blockieren-frage>${icon('x', 'i-sm')}${vn} blockieren</button>`;
+    return `<div class="bestaetigen-box"><p><strong>${vn} blockieren?</strong> Ihr seht eure Anfragen gegenseitig nicht mehr, und laufende Zusagen zwischen euch enden. ${vn} erfährt davon nichts. Unter „${istLive() ? 'Konto' : 'Ansicht'}“ kannst du das jederzeit aufheben.</p>
+        <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-blockieren ${ui.busy ? 'disabled aria-busy="true"' : ''}>Blockieren</button>
+        <button type="button" class="btn btn-secondary" data-blockieren-nein>Abbrechen</button></div></div>`;
+  }
   function sheetProfilHTML() {
     const g = gesuche.find((x) => x.id === ui.profilGesuch);
     const kopf = `<div class="sheet-top">
-        <button type="button" class="link-btn zurueck" data-zurueck-gesuch><span class="zurueck-pfeil" aria-hidden="true">‹</span>Zurück zum Gesuch</button>
+        <button type="button" class="link-btn zurueck" data-zurueck-gesuch><span class="zurueck-pfeil" aria-hidden="true">‹</span>Zurück zur Anfrage</button>
         <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
       </div>`;
     const p = g && profilDaten(g);
@@ -2951,7 +3117,8 @@ function FRAGEN_TEXTE(c) {
         <li>${icon('check', 'i-sm')}Konto mit E-Mail-Adresse</li>
         <li>${icon('check', 'i-sm')}Hat den Regeln für Nachbarn zugestimmt</li>
       </ul>
-      <p class="klein">Andere sehen nur Vorname, Anfangsbuchstabe und Stadtteil. Adresse und E-Mail sieht niemand.</p>`;
+      <p class="klein">Andere sehen nur Vorname, Anfangsbuchstabe und Stadtteil. Adresse und E-Mail sieht niemand.</p>
+      ${blockierenHTML(g)}`;
   }
 
   function sheetRechtHTML(name) {
@@ -2965,6 +3132,10 @@ function FRAGEN_TEXTE(c) {
       <nav class="recht-nav" aria-label="Weitere Rechtstexte">${Object.keys(RECHT).filter((k) => k !== name).map((k) => `<a href="#${k}">${RECHT[k].titel}</a>`).join('')}</nav>`;
   }
 
+  // Kontakt (App Store 1.2: veröffentlichte Kontaktmöglichkeit). Ohne E-Mail im CONFIG verweist er aufs Impressum.
+  const kontaktLink = () => CONFIG.betreiber.email
+    ? `<a href="mailto:${esc(CONFIG.betreiber.email)}?subject=${encodeURIComponent('Hand Drauf')}">Kontakt</a>`
+    : '<a href="#impressum">Kontakt</a>';
   function sheetFragenHTML() {
     return `<div class="sheet-top">
         <span class="eyebrow">Hilfe</span>
@@ -2972,7 +3143,7 @@ function FRAGEN_TEXTE(c) {
       </div>
       <h2 id="sheet-titel">${FRAGEN.titel}</h2>
       ${FRAGEN.gruppen.map(([titel, fragen]) => `<section class="fragen-gruppe"><h3 class="h-klein">${titel}</h3>${fragen.join('')}</section>`).join('')}
-      <p class="klein">Deine Frage ist nicht dabei? Lies die <a href="#regeln">Regeln für Nachbarn</a> und die <a href="#nutzung">Nutzungsbedingungen</a>.</p>`;
+      <p class="klein">Deine Frage ist nicht dabei? Lies die <a href="#regeln">Regeln für Nachbarn</a> oder schreib uns: ${kontaktLink()}.</p>`;
   }
 
   function sheetAnsichtHTML() {
@@ -2993,6 +3164,7 @@ function FRAGEN_TEXTE(c) {
       ${gruppe('start', 'Startseite', 'Was du beim Öffnen zuerst siehst.')}
       ${istLive() && db.profil ? '' : `<div class="feld"><label for="ansicht-ort">Dein Stadtteil</label><select id="ansicht-ort">${gewaehlterOrt ? '' : '<option value="">Bitte wählen</option>'}${stadtteilOptionen(gewaehlterOrt || '', false)}</select><p class="klein">Für die Entfernungen. Deine Adresse brauchen wir dafür nicht.</p></div>`}
       <p class="klein">Gespeichert nur auf diesem Gerät.</p>
+      ${istLive() ? '' : blockListeHTML()}
       <button type="button" class="btn btn-secondary" data-einladen>${icon('teilen')}Hand Drauf weiterempfehlen</button>
       ${installEreignis ? `<button type="button" class="btn btn-secondary" data-installieren>${icon('plus')}Auf den Startbildschirm</button>`
         : installierenMoeglich() ? `<p class="klein">Als App nutzen: In Safari unten auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.</p>` : ''}
@@ -3086,6 +3258,7 @@ function FRAGEN_TEXTE(c) {
     const v = location.hash.slice(1);
     if (VIEWS.includes(v)) { if (istSeite(ui.panel)) schliessen(); zeige(v); }
     else if (istSeite(v)) oeffnePanel(v);
+    else if (linkId(v)) gesuchAusLink(linkId(v));
   });
 
   function sheetZeigen() {
@@ -3115,6 +3288,7 @@ function FRAGEN_TEXTE(c) {
     ui.loeschen = false;
     ui.authGrund = grund || '';
     ui.authFertig = '';
+    ui.blockieren = false;
     renderSheet();
     sheetZeigen();
     renderKarte();
@@ -3124,7 +3298,7 @@ function FRAGEN_TEXTE(c) {
     ui.offen = null;
     ui.panel = null;
     sheetSchluessel = null;
-    if (istSeite(location.hash.slice(1))) history.replaceState(null, '', '#' + ui.view);
+    if (istSeite(location.hash.slice(1)) || linkId(location.hash.slice(1))) history.replaceState(null, '', '#' + ui.view);
     $('#backdrop').hidden = true;
     $('#sheet').hidden = true;
     document.body.classList.remove('sheet-offen');
@@ -3136,10 +3310,10 @@ function FRAGEN_TEXTE(c) {
 
   const ERFOLG = {
     zusagen: (g) => `Zugesagt. ${vorname(g.wer)} sieht jetzt deinen Namen.`,
-    absagen: () => 'Zusage zurückgezogen. Das Gesuch ist wieder offen.',
+    absagen: () => 'Zusage zurückgezogen. Die Anfrage ist wieder offen.',
     erledigt: (g) => `Gemeldet. ${vorname(g.wer)} muss noch bestätigen.`,
     bestaetigen: (g) => istLive() ? 'Bestätigt. Danke, dass ihr euch geholfen habt!' : `${euro(auszahlung(g))} ausgezahlt`,
-    rueckzug: () => 'Gesuch zurückgezogen'
+    rueckzug: () => 'Anfrage zurückgezogen'
   };
 
   $('#sheet').addEventListener('click', async (e) => {
@@ -3160,6 +3334,40 @@ function FRAGEN_TEXTE(c) {
       oeffnePanel('profil');
       ui.profilGesuch = id;
       ui.zuletzt = zuletzt;
+      renderSheet();
+      return;
+    }
+    if (t.hasAttribute('data-blockieren-frage') || t.hasAttribute('data-blockieren-nein')) {
+      if (istLive() && !db.profil) { oeffnePanel('anmelden', 'Bitte melde dich an, um jemanden zu blockieren.'); return; }
+      ui.blockieren = t.hasAttribute('data-blockieren-frage');
+      renderSheet();
+      const f = $(ui.blockieren ? '#sheet [data-blockieren-nein]' : '#sheet [data-blockieren-frage]');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
+    if (t.hasAttribute('data-blockieren')) {
+      const person = anderePerson(gesuche.find((x) => x.id === ui.profilGesuch));
+      if (!person) return;
+      ui.busy = true; renderSheet();
+      try {
+        await blockiere(person.id, person.name);
+        ui.blockieren = false;
+        ui.busy = false;
+        ui.zuletzt = null;
+        schliessen();
+        renderAlles();
+        meldung(`${vorname(person.name)} ist blockiert. Ihr seht eure Anfragen gegenseitig nicht mehr.`);
+      } catch (err) {
+        ui.busy = false;
+        renderSheet();
+        meldung(fehlerText(err));
+      }
+      return;
+    }
+    if (t.dataset.entsperren) {
+      const id = t.dataset.entsperren;
+      try { await entsperre(id); meldung('Blockierung aufgehoben.'); } catch (err) { meldung(fehlerText(err)); }
+      renderAlles();
       renderSheet();
       return;
     }
@@ -3214,6 +3422,8 @@ function FRAGEN_TEXTE(c) {
       if (f) f.focus({ preventScroll: true });
       return;
     }
+    if (a === 'teilen') { gesuchTeilen(g); return; }
+    if (a === 'kalender') { kalenderLaden(g); return; }
     if (a === 'bearbeiten' || a === 'bearbeiten-termin') { bearbeitenStarten(g, a === 'bearbeiten-termin' ? 2 : 1); return; }
     if (a === 'melden-frage' || a === 'melden-nein') {
       if (a === 'melden-frage' && istLive() && !db.profil) { oeffnePanel('anmelden', 'Bitte melde dich an, um etwas zu melden.'); return; }
@@ -3260,6 +3470,7 @@ function FRAGEN_TEXTE(c) {
     const text = feld.value.trim();
     if (!text) { feld.focus(); return; }
     if (istLive() && !db.profil) { oeffnePanel('anmelden', 'Bitte melde dich an.'); return; }
+    if (anstoessig(text)) { meldung('Bitte schreib freundlich. Beleidigende oder anstößige Wörter werden nicht verschickt.'); feld.focus(); return; }
     $('#chat-form button[type="submit"]').disabled = true;
     try {
       await sendeNachricht(g, text);
@@ -3294,6 +3505,15 @@ function FRAGEN_TEXTE(c) {
     try {
       await melde(g, wahl.value, text);
       ui.melden = false;
+      const person = anderePerson(g);
+      if (person && $('#melden-blockieren') && $('#melden-blockieren').checked) {
+        await blockiere(person.id, person.name);
+        ui.busy = false;
+        schliessen();
+        renderAlles();
+        meldung(`Danke für deine Meldung. ${vorname(person.name)} ist blockiert.`);
+        return;
+      }
       meldung('Danke für deine Meldung. Wir prüfen sie.');
     } catch (err) {
       meldung(fehlerText(err));
@@ -3395,15 +3615,81 @@ function FRAGEN_TEXTE(c) {
     if (e.key === 'Escape' && (ui.offen || ui.panel)) schliessen();
   });
 
-  /* ===== Nachbarn einladen (Wachstum über Empfehlungen statt Werbung) ===== */
-  async function einladen() {
-    const url = location.origin + location.pathname;
-    const text = 'Hand Drauf: Nachbarn in Garbsen helfen sich bei kleinen Dingen, gegen eine kleine Aufwandsentschädigung. Schau mal rein:';
+  /* ===== Teilen: Nachbarn einladen und einzelne Anfragen weitersagen (Wachstum über Empfehlungen statt Werbung) ===== */
+  const appAdresse = () => location.origin + location.pathname + location.search;
+  const gesuchLink = (g) => `${appAdresse()}#anfrage-${encodeURIComponent(g.id)}`;
+  async function teilen(text, url) {
     if (navigator.share) {
       try { await navigator.share({ title: 'Hand Drauf', text, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
     }
     try { await navigator.clipboard.writeText(`${text} ${url}`); meldung('Link kopiert. Füge ihn in eine Nachricht ein.'); }
     catch (e) { meldung(`Link zum Teilen: ${url}`); }
+  }
+  const einladen = () => teilen('Hand Drauf: Nachbarn in Garbsen helfen sich bei kleinen Dingen, gegen eine kleine Aufwandsentschädigung. Schau mal rein:', location.origin + location.pathname);
+  function gesuchTeilen(g) {
+    const was = `„${g.titel}“ in ${g.stadtteil}, ${g.wann}, ${euroKurz(g.betrag)} Aufwandsentschädigung`;
+    teilen(g.eigen ? `Ich suche Hilfe: ${was}. Kannst du helfen oder kennst du jemanden?` : `${vorname(g.wer)} sucht Hilfe: ${was}. Kannst du helfen?`, gesuchLink(g));
+  }
+
+  // Geteilter Link #anfrage-<id> öffnet die Anfrage direkt
+  const GESUCH_LINK = /^(?:anfrage|gesuch)-(.+)$/;
+  const linkId = (hash) => { const m = hash.match(GESUCH_LINK); return m ? decodeURIComponent(m[1]) : null; };
+  function gesuchAusLink(id) {
+    if (gesuche.some((g) => g.id === id)) { oeffnen(id); return; }
+    if (istLive() && !db.geladen) return; // wird nach dem Laden erneut versucht
+    history.replaceState(null, '', '#' + ui.view);
+    meldung('Diese Anfrage ist nicht mehr offen. Schau dir die anderen in deiner Nähe an.');
+  }
+
+  /* ===== Termin in den eigenen Kalender (.ics, funktioniert mit iPhone, Android, Outlook) ===== */
+  function kalenderDatei(g) {
+    const t = terminAusText(g.wann);
+    if (!t) return null;
+    const zwei = (n) => String(n).padStart(2, '0');
+    const tag = (d) => `${d.getFullYear()}${zwei(d.getMonth() + 1)}${zwei(d.getDate())}`;
+    const um = (d, [h, m]) => `${tag(d)}T${zwei(h)}${zwei(m)}00`;
+    const j = new Date();
+    const stempel = `${j.getUTCFullYear()}${zwei(j.getUTCMonth() + 1)}${zwei(j.getUTCDate())}T${zwei(j.getUTCHours())}${zwei(j.getUTCMinutes())}${zwei(j.getUTCSeconds())}Z`;
+    const txt = (x) => String(x).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+    const mitUhrzeit = +t.von === +t.bis && t.start;
+    const mit = g.eigen ? (g.helferName ? ` mit ${vorname(g.helferName)}` : '') : ` bei ${g.wer}`;
+    const beteiligt = g.eigen || g.helfer === 'ich';
+    const adresse = beteiligt ? adresseVon(g) : '';
+    const ort = adresse ? `${adresse}${adresse.includes(g.stadtteil) ? '' : ', ' + g.stadtteil}, Garbsen` : `${g.stadtteil}, Garbsen`;
+    const zeilen = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Hand Drauf//Nachbarschaftshilfe Garbsen//DE', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+      'BEGIN:VEVENT', `UID:${g.id}@hand-drauf`, `DTSTAMP:${stempel}`,
+      ...(mitUhrzeit ? [`DTSTART:${um(t.von, t.start)}`, `DTEND:${um(t.von, t.ende)}`]
+        : [`DTSTART;VALUE=DATE:${tag(t.von)}`, `DTEND;VALUE=DATE:${tag(plusTage(t.bis, 1))}`]),
+      `SUMMARY:${txt(`Hand Drauf: ${g.titel}${mit}`)}`,
+      `LOCATION:${txt(ort)}`,
+      `DESCRIPTION:${txt([`Wann: ${g.wann}`, `Aufwandsentschädigung: ${euroKurz(g.betrag)}`, g.text, `In der App: ${gesuchLink(g)}`].filter(Boolean).join('\n'))}`,
+      `URL:${gesuchLink(g)}`,
+      'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${txt(g.titel)}`, mitUhrzeit ? 'TRIGGER:-PT1H' : 'TRIGGER:PT8H', 'END:VALARM',
+      'END:VEVENT', 'END:VCALENDAR'];
+    // Zeilen über 75 Bytes werden nach dem Kalender-Standard umgebrochen
+    const bytes = (x) => new TextEncoder().encode(x).length;
+    const falten = (z) => {
+      if (bytes(z) <= 75) return z;
+      const teile = [];
+      let akt = '';
+      for (const ch of z) { if (bytes(akt + ch) > (teile.length ? 74 : 75)) { teile.push(akt); akt = ch; } else akt += ch; }
+      teile.push(akt);
+      return teile.join('\r\n ');
+    };
+    return zeilen.map(falten).join('\r\n') + '\r\n';
+  }
+  function kalenderLaden(g) {
+    const ics = kalenderDatei(g);
+    if (!ics) return;
+    const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hand-drauf-${g.titel.toLowerCase().replace(/[äöüß]/g, (c) => ({ ä: 'ae', ö: 'oe', ü: 'ue', ß: 'ss' }[c])).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'termin'}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 20000);
+    meldung('Termin geladen. Öffne die Datei, um ihn in deinen Kalender zu übernehmen.');
   }
 
   /* ===== Als App auf den Startbildschirm (Web-App, ohne App Store) ===== */
@@ -3505,7 +3791,7 @@ function FRAGEN_TEXTE(c) {
       <h1 id="start-titel" tabindex="-1">Nachbarn helfen Nachbarn</h1>
       <p class="start-text">Rasen mähen, Einkauf hochtragen, Drucker einrichten: kleine Hilfen in Garbsen, gegen eine kleine Aufwandsentschädigung.</p>
       <ul class="start-liste">
-        <li>${icon('plus')}<span><strong>Hilfe suchen</strong>Ein Gesuch in vier kurzen Schritten einstellen.</span></li>
+        <li>${icon('plus')}<span><strong>Hilfe suchen</strong>Eine Anfrage in vier kurzen Schritten stellen.</span></li>
         <li>${icon('karte')}<span><strong>Helfen</strong>Auf der Karte sehen, wo in deiner Nähe Hilfe gebraucht wird.</span></li>
       </ul>
       ${fuss(0, 'Weiter', 'weiter')}`;
@@ -3554,11 +3840,11 @@ function FRAGEN_TEXTE(c) {
   });
   $('#start').addEventListener('keydown', (e) => { if (e.key === 'Escape') startBeenden(); });
 
-  /* ===== Gesuch erstellen: vier Schritte (Vorbild: TaskRabbit, Kleinanzeigen) ===== */
+  /* ===== Anfrage erstellen: vier Schritte (Vorbild: TaskRabbit, Kleinanzeigen) ===== */
   const form = $('#neu-form');
   const betragInput = $('#neu-betrag');
   const SCHRITT_NAMEN = ['Was?', 'Wann und wo?', 'Betrag', 'Prüfen'];
-  // Unser Vorschlag je Tätigkeit, bis genug echte Gesuche aus Garbsen für einen Durchschnitt da sind
+  // Unser Vorschlag je Tätigkeit, bis genug echte Anfragen aus Garbsen für einen Durchschnitt da sind
   const RICHTWERTE = { garten: [15, 25], einkaufen: [5, 10], tiere: [8, 15], haushalt: [10, 25], tragen: [10, 20], technik: [10, 20] };
   const VORSCHLAEGE = {
     garten: ['Rasen mähen', 'Hecke schneiden', 'Laub rechen'],
@@ -3653,6 +3939,7 @@ function FRAGEN_TEXTE(c) {
   function pruefeSchritt(n) {
     const fehler = (feld, id) => { feld.setAttribute('aria-invalid', 'true'); $(id).hidden = false; return feld; };
     if (n === 1 && $('#neu-titel').value.trim().length < 3) return fehler($('#neu-titel'), '#fehler-titel');
+    if (n === 1 && anstoessig(`${$('#neu-titel').value} ${$('#neu-text').value}`)) return fehler(anstoessig($('#neu-titel').value) ? $('#neu-titel') : $('#neu-text'), '#fehler-wort');
     if (n === 2 && !wahlWert('tag')) { $('#fehler-tag').hidden = false; return form.querySelector('input[name="tag"]'); }
     if (n === 2 && istLive() && $('#neu-adresse').value.trim().length < 3) return fehler($('#neu-adresse'), '#fehler-adresse');
     if (n === 3 && !betragGueltig(betragWert())) return fehler(betragInput, '#fehler-betrag');
@@ -3690,7 +3977,9 @@ function FRAGEN_TEXTE(c) {
   betragInput.addEventListener('input', () => { betragGeaendert = true; renderKosten(); });
   $('#neu-titel').addEventListener('input', (e) => {
     if (e.target.value.trim().length >= 3) { e.target.removeAttribute('aria-invalid'); $('#fehler-titel').hidden = true; }
+    $('#fehler-wort').hidden = true;
   });
+  $('#neu-text').addEventListener('input', (e) => { e.target.removeAttribute('aria-invalid'); $('#fehler-wort').hidden = true; });
   $('#neu-adresse').addEventListener('input', (e) => {
     if (e.target.value.trim().length >= 3) { e.target.removeAttribute('aria-invalid'); $('#fehler-adresse').hidden = true; }
   });
@@ -3706,14 +3995,14 @@ function FRAGEN_TEXTE(c) {
   }
   renderTage();
 
-  /* ----- Eigenes Gesuch bearbeiten: dieselben Schritte, vorausgefüllt ----- */
+  /* ----- Eigene Anfrage bearbeiten: dieselben Schritte, vorausgefüllt ----- */
   function renderWizardModus() {
     const b = !!ui.bearbeiten;
-    $('#h-neu').textContent = b ? 'Gesuch bearbeiten' : 'Hilfe suchen';
+    $('#h-neu').textContent = b ? 'Anfrage bearbeiten' : 'Hilfe suchen';
     $('#neu-lead').textContent = b
       ? 'Änderungen sehen Nachbarn sofort. Bearbeiten geht, solange noch niemand zugesagt hat.'
-      : 'In vier kurzen Schritten. Nachbarn in der Nähe sehen dein Gesuch danach auf der Karte.';
-    $('#neu-senden').textContent = b ? 'Änderungen speichern' : 'Gesuch veröffentlichen';
+      : 'In vier kurzen Schritten. Nachbarn in der Nähe sehen deine Anfrage danach auf der Karte.';
+    $('#neu-senden').textContent = b ? 'Änderungen speichern' : 'Anfrage veröffentlichen';
     $('#neu-abbrechen').hidden = !b;
   }
   async function bearbeitenStarten(g, schritt) {
@@ -3777,7 +4066,7 @@ function FRAGEN_TEXTE(c) {
       if (f) { zeigeSchritt(n, false); f.focus(); return; }
     }
     if (istLive() && !db.profil) {
-      oeffnePanel('anmelden', 'Melde dich an, um dein Gesuch zu veröffentlichen. Deine Eingaben bleiben erhalten.');
+      oeffnePanel('anmelden', 'Melde dich an, um deine Anfrage zu veröffentlichen. Deine Eingaben bleiben erhalten.');
       return;
     }
 
@@ -3802,7 +4091,7 @@ function FRAGEN_TEXTE(c) {
         const fehlt = (err) => err && (err.code === 'PGRST202' || /could not find the function/i.test(err.message || ''));
         if (bearbeitet) {
           const { error } = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis });
-          if (fehlt(error)) throw new Error('Bearbeiten ist noch nicht freigeschaltet. Zieh das Gesuch zurück und erstelle es neu.');
+          if (fehlt(error)) throw new Error('Bearbeiten ist noch nicht freigeschaltet. Zieh die Anfrage zurück und stelle sie neu.');
           if (error) throw error;
         } else {
           let r = db.altesSchema ? { error: { code: 'PGRST202' } } : await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis });
@@ -3848,7 +4137,7 @@ function FRAGEN_TEXTE(c) {
     renderAlles();
     gehe('karte');
     oeffnen(neuId);
-    meldung(bearbeitet ? 'Änderungen gespeichert' : 'Gesuch veröffentlicht');
+    meldung(bearbeitet ? 'Änderungen gespeichert' : 'Anfrage veröffentlicht');
   });
 
   /* ===== Start ===== */
@@ -3863,13 +4152,14 @@ function FRAGEN_TEXTE(c) {
   renderKosten();
   zeige(VIEWS.includes(start) ? start : ansicht.start);
   if (istSeite(start)) oeffnePanel(start);
+  else if (linkId(start)) { /* geteilte Anfrage: erst die Anfrage zeigen, die Begrüßung kommt beim nächsten Besuch */ }
   else {
     let gesehen = false;
     try { gesehen = localStorage.getItem(START_SPEICHER) === '1'; } catch (e) { gesehen = true; }
     if (!gesehen) startZeigen();
   }
   starteLive().then((live) => {
-    if (!live) return;
+    if (!live) { if (linkId(start)) gesuchAusLink(linkId(start)); return; }
     renderStadtteilAuswahl();
     renderKosten();
   });

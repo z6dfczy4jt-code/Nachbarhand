@@ -544,3 +544,12 @@ body { margin: 0; }
 .link-als-knopf { display: inline-flex; align-items: center; }
 .wahl-raster ~ .feld-hinweis, .wahl-raster ~ .fehler { margin-top: 8px; }
 .leer-knoepfe { justify-self: stretch; }
+
+/* ===== Gesuch: Karte und Teilen nebeneinander ===== */
+.link-zeile { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.link-zeile .link-inline { min-height: 44px; }
+
+/* ===== Blockierte Personen ===== */
+.blockliste { display: grid; gap: 4px; padding-top: 6px; }
+.block-zeile { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--line); font-weight: 700; }
+.block-zeile .link-btn { justify-self: end; }
