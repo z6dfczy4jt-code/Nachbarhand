@@ -3,6 +3,7 @@
 
     python3 tools/build.py                    -> index.html (für GitHub Pages)
     python3 tools/build.py --vorschau ZIEL    -> zusätzlich eine Fassung für die Claude-Vorschau
+    python3 tools/build.py --app              -> zusätzlich app/www/ für die iPhone-App (Capacitor, siehe APP-STORE.md)
 
 Die Vorschau-Fassung ist ein HTML-Fragment ohne <html>/<head> und startet immer im Demo-Modus.
 """
@@ -88,6 +89,16 @@ if __name__ == '__main__':
     ziel = WURZEL / 'index.html'
     ziel.write_text(standalone())
     print('index.html', ziel.stat().st_size, 'Bytes')
+    if '--app' in sys.argv:
+        import shutil
+        www = WURZEL / 'app/www'
+        if www.exists():
+            shutil.rmtree(www)
+        (www / 'assets').mkdir(parents=True)
+        (www / 'index.html').write_text(ziel.read_text())
+        # Alles aus assets/ außer dem Vorschaubild für geteilte Links
+        shutil.copytree(WURZEL / 'assets', www / 'assets', dirs_exist_ok=True, ignore=shutil.ignore_patterns('vorschau.png'))
+        print('App-Dateien', www, sum(f.stat().st_size for f in www.rglob('*') if f.is_file()), 'Bytes')
     if '--vorschau' in sys.argv:
         pfad = pathlib.Path(sys.argv[sys.argv.index('--vorschau') + 1])
         pfad.write_text(vorschau_fragment())

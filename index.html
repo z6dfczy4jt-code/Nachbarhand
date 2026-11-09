@@ -1739,6 +1739,18 @@ function FRAGEN_TEXTE(c) {
   /* ===== Betriebsart ===== */
   // Wird beim Bauen für die Claude-Vorschau auf true gesetzt: Dort ist keine Datenbank erreichbar, also immer Demo.
   const VORSCHAU = false;
+  // Läuft die App als iPhone-App (Capacitor)? Dann liegt sie lokal auf dem Gerät, Links zeigen auf die Website.
+  const NATIV = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  const OEFFENTLICH = 'https://z6dfczy4jt-code.github.io/Nachbarhand/';
+  const PLUGINS = {};
+  function plugin(name) { // native Erweiterungen (@capacitor/share, @capacitor/filesystem), nur in der iPhone-App
+    if (!NATIV) return null;
+    if (!PLUGINS[name]) {
+      const C = window.Capacitor;
+      PLUGINS[name] = (C.Plugins && C.Plugins[name]) || (C.registerPlugin ? C.registerPlugin(name) : null);
+    }
+    return PLUGINS[name];
+  }
   // ?beispiele in der Adresse: erfundene Beispiele zeigen, auch wenn die Datenbank erreichbar ist
   const BEISPIEL_MODUS = (() => { try { return new URLSearchParams(location.search).has('beispiele'); } catch (e) { return false; } })();
 
@@ -3021,7 +3033,7 @@ function FRAGEN_TEXTE(c) {
         <div class="feld"><label for="auth-passwort">Passwort</label><input id="auth-passwort" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" minlength="8" required>${reg ? '<p class="feld-hinweis" style="margin-top:0">Mindestens 8 Zeichen.</p>' : ''}</div>
         ${reg ? `<label class="check"><input type="checkbox" id="auth-18"><span>Ich bin mindestens 18 Jahre alt.</span></label>
         <label class="check"><input type="checkbox" id="auth-regeln"><span>Ich akzeptiere die Nutzungsbedingungen. Hand Drauf vermittelt nur, die Absprache und Bezahlung läuft direkt zwischen uns Nachbarn, gelegentlich und in kleinem Umfang.</span></label>
-        <p class="klein recht-links-form">Lies vorher die <a href="#nutzung" target="_blank" rel="noopener">Nutzungsbedingungen</a> und die <a href="#datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a> (öffnen in neuem Tab).</p>` : ''}
+        <p class="klein recht-links-form">Lies vorher die <a href="${NATIV ? OEFFENTLICH : ''}#nutzung" target="_blank" rel="noopener">Nutzungsbedingungen</a> und die <a href="${NATIV ? OEFFENTLICH : ''}#datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a> (öffnen ${NATIV ? 'im Browser' : 'in neuem Tab'}).</p>` : ''}
         <p class="fehler" id="auth-fehler" role="alert" hidden></p>
         <button type="submit" class="btn btn-primary" ${ui.busy ? 'disabled aria-busy="true"' : ''}>${reg ? 'Konto erstellen' : 'Anmelden'}</button>
       </form>`;
@@ -3565,7 +3577,7 @@ function FRAGEN_TEXTE(c) {
           email,
           password: passwort,
           options: {
-            emailRedirectTo: location.origin + location.pathname,
+            emailRedirectTo: NATIV ? OEFFENTLICH : location.origin + location.pathname,
             data: {
               vorname: $('#auth-vorname').value.trim().slice(0, 40),
               nachname_initial: $('#auth-initial').value.trim().slice(0, 1).toUpperCase(),
@@ -3616,16 +3628,21 @@ function FRAGEN_TEXTE(c) {
   });
 
   /* ===== Teilen: Nachbarn einladen und einzelne Anfragen weitersagen (Wachstum über Empfehlungen statt Werbung) ===== */
-  const appAdresse = () => location.origin + location.pathname + location.search;
+  const appAdresse = () => NATIV ? OEFFENTLICH : location.origin + location.pathname + location.search;
   const gesuchLink = (g) => `${appAdresse()}#anfrage-${encodeURIComponent(g.id)}`;
   async function teilen(text, url) {
+    const teilenPlugin = plugin('Share');
+    if (teilenPlugin) {
+      try { await teilenPlugin.share({ title: 'Hand Drauf', text, url, dialogTitle: 'Teilen' }); } catch (e) { /* abgebrochen */ }
+      return;
+    }
     if (navigator.share) {
       try { await navigator.share({ title: 'Hand Drauf', text, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
     }
     try { await navigator.clipboard.writeText(`${text} ${url}`); meldung('Link kopiert. Füge ihn in eine Nachricht ein.'); }
     catch (e) { meldung(`Link zum Teilen: ${url}`); }
   }
-  const einladen = () => teilen('Hand Drauf: Nachbarn in Garbsen helfen sich bei kleinen Dingen, gegen eine kleine Aufwandsentschädigung. Schau mal rein:', location.origin + location.pathname);
+  const einladen = () => teilen('Hand Drauf: Nachbarn in Garbsen helfen sich bei kleinen Dingen, gegen eine kleine Aufwandsentschädigung. Schau mal rein:', NATIV ? OEFFENTLICH : location.origin + location.pathname);
   function gesuchTeilen(g) {
     const was = `„${g.titel}“ in ${g.stadtteil}, ${g.wann}, ${euroKurz(g.betrag)} Aufwandsentschädigung`;
     teilen(g.eigen ? `Ich suche Hilfe: ${was}. Kannst du helfen oder kennst du jemanden?` : `${vorname(g.wer)} sucht Hilfe: ${was}. Kannst du helfen?`, gesuchLink(g));
@@ -3678,13 +3695,23 @@ function FRAGEN_TEXTE(c) {
     };
     return zeilen.map(falten).join('\r\n') + '\r\n';
   }
-  function kalenderLaden(g) {
+  async function kalenderLaden(g) {
     const ics = kalenderDatei(g);
     if (!ics) return;
+    const dateiname = `hand-drauf-${g.titel.toLowerCase().replace(/[äöüß]/g, (c) => ({ ä: 'ae', ö: 'oe', ü: 'ue', ß: 'ss' }[c])).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'termin'}.ics`;
+    // iPhone-App: Datei im Zwischenspeicher ablegen und über das Teilen-Menü öffnen („Zum Kalender hinzufügen“)
+    const dateien = plugin('Filesystem'), teilenPlugin = plugin('Share');
+    if (dateien && teilenPlugin) {
+      try {
+        const { uri } = await dateien.writeFile({ path: dateiname, data: ics, directory: 'CACHE', encoding: 'utf8' });
+        await teilenPlugin.share({ title: g.titel, files: [uri], dialogTitle: 'In den Kalender' });
+      } catch (e) { /* abgebrochen */ }
+      return;
+    }
     const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = `hand-drauf-${g.titel.toLowerCase().replace(/[äöüß]/g, (c) => ({ ä: 'ae', ö: 'oe', ü: 'ue', ß: 'ss' }[c])).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'termin'}.ics`;
+    a.download = dateiname;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -3695,7 +3722,7 @@ function FRAGEN_TEXTE(c) {
   /* ===== Als App auf den Startbildschirm (Web-App, ohne App Store) ===== */
   const INSTALL_SPEICHER = 'handdrauf-installieren';
   let installEreignis = null; // Android/Chrome: Systemdialog zum Installieren
-  const istInstalliert = () => (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  const istInstalliert = () => NATIV || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
   const istIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const installierenMoeglich = () => !VORSCHAU && !istInstalliert() && (!!installEreignis || istIOS());
   function startGesehen() { try { return localStorage.getItem(START_SPEICHER) === '1'; } catch (e) { return true; } }

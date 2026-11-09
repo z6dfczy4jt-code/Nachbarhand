@@ -6,7 +6,8 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 - **Live** läuft die App mit der Supabase-Datenbank: echte Konten, gemeinsame Anfragen, Nachrichten. Stand und offene Schritte: [SETUP.md](SETUP.md)
 - **Ohne Datenbank** (oder wenn sie nicht erreichbar ist) zeigt die App eine Demo mit erfundenen Beispielen. Die Vorschau in Claude ist immer die Demo.
 - **Beispiele:** https://z6dfczy4jt-code.github.io/Nachbarhand/?beispiele zeigt die erfundenen Beispiele auch dann, wenn die Datenbank läuft, mit einem Hinweisband. Gut zum Vorführen, solange noch wenige echte Anfragen da sind.
-- **Als App:** Auf dem Handy lässt sich die Seite auf den Startbildschirm legen und startet dann ohne Browserleiste. Die App-Hülle (Seite, Schriften, Karte) lädt auch bei schlechtem Netz.
+- **iPhone-App:** vorbereitet mit Capacitor, gebaut wird sie an einem Mac. Anleitung, Apple-Regeln und Texte für den App Store: [APP-STORE.md](APP-STORE.md)
+- **Als Web-App:** Auf dem Handy lässt sich die Seite auf den Startbildschirm legen und startet dann ohne Browserleiste. Die App-Hülle (Seite, Schriften, Karte) lädt auch bei schlechtem Netz.
 
 ## Aufbau
 
@@ -28,6 +29,9 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 | `manifest.webmanifest` | Angaben für „Zum Home-Bildschirm“ |
 | `design/logo/` | Logo „Hand Drauf“ als SVG (gestapelt, quer, hell, dunkel, App-Icon) und die Vorlage |
 | `design/` | Skripte: `trace.py` zeichnet den Handschlag aus der Vorlage nach, `marke.py` setzt Logo und Icons, `symbole.py` zeichnet die Tätigkeits-Symbole |
+| `package.json`, `capacitor.config.json` | iPhone-App mit Capacitor (siehe APP-STORE.md) |
+| `app/resources/` | App-Symbol und Startbildschirme für die iPhone-App, erzeugt mit `design/app-bilder.py` |
+| `assets/vorschau.png` | Vorschaubild für geteilte Links, erzeugt mit `design/vorschau.py` |
 | `index.html` | Fertige App, wird von GitHub Pages ausgeliefert. Nicht von Hand ändern, sondern mit `python3 tools/build.py` neu bauen |
 
 ## Daten und Quellen

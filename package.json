@@ -1,0 +1,25 @@
+{
+  "name": "hand-drauf",
+  "version": "0.9.0",
+  "private": true,
+  "description": "Hand Drauf: Nachbarschaftshilfe in Garbsen. Web-App und iPhone-App (Capacitor).",
+  "scripts": {
+    "web": "python3 tools/build.py",
+    "app:bauen": "python3 tools/build.py --app && npx cap sync ios",
+    "app:icons": "npx @capacitor/assets generate --ios --assetPath app/resources --iconBackgroundColor '#F4B400' --splashBackgroundColor '#F3F5F1' --splashBackgroundColorDark '#10151A'",
+    "app:oeffnen": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
+    "@capacitor/share": "^8.0.0",
+    "@capacitor/filesystem": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/assets": "^3.0.5"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

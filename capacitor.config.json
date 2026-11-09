@@ -1,0 +1,12 @@
+{
+  "appId": "de.handdrauf.app",
+  "appName": "Hand Drauf",
+  "webDir": "app/www",
+  "backgroundColor": "#F3F5F1",
+  "loggingBehavior": "debug",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#F3F5F1",
+    "preferredContentMode": "mobile"
+  }
+}
