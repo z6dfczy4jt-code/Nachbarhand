@@ -1,6 +1,6 @@
 # Datenbank einrichten (Supabase)
 
-Ohne Datenbank läuft Hand drauf im **Demo-Modus** mit erfundenen Beispielen, die nur auf deinem Gerät gespeichert werden.
+Ohne Datenbank läuft Hand Drauf im **Demo-Modus** mit erfundenen Beispielen, die nur auf deinem Gerät gespeichert werden.
 Mit Supabase bekommt die App **echte Konten** und eine **gemeinsame Datenbank**: Was Karin einstellt, sieht Tim auf seinem Handy.
 
 Supabase ist für ein Projekt dieser Größe kostenlos. Die Einrichtung dauert etwa 10 Minuten.
@@ -40,11 +40,23 @@ Damit der Link in der Bestätigungs-E-Mail zur App führt:
 Diese beiden Werte sind **öffentlich** und dürfen im Code stehen. Die Regeln in der Datenbank schützen die Daten.
 Den **Secret key** bzw. **service_role** Key dagegen **niemals** weitergeben oder in die App schreiben.
 
+## Meldungen prüfen
+
+Nutzer können ein Gesuch oder eine beteiligte Person melden. Die Meldungen sieht nur der Betreiber:
+
+1. In Supabase links **Table Editor** öffnen und die Tabelle **meldungen** wählen.
+2. Neue Meldungen haben den Status `neu`. Nach dem Prüfen den Status auf `geprueft` oder `erledigt` setzen.
+3. Ist ein Gesuch nicht in Ordnung: in der Tabelle **gesuche** den Status auf `zurueckgezogen` setzen. Dann sieht es niemand mehr.
+
+## Nach einem Update
+
+Wenn sich `supabase/schema.sql` geändert hat (zuletzt: Nachrichten und Meldungen), das Skript einfach noch einmal im **SQL Editor** ausführen. Vorhandene Daten bleiben erhalten.
+
 ## Gut zu wissen
 
 - **Bestätigungs-E-Mails:** Supabase verschickt im kostenlosen Plan nur wenige E-Mails pro Stunde. Für Tests reicht das. Für viele Nutzer später einen eigenen E-Mail-Versand einrichten (Authentication → Emails → SMTP).
 - **Pause:** Kostenlose Projekte pausieren nach 7 Tagen ohne Nutzung. Im Dashboard lassen sie sich mit einem Tippen wieder starten.
-- **Datenschutz:** Gespeichert werden E-Mail, Vorname, Anfangsbuchstabe des Nachnamens, Stadtteil, Gesuche und die Adresse zu einem Gesuch. Vor dem öffentlichen Start eine Datenschutzerklärung ergänzen und mit Supabase den Auftragsverarbeitungsvertrag (DPA) abschließen.
+- **Datenschutz:** Gespeichert werden E-Mail, Vorname, Anfangsbuchstabe des Nachnamens, Stadtteil, Gesuche, die Adresse zu einem Gesuch, Nachrichten und Meldungen. Vor dem öffentlichen Start eine Datenschutzerklärung ergänzen und mit Supabase den Auftragsverarbeitungsvertrag (DPA) abschließen.
 
 ## Was die Datenbank absichert
 
@@ -54,5 +66,7 @@ Den **Secret key** bzw. **service_role** Key dagegen **niemals** weitergeben ode
 | Pin zeigt keine Hausnummer | Die Datenbank setzt die Lage zufällig 100 bis 400 m um die Stadtteilmitte |
 | Helfen erst ab 18 | Wird bei der Registrierung bestätigt und bei jeder Zusage geprüft |
 | Nachbarschaftshilfe bleibt klein | Höchstens 50 € pro Gesuch, 5 laufende Gesuche pro Person, 8 Zusagen in 30 Tagen, höchstens 2 für dieselbe Person in 30 Tagen |
+| Nachrichten privat | Nur die beiden Beteiligten eines Auftrags lesen und schreiben Nachrichten, erst nach der Zusage. Zieht jemand seine Zusage zurück, wird der Verlauf gelöscht. Höchstens 30 Nachrichten in 10 Minuten |
+| Melden | Gesuch oder beteiligte Person melden, mit Grund. Meldungen kann über die App niemand lesen, auch nicht die gemeldete Person. Höchstens 10 Meldungen am Tag |
 | Keine Manipulation | Niemand ändert Tabellen direkt, alle Schritte laufen über geprüfte Funktionen, Bewertungen kann man nicht selbst ändern |
 | Testphase ohne Bezahlung (Weg 1) | Die App vermittelt nur, die Aufwandsentschädigung zahlen die Beteiligten direkt untereinander |

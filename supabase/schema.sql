@@ -1,5 +1,5 @@
 -- =====================================================================
--- Nachbarhand: Datenbank für Supabase
+-- Hand Drauf: Datenbank für Supabase
 -- Im Supabase-Dashboard unter "SQL Editor" komplett einfügen und auf
 -- "Run" tippen. Das Skript kann gefahrlos mehrfach ausgeführt werden.
 --
@@ -12,6 +12,8 @@
 -- * Schreiben: Niemand ändert Tabellen direkt. Alles läuft über die
 --   Funktionen unten, die Regeln prüfen (Anmeldung, 18+, Grenzen für
 --   Nachbarschaftshilfe, erlaubte Statuswechsel).
+-- * Nachrichten lesen und schreiben nur die beiden Beteiligten eines
+--   Auftrags. Meldungen kann über die App niemand lesen.
 -- * Testphase (Weg 1): Die App vermittelt nur. Die Aufwandsentschädigung
 --   zahlen die Beteiligten direkt untereinander.
 -- =====================================================================
@@ -182,6 +184,51 @@ revoke insert, update, delete on public.bewertungen from authenticated;
 grant select on public.bewertungen to authenticated;
 
 -- ---------------------------------------------------------------------
+-- Nachrichten (nur zwischen den beiden Beteiligten eines Auftrags)
+-- ---------------------------------------------------------------------
+create table if not exists public.nachrichten (
+  id bigint generated always as identity primary key,
+  gesuch_id uuid not null references public.gesuche (id) on delete cascade,
+  von uuid not null references public.profile (id) on delete cascade,
+  text text not null check (char_length(text) between 1 and 1000),
+  erstellt timestamptz not null default now()
+);
+create index if not exists nachrichten_gesuch_idx on public.nachrichten (gesuch_id, erstellt);
+create index if not exists nachrichten_von_idx on public.nachrichten (von, erstellt);
+
+alter table public.nachrichten enable row level security;
+drop policy if exists "Nachrichten nur für Beteiligte" on public.nachrichten;
+create policy "Nachrichten nur für Beteiligte" on public.nachrichten
+  for select to authenticated
+  using (exists (
+    select 1 from public.gesuche g
+    where g.id = gesuch_id
+      and (g.ersteller = (select auth.uid()) or g.helfer = (select auth.uid()))
+  ));
+revoke all on public.nachrichten from anon;
+revoke insert, update, delete on public.nachrichten from authenticated;
+grant select on public.nachrichten to authenticated;
+
+-- ---------------------------------------------------------------------
+-- Meldungen (Meldeweg nach dem Digital Services Act)
+-- Niemand kann Meldungen über die App lesen. Prüfen im Supabase-Dashboard:
+-- Table Editor → meldungen
+-- ---------------------------------------------------------------------
+create table if not exists public.meldungen (
+  id bigint generated always as identity primary key,
+  gesuch_id uuid references public.gesuche (id) on delete set null,
+  gemeldet uuid references public.profile (id) on delete set null,
+  von uuid not null references public.profile (id) on delete cascade,
+  grund text not null check (grund in ('betrug', 'unangemessen', 'gefaehrlich', 'schwarzarbeit', 'anderes')),
+  text text not null default '' check (char_length(text) <= 500),
+  status text not null default 'neu' check (status in ('neu', 'geprueft', 'erledigt')),
+  erstellt timestamptz not null default now(),
+  constraint meldungen_einmal unique (gesuch_id, von)
+);
+alter table public.meldungen enable row level security;
+revoke all on public.meldungen from anon, authenticated;
+
+-- ---------------------------------------------------------------------
 -- Funktionen: alle Änderungen laufen hierüber
 -- ---------------------------------------------------------------------
 
@@ -294,6 +341,8 @@ begin
   if not found then
     raise exception 'Diese Zusage kannst du nicht mehr zurückziehen.';
   end if;
+  -- Der nächste Helfer soll den alten Verlauf nicht sehen
+  delete from public.nachrichten where gesuch_id = p_id;
 end;
 $$;
 
@@ -387,6 +436,81 @@ begin
 end;
 $$;
 
+-- Nachricht schreiben: nur die beiden Beteiligten, erst nach der Zusage
+create or replace function public.nachricht_senden(p_id uuid, p_text text)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  ich uuid := auth.uid();
+  g public.gesuche%rowtype;
+  t text := btrim(coalesce(p_text, ''));
+  neu bigint;
+begin
+  if ich is null then
+    raise exception 'Bitte melde dich zuerst an.';
+  end if;
+  select * into g from public.gesuche where id = p_id;
+  if not found or (g.ersteller <> ich and g.helfer is distinct from ich) then
+    raise exception 'Nachrichten gibt es nur zwischen den Beteiligten eines Auftrags.';
+  end if;
+  if g.status not in ('zugesagt', 'erledigt', 'bestaetigt') then
+    raise exception 'Nachrichten sind erst nach einer Zusage möglich.';
+  end if;
+  if char_length(t) = 0 then
+    raise exception 'Die Nachricht ist leer.';
+  end if;
+  if char_length(t) > 1000 then
+    raise exception 'Die Nachricht ist zu lang (höchstens 1000 Zeichen).';
+  end if;
+  if (select count(*) from public.nachrichten
+      where von = ich and erstellt > now() - interval '10 minutes') >= 30 then
+    raise exception 'Du hast gerade sehr viele Nachrichten geschickt. Warte bitte ein paar Minuten.';
+  end if;
+  insert into public.nachrichten (gesuch_id, von, text) values (p_id, ich, t) returning id into neu;
+  return neu;
+end;
+$$;
+
+-- Gesuch oder beteiligte Person melden. Wer meldet, bleibt für die gemeldete Person unsichtbar.
+create or replace function public.melden(p_id uuid, p_grund text, p_text text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  ich uuid := auth.uid();
+  g public.gesuche%rowtype;
+  ziel uuid;
+begin
+  if ich is null then
+    raise exception 'Bitte melde dich zuerst an.';
+  end if;
+  if p_grund is null or p_grund not in ('betrug', 'unangemessen', 'gefaehrlich', 'schwarzarbeit', 'anderes') then
+    raise exception 'Bitte wähle einen Grund.';
+  end if;
+  select * into g from public.gesuche where id = p_id;
+  if not found or not (g.status = 'offen' or g.ersteller = ich or coalesce(g.helfer = ich, false)) then
+    raise exception 'Dieses Gesuch gibt es nicht mehr.';
+  end if;
+  ziel := case when g.ersteller = ich then g.helfer else g.ersteller end;
+  if ziel is null then
+    raise exception 'Hier gibt es niemanden zu melden.';
+  end if;
+  if (select count(*) from public.meldungen
+      where von = ich and erstellt > now() - interval '1 day') >= 10 then
+    raise exception 'Du hast heute schon viele Meldungen geschickt. Wir prüfen sie zuerst.';
+  end if;
+  insert into public.meldungen (gesuch_id, gemeldet, von, grund, text)
+  values (p_id, ziel, ich, p_grund, left(btrim(coalesce(p_text, '')), 500))
+  on conflict on constraint meldungen_einmal
+  do update set grund = excluded.grund, text = excluded.text, status = 'neu', erstellt = now();
+end;
+$$;
+
 -- Nur angemeldete Nutzer dürfen die Funktionen aufrufen
 revoke execute on function public.gesuch_erstellen(text, text, text, integer, text, text, text) from public, anon;
 revoke execute on function public.gesuch_zusagen(uuid) from public, anon;
@@ -395,6 +519,8 @@ revoke execute on function public.gesuch_erledigt(uuid) from public, anon;
 revoke execute on function public.gesuch_bestaetigen(uuid) from public, anon;
 revoke execute on function public.gesuch_zurueckziehen(uuid) from public, anon;
 revoke execute on function public.bewerten(uuid, integer) from public, anon;
+revoke execute on function public.nachricht_senden(uuid, text) from public, anon;
+revoke execute on function public.melden(uuid, text, text) from public, anon;
 revoke execute on function public.neues_profil() from public, anon, authenticated;
 grant execute on function public.gesuch_erstellen(text, text, text, integer, text, text, text) to authenticated;
 grant execute on function public.gesuch_zusagen(uuid) to authenticated;
@@ -403,18 +529,25 @@ grant execute on function public.gesuch_erledigt(uuid) to authenticated;
 grant execute on function public.gesuch_bestaetigen(uuid) to authenticated;
 grant execute on function public.gesuch_zurueckziehen(uuid) to authenticated;
 grant execute on function public.bewerten(uuid, integer) to authenticated;
+grant execute on function public.nachricht_senden(uuid, text) to authenticated;
+grant execute on function public.melden(uuid, text, text) to authenticated;
 
 -- ---------------------------------------------------------------------
--- Live-Aktualisierung: Änderungen an Gesuchen sofort an alle Geräte senden
+-- Live-Aktualisierung: Änderungen an Gesuchen und neue Nachrichten sofort an die Geräte senden
+-- (Nachrichten bekommen nur die Beteiligten, die Zugriffsregeln oben gelten auch hier)
 -- ---------------------------------------------------------------------
 do $$
+declare
+  t text;
 begin
   if exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
-    begin
-      alter publication supabase_realtime add table public.gesuche;
-    exception when duplicate_object then
-      null;
-    end;
+    foreach t in array array['gesuche', 'nachrichten'] loop
+      begin
+        execute format('alter publication supabase_realtime add table public.%I', t);
+      exception when duplicate_object then
+        null;
+      end;
+    end loop;
   end if;
 end;
 $$;

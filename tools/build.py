@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Baut Hand drauf aus src/ zusammen.
+"""Baut Hand Drauf aus src/ zusammen.
 
     python3 tools/build.py                    -> index.html (für GitHub Pages)
     python3 tools/build.py --vorschau ZIEL    -> zusätzlich eine Fassung für die Claude-Vorschau
@@ -43,7 +43,7 @@ def standalone():
             '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#F3F5F1">\n'
             '<meta name="description" content="Nachbarschaftshilfe in Garbsen: kleine Jobs in deiner Nähe finden oder Hilfe suchen.">\n'
-            '<title>Hand drauf</title>\n'
+            '<title>Hand Drauf</title>\n'
             '<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">\n'
             '<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">\n'
             '<link rel="manifest" href="manifest.webmanifest">\n'
@@ -52,7 +52,7 @@ def standalone():
 
 def vorschau_fragment():
     kopf, rumpf = teile(True)
-    return ('<title>Hand drauf</title>\n'
+    return ('<title>Hand Drauf</title>\n'
             '<meta name="claude:viewport-fit-sides" content="cover">\n'
             f'{kopf}\n{rumpf}')
 

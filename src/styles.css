@@ -77,15 +77,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* Kopf */
 .kopf { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.marke { display: flex; align-items: center; gap: 9px; min-height: 44px; font-family: var(--f-display); font-weight: 800; font-size: 1.375rem; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; white-space: nowrap; }
-.marke-zeichen { width: 40px; height: 40px; flex: none; }
-:root[data-theme="dark"] .marke-zeichen > circle:first-of-type { fill: #E9EDE6; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .marke-zeichen > circle:first-of-type { fill: #E9EDE6; } }
+.marke { display: flex; align-items: center; min-height: 44px; color: var(--ink); text-decoration: none; }
+.marke-logo { display: block; height: 34px; width: auto; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .ansicht-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; color: var(--ink); font-weight: 700; font-size: 0.875rem; cursor: pointer; }
 .ansicht-btn:hover { background: var(--tile); }
-@media (max-width: 380px) { .ansicht-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .ansicht-btn { padding: 0 10px; } }
+@media (max-width: 430px) { .ansicht-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .ansicht-btn { padding: 0 10px; } }
+@media (max-width: 350px) { .marke-logo { height: 30px; } }
 
-/* Tätigkeits-Symbole (Tuschezeichnung, mehrfarbig) */
+/* Tätigkeits-Symbole (Linienzeichnung wie das Logo, mit Rapsgelb) */
 .ks { stroke: none; fill: none; }
 .ks .fi { fill: var(--ink); } .ks .fw { fill: var(--surface); } .ks .si { stroke: var(--ink); } .ks .sw { stroke: var(--surface); }
 .ico .ks { width: 34px; height: 34px; }
@@ -257,8 +257,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .schritte li.is-done { color: var(--ink); }
 .schritte li.is-done .punkt { background: var(--hedge); border-color: var(--hedge); color: var(--on-hedge); }
 .schritte li.is-current { font-weight: 700; }
-.nachricht { align-self: flex-start; max-width: 92%; background: var(--tile); border-radius: 16px 16px 16px 4px; padding: 10px 14px; display: grid; gap: 2px; }
-.nachricht-von { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .status-box { display: flex; gap: 8px; align-items: center; padding: 12px 14px; border-radius: 12px; font-weight: 700; }
 .status-box.warn { background: var(--warn-bg); color: var(--warn); }
 .status-box.good { background: var(--good-bg); color: var(--hedge); }
@@ -356,3 +354,34 @@ body { margin: 0; }
 .segment button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.14), inset 0 0 0 1.5px var(--ink); }
 .schrift-probe { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); font-size: 0.9375rem; color: var(--muted); }
 .schrift-probe strong { color: var(--ink); font-size: 1rem; }
+
+/* Aufträge: Hinweis auf neue Nachrichten */
+.tab-icon { position: relative; display: inline-flex; }
+.tab-punkt { position: absolute; top: -2px; right: -5px; width: 11px; height: 11px; border-radius: 50%; background: var(--crit); box-shadow: 0 0 0 2px var(--surface); }
+.card-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.pill-neu { background: var(--crit); color: #fff; }
+
+/* Nachrichten */
+.chat { display: grid; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+.chat-titel { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--f-display); font-size: 1.0625rem; }
+.chat-liste { display: flex; flex-direction: column; gap: 8px; max-height: min(46vh, 320px); overflow-y: auto; overscroll-behavior: contain; padding: 4px 2px; }
+.chat-liste:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 12px; }
+.chat-leer { margin: 0; color: var(--muted); font-size: 0.9375rem; }
+.blase { align-self: flex-start; max-width: 85%; padding: 9px 13px 7px; border-radius: 16px 16px 16px 4px; background: var(--tile); color: var(--ink); }
+.blase p { margin: 0; font-size: 1rem; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
+.blase time { display: block; margin-top: 2px; font-size: 0.75rem; color: var(--muted); }
+.blase-ich { align-self: flex-end; border-radius: 16px 16px 4px 16px; background: var(--ink); color: var(--surface); }
+.blase-ich time { color: inherit; opacity: .75; }
+.chat-form { display: flex; gap: 8px; align-items: flex-end; }
+.chat-form textarea { flex: 1; min-width: 0; min-height: 48px; max-height: 140px; resize: none; font: inherit; font-size: 1rem; line-height: 1.4; color: var(--ink); background: var(--surface); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+.chat-form textarea:focus { border-color: var(--ink); outline: none; }
+.chat-form textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.chat-senden { flex: none; width: 48px; height: 48px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent, #1B1A10); cursor: pointer; }
+.chat-senden .i { width: 22px; height: 22px; stroke-width: 2.4; }
+.chat-senden:disabled { opacity: .5; cursor: progress; }
+
+/* Melden */
+.link-melden { display: inline-flex; align-items: center; gap: 6px; justify-self: start; align-self: flex-start; color: var(--muted); font-size: 0.875rem; }
+.melden-box { display: grid; gap: 12px; padding: 14px; border-radius: 14px; background: var(--tile); }
+.melden-box .feld textarea { min-height: 72px; }
+.gemeldet { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--muted); font-size: 0.875rem; }

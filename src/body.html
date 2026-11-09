@@ -1,5 +1,7 @@
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <filter id="tusche-s" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="5" result="r"/><feDisplacementMap in="SourceGraphic" in2="r" scale="1.1" xChannelSelector="R" yChannelSelector="G"/></filter>
+  <symbol id="i-senden" viewBox="0 0 24 24"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></symbol>
+  <symbol id="i-sprechblase" viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></symbol>
+  <symbol id="i-flagge" viewBox="0 0 24 24"><path d="M6 21V4M6 4.5h11l-2.2 4.2L17 13H6"/></symbol>
   <symbol id="i-ansicht" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></symbol>
   <symbol id="i-suche" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></symbol>
   <symbol id="i-entdecken" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></symbol>
@@ -19,7 +21,7 @@
 
 <div class="app">
   <header class="kopf">
-    <a class="marke" href="#entdecken" aria-label="Hand drauf, zur Startseite"><!--KOPFZEICHEN--><span>Hand drauf</span></a>
+    <a class="marke" href="#entdecken" aria-label="Hand Drauf, zur Startseite"><!--KOPFZEICHEN--></a>
     <div class="kopf-rechts">
       <button type="button" class="ansicht-btn" data-panel="ansicht"><svg class="i" aria-hidden="true"><use href="#i-ansicht"/></svg><span>Ansicht</span></button>
       <div id="kopf-rechts" class="kopf-konto"><span class="pill pill-muted">Demo</span></div>
@@ -190,7 +192,7 @@
     <a class="tab" href="#entdecken" data-view="entdecken"><svg class="i" aria-hidden="true"><use href="#i-entdecken"/></svg>Entdecken</a>
     <a class="tab" href="#karte" data-view="karte"><svg class="i" aria-hidden="true"><use href="#i-karte"/></svg>Karte</a>
     <a class="tab" href="#neu" data-view="neu"><span class="tab-plus"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span>Hilfe suchen</a>
-    <a class="tab" href="#auftraege" data-view="auftraege"><svg class="i" aria-hidden="true"><use href="#i-liste"/></svg>Aufträge</a>
+    <a class="tab" href="#auftraege" data-view="auftraege"><span class="tab-icon"><svg class="i" aria-hidden="true"><use href="#i-liste"/></svg><span class="tab-punkt" id="tab-punkt" hidden></span></span>Aufträge<span class="sr-only" id="tab-punkt-text"></span></a>
   </div>
 </nav>
 

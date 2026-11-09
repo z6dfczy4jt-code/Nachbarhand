@@ -142,7 +142,10 @@
     laedt: false,
     fehler: null,
     bewertungen: new Map(), // gesuch_id -> meine Sterne
-    adressen: new Map()     // gesuch_id -> Adresse (nur für Beteiligte)
+    adressen: new Map(),    // gesuch_id -> Adresse (nur für Beteiligte)
+    nachrichten: new Map(), // gesuch_id -> Verlauf (null = wird geladen)
+    letzte: new Map(),      // gesuch_id -> Zeit der letzten Nachricht der anderen Person
+    gemeldet: new Set()     // in dieser Sitzung gemeldete Gesuche
   };
   const istLive = () => db.modus === 'live';
 
@@ -162,7 +165,7 @@
   }
 
   let gesuche = [];
-  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, zuletzt: null, busy: false };
+  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, zuletzt: null, busy: false };
 
   /* ===== Ansicht: Design, Schriftgröße, Startseite (nur auf diesem Gerät gespeichert) ===== */
   const ANSICHT_SPEICHER = 'handdrauf-ansicht';
@@ -200,7 +203,7 @@
   const euroKurz = (n) => Number.isInteger(n) ? `${n} €` : euro(n);
   const katName = (id) => (KATEGORIEN.find((k) => k.id === id) || {}).name || '';
   const icon = (id, cls = '') => KAT_SYMBOLE[id]
-    ? `<svg class="i ks ${cls}" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><g filter="url(#tusche-s)">${KAT_SYMBOLE[id]}</g></svg>`
+    ? `<svg class="i ks ${cls}" viewBox="0 0 48 48" aria-hidden="true" focusable="false">${KAT_SYMBOLE[id]}</svg>`
     : `<svg class="i ${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
   const vorname = (name) => String(name || '').split(' ')[0];
   const anzeigename = (p) => p ? `${p.vorname}${p.nachname_initial ? ' ' + p.nachname_initial + '.' : ''}` : 'Unbekannt';
@@ -310,6 +313,9 @@
     db.client.channel('gesuche-aenderungen')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'gesuche' }, () => bald(neuLaden))
       .subscribe();
+    db.client.channel('nachrichten-neu')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'nachrichten' }, (p) => neueNachricht(p.new))
+      .subscribe();
     document.addEventListener('visibilitychange', () => { if (!document.hidden) bald(neuLaden); });
     return true;
   }
@@ -325,6 +331,9 @@
     db.profil = null;
     db.bewertungen.clear();
     db.adressen.clear();
+    db.nachrichten.clear();
+    db.letzte.clear();
+    db.gemeldet.clear();
     if (uid) {
       const { data } = await db.client.from('profile').select('*').eq('id', uid).maybeSingle();
       db.profil = data || null;
@@ -370,8 +379,16 @@
       if (db.user) {
         const b = await db.client.from('bewertungen').select('gesuch_id, sterne').eq('von', db.user.id);
         if (!b.error && b.data) b.data.forEach((x) => db.bewertungen.set(x.gesuch_id, x.sterne));
+        const n = await db.client.from('nachrichten').select('gesuch_id, erstellt')
+          .neq('von', db.user.id).order('erstellt', { ascending: false }).limit(300);
+        if (!n.error && n.data) {
+          db.letzte.clear();
+          n.data.forEach((x) => { const t = Date.parse(x.erstellt) || 0; if (t > (db.letzte.get(x.gesuch_id) || 0)) db.letzte.set(x.gesuch_id, t); });
+        }
       }
       gesuche = (data || []).map(ausDb);
+      // Nach einer zurückgezogenen Zusage ist der alte Verlauf gelöscht
+      gesuche.forEach((g) => { if (g.status === 'offen') db.nachrichten.delete(g.id); });
       db.fehler = null;
       db.geladen = true;
     } catch (e) {
@@ -395,6 +412,94 @@
   }
   const adresseVon = (g) => istLive() ? db.adressen.get(g.id) : g.adresse;
 
+  /* ===== Nachrichten zwischen den Beteiligten ===== */
+  const GELESEN_SPEICHER = 'handdrauf-gelesen';
+  let gelesen = {};
+  try { gelesen = JSON.parse(localStorage.getItem(GELESEN_SPEICHER) || '{}') || {}; } catch (e) { gelesen = {}; }
+  const imChat = (g) => g.status !== 'offen' && (g.helfer === 'ich' || (g.eigen && !!g.helfer));
+  const nachrichtenVon = (g) => istLive() ? (db.nachrichten.has(g.id) ? db.nachrichten.get(g.id) : null) : (g.nachrichten || []);
+  function letzteFremde(g) {
+    if (istLive()) return db.letzte.get(g.id) || 0;
+    return (g.nachrichten || []).reduce((m, n) => (n.von === 'ich' ? m : Math.max(m, n.zeit)), 0);
+  }
+  const ungelesen = (g) => imChat(g) && letzteFremde(g) > (gelesen[g.id] || 0);
+  function alsGelesen(g) {
+    const t = letzteFremde(g);
+    if (!t || t <= (gelesen[g.id] || 0)) return;
+    gelesen[g.id] = t;
+    try { localStorage.setItem(GELESEN_SPEICHER, JSON.stringify(gelesen)); } catch (e) { /* nur für diese Sitzung */ }
+    renderAuftraege();
+  }
+  function zeitText(ms) {
+    const d = new Date(ms);
+    const uhr = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    const tage = Math.round((new Date(new Date().toDateString()) - new Date(d.toDateString())) / 86400000);
+    if (tage === 0) return uhr;
+    if (tage === 1) return `gestern, ${uhr}`;
+    return `${d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })}, ${uhr}`;
+  }
+  const nachrichtAusDb = (r) => ({ id: r.id, von: db.user && r.von === db.user.id ? 'ich' : 'sie', text: r.text, zeit: Date.parse(r.erstellt) || Date.now() });
+  async function ladeNachrichten(id) {
+    if (!istLive() || !db.user || db.nachrichten.has(id)) return;
+    db.nachrichten.set(id, null);
+    const { data, error } = await db.client.from('nachrichten').select('id, gesuch_id, von, text, erstellt')
+      .eq('gesuch_id', id).order('erstellt', { ascending: true }).limit(300);
+    if (error) meldung(fehlerText(error));
+    db.nachrichten.set(id, (data || []).map(nachrichtAusDb));
+    if (ui.offen === id) aktualisiereChat();
+  }
+  function neueNachricht(r) { // aus der Live-Aktualisierung
+    if (!r || !db.user) return;
+    const liste = db.nachrichten.get(r.gesuch_id);
+    if (Array.isArray(liste) && !liste.some((n) => n.id === r.id)) liste.push(nachrichtAusDb(r));
+    if (r.von !== db.user.id) {
+      db.letzte.set(r.gesuch_id, Math.max(db.letzte.get(r.gesuch_id) || 0, Date.parse(r.erstellt) || Date.now()));
+      const g = gesuche.find((x) => x.id === r.gesuch_id);
+      if (g && ui.offen !== g.id) meldung(`Neue Nachricht zu „${g.titel}“`);
+    }
+    if (ui.offen === r.gesuch_id) aktualisiereChat(); else renderAuftraege();
+  }
+  const DEMO_ANTWORTEN = ['Alles klar, danke dir!', 'Passt gut. Bis dann!', 'Super, dann machen wir das so.', 'Danke! Klingel einfach, wenn du da bist.'];
+  function demoNachricht(id, text, verzoegerung) {
+    setTimeout(() => {
+      const g = gesuche.find((x) => x.id === id);
+      if (istLive() || !g || g.helfer !== 'ich' || g.status === 'offen') return;
+      g.nachrichten = g.nachrichten || [];
+      g.nachrichten.push({ von: 'sie', text, zeit: Date.now() });
+      demoSpeichern();
+      if (ui.offen === id) aktualisiereChat();
+      else { renderAuftraege(); meldung(`Neue Nachricht von ${vorname(g.wer)}`); }
+    }, verzoegerung);
+  }
+  async function sendeNachricht(g, text) {
+    if (istLive()) {
+      const { data, error } = await db.client.rpc('nachricht_senden', { p_id: g.id, p_text: text });
+      if (error) throw error;
+      const liste = db.nachrichten.get(g.id);
+      if (Array.isArray(liste) && !liste.some((n) => n.id === data)) liste.push({ id: data, von: 'ich', text, zeit: Date.now() });
+      return;
+    }
+    g.nachrichten = g.nachrichten || [];
+    g.nachrichten.push({ von: 'ich', text, zeit: Date.now() });
+    demoSpeichern();
+    const nr = g.nachrichten.filter((n) => n.von === 'ich').length;
+    demoNachricht(g.id, DEMO_ANTWORTEN[(nr - 1) % DEMO_ANTWORTEN.length], 1800);
+  }
+
+  /* ===== Melden ===== */
+  const MELDEGRUENDE = [['betrug', 'Betrug oder Abzocke'], ['unangemessen', 'Beleidigend oder unangemessen'], ['gefaehrlich', 'Gefährlich oder verboten'],
+    ['schwarzarbeit', 'Eher ein regelmäßiger Job als Nachbarschaftshilfe'], ['anderes', 'Etwas anderes']];
+  async function melde(g, grund, text) {
+    if (istLive()) {
+      const { error } = await db.client.rpc('melden', { p_id: g.id, p_grund: grund, p_text: text });
+      if (error) throw error;
+      db.gemeldet.add(g.id);
+      return;
+    }
+    g.gemeldet = true;
+    demoSpeichern();
+  }
+
   // Statuswechsel: Live über Datenbankfunktionen, Demo direkt hier
   async function aendereStatus(g, aktion) {
     if (istLive()) {
@@ -404,8 +509,8 @@
       await neuLaden();
       return;
     }
-    if (aktion === 'zusagen') { g.status = 'zugesagt'; g.helfer = 'ich'; }
-    else if (aktion === 'absagen') { g.status = 'offen'; g.helfer = null; }
+    if (aktion === 'zusagen') { g.status = 'zugesagt'; g.helfer = 'ich'; g.nachrichten = []; if (g.antwort) demoNachricht(g.id, g.antwort, 1500); }
+    else if (aktion === 'absagen') { g.status = 'offen'; g.helfer = null; g.nachrichten = []; }
     else if (aktion === 'erledigt') g.status = 'erledigt';
     else if (aktion === 'bestaetigen') g.status = 'bezahlt';
     else if (aktion === 'rueckzug') gesuche = gesuche.filter((x) => x.id !== g.id);
@@ -447,7 +552,7 @@
     else if (!db.profil) el.innerHTML = '<button type="button" class="btn btn-secondary btn-klein" data-panel="anmelden">Anmelden</button>';
     else el.innerHTML = `<button type="button" class="avatar-btn" data-panel="konto" aria-label="Dein Konto">${esc(kuerzel(db.profil))}</button>`;
     $('#fuss').textContent = istLive()
-      ? 'Testphase: Die Aufwandsentschädigung zahlt ihr direkt untereinander. Hand drauf vermittelt nur und nimmt noch keine Gebühr.'
+      ? 'Testphase: Die Aufwandsentschädigung zahlt ihr direkt untereinander. Hand Drauf vermittelt nur und nimmt noch keine Gebühr.'
       : 'Prototyp mit erfundenen Beispiel-Gesuchen in Garbsen. Es fließt kein echtes Geld.';
     $('#reset-knopf').hidden = istLive();
     $('#adresse-optional').hidden = istLive();
@@ -496,6 +601,10 @@
   }
 
   function renderAuftraege() {
+    const neu = gesuche.filter(ungelesen).length;
+    $('#tab-punkt').hidden = !neu;
+    $('#tab-punkt-text').textContent = neu ? `, ${neu} ${neu === 1 ? 'neue Nachricht' : 'neue Nachrichten'}` : '';
+    const pills = (g) => `<span class="card-pills">${statusPill(g)}${ungelesen(g) ? '<span class="pill pill-neu">Neue Nachricht</span>' : ''}</span>`;
     const abschnitte = document.querySelectorAll('#view-auftraege .abschnitt');
     if (istLive() && !db.profil) {
       $('#summe').innerHTML = `<span class="h-klein">Deine Aufträge</span>
@@ -511,15 +620,15 @@
     const anteil = Math.min(100, verdient / CONFIG.freigrenze * 100);
     const rest = Math.max(0, CONFIG.freigrenze - verdient);
     $('#summe').innerHTML = `
-      <span class="h-klein">${istLive() ? 'Aufwandsentschädigungen (bestätigt)' : 'Verdient über Hand drauf'}</span>
+      <span class="h-klein">${istLive() ? 'Aufwandsentschädigungen (bestätigt)' : 'Verdient über Hand Drauf'}</span>
       <span class="summe-zahl">${euro(verdient)}</span>
       <div class="meter" role="img" aria-label="${euro(verdient)} von ${euro(CONFIG.freigrenze)} steuerfreiem Betrag"><span style="width:${anteil.toFixed(1)}%"></span></div>
       <span class="summe-hint">Bis ${CONFIG.freigrenze} € Gewinn im Jahr steuerfrei (§ 22 Nr. 3 EStG). Noch ${euro(rest)} frei.</span>`;
     $('#zusagen').innerHTML = zusagen.length
-      ? zusagen.map((g) => karteHTML(g, statusPill(g))).join('')
+      ? zusagen.map((g) => karteHTML(g, pills(g))).join('')
       : `<p class="leer-klein">Noch keine Zusagen. Such dir in der Liste oder auf der Karte einen Job in deiner Nähe.</p>`;
     $('#eigene').innerHTML = eigene.length
-      ? eigene.map((g) => karteHTML(g, statusPill(g))).join('')
+      ? eigene.map((g) => karteHTML(g, pills(g))).join('')
       : `<p class="leer-klein">Du hast noch kein Gesuch erstellt. Über „Hilfe suchen“ geht das in einer Minute.</p>`;
   }
 
@@ -755,7 +864,7 @@
     } else {
       const bewertung = g.bewertungen
         ? `${icon('stern', 'i-xs i-fill')}${g.sterne.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} · ${g.bewertungen} ${g.bewertungen === 1 ? 'Bewertung' : 'Bewertungen'}`
-        : 'Neu bei Hand drauf';
+        : 'Neu bei Hand Drauf';
       html += `<div class="person">
         <span class="avatar" aria-hidden="true">${esc(g.initialen)}</span>
         <div>
@@ -806,7 +915,6 @@
       html += `<ol class="schritte" aria-label="Fortschritt">${namen.map((n, i) =>
         `<li class="${i <= idx ? 'is-done' : ''} ${i === idx ? 'is-current' : ''}"><span class="punkt">${i <= idx ? icon('check', 'i-xs') : ''}</span>${n}</li>`
       ).join('')}</ol>`;
-      if (!live && g.helfer === 'ich' && g.antwort) html += `<div class="nachricht"><span class="nachricht-von">Nachricht von ${esc(vn)}</span><p>${esc(g.antwort)}</p></div>`;
     }
 
     const sterneHTML = (b, wen) => `<div class="bewerten"><span><strong>${b ? 'Danke für deine Bewertung.' : `Wie war es mit ${esc(wen)}?`}</strong></span>
@@ -842,7 +950,54 @@
     } else if (g.status === 'bezahlt') {
       html += `<div class="status-box good">${icon('check')}${live ? `${esc(vn)} hat bestätigt` : `${euro(auszahlung(g))} ausgezahlt`}</div>` + sterneHTML(g.meineBewertung || 0, vn);
     }
-    return html;
+    if (imChat(g)) {
+      html += chatHTML(g);
+      if (live) ladeNachrichten(g.id);
+    }
+    return html + meldenHTML(g);
+  }
+
+  function chatListeHTML(g) {
+    const liste = nachrichtenVon(g);
+    if (liste === null) return '<p class="chat-leer">Nachrichten werden geladen …</p>';
+    if (!liste.length) return '<p class="chat-leer">Noch keine Nachrichten. Sprecht hier ab, wann es passt.</p>';
+    return liste.map((n) => `<div class="blase ${n.von === 'ich' ? 'blase-ich' : ''}">
+        <span class="sr-only">${n.von === 'ich' ? 'Du' : esc(g.eigen ? vorname(g.helferName) : vorname(g.wer))}:</span>
+        <p>${esc(n.text)}</p><time datetime="${new Date(n.zeit).toISOString()}">${zeitText(n.zeit)}</time>
+      </div>`).join('');
+  }
+  function chatHTML(g) {
+    const partner = esc((g.eigen ? vorname(g.helferName) : vorname(g.wer)) || 'deinem Nachbarn');
+    return `<section class="chat" aria-labelledby="chat-titel">
+        <h3 class="chat-titel" id="chat-titel">${icon('sprechblase', 'i-sm')}Nachrichten mit ${partner}</h3>
+        <div class="chat-liste" id="chat-liste" role="log" aria-live="polite" tabindex="0">${chatListeHTML(g)}</div>
+        <form class="chat-form" id="chat-form" autocomplete="off">
+          <label class="sr-only" for="chat-text">Nachricht an ${partner}</label>
+          <textarea id="chat-text" rows="1" maxlength="1000" placeholder="Nachricht an ${partner}" enterkeyhint="send"></textarea>
+          <button type="submit" class="chat-senden" aria-label="Nachricht senden">${icon('senden')}</button>
+        </form>
+        <p class="klein">Nur ihr beide seht diese Nachrichten. Teile keine Bank- oder Passwortdaten.</p>
+      </section>`;
+  }
+  function meldenHTML(g) {
+    const live = istLive();
+    const meldbar = !g.eigen || (live && !!g.helfer && g.status !== 'offen');
+    if (!meldbar) return '';
+    if (live ? db.gemeldet.has(g.id) : g.gemeldet) return `<p class="gemeldet">${icon('flagge', 'i-xs')}Gemeldet. Danke, wir prüfen das.</p>`;
+    const wer = g.eigen ? (vorname(g.helferName) || 'Helfer') : vorname(g.wer);
+    if (!ui.melden) return `<button type="button" class="link-btn link-melden" data-aktion="melden-frage">${icon('flagge', 'i-sm')}${g.eigen ? `${esc(wer)} melden` : 'Gesuch melden'}</button>`;
+    const dis = ui.busy ? 'disabled aria-busy="true"' : '';
+    return `<form class="melden-box" id="melden-form" novalidate>
+        <fieldset class="feld"><legend>Was stimmt nicht?</legend>
+          ${MELDEGRUENDE.map(([w, n]) => `<label class="check"><input type="radio" name="grund" id="melden-${w}" value="${w}"><span>${n}</span></label>`).join('')}
+        </fieldset>
+        <div class="feld"><label for="melden-text">Was ist passiert? (freiwillig)</label>
+          <textarea id="melden-text" maxlength="500" rows="3"></textarea></div>
+        <p class="fehler" id="melden-fehler" role="alert" hidden></p>
+        <div class="btn-row"><button type="submit" class="btn btn-danger-solid" ${dis}>Meldung senden</button>
+          <button type="button" class="btn btn-secondary" data-aktion="melden-nein">Abbrechen</button></div>
+        <p class="klein">Wir prüfen jede Meldung. ${esc(wer)} erfährt nicht, wer gemeldet hat. Bei Gefahr ruf die Polizei unter 110 an.</p>
+      </form>`;
   }
 
   function sheetAnmeldenHTML() {
@@ -871,7 +1026,7 @@
         <div class="feld"><label for="auth-email">E-Mail</label><input id="auth-email" type="email" autocomplete="email" required></div>
         <div class="feld"><label for="auth-passwort">Passwort</label><input id="auth-passwort" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" minlength="8" required>${reg ? '<p class="feld-hinweis" style="margin-top:0">Mindestens 8 Zeichen.</p>' : ''}</div>
         ${reg ? `<label class="check"><input type="checkbox" id="auth-18"><span>Ich bin mindestens 18 Jahre alt.</span></label>
-        <label class="check"><input type="checkbox" id="auth-regeln"><span>Ich habe verstanden: Hand drauf vermittelt nur. Die Absprache und Bezahlung läuft direkt zwischen uns Nachbarn, gelegentlich und in kleinem Umfang.</span></label>` : ''}
+        <label class="check"><input type="checkbox" id="auth-regeln"><span>Ich habe verstanden: Hand Drauf vermittelt nur. Die Absprache und Bezahlung läuft direkt zwischen uns Nachbarn, gelegentlich und in kleinem Umfang.</span></label>` : ''}
         <p class="fehler" id="auth-fehler" role="alert" hidden></p>
         <button type="submit" class="btn btn-primary" ${ui.busy ? 'disabled aria-busy="true"' : ''}>${reg ? 'Konto erstellen' : 'Anmelden'}</button>
       </form>`;
@@ -918,7 +1073,34 @@
       <p class="klein">Gespeichert nur auf diesem Gerät.</p>`;
   }
 
+  // Beim Neuzeichnen bleiben Eingaben, Auswahl und Fokus erhalten (z. B. wenn eine Nachricht eintrifft)
+  let sheetSchluessel = null;
+  function sheetZustand() {
+    const r = $('#sheet-inhalt');
+    const felder = {};
+    r.querySelectorAll('textarea[id], input[id]:not([type="radio"]):not([type="checkbox"]):not([type="password"])').forEach((e) => { felder[e.id] = e.value; });
+    const gewaehlt = [...r.querySelectorAll('input[type="radio"]:checked, input[type="checkbox"]:checked')].map((e) => e.id).filter(Boolean);
+    const a = document.activeElement;
+    return { felder, gewaehlt, fokus: a && r.contains(a) && a.id ? a.id : null };
+  }
+  function zustandSetzen(z) {
+    Object.entries(z.felder).forEach(([id, v]) => { const e = document.getElementById(id); if (e && 'value' in e) e.value = v; });
+    z.gewaehlt.forEach((id) => { const e = document.getElementById(id); if (e) e.checked = true; });
+    if (z.fokus) { const e = document.getElementById(z.fokus); if (e && !e.disabled) e.focus({ preventScroll: true }); }
+  }
+  function aktualisiereChat() {
+    const g = gesuche.find((x) => x.id === ui.offen);
+    const liste = $('#chat-liste');
+    if (!g || !liste) return;
+    const unten = liste.scrollHeight - liste.scrollTop - liste.clientHeight < 60;
+    liste.innerHTML = chatListeHTML(g);
+    if (unten) liste.scrollTop = liste.scrollHeight;
+    alsGelesen(g);
+  }
+
   function renderSheet() {
+    const schluessel = ui.panel || ui.offen;
+    const zustand = schluessel && schluessel === sheetSchluessel ? sheetZustand() : null;
     let html = '';
     if (ui.panel === 'ansicht') html = sheetAnsichtHTML();
     else if (ui.panel === 'anmelden') html = sheetAnmeldenHTML();
@@ -929,6 +1111,14 @@
       html = sheetGesuchHTML(g);
     }
     $('#sheet-inhalt').innerHTML = html;
+    sheetSchluessel = schluessel;
+    if (zustand) zustandSetzen(zustand);
+    const liste = $('#chat-liste');
+    if (liste) {
+      liste.scrollTop = liste.scrollHeight;
+      const g = gesuche.find((x) => x.id === ui.offen);
+      if (g) alsGelesen(g);
+    }
   }
 
   function renderAlles() {
@@ -977,6 +1167,7 @@
     ui.offen = id;
     ui.panel = null;
     ui.rueckzug = false;
+    ui.melden = false;
     ui.zuletzt = ausloeser || null;
     renderSheet();
     sheetZeigen();
@@ -998,6 +1189,7 @@
     const id = ui.offen;
     ui.offen = null;
     ui.panel = null;
+    sheetSchluessel = null;
     $('#backdrop').hidden = true;
     $('#sheet').hidden = true;
     document.body.classList.remove('sheet-offen');
@@ -1053,6 +1245,14 @@
       if (f) f.focus({ preventScroll: true });
       return;
     }
+    if (a === 'melden-frage' || a === 'melden-nein') {
+      if (a === 'melden-frage' && istLive() && !db.profil) { oeffnePanel('anmelden', 'Bitte melde dich an, um etwas zu melden.'); return; }
+      ui.melden = a === 'melden-frage';
+      renderSheet();
+      const f = ui.melden ? $('#melden-betrug') : $('#sheet [data-aktion="melden-frage"]');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
     if (!a && !t.dataset.stern) return;
     if (istLive() && !db.profil) {
       oeffnePanel('anmelden', a === 'zusagen' ? 'Melde dich an, um zu helfen. Danach kannst du direkt zusagen.' : 'Bitte melde dich an.');
@@ -1083,7 +1283,75 @@
   });
 
   // Anmelden und Registrieren
+  async function chatAbsenden() {
+    const g = gesuche.find((x) => x.id === ui.offen);
+    const feld = $('#chat-text');
+    if (!g || !feld) return;
+    const text = feld.value.trim();
+    if (!text) { feld.focus(); return; }
+    if (istLive() && !db.profil) { oeffnePanel('anmelden', 'Bitte melde dich an.'); return; }
+    $('#chat-form button[type="submit"]').disabled = true;
+    try {
+      await sendeNachricht(g, text);
+      const f = $('#chat-text');
+      if (f) f.value = '';
+      aktualisiereChat();
+      const l = $('#chat-liste');
+      if (l) l.scrollTop = l.scrollHeight;
+    } catch (err) {
+      meldung(fehlerText(err));
+    } finally {
+      const k = $('#chat-form button[type="submit"]');
+      if (k) k.disabled = false;
+      const f = $('#chat-text');
+      if (f) f.focus({ preventScroll: true });
+    }
+  }
+  async function meldungAbsenden() {
+    const g = gesuche.find((x) => x.id === ui.offen);
+    if (!g) return;
+    const wahl = $('#melden-form input[name="grund"]:checked');
+    if (!wahl) {
+      const f = $('#melden-fehler');
+      f.textContent = 'Bitte wähle einen Grund.';
+      f.hidden = false;
+      $('#melden-betrug').focus();
+      return;
+    }
+    const text = $('#melden-text').value.trim().slice(0, 500);
+    ui.busy = true;
+    renderSheet();
+    try {
+      await melde(g, wahl.value, text);
+      ui.melden = false;
+      meldung('Danke für deine Meldung. Wir prüfen sie.');
+    } catch (err) {
+      meldung(fehlerText(err));
+    } finally {
+      ui.busy = false;
+    }
+    renderSheet();
+    const f = $('#sheet .gemeldet, #sheet [data-aktion="melden-frage"], #melden-betrug');
+    if (f) { if (!f.hasAttribute('tabindex') && f.tagName === 'P') f.setAttribute('tabindex', '-1'); f.focus({ preventScroll: true }); }
+  }
+
+  // Enter sendet am Computer, Umschalt+Enter macht eine neue Zeile. Auf dem Handy: Senden-Knopf.
+  $('#sheet').addEventListener('keydown', (e) => {
+    if (e.target.id !== 'chat-text' || e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+    if (window.matchMedia('(pointer: coarse)').matches) return;
+    e.preventDefault();
+    chatAbsenden();
+  });
+  // Eingabefeld wächst mit dem Text (bis 5 Zeilen)
+  $('#sheet').addEventListener('input', (e) => {
+    if (e.target.id !== 'chat-text') return;
+    e.target.style.height = 'auto';
+    e.target.style.height = Math.min(e.target.scrollHeight, 140) + 'px';
+  });
+
   $('#sheet').addEventListener('submit', async (e) => {
+    if (e.target.id === 'chat-form') { e.preventDefault(); chatAbsenden(); return; }
+    if (e.target.id === 'melden-form') { e.preventDefault(); meldungAbsenden(); return; }
     if (e.target.id !== 'auth-form') return;
     e.preventDefault();
     const reg = ui.authModus === 'registrieren';
@@ -1094,7 +1362,7 @@
     if (reg && !$('#auth-vorname').value.trim()) return zeigeFehler('Bitte gib deinen Vornamen ein.', $('#auth-vorname'));
     if (!/^\S+@\S+\.\S+$/.test(email)) return zeigeFehler('Bitte gib eine gültige E-Mail-Adresse ein.', $('#auth-email'));
     if (passwort.length < (reg ? 8 : 1)) return zeigeFehler(reg ? 'Das Passwort braucht mindestens 8 Zeichen.' : 'Bitte gib dein Passwort ein.', $('#auth-passwort'));
-    if (reg && !$('#auth-18').checked) return zeigeFehler('Hand drauf ist erst ab 18 Jahren.', $('#auth-18'));
+    if (reg && !$('#auth-18').checked) return zeigeFehler('Hand Drauf ist erst ab 18 Jahren.', $('#auth-18'));
     if (reg && !$('#auth-regeln').checked) return zeigeFehler('Bitte bestätige, dass du die Regeln verstanden hast.', $('#auth-regeln'));
 
     const knopf = e.target.querySelector('button[type="submit"]');
@@ -1133,6 +1401,7 @@
 
   // Stadtteil im Konto ändern
   $('#sheet').addEventListener('change', async (e) => {
+    if (e.target.name === 'grund') { const f = $('#melden-fehler'); if (f) f.hidden = true; return; }
     if (e.target.id !== 'konto-stadtteil' || !db.profil) return;
     const neu = e.target.value;
     const { error } = await db.client.from('profile').update({ stadtteil: neu }).eq('id', db.profil.id);
@@ -1201,7 +1470,7 @@
     if (istLive()) {
       el.innerHTML = `
         <div class="kosten-zeile kosten-summe" style="border:0;padding:0;margin:0"><span>Du zahlst direkt</span><span>${euro(b)}</span></div>
-        <span class="kosten-hinweis">Die Aufwandsentschädigung gibst du der Person, die dir hilft. Hand drauf nimmt in der Testphase keine Gebühr.</span>`;
+        <span class="kosten-hinweis">Die Aufwandsentschädigung gibst du der Person, die dir hilft. Hand Drauf nimmt in der Testphase keine Gebühr.</span>`;
       return;
     }
     const g = CONFIG.gebuehrAuftraggeber;

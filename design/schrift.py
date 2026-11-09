@@ -6,9 +6,7 @@ from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.boundsPen import BoundsPen
 import functools
 
-import os
-# Ordner mit den Google-Fonts-Dateien (github.com/google/fonts, Unterordner ofl/)
-FONTS = os.environ.get('FONTS', 'fonts/ofl/')
+FONTS = '/tmp/claude-0/-home-claude/78f397be-ba23-569e-a338-ff688ea7efca/scratchpad/gfonts/ofl/'
 
 @functools.lru_cache(None)
 def schrift(datei, **achsen):
