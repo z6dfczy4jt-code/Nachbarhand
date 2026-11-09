@@ -11,7 +11,16 @@ import sys
 
 WURZEL = pathlib.Path(__file__).resolve().parent.parent
 SRC = WURZEL / 'src'
-LEAFLET_JS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'
+LEAFLET_JS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'   # nur Vorschau
+LEAFLET_LOKAL = 'assets/vendor/leaflet-1.9.4.js'                                # GitHub Pages
+# GitHub Pages: Schriften liegen in assets/fonts, damit keine Daten an Google gehen
+SCHRIFTEN_LOKAL = ('<link rel="preload" href="assets/fonts/atkinson-hyperlegible-400.woff" as="font" type="font/woff" crossorigin>\n'
+    '<style>\n'
+    "@font-face { font-family: 'Bricolage Grotesque'; src: url('assets/fonts/bricolage-grotesque.woff') format('woff'); font-weight: 600 800; font-display: swap; }\n"
+    "@font-face { font-family: 'Atkinson Hyperlegible'; src: url('assets/fonts/atkinson-hyperlegible-400.woff') format('woff'); font-weight: 400; font-display: swap; }\n"
+    "@font-face { font-family: 'Atkinson Hyperlegible'; src: url('assets/fonts/atkinson-hyperlegible-700.woff') format('woff'); font-weight: 700; font-display: swap; }\n"
+    '</style>')
+# Vorschau in Claude: Google Fonts (dort sind keine eigenen Dateien möglich)
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n'
          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
          '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700'
@@ -26,13 +35,15 @@ def teile(vorschau):
     leaflet_css = (SRC / 'vendor' / 'leaflet-1.9.4.css').read_text()
     styles = (SRC / 'styles.css').read_text()
     body = (SRC / 'body.html').read_text().replace('<!--KOPFZEICHEN-->', (SRC / 'kopfzeichen.svg').read_text().strip())
-    app = (SRC / 'symbole.js').read_text() + '\n' + (SRC / 'app.js').read_text()
+    app = '\n'.join((SRC / n).read_text() for n in ('symbole.js', 'recht.js', 'app.js'))
     if vorschau:
         alt = 'const VORSCHAU = false;'
         assert alt in app
         app = app.replace(alt, 'const VORSCHAU = true;')
-    kopf = f'{FRUEH}\n{FONTS}\n<style>\n{leaflet_css}</style>\n<style>\n{styles}</style>'
-    rumpf = f'{body}\n<script src="{LEAFLET_JS}"></script>\n<script>\n{app}</script>\n'
+    schriften = FONTS if vorschau else SCHRIFTEN_LOKAL
+    leaflet = LEAFLET_JS if vorschau else LEAFLET_LOKAL
+    kopf = f'{FRUEH}\n{schriften}\n<style>\n{leaflet_css}</style>\n<style>\n{styles}</style>'
+    rumpf = f'{body}\n<script src="{leaflet}"></script>\n<script>\n{app}</script>\n'
     return kopf, rumpf
 
 

@@ -511,6 +511,29 @@ begin
 end;
 $$;
 
+-- Eigenes Konto löschen (Recht auf Löschung, Art. 17 DSGVO).
+-- Laufende Zusagen werden freigegeben, damit andere ihre Gesuche wieder ausschreiben können.
+-- Profil, eigene Gesuche, Adressen, Nachrichten und Bewertungen fallen per Kaskade weg.
+create or replace function public.konto_loeschen()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  ich uuid := auth.uid();
+begin
+  if ich is null then
+    raise exception 'Bitte melde dich zuerst an.';
+  end if;
+  delete from public.nachrichten
+  where gesuch_id in (select id from public.gesuche where helfer = ich and status = 'zugesagt');
+  update public.gesuche set status = 'offen', helfer = null, geaendert = now()
+  where helfer = ich and status = 'zugesagt';
+  delete from auth.users where id = ich;
+end;
+$$;
+
 -- Nur angemeldete Nutzer dürfen die Funktionen aufrufen
 revoke execute on function public.gesuch_erstellen(text, text, text, integer, text, text, text) from public, anon;
 revoke execute on function public.gesuch_zusagen(uuid) from public, anon;
@@ -521,6 +544,7 @@ revoke execute on function public.gesuch_zurueckziehen(uuid) from public, anon;
 revoke execute on function public.bewerten(uuid, integer) from public, anon;
 revoke execute on function public.nachricht_senden(uuid, text) from public, anon;
 revoke execute on function public.melden(uuid, text, text) from public, anon;
+revoke execute on function public.konto_loeschen() from public, anon;
 revoke execute on function public.neues_profil() from public, anon, authenticated;
 grant execute on function public.gesuch_erstellen(text, text, text, integer, text, text, text) to authenticated;
 grant execute on function public.gesuch_zusagen(uuid) to authenticated;
@@ -531,6 +555,7 @@ grant execute on function public.gesuch_zurueckziehen(uuid) to authenticated;
 grant execute on function public.bewerten(uuid, integer) to authenticated;
 grant execute on function public.nachricht_senden(uuid, text) to authenticated;
 grant execute on function public.melden(uuid, text, text) to authenticated;
+grant execute on function public.konto_loeschen() to authenticated;
 
 -- ---------------------------------------------------------------------
 -- Live-Aktualisierung: Änderungen an Gesuchen und neue Nachrichten sofort an die Geräte senden

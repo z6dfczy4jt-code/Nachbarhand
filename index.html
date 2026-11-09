@@ -10,9 +10,12 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <script>try{var a=JSON.parse(localStorage.getItem("handdrauf-ansicht")||"{}"),r=document.documentElement;if(a.thema==="dunkel"||a.thema==="hell")r.setAttribute("data-theme",a.thema==="dunkel"?"dark":"light");if(a.schrift==="gross"||a.schrift==="sehr-gross")r.setAttribute("data-schrift",a.schrift)}catch(e){}</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;800&display=swap">
+<link rel="preload" href="assets/fonts/atkinson-hyperlegible-400.woff" as="font" type="font/woff" crossorigin>
+<style>
+@font-face { font-family: 'Bricolage Grotesque'; src: url('assets/fonts/bricolage-grotesque.woff') format('woff'); font-weight: 600 800; font-display: swap; }
+@font-face { font-family: 'Atkinson Hyperlegible'; src: url('assets/fonts/atkinson-hyperlegible-400.woff') format('woff'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Atkinson Hyperlegible'; src: url('assets/fonts/atkinson-hyperlegible-700.woff') format('woff'); font-weight: 700; font-display: swap; }
+</style>
 <style>
 /* Leaflet 1.9.4, BSD-2-Clause, (c) Volodymyr Agafonkin, CloudMade; Bildverweise entfernt */
 /* required styles */
@@ -1051,6 +1054,26 @@ body { margin: 0; }
 .melden-box { display: grid; gap: 12px; padding: 14px; border-radius: 14px; background: var(--tile); }
 .melden-box .feld textarea { min-height: 72px; }
 .gemeldet { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--muted); font-size: 0.875rem; }
+
+/* Rechtliches */
+.app-fuss nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; padding-top: 8px; border-top: 1px solid var(--line); }
+.app-fuss a, .recht-nav a, .recht-links-form a { color: var(--muted); font-size: 0.875rem; font-weight: 700; text-underline-offset: 3px; }
+.app-fuss a { display: inline-flex; align-items: center; min-height: 44px; }
+.recht-links-form { margin: 0; }
+.recht-links-form a { color: var(--ink); font-size: inherit; }
+.recht { display: grid; gap: 10px; font-size: 1rem; line-height: 1.55; }
+.recht h3 { margin: 10px 0 0; font-family: var(--f-display); font-size: 1.0625rem; }
+.recht p, .recht ul, .recht ol { margin: 0; }
+.recht ul, .recht ol { padding-left: 1.3em; display: grid; gap: 6px; }
+.recht a { color: var(--ink); font-weight: 700; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.recht-kurz { padding: 12px 14px; border-radius: 12px; background: var(--tile); font-weight: 700; }
+.recht-hinweis { padding: 12px 14px; border-radius: 12px; background: var(--warn-bg); color: var(--warn); font-weight: 700; }
+.platzhalter { padding: 0 4px; border-radius: 4px; background: var(--warn-bg); color: var(--warn); font-weight: 700; }
+.recht-stand { color: var(--muted); font-size: 0.875rem; }
+.regel-liste li::marker { font-weight: 800; }
+.recht-nav { display: flex; flex-wrap: wrap; gap: 4px 18px; padding-top: 12px; border-top: 1px solid var(--line); }
+.recht-nav a { display: inline-flex; align-items: center; min-height: 44px; }
+.loeschen-box { background: var(--warn-bg); }
 </style>
 </head>
 <body>
@@ -1241,6 +1264,9 @@ body { margin: 0; }
       <button type="button" class="link-btn" data-reset id="reset-knopf">Beispieldaten zurücksetzen</button>
     </section>
   </main>
+  <footer class="app-fuss">
+    <nav aria-label="Rechtliches"><a href="#impressum">Impressum</a><a href="#datenschutz">Datenschutz</a><a href="#nutzung">Nutzungsbedingungen</a><a href="#regeln">Regeln für Nachbarn</a></nav>
+  </footer>
 </div>
 
 <nav class="tabs" aria-label="Hauptnavigation">
@@ -1259,7 +1285,7 @@ body { margin: 0; }
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="assets/vendor/leaflet-1.9.4.js"></script>
 <script>
 /* Tätigkeits-Symbole von Hand Drauf (erzeugt aus design/symbole.py, viewBox 0 0 48 48).
    Klassen: fi/si = Tinte, fw/sw = Fläche. Gelb ist fest. */
@@ -1272,6 +1298,166 @@ const KAT_SYMBOLE = {
   "technik": "<rect class=\"fw si\" x=\"13\" y=\"5\" width=\"20\" height=\"38\" rx=\"4.5\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\" transform=\"rotate(-6 23 24)\"/><rect x=\"16.5\" y=\"10\" width=\"13\" height=\"25\" rx=\"1.5\" fill=\"#F4B400\" stroke=\"none\" transform=\"rotate(-6 23 24)\"/><path class=\"si\" d=\"M21.5 39.2 h3.5\" fill=\"none\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" transform=\"rotate(-6 23 24)\"/><path class=\"fw si\" d=\"M30 8.5 C30 5.5 32 4 35 4 H40.5 C43.5 4 45 5.5 45 8.5 V11 C45 14 43.5 15.5 40.5 15.5 H36 L32 19 L32.8 15.2 C31 14.6 30 13 30 11 Z\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle class=\"fi\" cx=\"34.5\" cy=\"9.8\" r=\"1.3\"/><circle class=\"fi\" cx=\"37.8\" cy=\"9.8\" r=\"1.3\"/><circle class=\"fi\" cx=\"41.1\" cy=\"9.8\" r=\"1.3\"/>"
 };
 
+/* Rechtstexte von Hand Drauf: Impressum, Datenschutz, Nutzungsbedingungen, Regeln.
+   Fassung für die Testphase (Weg 1: ohne Bezahlung über die App). Vor dem öffentlichen Start
+   von einer Anwältin oder einem Anwalt für IT-Recht prüfen lassen.
+   b = Betreiberdaten aus CONFIG.betreiber, e = HTML-Escape-Funktion. */
+const RECHT_STAND = 'November 2026';
+function RECHT_TEXTE(b, e) {
+  const fehlt = !b.name || !b.anschrift || !b.email;
+  const name = b.name ? e(b.name) : '<span class="platzhalter">[Name des Betreibers]</span>';
+  const anschrift = b.anschrift ? e(b.anschrift).replace(/\n/g, '<br>') : '<span class="platzhalter">[Straße, Hausnummer, PLZ, Ort]</span>';
+  const mail = b.email ? `<a href="mailto:${e(b.email)}">${e(b.email)}</a>` : '<span class="platzhalter">[E-Mail-Adresse]</span>';
+  const offen = fehlt ? '<div class="recht-hinweis">Die Angaben zum Betreiber werden vor dem öffentlichen Start ergänzt.</div>' : '';
+  const stand = `<p class="recht-stand">Stand: ${RECHT_STAND}</p>`;
+  const verweis = (id, text) => `<a href="#${id}">${text}</a>`;
+
+  return {
+    impressum: {
+      titel: 'Impressum',
+      html: `${offen}
+        <h3>Angaben nach § 5 Digitale-Dienste-Gesetz</h3>
+        <p>${name}<br>${anschrift}</p>
+        <h3>Kontakt</h3>
+        <p>E-Mail: ${mail}${b.telefon ? `<br>Telefon: ${e(b.telefon)}` : ''}</p>
+        <h3>Zentrale Kontaktstelle nach dem Digital Services Act</h3>
+        <p>Für Behörden und Nutzer (Art. 11 und 12 DSA): ${mail}. Du kannst uns auf Deutsch oder Englisch schreiben.</p>
+        <h3>Verbraucherstreitbeilegung</h3>
+        <p>Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+        <h3>Haftung für Inhalte</h3>
+        <p>Gesuche und Nachrichten schreiben die Nutzer selbst. Wir prüfen sie nicht vorab, entfernen aber rechtswidrige Inhalte, sobald wir davon erfahren. Hinweise nehmen wir über „Melden“ in der App oder per E-Mail entgegen.</p>
+        ${stand}`
+    },
+
+    datenschutz: {
+      titel: 'Datenschutzerklärung',
+      html: `${offen}
+        <p class="recht-kurz">Kurz gesagt: Wir speichern nur, was für die Vermittlung nötig ist. Keine Werbung, kein Tracking, keine Weitergabe zu Werbezwecken.</p>
+
+        <h3>1. Wer ist verantwortlich?</h3>
+        <p>${name}<br>${anschrift}<br>E-Mail: ${mail}</p>
+
+        <h3>2. Wenn du die App aufrufst</h3>
+        <p>Die App liegt bei GitHub Pages, einem Dienst von GitHub (GitHub B.V., Prins Bernhardplein 200, 1097 JB Amsterdam, Niederlande, und GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA). Beim Aufruf verarbeitet GitHub technisch notwendige Daten wie deine IP-Adresse, Zeitpunkt, Browser und Betriebssystem, um die Seite auszuliefern und vor Angriffen zu schützen. Rechtsgrundlage ist unser berechtigtes Interesse an einer sicheren, erreichbaren App (Art. 6 Abs. 1 lit. f DSGVO). Für Übermittlungen in die USA stützt sich GitHub auf das EU-US Data Privacy Framework und auf EU-Standardvertragsklauseln.</p>
+        <p>Schriften und die Kartenbibliothek liefern wir selbst aus. Dafür werden keine Daten an Google oder andere Anbieter übertragen.</p>
+
+        <h3>3. Karte</h3>
+        <p>Die Kartenbilder lädt dein Gerät von den Servern der OpenStreetMap Foundation (St John’s Innovation Centre, Cowley Road, Cambridge, CB4 0WS, Großbritannien). Dabei wird deine IP-Adresse übertragen. Für Großbritannien gilt ein Angemessenheitsbeschluss der EU-Kommission. Sind diese Server nicht erreichbar, lädt die App die Kartenbilder von openstreetmap.de (FOSSGIS e.V., Deutschland) oder von CARTO. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO: Ohne Karte kann die App nicht zeigen, wo Hilfe gesucht wird.</p>
+        <p>Deinen eigenen Standort fragt die App nicht ab. Sie rechnet Entfernungen von der Mitte deines Stadtteils aus.</p>
+
+        <h3>4. Speicher auf deinem Gerät</h3>
+        <p>Die App speichert im Browser deines Geräts (localStorage): deine Ansicht-Einstellungen, welche Nachrichten du gelesen hast, die Beispieldaten der Demo und, wenn du angemeldet bist, deine Anmeldung. Diese Daten bleiben auf deinem Gerät. Sie sind für die Funktionen nötig, die du nutzt (§ 25 Abs. 2 Nr. 2 TDDDG). Cookies für Werbung oder Statistik setzen wir nicht.</p>
+
+        <h3>5. Wenn du ein Konto hast</h3>
+        <p>Für Konten, Gesuche und Nachrichten nutzen wir Supabase (Supabase Pte. Ltd., Singapur). Die Datenbank liegt in einem Rechenzentrum in Frankfurt am Main. Mit Supabase besteht ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO). Soweit Supabase für Betrieb und Support aus Ländern außerhalb der EU zugreift, gelten EU-Standardvertragsklauseln.</p>
+        <p>Gespeichert werden:</p>
+        <ul>
+          <li>E-Mail-Adresse und Passwort (nur verschlüsselt als Prüfwert)</li>
+          <li>Vorname, Anfangsbuchstabe des Nachnamens, Stadtteil und deine Bestätigung, dass du mindestens 18 bist</li>
+          <li>deine Gesuche, die Adresse zu einem Gesuch, deine Zusagen und Bewertungen</li>
+          <li>Nachrichten zu einem Auftrag und Meldungen, die du abschickst</li>
+        </ul>
+        <p>Rechtsgrundlage ist der Nutzungsvertrag mit dir (Art. 6 Abs. 1 lit. b DSGVO). Meldungen verarbeiten wir außerdem, um rechtswidrige Inhalte zu entfernen und Nutzer zu schützen (Art. 6 Abs. 1 lit. c und f DSGVO). Die Bestätigungs-E-Mail bei der Registrierung verschickt Supabase für uns.</p>
+        <p>Die Programmbibliothek für die Anmeldung lädt die App vom Dienst jsDelivr. Dabei wird deine IP-Adresse an dessen Server übertragen (Art. 6 Abs. 1 lit. f DSGVO).</p>
+
+        <h3>6. Wer sieht was?</h3>
+        <ul>
+          <li><strong>Alle, auch ohne Konto:</strong> offene Gesuche mit Vorname, Anfangsbuchstabe, Stadtteil, ungefährer Lage (100 bis 400 Meter um die Stadtteilmitte) und Bewertungsschnitt.</li>
+          <li><strong>Nur die Person, die zusagt:</strong> die genaue Adresse.</li>
+          <li><strong>Nur ihr beide:</strong> eure Nachrichten.</li>
+          <li><strong>Nur wir:</strong> Meldungen. Die gemeldete Person erfährt nicht, wer gemeldet hat.</li>
+        </ul>
+
+        <h3>7. Wie lange?</h3>
+        <p>Dein Konto und deine Daten speichern wir, bis du das Konto löschst. Das geht jederzeit in der App unter „Dein Konto“. Dann löschen wir dein Profil, deine Gesuche, Adressen, Nachrichten und Bewertungen. Meldungen bewahren wir höchstens zwölf Monate nach ihrer Bearbeitung auf, um wiederholte Verstöße erkennen zu können.</p>
+
+        <h3>8. Deine Rechte</h3>
+        <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Datenübertragbarkeit (Art. 15 bis 20 DSGVO). Verarbeitungen auf Grundlage unseres berechtigten Interesses kannst du widersprechen (Art. 21 DSGVO). Schreib uns dafür an ${mail}.</p>
+        <p>Du kannst dich außerdem bei einer Datenschutz-Aufsichtsbehörde beschweren. In Niedersachsen ist das die Landesbeauftragte für den Datenschutz Niedersachsen, Prinzenstraße 5, 30159 Hannover.</p>
+
+        <h3>9. Keine Werbung, kein Profiling</h3>
+        <p>Wir verkaufen keine Daten, zeigen keine Werbung und treffen keine automatisierten Entscheidungen über dich.</p>
+        ${stand}`
+    },
+
+    nutzung: {
+      titel: 'Nutzungsbedingungen',
+      html: `${offen}
+        <p class="recht-kurz">Fassung für die Testphase in Garbsen. In dieser Phase ist Hand Drauf kostenlos und vermittelt nur.</p>
+
+        <h3>1. Was Hand Drauf ist</h3>
+        <p>Hand Drauf ist eine Plattform, auf der sich Nachbarn in Garbsen bei kleinen Dingen helfen: Wer Hilfe braucht, stellt ein Gesuch ein, wer helfen möchte, sagt zu. Betreiber ist ${name} (siehe ${verweis('impressum', 'Impressum')}).</p>
+        <p>Die Absprache über eine Hilfe kommt nur zwischen euch Nutzern zustande. Hand Drauf ist nicht Vertragspartner, nicht Arbeitgeber und nicht Auftraggeber.</p>
+
+        <h3>2. Kosten</h3>
+        <p>In der Testphase ist die Nutzung kostenlos. Die Aufwandsentschädigung zahlt ihr direkt untereinander. Sollte Hand Drauf später Gebühren einführen, kündigen wir das vorher an. Gebühren fallen erst an, wenn du ihnen zustimmst.</p>
+
+        <h3>3. Dein Konto</h3>
+        <ul>
+          <li>Ein Konto darf nur anlegen, wer mindestens 18 Jahre alt ist.</li>
+          <li>Deine Angaben müssen stimmen. Jede Person hat nur ein Konto.</li>
+          <li>Halte dein Passwort geheim. Du bist für alles verantwortlich, was über dein Konto passiert.</li>
+        </ul>
+
+        <h3>4. Nachbarschaftshilfe, kein Job</h3>
+        <p>Hand Drauf ist für gelegentliche Hilfe gegen eine kleine Aufwandsentschädigung gedacht, nicht für regelmäßige oder gewerbliche Arbeit. Deshalb gilt:</p>
+        <ul>
+          <li>höchstens 50 € pro Gesuch,</li>
+          <li>höchstens 5 laufende Gesuche pro Person,</li>
+          <li>höchstens 8 Zusagen in 30 Tagen und höchstens 2 für dieselbe Person,</li>
+          <li>keine Daueraufträge und keine Leistungen, für die man ein Gewerbe oder eine Ausbildung braucht.</li>
+        </ul>
+        <p>Nicht erlaubt sind insbesondere: Arbeiten an Strom-, Gas- oder Wasserleitungen, Arbeiten in gefährlicher Höhe, Fahrten gegen Bezahlung, Pflege und medizinische Hilfe, die Betreuung von Kindern ohne Anwesenheit der Eltern sowie alles, was gegen Gesetze verstößt.</p>
+
+        <h3>5. Steuern und Sozialleistungen</h3>
+        <p>Für Steuern und Meldepflichten ist jede Person selbst verantwortlich. Einkünfte aus gelegentlichen Leistungen bleiben bis unter 256 € Gewinn im Jahr steuerfrei (§ 22 Nr. 3 EStG). Wer Bürgergeld oder andere Leistungen bezieht, muss Einnahmen dem Jobcenter oder Amt melden.</p>
+
+        <h3>6. Umgang miteinander</h3>
+        <ul>
+          <li>Bleib freundlich und ehrlich, in Gesuchen wie in Nachrichten. Halte dich an die ${verweis('regeln', 'Regeln für Nachbarn')}.</li>
+          <li>Die Adresse, die du nach einer Zusage siehst, darfst du nur für diesen Auftrag nutzen.</li>
+          <li>Keine Werbung, keine Weitergabe von Daten anderer.</li>
+        </ul>
+
+        <h3>7. Melden und Sperren</h3>
+        <p>Über „Melden“ kannst du Gesuche und beteiligte Personen melden. Wir prüfen jede Meldung. Verstößt etwas gegen Gesetze oder diese Bedingungen, können wir Inhalte entfernen und Konten vorübergehend oder dauerhaft sperren. Wir sagen dir, was wir entschieden haben und warum. Bist du anderer Meinung, schreib uns an ${mail}.</p>
+
+        <h3>8. Haftung</h3>
+        <p>Für Schäden bei einer Hilfe haftet ihr untereinander nach den gesetzlichen Regeln. Prüf vorher, ob deine private Haftpflichtversicherung Schäden bei Gefälligkeiten abdeckt.</p>
+        <p>Hand Drauf haftet unbeschränkt bei Vorsatz und grober Fahrlässigkeit sowie bei Verletzung von Leben, Körper oder Gesundheit. Bei leichter Fahrlässigkeit haften wir nur, wenn wir eine wesentliche Pflicht verletzen, auf die du vertrauen darfst, und nur für den typischerweise vorhersehbaren Schaden. Die Haftung nach dem Produkthaftungsgesetz bleibt unberührt.</p>
+
+        <h3>9. Verfügbarkeit</h3>
+        <p>Hand Drauf ist in der Testphase. Funktionen können sich ändern oder zeitweise nicht verfügbar sein.</p>
+
+        <h3>10. Ende der Nutzung</h3>
+        <p>Du kannst dein Konto jederzeit in der App löschen. Wir können die Nutzung mit einer Frist von zwei Wochen beenden, bei schweren Verstößen auch sofort.</p>
+
+        <h3>11. Änderungen</h3>
+        <p>Ändern sich diese Bedingungen, informieren wir dich vorher per E-Mail. Änderungen, die dich schlechter stellen, gelten erst, wenn du zustimmst.</p>
+
+        <h3>12. Recht</h3>
+        <p>Es gilt deutsches Recht. Zwingende Verbraucherschutzvorschriften des Landes, in dem du wohnst, bleiben unberührt.</p>
+        ${stand}`
+    },
+
+    regeln: {
+      titel: 'Regeln für Nachbarn',
+      html: `<p class="recht-kurz">Damit Hand Drauf für alle angenehm bleibt, ob 18 oder 80.</p>
+        <ol class="regel-liste">
+          <li><strong>Ehrlich beschreiben.</strong> Was ist zu tun, wie lange dauert es, was ist schon da?</li>
+          <li><strong>Fair bezahlen.</strong> Die Aufwandsentschädigung steht vorher fest und wird nach der Hilfe gezahlt, nicht vorab.</li>
+          <li><strong>Zusagen halten.</strong> Wenn etwas dazwischenkommt, sag so früh wie möglich in den Nachrichten ab.</li>
+          <li><strong>Freundlich bleiben.</strong> Keine Beleidigungen, kein Druck, keine Anmache.</li>
+          <li><strong>Sicherheit geht vor.</strong> Lass niemanden auf wackelige Leitern, an Strom oder Gas. Bei Unsicherheit: lieber eine Fachfirma.</li>
+          <li><strong>Privat bleibt privat.</strong> Adresse und Nachrichten nur für den Auftrag nutzen. Keine Bank- oder Passwortdaten teilen.</li>
+          <li><strong>Gelegentlich, nicht ständig.</strong> Hand Drauf ist Nachbarschaftshilfe, kein Nebenjob.</li>
+          <li><strong>Etwas stimmt nicht?</strong> Nutze „Melden“. Bei Gefahr ruf die Polizei unter 110 an.</li>
+        </ol>
+        <p>Weitere Einzelheiten stehen in den ${verweis('nutzung', 'Nutzungsbedingungen')}.</p>`
+    }
+  };
+}
+
 (() => {
   'use strict';
 
@@ -1281,11 +1467,13 @@ const KAT_SYMBOLE = {
 
   // Zugang zur Datenbank (Supabase). Beide Werte sind öffentlich und dürfen im Code stehen.
   // Leer = Demo-Modus mit erfundenen Beispieldaten.
+  // Supabase-Projekt „hand-drauf“ (Frankfurt). Beide Werte sind öffentlich; die Zugriffsregeln in der Datenbank schützen die Daten.
+  // Niemals den Secret- oder service_role-Key hier eintragen.
   const LIVE = {
-    url: '',
-    key: ''
+    url: 'https://hgfwbjesolgneyapehta.supabase.co',
+    key: 'sb_publishable_aHSISOj3lPHJwpWqa64gnA_iLcJV1w3'
   };
-  const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';
+  const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js';
 
   /* ===== Einstellungen: Gebühren, Regeln und Karte hier anpassen ===== */
   const CONFIG = {
@@ -1295,7 +1483,9 @@ const KAT_SYMBOLE = {
     maxBetrag: 50,             // Obergrenze für Nachbarschaftshilfe
     freigrenze: 255,           // § 22 Nr. 3 EStG: unter 256 € Gewinn im Jahr steuerfrei
     bereichMeter: 250,         // Radius des ungefähren Bereichs um ein Gesuch
-    ich: { name: 'Tim', initialen: 'TS', stadtteil: 'Garbsen-Mitte', lat: 52.4248, lng: 9.5962 } // Demo-Person
+    ich: { name: 'Tim', initialen: 'TS', stadtteil: 'Garbsen-Mitte', lat: 52.4248, lng: 9.5962 }, // Demo-Person
+    // Betreiber für Impressum und Datenschutz. Vor dem öffentlichen Start ausfüllen.
+    betreiber: { name: '', anschrift: '', email: '', telefon: '' }
   };
 
   const KARTE = {
@@ -1401,6 +1591,7 @@ const KAT_SYMBOLE = {
 
   const SPEICHER = 'nachbarhand-prototyp-v2';
   const VIEWS = ['entdecken', 'karte', 'neu', 'auftraege'];
+  const RECHT = RECHT_TEXTE(CONFIG.betreiber, (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
   const EIGEN_VERSATZ = [[180, -150], [-160, 170], [220, 160], [-210, -190]]; // Demo: Meter Nord/Ost ab deinem Standort
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -1439,7 +1630,7 @@ const KAT_SYMBOLE = {
   }
 
   let gesuche = [];
-  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, zuletzt: null, busy: false };
+  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, zuletzt: null, busy: false };
 
   /* ===== Ansicht: Design, Schriftgröße, Startseite (nur auf diesem Gerät gespeichert) ===== */
   const ANSICHT_SPEICHER = 'handdrauf-ansicht';
@@ -1540,6 +1731,9 @@ const KAT_SYMBOLE = {
     if (/email not confirmed/i.test(m)) return 'Bitte bestätige zuerst deine E-Mail-Adresse über den Link in der E-Mail.';
     if (/already registered|already been registered/i.test(m)) return 'Für diese E-Mail gibt es schon ein Konto. Melde dich an.';
     if (/password should be at least|weak password/i.test(m)) return 'Das Passwort ist zu kurz oder zu einfach. Nimm mindestens 8 Zeichen.';
+    if (/email address not authorized|email_address_not_authorized/i.test(m)) return 'Die Registrierung ist gerade nur für das Test-Team freigeschaltet. Bitte versuch es bald noch einmal.';
+    if (/email rate limit/i.test(m)) return 'Gerade wurden zu viele Bestätigungs-E-Mails verschickt. Bitte versuch es in einer Stunde noch einmal.';
+    if (/signups? not allowed|signup is disabled/i.test(m)) return 'Neue Registrierungen sind gerade geschlossen.';
     if (/rate limit|too many/i.test(m)) return 'Zu viele Versuche. Warte ein paar Minuten.';
     if (/jwt|permission denied/i.test(m)) return 'Deine Anmeldung ist abgelaufen. Bitte melde dich neu an.';
     return m || 'Etwas ist schiefgelaufen. Versuch es noch einmal.';
@@ -2300,7 +2494,8 @@ const KAT_SYMBOLE = {
         <div class="feld"><label for="auth-email">E-Mail</label><input id="auth-email" type="email" autocomplete="email" required></div>
         <div class="feld"><label for="auth-passwort">Passwort</label><input id="auth-passwort" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" minlength="8" required>${reg ? '<p class="feld-hinweis" style="margin-top:0">Mindestens 8 Zeichen.</p>' : ''}</div>
         ${reg ? `<label class="check"><input type="checkbox" id="auth-18"><span>Ich bin mindestens 18 Jahre alt.</span></label>
-        <label class="check"><input type="checkbox" id="auth-regeln"><span>Ich habe verstanden: Hand Drauf vermittelt nur. Die Absprache und Bezahlung läuft direkt zwischen uns Nachbarn, gelegentlich und in kleinem Umfang.</span></label>` : ''}
+        <label class="check"><input type="checkbox" id="auth-regeln"><span>Ich akzeptiere die Nutzungsbedingungen. Hand Drauf vermittelt nur, die Absprache und Bezahlung läuft direkt zwischen uns Nachbarn, gelegentlich und in kleinem Umfang.</span></label>
+        <p class="klein recht-links-form">Lies vorher die <a href="#nutzung" target="_blank" rel="noopener">Nutzungsbedingungen</a> und die <a href="#datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a> (öffnen in neuem Tab).</p>` : ''}
         <p class="fehler" id="auth-fehler" role="alert" hidden></p>
         <button type="submit" class="btn btn-primary" ${ui.busy ? 'disabled aria-busy="true"' : ''}>${reg ? 'Konto erstellen' : 'Anmelden'}</button>
       </form>`;
@@ -2325,7 +2520,24 @@ const KAT_SYMBOLE = {
       </div>
       <p class="klein">Angemeldet als ${esc(db.user && db.user.email)}. Andere sehen nur deinen Vornamen, den Anfangsbuchstaben und deinen Stadtteil.</p>
       <div class="feld"><label for="konto-stadtteil">Dein Stadtteil</label><select id="konto-stadtteil">${stadtteilOptionen(p.stadtteil, false)}</select></div>
-      <button type="button" class="btn btn-secondary" data-abmelden ${ui.busy ? 'disabled' : ''}>Abmelden</button>`;
+      <button type="button" class="btn btn-secondary" data-abmelden ${ui.busy ? 'disabled' : ''}>Abmelden</button>
+      <p class="klein recht-links-form"><a href="#nutzung">Nutzungsbedingungen</a> · <a href="#datenschutz">Datenschutz</a> · <a href="#impressum">Impressum</a></p>
+      ${ui.loeschen
+        ? `<div class="bestaetigen-box loeschen-box"><p><strong>Konto wirklich löschen?</strong> Dein Profil, deine Gesuche, Adressen, Nachrichten und Bewertungen werden gelöscht. Laufende Zusagen werden freigegeben. Das lässt sich nicht rückgängig machen.</p>
+            <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-konto-loeschen ${ui.busy ? 'disabled aria-busy="true"' : ''}>Endgültig löschen</button>
+            <button type="button" class="btn btn-secondary" data-loeschen-nein>Abbrechen</button></div></div>`
+        : `<button type="button" class="link-btn link-melden" data-loeschen-frage>Konto löschen</button>`}`;
+  }
+
+  function sheetRechtHTML(name) {
+    const r = RECHT[name];
+    return `<div class="sheet-top">
+        <span class="eyebrow">Rechtliches</span>
+        <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
+      </div>
+      <h2 id="sheet-titel">${r.titel}</h2>
+      <div class="recht">${r.html}</div>
+      <nav class="recht-nav" aria-label="Weitere Rechtstexte">${Object.keys(RECHT).filter((k) => k !== name).map((k) => `<a href="#${k}">${RECHT[k].titel}</a>`).join('')}</nav>`;
   }
 
   function sheetAnsichtHTML() {
@@ -2376,7 +2588,8 @@ const KAT_SYMBOLE = {
     const schluessel = ui.panel || ui.offen;
     const zustand = schluessel && schluessel === sheetSchluessel ? sheetZustand() : null;
     let html = '';
-    if (ui.panel === 'ansicht') html = sheetAnsichtHTML();
+    if (RECHT[ui.panel]) html = sheetRechtHTML(ui.panel);
+    else if (ui.panel === 'ansicht') html = sheetAnsichtHTML();
     else if (ui.panel === 'anmelden') html = sheetAnmeldenHTML();
     else if (ui.panel === 'konto') html = sheetKontoHTML();
     else {
@@ -2426,7 +2639,8 @@ const KAT_SYMBOLE = {
   }
   window.addEventListener('hashchange', () => {
     const v = location.hash.slice(1);
-    if (VIEWS.includes(v)) zeige(v);
+    if (VIEWS.includes(v)) { if (RECHT[ui.panel]) schliessen(); zeige(v); }
+    else if (RECHT[v]) oeffnePanel(v);
   });
 
   function sheetZeigen() {
@@ -2453,6 +2667,7 @@ const KAT_SYMBOLE = {
     ui.offen = null;
     ui.panel = name;
     ui.authModus = 'anmelden';
+    ui.loeschen = false;
     ui.authGrund = grund || '';
     ui.authFertig = '';
     renderSheet();
@@ -2464,6 +2679,7 @@ const KAT_SYMBOLE = {
     ui.offen = null;
     ui.panel = null;
     sheetSchluessel = null;
+    if (RECHT[location.hash.slice(1)]) history.replaceState(null, '', '#' + ui.view);
     $('#backdrop').hidden = true;
     $('#sheet').hidden = true;
     document.body.classList.remove('sheet-offen');
@@ -2490,6 +2706,30 @@ const KAT_SYMBOLE = {
       renderSheet();
       const erstes = $('#auth-form input');
       if (erstes) erstes.focus();
+      return;
+    }
+    if (t.hasAttribute('data-loeschen-frage') || t.hasAttribute('data-loeschen-nein')) {
+      ui.loeschen = t.hasAttribute('data-loeschen-frage');
+      renderSheet();
+      const f = $(ui.loeschen ? '#sheet [data-loeschen-nein]' : '#sheet [data-loeschen-frage]');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
+    if (t.hasAttribute('data-konto-loeschen')) {
+      ui.busy = true; renderSheet();
+      try {
+        const { error } = await db.client.rpc('konto_loeschen');
+        if (error) throw error;
+        await db.client.auth.signOut();
+        ui.loeschen = false;
+        schliessen();
+        meldung('Dein Konto und deine Daten sind gelöscht.');
+      } catch (err) {
+        meldung(fehlerText(err));
+      } finally {
+        ui.busy = false;
+        if (ui.panel) renderSheet();
+      }
       return;
     }
     if (t.hasAttribute('data-abmelden')) {
@@ -2858,6 +3098,7 @@ const KAT_SYMBOLE = {
   renderAlles();
   renderKosten();
   zeige(VIEWS.includes(start) ? start : ansicht.start);
+  if (RECHT[start]) oeffnePanel(start);
   starteLive().then((live) => {
     if (!live) return;
     renderStadtteilAuswahl();

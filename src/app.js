@@ -7,11 +7,13 @@
 
   // Zugang zur Datenbank (Supabase). Beide Werte sind öffentlich und dürfen im Code stehen.
   // Leer = Demo-Modus mit erfundenen Beispieldaten.
+  // Supabase-Projekt „hand-drauf“ (Frankfurt). Beide Werte sind öffentlich; die Zugriffsregeln in der Datenbank schützen die Daten.
+  // Niemals den Secret- oder service_role-Key hier eintragen.
   const LIVE = {
-    url: '',
-    key: ''
+    url: 'https://hgfwbjesolgneyapehta.supabase.co',
+    key: 'sb_publishable_aHSISOj3lPHJwpWqa64gnA_iLcJV1w3'
   };
-  const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';
+  const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js';
 
   /* ===== Einstellungen: Gebühren, Regeln und Karte hier anpassen ===== */
   const CONFIG = {
@@ -21,7 +23,9 @@
     maxBetrag: 50,             // Obergrenze für Nachbarschaftshilfe
     freigrenze: 255,           // § 22 Nr. 3 EStG: unter 256 € Gewinn im Jahr steuerfrei
     bereichMeter: 250,         // Radius des ungefähren Bereichs um ein Gesuch
-    ich: { name: 'Tim', initialen: 'TS', stadtteil: 'Garbsen-Mitte', lat: 52.4248, lng: 9.5962 } // Demo-Person
+    ich: { name: 'Tim', initialen: 'TS', stadtteil: 'Garbsen-Mitte', lat: 52.4248, lng: 9.5962 }, // Demo-Person
+    // Betreiber für Impressum und Datenschutz. Vor dem öffentlichen Start ausfüllen.
+    betreiber: { name: '', anschrift: '', email: '', telefon: '' }
   };
 
   const KARTE = {
@@ -127,6 +131,7 @@
 
   const SPEICHER = 'nachbarhand-prototyp-v2';
   const VIEWS = ['entdecken', 'karte', 'neu', 'auftraege'];
+  const RECHT = RECHT_TEXTE(CONFIG.betreiber, (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
   const EIGEN_VERSATZ = [[180, -150], [-160, 170], [220, 160], [-210, -190]]; // Demo: Meter Nord/Ost ab deinem Standort
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -165,7 +170,7 @@
   }
 
   let gesuche = [];
-  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, zuletzt: null, busy: false };
+  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, zuletzt: null, busy: false };
 
   /* ===== Ansicht: Design, Schriftgröße, Startseite (nur auf diesem Gerät gespeichert) ===== */
   const ANSICHT_SPEICHER = 'handdrauf-ansicht';
@@ -266,6 +271,9 @@
     if (/email not confirmed/i.test(m)) return 'Bitte bestätige zuerst deine E-Mail-Adresse über den Link in der E-Mail.';
     if (/already registered|already been registered/i.test(m)) return 'Für diese E-Mail gibt es schon ein Konto. Melde dich an.';
     if (/password should be at least|weak password/i.test(m)) return 'Das Passwort ist zu kurz oder zu einfach. Nimm mindestens 8 Zeichen.';
+    if (/email address not authorized|email_address_not_authorized/i.test(m)) return 'Die Registrierung ist gerade nur für das Test-Team freigeschaltet. Bitte versuch es bald noch einmal.';
+    if (/email rate limit/i.test(m)) return 'Gerade wurden zu viele Bestätigungs-E-Mails verschickt. Bitte versuch es in einer Stunde noch einmal.';
+    if (/signups? not allowed|signup is disabled/i.test(m)) return 'Neue Registrierungen sind gerade geschlossen.';
     if (/rate limit|too many/i.test(m)) return 'Zu viele Versuche. Warte ein paar Minuten.';
     if (/jwt|permission denied/i.test(m)) return 'Deine Anmeldung ist abgelaufen. Bitte melde dich neu an.';
     return m || 'Etwas ist schiefgelaufen. Versuch es noch einmal.';
@@ -1026,7 +1034,8 @@
         <div class="feld"><label for="auth-email">E-Mail</label><input id="auth-email" type="email" autocomplete="email" required></div>
         <div class="feld"><label for="auth-passwort">Passwort</label><input id="auth-passwort" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" minlength="8" required>${reg ? '<p class="feld-hinweis" style="margin-top:0">Mindestens 8 Zeichen.</p>' : ''}</div>
         ${reg ? `<label class="check"><input type="checkbox" id="auth-18"><span>Ich bin mindestens 18 Jahre alt.</span></label>
-        <label class="check"><input type="checkbox" id="auth-regeln"><span>Ich habe verstanden: Hand Drauf vermittelt nur. Die Absprache und Bezahlung läuft direkt zwischen uns Nachbarn, gelegentlich und in kleinem Umfang.</span></label>` : ''}
+        <label class="check"><input type="checkbox" id="auth-regeln"><span>Ich akzeptiere die Nutzungsbedingungen. Hand Drauf vermittelt nur, die Absprache und Bezahlung läuft direkt zwischen uns Nachbarn, gelegentlich und in kleinem Umfang.</span></label>
+        <p class="klein recht-links-form">Lies vorher die <a href="#nutzung" target="_blank" rel="noopener">Nutzungsbedingungen</a> und die <a href="#datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a> (öffnen in neuem Tab).</p>` : ''}
         <p class="fehler" id="auth-fehler" role="alert" hidden></p>
         <button type="submit" class="btn btn-primary" ${ui.busy ? 'disabled aria-busy="true"' : ''}>${reg ? 'Konto erstellen' : 'Anmelden'}</button>
       </form>`;
@@ -1051,7 +1060,24 @@
       </div>
       <p class="klein">Angemeldet als ${esc(db.user && db.user.email)}. Andere sehen nur deinen Vornamen, den Anfangsbuchstaben und deinen Stadtteil.</p>
       <div class="feld"><label for="konto-stadtteil">Dein Stadtteil</label><select id="konto-stadtteil">${stadtteilOptionen(p.stadtteil, false)}</select></div>
-      <button type="button" class="btn btn-secondary" data-abmelden ${ui.busy ? 'disabled' : ''}>Abmelden</button>`;
+      <button type="button" class="btn btn-secondary" data-abmelden ${ui.busy ? 'disabled' : ''}>Abmelden</button>
+      <p class="klein recht-links-form"><a href="#nutzung">Nutzungsbedingungen</a> · <a href="#datenschutz">Datenschutz</a> · <a href="#impressum">Impressum</a></p>
+      ${ui.loeschen
+        ? `<div class="bestaetigen-box loeschen-box"><p><strong>Konto wirklich löschen?</strong> Dein Profil, deine Gesuche, Adressen, Nachrichten und Bewertungen werden gelöscht. Laufende Zusagen werden freigegeben. Das lässt sich nicht rückgängig machen.</p>
+            <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-konto-loeschen ${ui.busy ? 'disabled aria-busy="true"' : ''}>Endgültig löschen</button>
+            <button type="button" class="btn btn-secondary" data-loeschen-nein>Abbrechen</button></div></div>`
+        : `<button type="button" class="link-btn link-melden" data-loeschen-frage>Konto löschen</button>`}`;
+  }
+
+  function sheetRechtHTML(name) {
+    const r = RECHT[name];
+    return `<div class="sheet-top">
+        <span class="eyebrow">Rechtliches</span>
+        <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
+      </div>
+      <h2 id="sheet-titel">${r.titel}</h2>
+      <div class="recht">${r.html}</div>
+      <nav class="recht-nav" aria-label="Weitere Rechtstexte">${Object.keys(RECHT).filter((k) => k !== name).map((k) => `<a href="#${k}">${RECHT[k].titel}</a>`).join('')}</nav>`;
   }
 
   function sheetAnsichtHTML() {
@@ -1102,7 +1128,8 @@
     const schluessel = ui.panel || ui.offen;
     const zustand = schluessel && schluessel === sheetSchluessel ? sheetZustand() : null;
     let html = '';
-    if (ui.panel === 'ansicht') html = sheetAnsichtHTML();
+    if (RECHT[ui.panel]) html = sheetRechtHTML(ui.panel);
+    else if (ui.panel === 'ansicht') html = sheetAnsichtHTML();
     else if (ui.panel === 'anmelden') html = sheetAnmeldenHTML();
     else if (ui.panel === 'konto') html = sheetKontoHTML();
     else {
@@ -1152,7 +1179,8 @@
   }
   window.addEventListener('hashchange', () => {
     const v = location.hash.slice(1);
-    if (VIEWS.includes(v)) zeige(v);
+    if (VIEWS.includes(v)) { if (RECHT[ui.panel]) schliessen(); zeige(v); }
+    else if (RECHT[v]) oeffnePanel(v);
   });
 
   function sheetZeigen() {
@@ -1179,6 +1207,7 @@
     ui.offen = null;
     ui.panel = name;
     ui.authModus = 'anmelden';
+    ui.loeschen = false;
     ui.authGrund = grund || '';
     ui.authFertig = '';
     renderSheet();
@@ -1190,6 +1219,7 @@
     ui.offen = null;
     ui.panel = null;
     sheetSchluessel = null;
+    if (RECHT[location.hash.slice(1)]) history.replaceState(null, '', '#' + ui.view);
     $('#backdrop').hidden = true;
     $('#sheet').hidden = true;
     document.body.classList.remove('sheet-offen');
@@ -1216,6 +1246,30 @@
       renderSheet();
       const erstes = $('#auth-form input');
       if (erstes) erstes.focus();
+      return;
+    }
+    if (t.hasAttribute('data-loeschen-frage') || t.hasAttribute('data-loeschen-nein')) {
+      ui.loeschen = t.hasAttribute('data-loeschen-frage');
+      renderSheet();
+      const f = $(ui.loeschen ? '#sheet [data-loeschen-nein]' : '#sheet [data-loeschen-frage]');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
+    if (t.hasAttribute('data-konto-loeschen')) {
+      ui.busy = true; renderSheet();
+      try {
+        const { error } = await db.client.rpc('konto_loeschen');
+        if (error) throw error;
+        await db.client.auth.signOut();
+        ui.loeschen = false;
+        schliessen();
+        meldung('Dein Konto und deine Daten sind gelöscht.');
+      } catch (err) {
+        meldung(fehlerText(err));
+      } finally {
+        ui.busy = false;
+        if (ui.panel) renderSheet();
+      }
       return;
     }
     if (t.hasAttribute('data-abmelden')) {
@@ -1584,6 +1638,7 @@
   renderAlles();
   renderKosten();
   zeige(VIEWS.includes(start) ? start : ansicht.start);
+  if (RECHT[start]) oeffnePanel(start);
   starteLive().then((live) => {
     if (!live) return;
     renderStadtteilAuswahl();

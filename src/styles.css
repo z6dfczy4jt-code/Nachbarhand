@@ -385,3 +385,23 @@ body { margin: 0; }
 .melden-box { display: grid; gap: 12px; padding: 14px; border-radius: 14px; background: var(--tile); }
 .melden-box .feld textarea { min-height: 72px; }
 .gemeldet { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--muted); font-size: 0.875rem; }
+
+/* Rechtliches */
+.app-fuss nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; padding-top: 8px; border-top: 1px solid var(--line); }
+.app-fuss a, .recht-nav a, .recht-links-form a { color: var(--muted); font-size: 0.875rem; font-weight: 700; text-underline-offset: 3px; }
+.app-fuss a { display: inline-flex; align-items: center; min-height: 44px; }
+.recht-links-form { margin: 0; }
+.recht-links-form a { color: var(--ink); font-size: inherit; }
+.recht { display: grid; gap: 10px; font-size: 1rem; line-height: 1.55; }
+.recht h3 { margin: 10px 0 0; font-family: var(--f-display); font-size: 1.0625rem; }
+.recht p, .recht ul, .recht ol { margin: 0; }
+.recht ul, .recht ol { padding-left: 1.3em; display: grid; gap: 6px; }
+.recht a { color: var(--ink); font-weight: 700; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.recht-kurz { padding: 12px 14px; border-radius: 12px; background: var(--tile); font-weight: 700; }
+.recht-hinweis { padding: 12px 14px; border-radius: 12px; background: var(--warn-bg); color: var(--warn); font-weight: 700; }
+.platzhalter { padding: 0 4px; border-radius: 4px; background: var(--warn-bg); color: var(--warn); font-weight: 700; }
+.recht-stand { color: var(--muted); font-size: 0.875rem; }
+.regel-liste li::marker { font-weight: 800; }
+.recht-nav { display: flex; flex-wrap: wrap; gap: 4px 18px; padding-top: 12px; border-top: 1px solid var(--line); }
+.recht-nav a { display: inline-flex; align-items: center; min-height: 44px; }
+.loeschen-box { background: var(--warn-bg); }
