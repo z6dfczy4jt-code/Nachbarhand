@@ -31,8 +31,9 @@
 
   /* ===== Einstellungen: Gebühren, Regeln und Karte hier anpassen ===== */
   const CONFIG = {
-    gebuehrAuftraggeber: 0.99, // nur Demo: fester Betrag, den die suchende Person zusätzlich zahlt
-    provisionHelfer: 0.05,     // nur Demo: Anteil, der vom Betrag des Helfers abgeht
+    gebuehren: false,          // Weg 2 (Bezahlung über die App mit Gebühren). Erst einschalten, wenn Stripe eingerichtet ist
+    gebuehrAuftraggeber: 0.99, // Weg 2: fester Betrag, den die suchende Person zusätzlich zahlt
+    provisionHelfer: 0.05,     // Weg 2: Anteil, der vom Betrag des Helfers abgeht
     minBetrag: 5,
     maxBetrag: 50,             // Obergrenze für Nachbarschaftshilfe
     freigrenze: 255,           // § 22 Nr. 3 EStG: unter 256 € Gewinn im Jahr steuerfrei
@@ -189,7 +190,7 @@
   }
 
   let gesuche = [];
-  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'naehe', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false, bearbeiten: null, blockieren: false };
+  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'termin', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false, bearbeiten: null, blockieren: false };
 
   /* ===== Ansicht: Design, Schriftgröße, Startseite (nur auf diesem Gerät gespeichert) ===== */
   const ANSICHT_SPEICHER = 'handdrauf-ansicht';
@@ -243,7 +244,7 @@
   const vorname = (name) => String(name || '').split(' ')[0];
   const anzeigename = (p) => p ? `${p.vorname}${p.nachname_initial ? ' ' + p.nachname_initial + '.' : ''}` : 'Unbekannt';
   const kuerzel = (p) => p ? ((p.vorname || '?')[0] + (p.nachname_initial || '')).toUpperCase() : '?';
-  const auszahlung = (g) => istLive() ? g.betrag : Math.round(g.betrag * (1 - CONFIG.provisionHelfer) * 100) / 100;
+  const auszahlung = (g) => CONFIG.gebuehren ? Math.round(g.betrag * (1 - CONFIG.provisionHelfer) * 100) / 100 : g.betrag;
 
   function abstand(a, b) {
     const R = 6371000, rad = Math.PI / 180;
@@ -549,7 +550,13 @@
           n.data.forEach((x) => { const t = Date.parse(x.erstellt) || 0; if (t > (db.letzte.get(x.gesuch_id) || 0)) db.letzte.set(x.gesuch_id, t); });
         }
       }
+      const vorher = new Map(gesuche.map((g) => [g.id, g.status]));
       gesuche = (data || []).map(ausDb);
+      // Wer geholfen hat, sieht den Handschlag, sobald die Bestätigung eintrifft
+      if (db.geladen) {
+        const bestaetigt = gesuche.find((g) => g.helfer === 'ich' && g.status === 'bezahlt' && vorher.get(g.id) === 'erledigt');
+        if (bestaetigt) setTimeout(() => feiern('Hand drauf!', feierText(bestaetigt)), 0);
+      }
       // Nach einer zurückgezogenen Zusage ist der alte Verlauf gelöscht
       gesuche.forEach((g) => { if (g.status === 'offen') db.nachrichten.delete(g.id); });
       db.fehler = null;
@@ -749,10 +756,6 @@
     if (!istLive()) el.innerHTML = `<span class="pill pill-muted">${BEISPIEL_MODUS ? 'Beispiele' : 'Demo'}</span>`;
     else if (!db.profil) el.innerHTML = '<button type="button" class="btn btn-secondary btn-klein" data-panel="anmelden">Anmelden</button>';
     else el.innerHTML = `<button type="button" class="avatar-btn" data-panel="konto" aria-label="Dein Konto">${esc(kuerzel(db.profil))}</button>`;
-    $('#fuss').textContent = istLive()
-      ? 'Testphase: Die Aufwandsentschädigung zahlt ihr direkt untereinander. Hand Drauf vermittelt nur und nimmt noch keine Gebühr.'
-      : BEISPIEL_MODUS ? 'Erfundene Beispiel-Anfragen, damit du siehst, wie Hand Drauf funktioniert. Es fließt kein echtes Geld.'
-        : 'Prototyp mit erfundenen Beispiel-Anfragen in Garbsen. Es fließt kein echtes Geld.';
     $('#reset-knopf').hidden = istLive();
     $('#adresse-optional').hidden = istLive();
   }
@@ -808,7 +811,26 @@
       </div>`;
       return;
     }
-    $('#liste').innerHTML = treffer.map((g) => karteHTML(g)).join('');
+    if (ui.sort !== 'termin') { $('#liste').innerHTML = treffer.map((g) => karteHTML(g)).join(''); return; }
+    // Nach Termin: Abschnitte Heute, Morgen, Diese Woche, Später, darin die nächsten zuerst
+    const gruppen = new Map(TERMIN_GRUPPEN.map((n) => [n, []]));
+    treffer.forEach((g) => gruppen.get(terminGruppe(g)).push(g));
+    $('#liste').innerHTML = [...gruppen].filter(([, l]) => l.length).map(([name, l]) =>
+      `<h2 class="liste-gruppe">${name}</h2>${l.sort((a, b) => (terminWert(a) - terminWert(b)) || (meterVonMir(a) - meterVonMir(b))).map((g) => karteHTML(g)).join('')}`).join('');
+  }
+  const TERMIN_GRUPPEN = ['Heute', 'Morgen', 'Diese Woche', 'Später', 'Ohne festen Termin'];
+  const terminWert = (g) => { const t = terminAusText(g.wann); return t ? +t.von : Infinity; };
+  function terminGruppe(g) {
+    const t = terminAusText(g.wann);
+    if (!t) return 'Ohne festen Termin';
+    const h = heute();
+    const wochenende = plusTage(h, (7 - h.getDay()) % 7); // Sonntag dieser Woche
+    if (+t.von === +t.bis) {
+      const tage = Math.round((t.von - h) / TAG_MS);
+      if (tage <= 0) return 'Heute';
+      if (tage === 1) return 'Morgen';
+    }
+    return t.bis <= wochenende ? 'Diese Woche' : 'Später';
   }
 
   function naechsteSchritte() {
@@ -864,6 +886,7 @@
     const pills = (g) => `<span class="card-pills">${statusPill(g)}${ungelesen(g) ? '<span class="pill pill-neu">Neue Nachricht</span>' : ''}</span>`;
     const abschnitte = document.querySelectorAll('#view-auftraege .abschnitt');
     if (istLive() && !db.profil) {
+      $('#summe').hidden = false;
       $('#summe').innerHTML = `<span class="h-klein">Deine Aufträge</span>
         <p>Melde dich an, um deine Anfragen und Zusagen zu sehen.</p>
         <button type="button" class="btn btn-primary" data-panel="anmelden">Anmelden oder registrieren</button>`;
@@ -876,17 +899,19 @@
     const verdient = zusagen.filter((g) => g.status === 'bezahlt').reduce((s, g) => s + auszahlung(g), 0);
     const anteil = Math.min(100, verdient / CONFIG.freigrenze * 100);
     const rest = Math.max(0, CONFIG.freigrenze - verdient);
+    // Geldübersicht erst zeigen, wenn es Zusagen gibt
+    $('#summe').hidden = !zusagen.length;
     $('#summe').innerHTML = `
-      <span class="h-klein">${istLive() ? 'Aufwandsentschädigungen (bestätigt)' : 'Verdient über Hand Drauf'}</span>
+      <span class="h-klein">Bekommen (bestätigt)</span>
       <span class="summe-zahl">${euro(verdient)}</span>
       <div class="meter" role="img" aria-label="${euro(verdient)} von ${euro(CONFIG.freigrenze)} steuerfreiem Betrag"><span style="width:${anteil.toFixed(1)}%"></span></div>
-      <span class="summe-hint">Bis ${CONFIG.freigrenze} € Gewinn im Jahr steuerfrei (§ 22 Nr. 3 EStG). Noch ${euro(rest)} frei.</span>`;
+      <span class="summe-hint">Steuerfrei bis ${CONFIG.freigrenze} € im Jahr, noch ${euro(rest)} frei.</span>`;
     $('#zusagen').innerHTML = zusagen.length
       ? zusagen.map((g) => karteHTML(g, pills(g))).join('')
-      : `<p class="leer-klein">Noch keine Zusagen. Such dir in der Liste oder auf der Karte einen Job in deiner Nähe.</p>`;
+      : `<p class="leer-klein">Noch keine Zusagen.</p>`;
     $('#eigene').innerHTML = eigene.length
       ? eigene.map((g) => karteHTML(g, pills(g))).join('')
-      : `<p class="leer-klein">Du hast noch keine Anfrage gestellt. Über „Hilfe suchen“ geht das in einer Minute.</p>`;
+      : `<p class="leer-klein">Noch keine Anfragen.</p>`;
   }
 
   /* ===== Karte (Leaflet) ===== */
@@ -1119,7 +1144,8 @@
 
     if (g.eigen) {
       const bis = sichtbarBis(g);
-      html += `<p class="klein">Deine Anfrage · ${g.status !== 'offen' ? 'nur für euch beide sichtbar' : abgelaufen(g) ? 'abgelaufen, Nachbarn sehen sie nicht mehr' : `sichtbar für Nachbarn${bis ? ` bis einschließlich ${esc(bis)}` : ''}`}</p>`;
+      const stand = g.status !== 'offen' ? '' : abgelaufen(g) ? 'Abgelaufen' : bis ? `Sichtbar bis ${bis}` : 'Sichtbar für Nachbarn';
+      if (stand) html += `<p class="stand ${abgelaufen(g) ? 'stand-warn' : ''}">${esc(stand)}</p>`;
     } else {
       const bewertung = g.bewertungen
         ? `${icon('stern', 'i-xs i-fill')}${g.sterne.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} · ${g.bewertungen} ${g.bewertungen === 1 ? 'Bewertung' : 'Bewertungen'}`
@@ -1135,44 +1161,40 @@
     }
 
     let detail;
-    if (live) detail = g.eigen
+    if (!CONFIG.gebuehren) detail = g.eigen
       ? `Zahlst du direkt<span>an die Person, die dir hilft</span>`
-      : `Bekommst du direkt<span>von ${esc(vn)}, ohne Gebühr in der Testphase</span>`;
+      : `Bekommst du direkt<span>von ${esc(vn)}</span>`;
     else detail = g.eigen
-      ? `Du zahlst ${euro(g.betrag + gebuehr)}<span>inkl. ${euro(gebuehr)} Servicegebühr, erst nach Erledigung</span>`
+      ? `Du zahlst ${euro(g.betrag + gebuehr)}<span>inkl. ${euro(gebuehr)} Servicegebühr</span>`
       : `Du erhältst ${euro(auszahlung(g))}<span>nach ${Math.round(CONFIG.provisionHelfer * 100)} % Servicegebühr</span>`;
+
+    // Adresse als Teil der Fakten: Andere sehen sie erst nach der Zusage
+    const beteiligt = g.eigen || g.helfer === 'ich';
+    const adresse = beteiligt ? adresseVon(g) : '';
+    if (beteiligt && live) ladeAdresse(g.id);
+    const echteAdresse = adresse && !(g.eigen && !live && adresse === g.stadtteil) ? adresse : '';
+    let adressZeile;
+    if (!beteiligt) adressZeile = `<span class="fakt-leise">${icon('schloss', 'i-xs')}nach der Zusage</span>`;
+    else if (echteAdresse) adressZeile = `${esc(echteAdresse)}<span class="fakt-leise">${g.eigen ? 'sieht nur, wer zusagt' : 'nur für dich sichtbar'}</span>`;
+    else adressZeile = `<span class="fakt-leise">${adresse === null ? 'wird geladen …' : g.eigen ? 'nur der Stadtteil' : 'nicht verfügbar'}</span>`;
+
     html += `<div class="betrag">
       <div><div class="betrag-zahl">${euroKurz(g.betrag)}</div><div class="betrag-label">Aufwandsentschädigung</div></div>
       <div class="betrag-detail">${detail}</div>
     </div>
     <dl class="fakten">
-      <div><dt>Stadtteil</dt><dd>${esc(g.stadtteil)}</dd></div>
-      <div><dt>Entfernung</dt><dd>${distanz(g)}</dd></div>
       <div><dt>Wann</dt><dd>${esc(wannLang(g))}</dd></div>
       <div><dt>Dauer</dt><dd>${esc(g.dauer)}</dd></div>
+      <div><dt>Stadtteil</dt><dd>${esc(g.stadtteil)}</dd></div>
+      <div><dt>Entfernung</dt><dd>${distanz(g)}</dd></div>
+      <div class="breit"><dt>Adresse</dt><dd>${adressZeile}</dd></div>
     </dl>`;
     if (g.text) html += `<p class="beschreibung">${esc(g.text)}</p>`;
-    const teilbar = g.status === 'offen' && !abgelaufen(g);
-    html += `<div class="link-zeile"><button type="button" class="link-inline" data-aktion="karte">${icon('karte', 'i-sm')}Auf der Karte zeigen</button>${teilbar
-      ? `<button type="button" class="link-inline" data-aktion="teilen">${icon('teilen', 'i-sm')}${g.eigen ? 'Anfrage teilen' : 'Weitersagen'}</button>` : ''}</div>`;
-
-    // Adresse: nur für Beteiligte
-    const beteiligt = g.eigen || g.helfer === 'ich';
-    const adresse = beteiligt ? adresseVon(g) : '';
-    if (beteiligt && live) ladeAdresse(g.id);
-    if (g.eigen) {
-      html += `<div class="hinweis">${icon('schloss')}<span>${adresse ? `Deine Adresse <strong>${esc(adresse)}</strong> sieht` : 'Deine genaue Adresse sieht'} nur, wer zusagt.</span></div>`;
-    } else if (g.status === 'offen') {
-      html += `<div class="hinweis">${icon('schloss')}<span>Die genaue Adresse siehst du nach deiner Zusage.</span></div>`;
-    } else {
-      const adressText = adresse ? esc(adresse) : (adresse === '' ? 'Adresse nicht verfügbar' : 'Adresse wird geladen …');
-      html += `<div class="hinweis hinweis-offen">${icon('ort')}<span><strong>${adressText}</strong><br>Nur für dich sichtbar</span></div>`;
-    }
 
     // Fortschritt für laufende Aufträge
     if (g.status !== 'offen' && (g.helfer === 'ich' || g.eigen)) {
       const stufen = ['zugesagt', 'erledigt', 'bezahlt'];
-      const namen = ['Zugesagt', 'Erledigt gemeldet', live ? 'Bestätigt' : 'Bestätigt und ausgezahlt'];
+      const namen = ['Zugesagt', 'Erledigt gemeldet', CONFIG.gebuehren ? 'Bestätigt und ausgezahlt' : 'Bestätigt'];
       const idx = stufen.indexOf(g.status);
       html += `<ol class="schritte" aria-label="Fortschritt">${namen.map((n, i) =>
         `<li class="${i <= idx ? 'is-done' : ''} ${i === idx ? 'is-current' : ''}"><span class="punkt">${i <= idx ? icon('check', 'i-xs') : ''}</span>${n}</li>`
@@ -1184,20 +1206,19 @@
         `<button type="button" class="stern ${n <= b ? 'is-an' : ''}" data-stern="${n}" aria-label="${n} ${n === 1 ? 'Stern' : 'Sterne'}" aria-pressed="${n <= b}" ${dis}>${icon('stern')}</button>`
       ).join('')}</div></div>`;
 
+    // Was jetzt zu tun ist: ein Hauptknopf, Nebensachen als Link
     if (g.eigen) {
       if (g.status === 'offen') {
         html += abgelaufen(g)
-          ? `<div class="status-box warn">Der Termin ist vorbei. Nachbarn sehen deine Anfrage nicht mehr.</div>
-            <button type="button" class="btn btn-primary" data-aktion="bearbeiten-termin">Neuen Termin wählen</button>`
+          ? `<button type="button" class="btn btn-primary" data-aktion="bearbeiten-termin">Neuen Termin wählen</button>`
           : `<button type="button" class="btn btn-secondary" data-aktion="bearbeiten">Anfrage bearbeiten</button>`;
         html += ui.rueckzug
           ? `<div class="bestaetigen-box"><p>Anfrage wirklich zurückziehen? Nachbarn sehen sie dann nicht mehr.</p>
               <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-aktion="rueckzug" ${dis}>Zurückziehen</button>
               <button type="button" class="btn btn-secondary" data-aktion="rueckzug-nein">Abbrechen</button></div></div>`
-          : `<button type="button" class="btn btn-secondary btn-danger" data-aktion="rueckzug-frage">Anfrage zurückziehen</button>`;
+          : `<button type="button" class="link-btn" data-aktion="rueckzug-frage">Anfrage zurückziehen</button>`;
       } else if (g.status === 'zugesagt') {
-        html += `<div class="status-box good">${icon('check')}${esc(g.helferName || 'Jemand')} hilft dir</div>
-          <p class="klein">Sobald der Job erledigt ist, meldet ${esc(hn)} das hier. Danach bestätigst du.</p>`;
+        html += `<div class="status-box good">${icon('check')}${esc(g.helferName || 'Jemand')} hilft dir</div>`;
       } else if (g.status === 'erledigt') {
         html += `<div class="status-box warn">${esc(hn)} hat den Job als erledigt gemeldet.</div>
           <button type="button" class="btn btn-primary" data-aktion="bestaetigen" ${dis}>Erledigt bestätigen</button>`;
@@ -1205,21 +1226,25 @@
         html += `<div class="status-box good">${icon('check')}Abgeschlossen</div>` + (g.helferName ? sterneHTML(g.meineBewertung || 0, hn) : '');
       }
     } else if (g.status === 'offen') {
-      html += `<button type="button" class="btn btn-primary" data-aktion="zusagen" ${dis}>Ich helfe</button>
-        <p class="klein">${live ? `Die Aufwandsentschädigung bekommst du direkt von ${esc(vn)}.` : 'Bezahlt wird sicher über die App, nicht bar.'} Helfen kannst du ab 18 Jahren.</p>`;
+      html += `<button type="button" class="btn btn-primary" data-aktion="zusagen" ${dis}>Ich helfe</button>`;
     } else if (g.status === 'zugesagt') {
       html += `<button type="button" class="btn btn-primary" data-aktion="erledigt" ${dis}>Job erledigt melden</button>
         <button type="button" class="link-btn" data-aktion="absagen" ${dis}>Zusage zurückziehen</button>`;
     } else if (g.status === 'erledigt') {
-      html += `<div class="status-box warn">Warte auf Bestätigung von ${esc(vn)}.${live ? '' : ' Danach wird ausgezahlt.'}</div>` +
+      html += `<div class="status-box warn">Warte auf Bestätigung von ${esc(vn)}.</div>` +
         (live ? '' : `<button type="button" class="btn btn-secondary" data-aktion="bestaetigen">Demo: ${esc(vn)} bestätigt</button>`);
     } else if (g.status === 'bezahlt') {
-      html += `<div class="status-box good">${icon('check')}${live ? `${esc(vn)} hat bestätigt` : `${euro(auszahlung(g))} ausgezahlt`}</div>` + sterneHTML(g.meineBewertung || 0, vn);
+      html += `<div class="status-box good">${icon('check')}${CONFIG.gebuehren ? `${euro(auszahlung(g))} ausgezahlt` : `${esc(vn)} hat bestätigt`}</div>` + sterneHTML(g.meineBewertung || 0, vn);
     }
-    const kalenderSinnvoll = (g.helfer === 'ich' && g.status === 'zugesagt') || (g.eigen && (g.status === 'zugesagt' || (g.status === 'offen' && !abgelaufen(g))));
-    if (kalenderSinnvoll && terminAusText(g.wann)) {
-      html += `<button type="button" class="btn btn-secondary" data-aktion="kalender">${icon('kalender')}In den Kalender eintragen</button>`;
-    }
+
+    // Kleine Links: Karte, Teilen, Kalender
+    const teilbar = g.status === 'offen' && !abgelaufen(g);
+    const kalenderSinnvoll = ((g.helfer === 'ich' && g.status === 'zugesagt') || (g.eigen && (g.status === 'zugesagt' || teilbar))) && terminAusText(g.wann);
+    html += `<div class="link-zeile">
+        <button type="button" class="link-inline" data-aktion="karte" aria-label="Auf der Karte zeigen">${icon('karte', 'i-sm')}Karte</button>
+        ${teilbar ? `<button type="button" class="link-inline" data-aktion="teilen" aria-label="${g.eigen ? 'Anfrage teilen' : 'Anfrage weitersagen'}">${icon('teilen', 'i-sm')}${g.eigen ? 'Teilen' : 'Weitersagen'}</button>` : ''}
+        ${kalenderSinnvoll ? `<button type="button" class="link-inline" data-aktion="kalender" aria-label="In den Kalender eintragen">${icon('kalender', 'i-sm')}Kalender</button>` : ''}
+      </div>`;
     if (imChat(g)) {
       html += chatHTML(g);
       if (live) ladeNachrichten(g.id);
@@ -1246,7 +1271,6 @@
           <textarea id="chat-text" rows="1" maxlength="1000" placeholder="Nachricht an ${partner}" enterkeyhint="send"></textarea>
           <button type="submit" class="chat-senden" aria-label="Nachricht senden">${icon('senden')}</button>
         </form>
-        <p class="klein">Nur ihr beide seht diese Nachrichten. Teile keine Bank- oder Passwortdaten.</p>
       </section>`;
   }
   function meldenHTML(g) {
@@ -1326,7 +1350,6 @@
       <button type="button" class="btn btn-secondary" data-einladen>${icon('teilen')}Nachbarn einladen</button>
       <button type="button" class="btn btn-secondary" data-abmelden ${ui.busy ? 'disabled' : ''}>Abmelden</button>
       ${blockListeHTML()}
-      <p class="klein recht-links-form"><a href="#fragen">Häufige Fragen</a> · ${kontaktLink()} · <a href="#nutzung">Nutzungsbedingungen</a> · <a href="#datenschutz">Datenschutz</a> · <a href="#impressum">Impressum</a></p>
       ${ui.loeschen
         ? `<div class="bestaetigen-box loeschen-box"><p><strong>Konto wirklich löschen?</strong> Dein Profil, deine Anfragen, Adressen, Nachrichten und Bewertungen werden gelöscht. Laufende Zusagen werden freigegeben. Das lässt sich nicht rückgängig machen.</p>
             <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-konto-loeschen ${ui.busy ? 'disabled aria-busy="true"' : ''}>Endgültig löschen</button>
@@ -1367,7 +1390,7 @@
     if (!person) return '';
     const vn = esc(vorname(person.name));
     if (!ui.blockieren) return `<button type="button" class="link-btn link-melden" data-blockieren-frage>${icon('x', 'i-sm')}${vn} blockieren</button>`;
-    return `<div class="bestaetigen-box"><p><strong>${vn} blockieren?</strong> Ihr seht eure Anfragen gegenseitig nicht mehr, und laufende Zusagen zwischen euch enden. ${vn} erfährt davon nichts. Unter „${istLive() ? 'Konto' : 'Ansicht'}“ kannst du das jederzeit aufheben.</p>
+    return `<div class="bestaetigen-box"><p><strong>${vn} blockieren?</strong> Ihr seht eure Anfragen gegenseitig nicht mehr, und laufende Zusagen zwischen euch enden. ${vn} erfährt davon nichts. Unter „${istLive() ? 'Konto' : 'Menü'}“ kannst du das jederzeit aufheben.</p>
         <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-blockieren ${ui.busy ? 'disabled aria-busy="true"' : ''}>Blockieren</button>
         <button type="button" class="btn btn-secondary" data-blockieren-nein>Abbrechen</button></div></div>`;
   }
@@ -1420,33 +1443,45 @@
       </div>
       <h2 id="sheet-titel">${FRAGEN.titel}</h2>
       ${FRAGEN.gruppen.map(([titel, fragen]) => `<section class="fragen-gruppe"><h3 class="h-klein">${titel}</h3>${fragen.join('')}</section>`).join('')}
-      <p class="klein">Deine Frage ist nicht dabei? Lies die <a href="#regeln">Regeln für Nachbarn</a> oder schreib uns: ${kontaktLink()}.</p>`;
+      <p class="klein">Deine Frage ist nicht dabei? ${CONFIG.betreiber.email ? `Schreib uns: ${kontaktLink()}.` : 'Die Kontaktdaten stehen im <a href="#impressum">Impressum</a>.'}</p>`;
   }
 
+  // Menü: Ansicht, Hilfe und Rechtliches an einem Ort (statt Links unter jeder Seite)
   function sheetAnsichtHTML() {
-    const gruppe = (k, titel, hinweis) => `<fieldset class="feld">
-        <legend>${titel}</legend>
-        <div class="segment" role="group">${ANSICHT_OPTIONEN[k].map(([w, n]) =>
-          `<button type="button" data-ansicht="${k}" data-wert="${w}" aria-pressed="${ansicht[k] === w}">${n}</button>`).join('')}</div>
-        ${hinweis ? `<p class="klein">${hinweis}</p>` : ''}
-      </fieldset>`;
+    const gruppe = (k, titel) => `<div class="menue-zeile"><span class="menue-label">${titel}</span>
+        <div class="segment" role="group" aria-label="${titel}">${ANSICHT_OPTIONEN[k].map(([w, n]) =>
+          `<button type="button" data-ansicht="${k}" data-wert="${w}" aria-pressed="${ansicht[k] === w}">${n}</button>`).join('')}</div></div>`;
+    const eintrag = (href, text, extra = '') => `<a class="menue-link" href="${href}" ${extra}>${text}<span aria-hidden="true">›</span></a>`;
+    const knopf = (attr, text) => `<button type="button" class="menue-link" ${attr}>${text}<span aria-hidden="true">›</span></button>`;
+    const ohneKonto = !(istLive() && db.profil);
     return `<div class="sheet-top">
-        <span class="eyebrow">Ansicht</span>
+        <h2 id="sheet-titel" class="menue-titel">Menü</h2>
         <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
       </div>
-      <h2 id="sheet-titel">So sieht die App für dich aus</h2>
-      ${gruppe('thema', 'Design', 'Automatisch folgt der Einstellung deines Handys.')}
-      ${gruppe('schrift', 'Schriftgröße', '')}
-      <div class="schrift-probe" aria-hidden="true"><span class="price">15 €</span><span><strong>Rasen mähen</strong><br>Berenbostel · Samstag, vormittags</span></div>
-      ${gruppe('start', 'Startseite', 'Was du beim Öffnen zuerst siehst.')}
-      ${istLive() && db.profil ? '' : `<div class="feld"><label for="ansicht-ort">Dein Stadtteil</label><select id="ansicht-ort">${gewaehlterOrt ? '' : '<option value="">Bitte wählen</option>'}${stadtteilOptionen(gewaehlterOrt || '', false)}</select><p class="klein">Für die Entfernungen. Deine Adresse brauchen wir dafür nicht.</p></div>`}
-      <p class="klein">Gespeichert nur auf diesem Gerät.</p>
+      <section class="menue-gruppe" aria-labelledby="m-ansicht"><h3 class="h-klein" id="m-ansicht">Ansicht</h3>
+        ${gruppe('thema', 'Design')}
+        ${gruppe('schrift', 'Schrift')}
+        ${gruppe('start', 'Start mit')}
+        ${ohneKonto ? `<div class="menue-zeile"><label class="menue-label" for="ansicht-ort">Stadtteil</label><select id="ansicht-ort">${gewaehlterOrt ? '' : '<option value="">Bitte wählen</option>'}${stadtteilOptionen(gewaehlterOrt || '', false)}</select></div>` : ''}
+      </section>
       ${istLive() ? '' : blockListeHTML()}
-      <button type="button" class="btn btn-secondary" data-einladen>${icon('teilen')}Hand Drauf weiterempfehlen</button>
-      ${installEreignis ? `<button type="button" class="btn btn-secondary" data-installieren>${icon('plus')}Auf den Startbildschirm</button>`
-        : installierenMoeglich() ? `<p class="klein">Als App nutzen: In Safari unten auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.</p>` : ''}
-      <button type="button" class="link-btn" data-start-zeigen>Einführung noch einmal ansehen</button>
-      <a class="link-btn link-als-knopf" href="#fragen">Häufige Fragen</a>`;
+      <section class="menue-gruppe" aria-labelledby="m-hilfe"><h3 class="h-klein" id="m-hilfe">Hilfe</h3>
+        <div class="menue-liste">
+          ${eintrag('#fragen', 'Häufige Fragen')}
+          ${knopf('data-start-zeigen', 'So funktioniert Hand Drauf')}
+          ${knopf('data-einladen', 'Nachbarn einladen')}
+          ${installEreignis ? knopf('data-installieren', 'Auf den Startbildschirm') : ''}
+          ${CONFIG.betreiber.email ? eintrag(`mailto:${esc(CONFIG.betreiber.email)}`, 'Kontakt') : ''}
+        </div>
+      </section>
+      <section class="menue-gruppe" aria-labelledby="m-recht"><h3 class="h-klein" id="m-recht">Rechtliches</h3>
+        <div class="menue-liste">
+          ${eintrag('#impressum', 'Impressum')}
+          ${eintrag('#datenschutz', 'Datenschutz')}
+          ${eintrag('#nutzung', 'Nutzungsbedingungen')}
+          ${eintrag('#regeln', 'Regeln für Nachbarn')}
+        </div>
+      </section>`;
   }
 
   // Beim Neuzeichnen bleiben Eingaben, Auswahl und Fokus erhalten (z. B. wenn eine Nachricht eintrifft)
@@ -1585,11 +1620,49 @@
     if (ziel && ziel.focus) ziel.focus({ preventScroll: true });
   }
 
+  /* ===== Handschlag, wenn ein Job bestätigt ist (Logo als Animation) ===== */
+  let feierTimer;
+  function feiern(titel, text) {
+    const el = $('#feier');
+    clearTimeout(feierTimer);
+    el.classList.remove('spielt', 'geht');
+    el.hidden = false;
+    void el.offsetWidth; // Animation neu starten
+    el.classList.add('spielt');
+    $('#toast').classList.remove('zeigen');
+    $('#feier-titel').textContent = titel;
+    $('#feier-text').textContent = text;
+    try {
+      if (navigator.vibrate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) setTimeout(() => navigator.vibrate([16, 40, 26]), 540);
+    } catch (e) { /* ohne Vibration */ }
+    $('#feier-weiter').focus({ preventScroll: true });
+    feierTimer = setTimeout(feierEnde, 4200);
+  }
+  function feierEnde() {
+    const el = $('#feier');
+    clearTimeout(feierTimer);
+    if (el.hidden || el.classList.contains('geht')) return;
+    el.classList.add('geht');
+    setTimeout(() => {
+      el.hidden = true;
+      el.classList.remove('spielt', 'geht');
+      const f = !$('#sheet').hidden && ($('#sheet [data-stern="1"]') || $('#sheet .btn'));
+      if (f) f.focus({ preventScroll: true });
+    }, 200);
+  }
+  $('#feier').addEventListener('click', feierEnde);
+  const feierText = (g) => {
+    const hn = vorname(g.helferName) || 'die helfende Person';
+    if (g.eigen) return CONFIG.gebuehren ? `${euro(auszahlung(g))} an ${hn} ausgezahlt.` : `Danke, dass ihr euch geholfen habt. Gib ${hn} noch Sterne.`;
+    return CONFIG.gebuehren ? `${euro(auszahlung(g))} ausgezahlt. Danke fürs Helfen!` : `${vorname(g.wer)} hat bestätigt. Die ${euroKurz(g.betrag)} bekommst du direkt.`;
+  };
+
+
   const ERFOLG = {
     zusagen: (g) => `Zugesagt. ${vorname(g.wer)} sieht jetzt deinen Namen.`,
     absagen: () => 'Zusage zurückgezogen. Die Anfrage ist wieder offen.',
     erledigt: (g) => `Gemeldet. ${vorname(g.wer)} muss noch bestätigen.`,
-    bestaetigen: (g) => istLive() ? 'Bestätigt. Danke, dass ihr euch geholfen habt!' : `${euro(auszahlung(g))} ausgezahlt`,
+    bestaetigen: (g) => CONFIG.gebuehren ? `${euro(auszahlung(g))} ausgezahlt` : 'Bestätigt. Danke, dass ihr euch geholfen habt!',
     rueckzug: () => 'Anfrage zurückgezogen'
   };
 
@@ -1724,7 +1797,9 @@
         meldung('Bewertung gespeichert');
       } else {
         await aendereStatus(g, a);
-        meldung(ERFOLG[a](g));
+        if (a === 'bestaetigen') {
+          feiern('Hand drauf!', feierText(gesuche.find((x) => x.id === g.id) || g));
+        } else meldung(ERFOLG[a](g));
         if (a === 'rueckzug') { ui.busy = false; schliessen(); renderAlles(); return; }
       }
     } catch (err) {
@@ -1889,7 +1964,9 @@
 
   $('#backdrop').addEventListener('click', schliessen);
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && (ui.offen || ui.panel)) schliessen();
+    if (e.key !== 'Escape') return;
+    if (!$('#feier').hidden) { feierEnde(); return; }
+    if (ui.offen || ui.panel) schliessen();
   });
 
   /* ===== Teilen: Nachbarn einladen und einzelne Anfragen weitersagen (Wachstum über Empfehlungen statt Werbung) ===== */
@@ -2169,7 +2246,7 @@
   function renderRichtwert() {
     const k = katWahl();
     const [lo, hi] = RICHTWERTE[k] || [10, 20];
-    $('#neu-richtwert').innerHTML = `${icon('info', 'i-sm')}<span><strong>Unser Vorschlag für ${esc(katName(k))}: ${lo} bis ${hi} €</strong>Je nach Aufwand. Du entscheidest, was du gibst.</span>`;
+    $('#neu-richtwert').innerHTML = `${icon('info', 'i-sm')}<span>Üblich für ${esc(katName(k))}: <strong>${lo} bis ${hi} €</strong></span>`;
     if (!betragGeaendert) setzeBetrag(Math.round((lo + hi) / 2 / 5) * 5, true);
   }
   function renderKosten() {
@@ -2179,10 +2256,10 @@
       el.innerHTML = `<div class="kosten-zeile"><span>Betrag zwischen ${CONFIG.minBetrag} und ${CONFIG.maxBetrag} € wählen</span></div>`;
       return;
     }
-    if (istLive()) {
+    if (!CONFIG.gebuehren) {
       el.innerHTML = `
         <div class="kosten-zeile kosten-summe" style="border:0;padding:0;margin:0"><span>Du zahlst direkt</span><span>${euro(b)}</span></div>
-        <span class="kosten-hinweis">Die Aufwandsentschädigung gibst du der Person, die dir hilft. Hand Drauf nimmt in der Testphase keine Gebühr.</span>`;
+        <span class="kosten-hinweis">Ohne Gebühr in der Testphase.</span>`;
       return;
     }
     const g = CONFIG.gebuehrAuftraggeber;
@@ -2190,7 +2267,7 @@
       <div class="kosten-zeile"><span>Aufwandsentschädigung</span><span>${euro(b)}</span></div>
       <div class="kosten-zeile"><span>Servicegebühr</span><span>${euro(g)}</span></div>
       <div class="kosten-zeile kosten-summe"><span>Du zahlst</span><span>${euro(b + g)}</span></div>
-      <span class="kosten-hinweis">Abgebucht wird erst, wenn du den erledigten Job bestätigst.</span>`;
+      <span class="kosten-hinweis">Erst nach dem erledigten Job.</span>`;
   }
   function setzeBetrag(b, automatisch) {
     betragInput.value = Math.min(CONFIG.maxBetrag, Math.max(CONFIG.minBetrag, b));
@@ -2292,9 +2369,8 @@
   function renderWizardModus() {
     const b = !!ui.bearbeiten;
     $('#h-neu').textContent = b ? 'Anfrage bearbeiten' : 'Hilfe suchen';
-    $('#neu-lead').textContent = b
-      ? 'Änderungen sehen Nachbarn sofort. Bearbeiten geht, solange noch niemand zugesagt hat.'
-      : 'In vier kurzen Schritten. Nachbarn in der Nähe sehen deine Anfrage danach auf der Karte.';
+    $('#neu-lead').textContent = b ? 'Änderungen sehen Nachbarn sofort.' : '';
+    $('#neu-lead').hidden = !b;
     $('#neu-senden').textContent = b ? 'Änderungen speichern' : 'Anfrage veröffentlichen';
     $('#neu-abbrechen').hidden = !b;
   }
@@ -2432,6 +2508,14 @@
     oeffnen(neuId);
     meldung(bearbeitet ? 'Änderungen gespeichert' : 'Anfrage veröffentlicht');
   });
+
+  /* ===== Start-Animation: zwei Hände geben sich die Hand (läuft per CSS, hier nur Überspringen und Aufräumen) ===== */
+  const intro = $('#intro');
+  if (intro) {
+    const introWeg = () => { intro.classList.add('weg'); setTimeout(() => { intro.hidden = true; }, 220); };
+    intro.addEventListener('click', introWeg);
+    setTimeout(() => { intro.hidden = true; }, 2400);
+  }
 
   /* ===== Start ===== */
   if (BEISPIEL_MODUS) {

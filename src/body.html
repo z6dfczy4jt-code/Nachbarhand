@@ -17,9 +17,13 @@
   <symbol id="i-ort" viewBox="0 0 24 24"><path d="M12 20.5s6.5-5.6 6.5-11a6.5 6.5 0 0 0-13 0c0 5.4 6.5 11 6.5 11Z"/><circle cx="12" cy="9.5" r="2.3"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-menue" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <!--HANDSCHLAG-DEFS-->
   <symbol id="i-kalender" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4M8 14h2.5M13.5 14H16M8 17h2.5"/></symbol>
   <symbol id="i-stern" viewBox="0 0 24 24"><path d="m12 4 2.4 5 5.4.6-4 3.7 1.1 5.4L12 16l-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z"/></symbol>
 </svg>
+
+<div class="intro" id="intro" aria-hidden="true"><!--INTRO-SVG--></div>
 
 <div class="app">
   <div class="beispiel-band" id="beispiel-band" hidden>
@@ -29,7 +33,7 @@
   <header class="kopf">
     <a class="marke" href="#entdecken" aria-label="Hand Drauf, zur Startseite"><!--KOPFZEICHEN--></a>
     <div class="kopf-rechts">
-      <button type="button" class="ansicht-btn" data-panel="ansicht"><svg class="i" aria-hidden="true"><use href="#i-ansicht"/></svg><span>Ansicht</span></button>
+      <button type="button" class="ansicht-btn" data-panel="ansicht"><svg class="i" aria-hidden="true"><use href="#i-menue"/></svg><span>Menü</span></button>
       <div id="kopf-rechts" class="kopf-konto"><span class="pill pill-muted">Demo</span></div>
     </div>
   </header>
@@ -49,30 +53,21 @@
       </div>
       <div class="chips" id="chips-liste" role="group" aria-label="Kategorie filtern"></div>
       <div class="liste-kopf">
-        <h2 class="h-klein">In deiner Nähe</h2>
         <div class="filter">
           <label><span class="sr">Stadtteil</span><select id="stadtteil"></select></label>
           <label><span class="sr">Sortieren</span>
             <select id="sort">
+              <option value="termin">Nach Termin</option>
               <option value="naehe">Nächste zuerst</option>
               <option value="betrag">Höchster Betrag</option>
-              <option value="termin">Nächster Termin</option>
               <option value="neu">Neueste</option>
             </select>
           </label>
         </div>
       </div>
       <div class="liste" id="liste"></div>
-      <div class="selbst">
-        <div><strong>Selbst Hilfe gebraucht?</strong><p>Anfrage in einer Minute stellen.</p></div>
-        <button type="button" class="btn btn-secondary btn-auto" data-go="neu">Hilfe suchen</button>
-      </div>
       <div class="installieren-karte" id="installieren" hidden></div>
-      <div class="einladen-karte">
-        <div><strong>Je mehr Nachbarn mitmachen, desto schneller findet sich Hilfe.</strong><p>Schick den Link an Nachbarn, Familie oder in die Hausgruppe.</p></div>
-        <button type="button" class="btn btn-secondary btn-auto" data-einladen>Nachbarn einladen</button>
-      </div>
-      <p class="fuss" id="fuss">Prototyp mit erfundenen Beispiel-Anfragen in Garbsen. Es fließt kein echtes Geld.</p>
+      <button type="button" class="einladen-zeile" data-einladen><svg class="i i-sm" aria-hidden="true"><use href="#i-teilen"/></svg><span>Nachbarn einladen</span><span class="aufgabe-pfeil" aria-hidden="true">›</span></button>
     </section>
 
     <!-- ===== Karte ===== -->
@@ -111,7 +106,6 @@
         <span><i class="sw sw-zugesagt"></i>Deine Zusage</span>
         <span id="legende-stadtteil" hidden><i class="sw sw-stadtteil"></i>Stadtteil (ungefähr)</span>
       </div>
-      <p class="klein">Beträge zeigen die Aufwandsentschädigung. Orte sind ungefähr, die genaue Adresse gibt es erst nach einer Zusage.</p>
       <div class="hinweis-karte" id="karte-hinweis" hidden>
         <svg class="i" aria-hidden="true"><use href="#i-info"/></svg>
         <span><strong>Vereinfachte Karte.</strong> Diese Vorschau darf keine Kartenbilder nachladen. Sobald die App auf einem eigenen Server läuft, liegt hier die Straßenkarte von OpenStreetMap.</span>
@@ -123,7 +117,7 @@
       <form class="form wizard" id="neu-form" novalidate>
         <div class="hallo">
           <h1 id="h-neu">Hilfe suchen</h1>
-          <p class="lead" id="neu-lead">In vier kurzen Schritten. Nachbarn in der Nähe sehen deine Anfrage danach auf der Karte.</p>
+          <p class="lead" id="neu-lead" hidden></p>
           <button type="button" class="link-btn" id="neu-abbrechen" hidden>Bearbeiten abbrechen</button>
         </div>
         <div class="wizard-kopf">
@@ -163,7 +157,6 @@
               <label class="wahl"><input type="radio" name="tag" value="Nächste Woche"><span>Nächste Woche<small class="wahl-datum"></small></span></label>
             </div>
             <p class="fehler" id="fehler-tag" hidden>Bitte wähle, wann du Hilfe brauchst.</p>
-            <p class="feld-hinweis">Ist der Termin vorbei und hat niemand zugesagt, verschwindet die Anfrage von der Karte. Du kannst dann einen neuen Termin wählen.</p>
           </fieldset>
           <fieldset class="feld">
             <legend>Tageszeit</legend>
@@ -181,7 +174,7 @@
           <div class="feld">
             <label for="neu-adresse">Straße und Hausnummer <span class="optional" id="adresse-optional">(freiwillig)</span></label>
             <input id="neu-adresse" name="adresse" maxlength="120" autocomplete="street-address" placeholder="z. B. Weberstraße 5" aria-describedby="adresse-hinweis fehler-adresse">
-            <p class="feld-hinweis" id="adresse-hinweis">Die Adresse sieht nur, wer bei dir zusagt. Auf der Karte erscheint nur ein Punkt in deinem Stadtteil.</p>
+            <p class="feld-hinweis" id="adresse-hinweis">Sieht nur, wer bei dir zusagt.</p>
             <p class="fehler" id="fehler-adresse" hidden>Bitte gib deine Straße und Hausnummer an.</p>
           </div>
         </div>
@@ -203,7 +196,6 @@
             <div class="schnell" id="neu-schnell"></div>
             <p class="fehler" id="fehler-betrag" hidden>Bitte einen Betrag zwischen 5 und 50 € wählen.</p>
           </div>
-          <div class="regel"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span>Nachbarschaftshilfe bleibt klein: höchstens 50 € pro Auftrag und keine festen, regelmäßigen Termine.</span></div>
         </div>
 
         <!-- Schritt 4: Prüfen -->
@@ -226,7 +218,6 @@
     <section id="view-auftraege" class="view" aria-labelledby="h-auftraege" hidden>
       <h1 id="h-auftraege">Aufträge</h1>
       <div id="naechstes"></div>
-      <div class="summe" id="summe"></div>
       <div class="abschnitt">
         <h2 class="h-klein">Deine Zusagen</h2>
         <div class="liste" id="zusagen"></div>
@@ -235,12 +226,10 @@
         <h2 class="h-klein">Deine Anfragen</h2>
         <div class="liste" id="eigene"></div>
       </div>
+      <div class="summe" id="summe"></div>
       <button type="button" class="link-btn" data-reset id="reset-knopf">Beispieldaten zurücksetzen</button>
     </section>
   </main>
-  <footer class="app-fuss">
-    <nav aria-label="Hilfe und Rechtliches"><a href="#fragen">Häufige Fragen</a><a href="#impressum">Impressum</a><a href="#datenschutz">Datenschutz</a><a href="#nutzung">Nutzungsbedingungen</a><a href="#regeln">Regeln für Nachbarn</a></nav>
-  </footer>
 </div>
 
 <nav class="tabs" aria-label="Hauptnavigation">
@@ -254,6 +243,15 @@
 
 <div class="start" id="start" role="dialog" aria-modal="true" aria-labelledby="start-titel" hidden>
   <div class="start-inhalt" id="start-inhalt"></div>
+</div>
+
+<div class="feier" id="feier" hidden>
+  <div class="feier-karte" role="status" aria-live="polite">
+    <div class="feier-scheibe" aria-hidden="true"><!--FEIER-SVG--></div>
+    <p class="feier-titel" id="feier-titel"></p>
+    <p class="feier-text" id="feier-text"></p>
+    <button type="button" class="btn btn-primary" id="feier-weiter">Weiter</button>
+  </div>
 </div>
 
 <div class="backdrop" id="backdrop" hidden></div>

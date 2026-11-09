@@ -51,7 +51,7 @@ function FRAGEN_TEXTE(c) {
         frage('Wie erreiche ich euch?',
           `<p>${c.betreiber.email ? `Per E-Mail an <a href="mailto:${c.betreiber.email}">${c.betreiber.email}</a>.` : 'Die Kontaktdaten stehen im <a href="#impressum">Impressum</a>.'} Geht es um eine bestimmte Person oder Anfrage, nutze am besten „Melden“ direkt dort.</p>`),
         frage('Wie wird die Schrift größer?',
-          `<p>Oben auf „Ansicht“ tippen. Dort stellst du Schriftgröße, hell oder dunkel und die Startseite ein.</p>`)
+          `<p>Oben auf „Menü“ tippen. Dort stellst du Schriftgröße, hell oder dunkel und die Startseite ein.</p>`)
       ]]
     ]
   };

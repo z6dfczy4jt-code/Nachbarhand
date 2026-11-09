@@ -32,10 +32,39 @@ FRUEH = ('<script>try{var a=JSON.parse(localStorage.getItem("handdrauf-ansicht")
          'if(a.schrift==="gross"||a.schrift==="sehr-gross")r.setAttribute("data-schrift",a.schrift)}catch(e){}</script>')
 
 
+def handschlag():
+    """Das Logo als zwei Hände für die Animationen (Start und bestätigter Job).
+
+    Die Trennlinie läuft so durch den Händedruck, dass die Faust mit den Knöcheln links
+    und die offene Hand mit Daumen rechts landet. Zusammen ergeben beide Teile genau das Logo.
+    """
+    import re
+    d = (WURZEL / 'design/handschlag.d').read_text().strip()
+    linie = [(214, -40), (206, 42), (160, 86), (150, 104), (166, 118), (208, 124), (214, 176), (206, 205), (210, 290)]
+    pts = lambda p: ' '.join(f'{x},{y}' for x, y in p)
+    defs = (f'<path id="hs-form" fill-rule="evenodd" d="{d}"/>'
+            f'<clipPath id="hs-clip-l"><polygon points="{pts([(-60, -40)] + linie + [(-60, 290)])}"/></clipPath>'
+            f'<clipPath id="hs-clip-r"><polygon points="{pts(linie + [(480, 290), (480, -40)])}"/></clipPath>')
+    haende = ('<g class="hs-ganz"><g class="hs-l"><use href="#hs-form" clip-path="url(#hs-clip-l)"/></g>'
+              '<g class="hs-r"><use href="#hs-form" clip-path="url(#hs-clip-r)"/></g></g>'
+              '<g class="hs-funken"><path d="M176 -2 158 -34"/><path d="M212 -10V-48"/><path d="M248 -2 266 -34"/>'
+              '<path d="M146 22 116 6"/><path d="M280 22 310 6"/></g>')
+    # Wortmarke aus dem gestapelten Logo (Hand + Drauf), Farbe folgt dem Design
+    logo = (WURZEL / 'design/logo/hand-drauf.svg').read_text()
+    g = re.search(r'<g fill="[^"]*" transform="([^"]+)">(.*?)</g>', logo, re.S)
+    intro = (f'<svg class="hs hs-intro" viewBox="40 -90 520 460" aria-hidden="true" focusable="false">'
+             f'<g transform="translate(84.8 -10.3)">{haende}</g>'
+             f'<g transform="{g.group(1)}"><g class="hs-wort" fill="currentColor">{g.group(2)}</g></g></svg>')
+    feier = f'<svg class="hs hs-feier" viewBox="-30 -70 480 340" aria-hidden="true" focusable="false">{haende}</svg>'
+    return defs, intro, feier
+
+
 def teile(vorschau):
     leaflet_css = (SRC / 'vendor' / 'leaflet-1.9.4.css').read_text()
     styles = (SRC / 'styles.css').read_text()
     body = (SRC / 'body.html').read_text().replace('<!--KOPFZEICHEN-->', (SRC / 'kopfzeichen.svg').read_text().strip())
+    defs, intro, feier = handschlag()
+    body = body.replace('<!--HANDSCHLAG-DEFS-->', defs).replace('<!--INTRO-SVG-->', intro).replace('<!--FEIER-SVG-->', feier)
     app = '\n'.join((SRC / n).read_text() for n in ('symbole.js', 'recht.js', 'fragen.js', 'app.js'))
     if vorschau:
         alt = 'const VORSCHAU = false;'
