@@ -35,7 +35,7 @@ function FRAGEN_TEXTE(c) {
       ]],
       ['Anfragen', [
         frage('Wie lange ist meine Anfrage sichtbar?',
-          `<p>Bis der gewählte Termin vorbei ist, höchstens drei Wochen. Hat bis dahin niemand zugesagt, verschwindet es von der Karte. Unter „Aufträge“ kannst du dann einen neuen Termin wählen.</p>`),
+          `<p>Bis der letzte gewählte Tag vorbei ist. Termine kannst du bis zu zwei Monate im Voraus wählen. Hat bis dahin niemand zugesagt, verschwindet es von der Karte. Unter „Aufträge“ kannst du dann einen neuen Termin wählen.</p>`),
         frage('Kann ich meine Anfrage ändern?',
           `<p>Ja, solange noch niemand zugesagt hat: Anfrage öffnen und „Anfrage bearbeiten“ tippen. Danach sprecht ihr Änderungen in den Nachrichten ab.</p>`),
         frage('Was passiert, wenn jemand absagt?',

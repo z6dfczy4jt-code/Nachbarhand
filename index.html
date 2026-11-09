@@ -1369,6 +1369,46 @@ h2 { font-size: 1.375rem; line-height: 1.2; letter-spacing: -0.016em; }
 .tabs { background: color-mix(in srgb, var(--surface) 82%, transparent); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
 .tab { font-weight: 600; }
 .sheet { border-radius: 16px 16px 0 0; }
+
+/* ===== Terminkalender im Anfrage-Formular ===== */
+.termin .segment { margin-bottom: 14px; }
+.kal { padding: 12px 10px 10px; border-radius: 16px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+.kal-kopf { display: flex; align-items: center; justify-content: space-between; padding: 0 2px 8px; }
+.kal-monat { font-weight: 700; font-size: 1.0625rem; letter-spacing: -0.01em; }
+.kal-pfeil { width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--you); font-size: 1.75rem; line-height: 1; cursor: pointer; }
+.kal-pfeil:hover:not(:disabled) { background: var(--tile); }
+.kal-pfeil:disabled { color: var(--line); cursor: default; }
+.kal-raster { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px 0; justify-items: center; }
+.kal-wt { padding: 4px 0 6px; font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.02em; }
+.kal-tag { width: 44px; height: 44px; max-width: 100%; border: 0; border-radius: 50%; background: transparent; color: var(--ink); font-size: 1.0625rem; font-variant-numeric: tabular-nums; cursor: pointer; transition: background .15s, color .15s; }
+.kal-tag:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--tile); }
+.kal-tag.ist-heute { color: var(--you); font-weight: 700; }
+.kal-tag[aria-pressed="true"] { background: var(--ink); color: var(--surface); font-weight: 700; }
+.kal-tag:disabled { color: var(--muted); opacity: .45; cursor: default; }
+.kal-tag:focus-visible, .kal-pfeil:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.kal-hinweis { margin: 8px 4px 0; font-size: 0.8125rem; color: var(--muted); text-align: center; }
+.wahl-gruppe + .wahl-gruppe { margin-top: 14px; }
+.wahl-titel { display: block; margin: 0 0 8px; font-size: 0.9375rem; font-weight: 600; color: var(--muted); }
+.wahl-raster-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.wahl-raster-3 .wahl-knopf { padding: 8px 4px; min-height: 56px; }
+.wahl-raster-zeit { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.wahl-raster-zeit .wahl-knopf { grid-column: span 2; }
+.wahl-raster-zeit .wahl-knopf:nth-child(n+4) { grid-column: span 3; }
+.wahl-knopf { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1.2; }
+.wahl-knopf small { font-size: 0.75rem; font-weight: 400; color: var(--muted); }
+.wahl-knopf[aria-pressed="true"] small { color: inherit; opacity: .8; }
+.wahl-knopf:disabled { opacity: .4; cursor: default; }
+.wahl-knopf:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.uhrzeit-feld { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 14px; border-radius: 12px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); font-weight: 600; }
+.uhrzeit-feld[hidden] { display: none; }
+.uhrzeit-feld input { min-height: 44px; padding: 6px 10px; border: 0; border-radius: 10px; background: var(--tile); color: var(--ink); font: inherit; font-size: 1.0625rem; font-variant-numeric: tabular-nums; }
+.termin-text { display: flex; align-items: center; gap: 8px; margin: 4px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--tile); font-weight: 600; }
+.termin-text:empty { display: none; }
+@media (max-width: 360px) {
+  .kal-tag { width: 38px; height: 38px; font-size: 1rem; }
+  .wahl-raster-3 .wahl-knopf, .wahl-raster-zeit .wahl-knopf { font-size: 0.8125rem; padding: 8px 4px; }
+  .kal-hinweis { font-size: 0.75rem; }
+}
 </style>
 </head>
 <body>
@@ -1523,25 +1563,26 @@ h2 { font-size: 1.375rem; line-height: 1.2; letter-spacing: -0.016em; }
         <!-- Schritt 2: Wann und wo? -->
         <div class="schritt" data-schritt="2" role="group" aria-labelledby="schritt-2-titel" hidden>
           <h2 class="schritt-titel" id="schritt-2-titel" tabindex="-1">Wann und wo?</h2>
-          <fieldset class="feld">
+          <fieldset class="feld termin">
             <legend>Wann?</legend>
-            <div class="wahl-raster" id="neu-tag">
-              <label class="wahl"><input type="radio" name="tag" value="Heute"><span>Heute<small class="wahl-datum"></small></span></label>
-              <label class="wahl"><input type="radio" name="tag" value="Morgen" checked><span>Morgen<small class="wahl-datum"></small></span></label>
-              <label class="wahl"><input type="radio" name="tag" value="Dieses Wochenende"><span>Am Wochenende<small class="wahl-datum"></small></span></label>
-              <label class="wahl"><input type="radio" name="tag" value="Nächste Woche"><span>Nächste Woche<small class="wahl-datum"></small></span></label>
+            <div class="segment" role="group" aria-label="Art des Termins" id="termin-modus">
+              <button type="button" data-termin-modus="tag" aria-pressed="true">Bestimmte Tage</button>
+              <button type="button" data-termin-modus="woche" aria-pressed="false">Flexibel</button>
             </div>
+            <div id="termin-tage"></div>
+            <div id="termin-woche" hidden></div>
             <p class="fehler" id="fehler-tag" hidden>Bitte wähle, wann du Hilfe brauchst.</p>
           </fieldset>
           <fieldset class="feld">
-            <legend>Tageszeit</legend>
-            <div class="wahl-raster" id="neu-zeit">
-              <label class="wahl"><input type="radio" name="zeit" value="vormittags"><span>Vormittags</span></label>
-              <label class="wahl"><input type="radio" name="zeit" value="nachmittags" checked><span>Nachmittags</span></label>
-              <label class="wahl"><input type="radio" name="zeit" value="abends"><span>Abends</span></label>
-              <label class="wahl"><input type="radio" name="zeit" value="flexibel"><span>Ist mir egal</span></label>
+            <legend>Uhrzeit</legend>
+            <div class="wahl-raster wahl-raster-zeit" id="termin-zeit" role="group" aria-label="Uhrzeit"></div>
+            <div class="uhrzeit-feld" id="uhrzeit-feld" hidden>
+              <label for="neu-uhrzeit">Gegen</label>
+              <input type="time" id="neu-uhrzeit" value="16:00" step="900" min="06:00" max="22:00">
+              <span>Uhr</span>
             </div>
           </fieldset>
+          <p class="termin-text" id="termin-text" aria-live="polite"></p>
           <div class="feld">
             <label for="neu-stadtteil">Stadtteil</label>
             <select id="neu-stadtteil" name="stadtteil"></select>
@@ -1847,7 +1888,7 @@ function FRAGEN_TEXTE(c) {
       ]],
       ['Anfragen', [
         frage('Wie lange ist meine Anfrage sichtbar?',
-          `<p>Bis der gewählte Termin vorbei ist, höchstens drei Wochen. Hat bis dahin niemand zugesagt, verschwindet es von der Karte. Unter „Aufträge“ kannst du dann einen neuen Termin wählen.</p>`),
+          `<p>Bis der letzte gewählte Tag vorbei ist. Termine kannst du bis zu zwei Monate im Voraus wählen. Hat bis dahin niemand zugesagt, verschwindet es von der Karte. Unter „Aufträge“ kannst du dann einen neuen Termin wählen.</p>`),
         frage('Kann ich meine Anfrage ändern?',
           `<p>Ja, solange noch niemand zugesagt hat: Anfrage öffnen und „Anfrage bearbeiten“ tippen. Danach sprecht ihr Änderungen in den Nachrichten ab.</p>`),
         frage('Was passiert, wenn jemand absagt?',
@@ -2148,8 +2189,9 @@ function FRAGEN_TEXTE(c) {
   const WOCHENTAGE = ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'];
   const MONATE = ['Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sept.', 'Okt.', 'Nov.', 'Dez.'];
   const TAG_MS = 86400000;
-  const MAX_TAGE = 21; // spätestens dann läuft eine offene Anfrage ab
-  const TAG_WAHL = ['Heute', 'Morgen', 'Dieses Wochenende', 'Nächste Woche'];
+  const MAX_TAGE = 21; // ohne festen Termin läuft eine offene Anfrage nach drei Wochen ab
+  const MONATE_LANG = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+  const MAX_VORAUS = 60; // so weit im Voraus lässt sich ein Termin wählen (wie in der Datenbank)
   const ZEIT_TEXT = { vormittags: 'vormittags', nachmittags: 'nachmittags', abends: 'abends', flexibel: 'Uhrzeit flexibel' };
   function heute() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
   function plusTage(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
@@ -2175,11 +2217,19 @@ function FRAGEN_TEXTE(c) {
     }
     return { von, bis, text, kurz };
   }
-  // Was gespeichert wird: lesbarer Text mit Datum und der letzte passende Tag
-  function terminSpeichern(tag, zeit) {
-    const z = zeitraum(tag) || zeitraum('Morgen');
-    return { wann: `${z.text}, ${ZEIT_TEXT[zeit] || ZEIT_TEXT.flexibel}`, bis: isoTag(z.bis) };
+  // Bausteine für den Termin-Text: „Mo. 16., Mi. 18. oder Fr. 20. Nov.“, „Werktage 16.–20. Nov.“
+  const montagVon = (d) => plusTage(d, -((d.getDay() + 6) % 7));
+  const spanneText = (von, bis) => von.getMonth() === bis.getMonth()
+    ? `${von.getDate()}.–${bis.getDate()}. ${MONATE[bis.getMonth()]}`
+    : `${von.getDate()}. ${MONATE[von.getMonth()]}–${bis.getDate()}. ${MONATE[bis.getMonth()]}`;
+  function tageText(daten) {
+    const teile = daten.map((d, i) => {
+      const n = daten[i + 1];
+      return `${WOCHENTAGE[d.getDay()]} ${d.getDate()}.${!n || n.getMonth() !== d.getMonth() ? ' ' + MONATE[d.getMonth()] : ''}`;
+    });
+    return teile.length === 1 ? teile[0] : `${teile.slice(0, -1).join(', ')} oder ${teile.at(-1)}`;
   }
+  const uhrzeitText = (hhmm) => { const [h, m] = String(hhmm || '16:00').split(':').map(Number); return `gegen ${h}${m ? ':' + String(m).padStart(2, '0') : ''} Uhr`; };
   // Liest den Termin aus dem Wann-Text: „Di. 10. Nov., nachmittags“, „Sa./So. 14./15. Nov.“, „Woche 16.–22. Nov.“,
   // ältere Texte wie „Samstag, vormittags“ oder „Morgen, ab 16 Uhr“. Ergebnis: erster und letzter Tag, Uhrzeit-Fenster.
   const MONAT_INDEX = { 'Jan.': 0, 'Feb.': 1, 'März': 2, 'Apr.': 3, 'Mai': 4, 'Juni': 5, 'Juli': 6, 'Aug.': 7, 'Sept.': 8, 'Okt.': 9, 'Nov.': 10, 'Dez.': 11 };
@@ -2189,20 +2239,27 @@ function FRAGEN_TEXTE(c) {
     const d = new Date(h.getFullYear(), monat, tag);
     return d < plusTage(h, -180) ? new Date(h.getFullYear() + 1, monat, tag) : d; // Jahreswechsel
   }
+  // Alle Tage mit Datum aus einem Text wie „Mo. 16., Mi. 18. oder Fr. 20. Nov.“ (Monat gilt rückwärts)
+  function datenAusText(datum) {
+    const tage = [...datum.matchAll(/(\d{1,2})\.(?:\s(Jan\.|Feb\.|März|Apr\.|Mai|Juni|Juli|Aug\.|Sept\.|Okt\.|Nov\.|Dez\.))?/g)]
+      .map((m) => [Number(m[1]), m[2] ? MONAT_INDEX[m[2]] : null]);
+    if (!tage.some((t) => t[1] !== null)) return [];
+    for (let k = tage.length - 2; k >= 0; k--) if (tage[k][1] === null) tage[k][1] = tage[k + 1][1];
+    for (let k = 1; k < tage.length; k++) if (tage[k][1] === null) tage[k][1] = tage[k - 1][1];
+    const daten = tage.map(([t, m]) => datumIm(m, t));
+    for (let k = 1; k < daten.length; k++) if (daten[k] < daten[k - 1]) daten[k] = new Date(daten[k].getFullYear() + 1, daten[k].getMonth(), daten[k].getDate());
+    return daten;
+  }
   function terminAusText(wann) {
     if (!wann) return null;
     const i = wann.lastIndexOf(', ');
     const datum = (i > 0 ? wann.slice(0, i) : wann).trim();
     const zeit = i > 0 ? wann.slice(i + 2) : '';
     let von = null, bis = null, genau = false;
-    const tage = [...datum.matchAll(/(\d{1,2})\.(?:\s(Jan\.|Feb\.|März|Apr\.|Mai|Juni|Juli|Aug\.|Sept\.|Okt\.|Nov\.|Dez\.))?/g)]
-      .map((m) => [Number(m[1]), m[2] ? MONAT_INDEX[m[2]] : null]);
-    if (tage.some((t) => t[1] !== null)) {
-      for (let k = tage.length - 2; k >= 0; k--) if (tage[k][1] === null) tage[k][1] = tage[k + 1][1];
-      for (let k = 1; k < tage.length; k++) if (tage[k][1] === null) tage[k][1] = tage[k - 1][1];
-      von = datumIm(tage[0][1], tage[0][0]);
-      bis = datumIm(tage.at(-1)[1], tage.at(-1)[0]);
-      if (bis < von) bis = new Date(bis.getFullYear() + 1, bis.getMonth(), bis.getDate());
+    const daten = datenAusText(datum);
+    if (daten.length) {
+      von = daten[0];
+      bis = daten.at(-1);
       genau = true;
     } else if (/^Heute/.test(datum)) von = bis = heute();
     else if (/^Morgen/.test(datum)) von = bis = plusTage(heute(), 1);
@@ -2217,7 +2274,9 @@ function FRAGEN_TEXTE(c) {
     let start = null, ende = null;
     const spanne = zeit.match(/(\d{1,2})(?::(\d\d))?\s*[–-]\s*(\d{1,2})(?::(\d\d))?\s*Uhr/);
     const ab = zeit.match(/ab\s(\d{1,2})(?::(\d\d))?\s*Uhr/);
-    if (spanne) { start = [+spanne[1], +(spanne[2] || 0)]; ende = [+spanne[3], +(spanne[4] || 0)]; }
+    const gegen = zeit.match(/gegen\s(\d{1,2})(?::(\d\d))?\s*Uhr/);
+    if (gegen) { start = [+gegen[1], +(gegen[2] || 0)]; ende = [Math.min(23, +gegen[1] + 1), +(gegen[2] || 0)]; }
+    else if (spanne) { start = [+spanne[1], +(spanne[2] || 0)]; ende = [+spanne[3], +(spanne[4] || 0)]; }
     else if (ab) { start = [+ab[1], +(ab[2] || 0)]; ende = [Math.min(23, +ab[1] + 2), +(ab[2] || 0)]; }
     else if (/vormittag/.test(zeit)) { start = [9, 0]; ende = [12, 0]; }
     else if (/nachmittag/.test(zeit)) { start = [14, 0]; ende = [17, 0]; }
@@ -2240,7 +2299,8 @@ function FRAGEN_TEXTE(c) {
   const wannLang = (g) => { const rel = relativerTag(g); return rel ? `${rel}, ${g.wann}` : (g.wann || ''); };
   const abgelaufen = (g) => g.status === 'offen' && !!g.laeuftAb && g.laeuftAb <= Date.now();
   const sichtbarBis = (g) => g.bis ? tagText(ausIso(g.bis)) : (g.laeuftAb ? tagText(new Date(g.laeuftAb - 1)) : '');
-  const demoAblauf = (bis) => Math.min(Date.now() + MAX_TAGE * TAG_MS, +plusTage(ausIso(bis), 1));
+  // Sichtbar bis Mitternacht nach dem letzten gewählten Tag (höchstens 60 Tage voraus), ohne Termin drei Wochen
+  const demoAblauf = (bis) => bis ? +plusTage(ausIso(bis), 1) : Date.now() + MAX_TAGE * TAG_MS;
 
   /* ===== Anstößige Wörter (App Store 1.2). Dieselbe Liste prüft die Datenbank in privat.anstoessig. ===== */
   const ANSTOESSIG = new RegExp('(?<![a-zäöüß])(hure|fotze|wichser|arschloch|spast(i|en)?(?![a-zäöüß])|mongo(?![a-zäöüß])|nutte|(ge)?fick(en|t|st|e|er|te|ten)?(?![a-zäöüß])|bitch|kanake|neger|nigger|schwuchtel|vergewaltig)' +
@@ -4109,7 +4169,6 @@ function FRAGEN_TEXTE(c) {
   ).join('');
 
   const katWahl = () => form.querySelector('input[name="kat"]:checked').value;
-  const wahlWert = (name) => (form.querySelector(`input[name="${name}"]:checked`) || {}).value || '';
   const betragWert = () => { const v = parseInt(betragInput.value, 10); return Number.isFinite(v) ? v : NaN; };
   const betragGueltig = (b) => b >= CONFIG.minBetrag && b <= CONFIG.maxBetrag;
 
@@ -4158,7 +4217,7 @@ function FRAGEN_TEXTE(c) {
     $('#neu-pruefen').innerHTML =
       zeile('Tätigkeit', `${icon(k, 'i-sm')}${esc(katName(k))}: ${esc($('#neu-titel').value.trim())}`, 1) +
       (text ? zeile('Details', esc(text), 1) : '') +
-      zeile('Wann', esc(wannLang({ ...terminSpeichern(wahlWert('tag'), wahlWert('zeit')) })), 2) +
+      zeile('Wann', esc(wannLang(terminSpeichern())), 2) +
       zeile('Wo', `${esc($('#neu-stadtteil').value)}${adresse ? `<span class="klein">${esc(adresse)}, sieht nur, wer zusagt</span>` : ''}`, 2) +
       zeile('Aufwandsentschädigung', euro(betragWert()), 3);
   }
@@ -4170,7 +4229,7 @@ function FRAGEN_TEXTE(c) {
     $('#neu-zurueck').hidden = n === 1;
     $('#neu-weiter').hidden = n === 4;
     $('#neu-senden').hidden = n !== 4;
-    if (n === 2) renderTage();
+    if (n === 2) renderTermin();
     if (n === 3) renderRichtwert();
     if (n === 4) { renderPruefen(); renderKosten(); }
     if (fokus) {
@@ -4184,7 +4243,7 @@ function FRAGEN_TEXTE(c) {
     const fehler = (feld, id) => { feld.setAttribute('aria-invalid', 'true'); $(id).hidden = false; return feld; };
     if (n === 1 && $('#neu-titel').value.trim().length < 3) return fehler($('#neu-titel'), '#fehler-titel');
     if (n === 1 && anstoessig(`${$('#neu-titel').value} ${$('#neu-text').value}`)) return fehler(anstoessig($('#neu-titel').value) ? $('#neu-titel') : $('#neu-text'), '#fehler-wort');
-    if (n === 2 && !wahlWert('tag')) { $('#fehler-tag').hidden = false; return form.querySelector('input[name="tag"]'); }
+    if (n === 2 && !terminAuswahl().gueltig) { $('#fehler-tag').hidden = false; return $(termin.modus === 'tag' ? '#termin-tage .kal-tag[tabindex="0"]' : '#termin-woche .wahl-knopf'); }
     if (n === 2 && istLive() && $('#neu-adresse').value.trim().length < 3) return fehler($('#neu-adresse'), '#fehler-adresse');
     if (n === 3 && !betragGueltig(betragWert())) return fehler(betragInput, '#fehler-betrag');
     return null;
@@ -4216,7 +4275,6 @@ function FRAGEN_TEXTE(c) {
   });
   form.addEventListener('change', (e) => {
     if (e.target.name === 'kat') { renderVorschlaege(); betragGeaendert = false; }
-    if (e.target.name === 'tag') $('#fehler-tag').hidden = true;
   });
   betragInput.addEventListener('input', () => { betragGeaendert = true; renderKosten(); });
   $('#neu-titel').addEventListener('input', (e) => {
@@ -4229,15 +4287,186 @@ function FRAGEN_TEXTE(c) {
   });
   renderVorschlaege();
 
-  // Datum unter „Heute“, „Morgen“ usw., damit klar ist, welcher Tag gemeint ist
-  function renderTage() {
-    form.querySelectorAll('input[name="tag"]').forEach((i) => {
-      const z = zeitraum(i.value);
-      const el = i.parentElement.querySelector('.wahl-datum');
-      if (z && el) el.textContent = z.kurz;
-    });
+  /* ----- Termin: Kalender mit einzelnen Tagen oder flexibel in einer Woche ----- */
+  const ZEIT_WAHL = [['vormittags', 'Vormittags'], ['nachmittags', 'Nachmittags'], ['abends', 'Abends'], ['uhrzeit', 'Uhrzeit wählen'], ['flexibel', 'Ist mir egal']];
+  const WOCHEN_WAHL = ['Diese Woche', 'Nächste Woche', 'In 2 Wochen'];
+  const UMFANG_WAHL = [['ganz', 'Ganze Woche', 'Mo–So'], ['werktage', 'Werktage', 'Mo–Fr'], ['wochenende', 'Wochenende', 'Sa/So']];
+  const MAX_TAGE_WAHL = 5;
+  const termin = {};
+  function terminStart() {
+    const morgen = plusTage(heute(), 1);
+    Object.assign(termin, { modus: 'tag', tage: [isoTag(morgen)], woche: 0, umfang: 'ganz', zeit: 'nachmittags', uhrzeit: '16:00', fokus: null });
+    termin.monat = new Date(morgen.getFullYear(), morgen.getMonth(), 1); // am Monatsende gleich den nächsten Monat zeigen
   }
-  renderTage();
+  // Welche Tage umfasst „Diese Woche, Werktage“ usw. ab heute?
+  function wochenSpanne(woche, umfang) {
+    const h = heute();
+    const mo = plusTage(montagVon(h), 7 * woche);
+    let von = umfang === 'wochenende' ? plusTage(mo, 5) : mo;
+    const bis = plusTage(mo, umfang === 'werktage' ? 4 : 6);
+    if (von < h) von = h;
+    return von > bis ? null : { von, bis };
+  }
+  // Ergebnis der Auswahl: Text für die Anzeige und den letzten Tag (für den Ablauf)
+  function terminAuswahl() {
+    if (termin.modus === 'tag') {
+      const daten = termin.tage.map(ausIso).filter((d) => d >= heute()).sort((x, y) => x - y);
+      if (!daten.length) return { gueltig: false };
+      return { gueltig: true, text: tageText(daten), von: daten[0], bis: daten.at(-1) };
+    }
+    if (termin.woche < 0) return { gueltig: false };
+    const sp = wochenSpanne(termin.woche, termin.umfang);
+    if (!sp) return { gueltig: false };
+    const { von, bis } = sp;
+    if (+von === +bis) return { gueltig: true, text: tagText(von), von, bis };
+    // Ab Samstag ist vom Rest der Woche nur noch das Wochenende übrig
+    const umfang = termin.umfang === 'ganz' && von.getDay() === 6 ? 'wochenende' : termin.umfang;
+    const vor = { ganz: 'Woche', werktage: 'Werktage', wochenende: 'Wochenende' }[umfang];
+    const text = umfang === 'wochenende' && von.getMonth() === bis.getMonth() ? `${vor} ${von.getDate()}./${bis.getDate()}. ${MONATE[bis.getMonth()]}` : `${vor} ${spanneText(von, bis)}`;
+    return { gueltig: true, text, von, bis };
+  }
+  const terminZeitText = () => termin.zeit === 'uhrzeit' ? uhrzeitText(termin.uhrzeit) : (ZEIT_TEXT[termin.zeit] || ZEIT_TEXT.flexibel);
+  // Was gespeichert wird: lesbarer Text mit Datum und Uhrzeit und der letzte passende Tag
+  function terminSpeichern() {
+    const a = terminAuswahl();
+    if (!a.gueltig) return { wann: '', bis: null };
+    return { wann: `${a.text}, ${terminZeitText()}`, bis: isoTag(a.bis) };
+  }
+  // Zum Bearbeiten: aus dem gespeicherten Text wieder eine Auswahl machen
+  function terminAusWann(wann, vorbei) {
+    terminStart();
+    termin.tage = [];
+    if (!wann) return;
+    const i = wann.lastIndexOf(', ');
+    const datum = i > 0 ? wann.slice(0, i) : wann;
+    const zeitTeil = i > 0 ? wann.slice(i + 2) : '';
+    const gegen = zeitTeil.match(/gegen (\d{1,2})(?::(\d\d))? Uhr/);
+    if (gegen) { termin.zeit = 'uhrzeit'; termin.uhrzeit = `${gegen[1].padStart(2, '0')}:${gegen[2] || '00'}`; }
+    else termin.zeit = Object.keys(ZEIT_TEXT).find((k) => ZEIT_TEXT[k] === zeitTeil || k === zeitTeil) || 'flexibel';
+    const t = terminAusText(wann);
+    if (!t || vorbei) { termin.woche = -1; return; }
+    const art = /^(Woche|Werktage|Wochenende)\b|^(Sa\.\/So\.)/.exec(datum);
+    if (art) {
+      termin.modus = 'woche';
+      termin.umfang = art[1] === 'Werktage' ? 'werktage' : art[1] === 'Woche' ? 'ganz' : 'wochenende';
+      termin.woche = Math.round((montagVon(t.von) - montagVon(heute())) / (7 * TAG_MS));
+      if (termin.woche < 0 || termin.woche > 2) termin.woche = -1;
+      return;
+    }
+    termin.tage = datenAusText(datum).filter((d) => d >= heute()).map(isoTag);
+    if (termin.tage.length) termin.monat = new Date(ausIso(termin.tage[0]).getFullYear(), ausIso(termin.tage[0]).getMonth(), 1);
+  }
+
+  function kalenderHTML() {
+    const h = heute(), max = plusTage(h, MAX_VORAUS);
+    const m = termin.monat;
+    const tageImMonat = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+    const versatz = (m.getDay() + 6) % 7;
+    const gewaehlt = new Set(termin.tage);
+    const imMonat = (iso) => { const d = ausIso(iso); return d.getMonth() === m.getMonth() && d.getFullYear() === m.getFullYear(); };
+    // Nur ein Tag ist per Tab erreichbar, die Pfeiltasten wechseln den Tag
+    const kandidaten = [termin.fokus, ...termin.tage, isoTag(h), isoTag(new Date(m))].filter((x) => x && imMonat(x) && ausIso(x) >= h && ausIso(x) <= max);
+    const fokus = kandidaten[0] || isoTag(new Date(m.getFullYear(), m.getMonth(), 1));
+    let zellen = '';
+    for (let k = 0; k < versatz; k++) zellen += '<span class="kal-leer" aria-hidden="true"></span>';
+    for (let t = 1; t <= tageImMonat; t++) {
+      const d = new Date(m.getFullYear(), m.getMonth(), t);
+      const iso = isoTag(d);
+      const aus = d < h || d > max;
+      const istHeute = +d === +h;
+      zellen += `<button type="button" class="kal-tag${istHeute ? ' ist-heute' : ''}${d.getDay() % 6 === 0 ? ' ist-we' : ''}" data-tag="${iso}"
+        aria-pressed="${gewaehlt.has(iso)}" aria-label="${TAGNAMEN[d.getDay()]}, ${t}. ${MONATE_LANG[d.getMonth()]}${istHeute ? ', heute' : ''}"
+        tabindex="${iso === fokus ? 0 : -1}" ${aus ? 'disabled' : ''}>${t}</button>`;
+    }
+    const vorher = m <= new Date(h.getFullYear(), h.getMonth(), 1);
+    const nachher = new Date(m.getFullYear(), m.getMonth() + 1, 1) > max;
+    return `<div class="kal">
+      <div class="kal-kopf">
+        <button type="button" class="kal-pfeil" data-kal="-1" aria-label="Voriger Monat" ${vorher ? 'disabled' : ''}>‹</button>
+        <span class="kal-monat" aria-live="polite">${MONATE_LANG[m.getMonth()]} ${m.getFullYear()}</span>
+        <button type="button" class="kal-pfeil" data-kal="1" aria-label="Nächster Monat" ${nachher ? 'disabled' : ''}>›</button>
+      </div>
+      <div class="kal-raster" role="group" aria-label="Tage im ${MONATE_LANG[m.getMonth()]}, mehrere möglich">
+        ${['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((w) => `<span class="kal-wt" aria-hidden="true">${w}</span>`).join('')}
+        ${zellen}
+      </div>
+      <p class="kal-hinweis">Tippe einen oder mehrere Tage an (höchstens ${MAX_TAGE_WAHL}).</p>
+    </div>`;
+  }
+  function wocheHTML() {
+    const knopf = (attr, wert, aktiv, titel, unter, aus) => `<button type="button" class="wahl-knopf" ${attr}="${wert}" aria-pressed="${aktiv}" ${aus ? 'disabled' : ''}>${titel}${unter ? `<small>${unter}</small>` : ''}</button>`;
+    return `<div class="wahl-gruppe"><span class="wahl-titel">Welche Woche?</span>
+        <div class="wahl-raster wahl-raster-3">${WOCHEN_WAHL.map((n, w) => {
+          const sp = wochenSpanne(w, 'ganz');
+          return knopf('data-woche', w, termin.woche === w, n, spanneText(sp.von, sp.bis), false);
+        }).join('')}</div></div>
+      <div class="wahl-gruppe"><span class="wahl-titel">Welche Tage?</span>
+        <div class="wahl-raster wahl-raster-3">${UMFANG_WAHL.map(([k, n, unter]) =>
+          knopf('data-umfang', k, termin.umfang === k, n, unter, termin.woche >= 0 && !wochenSpanne(termin.woche, k))).join('')}</div></div>`;
+  }
+  function renderTermin(fokus) {
+    $('#termin-modus').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.terminModus === termin.modus)));
+    $('#termin-tage').hidden = termin.modus !== 'tag';
+    $('#termin-woche').hidden = termin.modus !== 'woche';
+    if (termin.modus === 'tag') $('#termin-tage').innerHTML = kalenderHTML();
+    else $('#termin-woche').innerHTML = wocheHTML();
+    $('#termin-zeit').innerHTML = ZEIT_WAHL.map(([k, n]) => `<button type="button" class="wahl-knopf" data-zeit="${k}" aria-pressed="${termin.zeit === k}">${n}</button>`).join('');
+    $('#uhrzeit-feld').hidden = termin.zeit !== 'uhrzeit';
+    $('#neu-uhrzeit').value = termin.uhrzeit;
+    const a = terminAuswahl();
+    $('#termin-text').innerHTML = a.gueltig ? `${icon('kalender', 'i-sm')}<span>${esc(wannLang({ wann: `${a.text}, ${terminZeitText()}` }))}</span>` : '';
+    if (a.gueltig) $('#fehler-tag').hidden = true;
+    if (fokus) { const f = $(fokus); if (f) f.focus({ preventScroll: true }); }
+  }
+  function terminKlick(e) {
+    const t = e.target.closest('button');
+    if (!t || t.disabled) return;
+    if (t.dataset.terminModus) {
+      termin.modus = t.dataset.terminModus;
+      renderTermin(`#termin-modus [data-termin-modus="${termin.modus}"]`);
+    } else if (t.dataset.kal) {
+      termin.monat = new Date(termin.monat.getFullYear(), termin.monat.getMonth() + Number(t.dataset.kal), 1);
+      termin.fokus = null;
+      renderTermin(`#termin-tage [data-kal="${t.dataset.kal}"]:not([disabled])`);
+      if (!$('#termin-tage [data-kal]:focus')) { const f = $('#termin-tage .kal-tag[tabindex="0"]'); if (f) f.focus({ preventScroll: true }); }
+    } else if (t.dataset.tag) {
+      const iso = t.dataset.tag;
+      termin.fokus = iso;
+      if (termin.tage.includes(iso)) termin.tage = termin.tage.filter((x) => x !== iso);
+      else if (termin.tage.length >= MAX_TAGE_WAHL) { meldung(`Höchstens ${MAX_TAGE_WAHL} Tage. Für mehr nimm „Flexibel“.`); return; }
+      else termin.tage = [...termin.tage, iso];
+      renderTermin(`#termin-tage [data-tag="${iso}"]`);
+    } else if (t.dataset.woche !== undefined) {
+      termin.woche = Number(t.dataset.woche);
+      if (!wochenSpanne(termin.woche, termin.umfang)) termin.umfang = 'ganz';
+      renderTermin(`#termin-woche [data-woche="${termin.woche}"]`);
+    } else if (t.dataset.umfang) {
+      termin.umfang = t.dataset.umfang;
+      if (termin.woche < 0) termin.woche = 0;
+      renderTermin(`#termin-woche [data-umfang="${termin.umfang}"]`);
+    } else if (t.dataset.zeit) {
+      termin.zeit = t.dataset.zeit;
+      renderTermin(termin.zeit === 'uhrzeit' ? '#neu-uhrzeit' : `#termin-zeit [data-zeit="${termin.zeit}"]`);
+    }
+  }
+  ['#termin-modus', '#termin-tage', '#termin-woche', '#termin-zeit'].forEach((sel) => $(sel).addEventListener('click', terminKlick));
+  // Pfeiltasten im Kalender: links/rechts ein Tag, hoch/runter eine Woche
+  $('#termin-tage').addEventListener('keydown', (e) => {
+    const t = e.target.closest('.kal-tag');
+    const schritt = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[e.key];
+    if (!t || !schritt) return;
+    e.preventDefault();
+    const ziel = plusTage(ausIso(t.dataset.tag), schritt);
+    if (ziel < heute() || ziel > plusTage(heute(), MAX_VORAUS)) return;
+    termin.fokus = isoTag(ziel);
+    if (ziel.getMonth() !== termin.monat.getMonth()) termin.monat = new Date(ziel.getFullYear(), ziel.getMonth(), 1);
+    renderTermin(`#termin-tage [data-tag="${termin.fokus}"]`);
+  });
+  $('#neu-uhrzeit').addEventListener('input', (e) => {
+    if (/^\d{2}:\d{2}$/.test(e.target.value)) { termin.uhrzeit = e.target.value; const a = terminAuswahl(); if (a.gueltig) $('#termin-text span').textContent = wannLang({ wann: `${a.text}, ${terminZeitText()}` }); }
+  });
+  terminStart();
+  renderTermin();
 
   /* ----- Eigene Anfrage bearbeiten: dieselben Schritte, vorausgefüllt ----- */
   function renderWizardModus() {
@@ -4262,12 +4491,9 @@ function FRAGEN_TEXTE(c) {
     renderVorschlaege();
     $('#neu-titel').value = g.titel;
     $('#neu-text').value = g.text || '';
-    // Passt der gespeicherte Termin noch zu einer Auswahl? Sonst neu wählen lassen.
-    const tag = TAG_WAHL.find((w) => g.bis && isoTag(zeitraum(w).bis) === g.bis && !abgelaufen(g));
-    form.querySelectorAll('input[name="tag"]').forEach((i) => { i.checked = i.value === tag; });
-    const zeitTeil = (g.wann || '').slice((g.wann || '').lastIndexOf(', ') + 2);
-    const zeit = Object.keys(ZEIT_TEXT).find((k) => ZEIT_TEXT[k] === zeitTeil || k === zeitTeil);
-    if (zeit) form.querySelectorAll('input[name="zeit"]').forEach((i) => { i.checked = i.value === zeit; });
+    // Gespeicherten Termin wieder in den Kalender holen. Ist er vorbei, muss ein neuer gewählt werden.
+    terminAusWann(g.wann, abgelaufen(g));
+    renderTermin();
     renderStadtteilAuswahl();
     $('#neu-stadtteil').value = g.stadtteil;
     $('#neu-adresse').value = istLive() || adresse !== g.stadtteil ? (adresse || '') : '';
@@ -4286,6 +4512,8 @@ function FRAGEN_TEXTE(c) {
     betragGeaendert = false;
     form.querySelectorAll('[aria-invalid]').forEach((f) => f.removeAttribute('aria-invalid'));
     form.querySelectorAll('.fehler').forEach((f) => { f.hidden = true; });
+    terminStart();
+    renderTermin();
     renderVorschlaege();
     renderWizardModus();
     zeigeSchritt(1, false);
@@ -4318,7 +4546,7 @@ function FRAGEN_TEXTE(c) {
     const adresse = $('#neu-adresse').value.trim();
     const b = betragWert();
     const stadtteil = $('#neu-stadtteil').value;
-    const { wann, bis } = terminSpeichern(wahlWert('tag'), wahlWert('zeit'));
+    const { wann, bis } = terminSpeichern();
     const text = $('#neu-text').value.trim();
     const bearbeitet = ui.bearbeiten;
     let neuId = bearbeitet;

@@ -149,25 +149,26 @@
         <!-- Schritt 2: Wann und wo? -->
         <div class="schritt" data-schritt="2" role="group" aria-labelledby="schritt-2-titel" hidden>
           <h2 class="schritt-titel" id="schritt-2-titel" tabindex="-1">Wann und wo?</h2>
-          <fieldset class="feld">
+          <fieldset class="feld termin">
             <legend>Wann?</legend>
-            <div class="wahl-raster" id="neu-tag">
-              <label class="wahl"><input type="radio" name="tag" value="Heute"><span>Heute<small class="wahl-datum"></small></span></label>
-              <label class="wahl"><input type="radio" name="tag" value="Morgen" checked><span>Morgen<small class="wahl-datum"></small></span></label>
-              <label class="wahl"><input type="radio" name="tag" value="Dieses Wochenende"><span>Am Wochenende<small class="wahl-datum"></small></span></label>
-              <label class="wahl"><input type="radio" name="tag" value="Nächste Woche"><span>Nächste Woche<small class="wahl-datum"></small></span></label>
+            <div class="segment" role="group" aria-label="Art des Termins" id="termin-modus">
+              <button type="button" data-termin-modus="tag" aria-pressed="true">Bestimmte Tage</button>
+              <button type="button" data-termin-modus="woche" aria-pressed="false">Flexibel</button>
             </div>
+            <div id="termin-tage"></div>
+            <div id="termin-woche" hidden></div>
             <p class="fehler" id="fehler-tag" hidden>Bitte wähle, wann du Hilfe brauchst.</p>
           </fieldset>
           <fieldset class="feld">
-            <legend>Tageszeit</legend>
-            <div class="wahl-raster" id="neu-zeit">
-              <label class="wahl"><input type="radio" name="zeit" value="vormittags"><span>Vormittags</span></label>
-              <label class="wahl"><input type="radio" name="zeit" value="nachmittags" checked><span>Nachmittags</span></label>
-              <label class="wahl"><input type="radio" name="zeit" value="abends"><span>Abends</span></label>
-              <label class="wahl"><input type="radio" name="zeit" value="flexibel"><span>Ist mir egal</span></label>
+            <legend>Uhrzeit</legend>
+            <div class="wahl-raster wahl-raster-zeit" id="termin-zeit" role="group" aria-label="Uhrzeit"></div>
+            <div class="uhrzeit-feld" id="uhrzeit-feld" hidden>
+              <label for="neu-uhrzeit">Gegen</label>
+              <input type="time" id="neu-uhrzeit" value="16:00" step="900" min="06:00" max="22:00">
+              <span>Uhr</span>
             </div>
           </fieldset>
+          <p class="termin-text" id="termin-text" aria-live="polite"></p>
           <div class="feld">
             <label for="neu-stadtteil">Stadtteil</label>
             <select id="neu-stadtteil" name="stadtteil"></select>

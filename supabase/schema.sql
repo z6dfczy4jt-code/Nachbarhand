@@ -6,7 +6,7 @@
 -- Grundsätze
 -- * Lesen: Jeder (auch ohne Konto) sieht offene Gesuche mit Vorname,
 --   Anfangsbuchstabe und ungefährer Lage, bis der gewünschte Termin vorbei
---   ist (spätestens 21 Tage). Laufende Aufträge sehen nur die beiden Beteiligten.
+--   ist (ohne Termin nach 21 Tagen). Laufende Aufträge sehen nur die beiden Beteiligten.
 -- * Die genaue Adresse sieht nur, wer das Gesuch erstellt hat, und wer
 --   zugesagt hat.
 -- * Schreiben: Niemand ändert Tabellen direkt. Alles läuft über die
@@ -179,7 +179,7 @@ create table if not exists public.gesuche (
   titel text not null check (char_length(titel) between 3 and 60),
   beschreibung text not null default '' check (char_length(beschreibung) <= 400),
   betrag integer not null check (betrag between 5 and 50),
-  wann text not null check (char_length(wann) between 1 and 60),
+  wann text not null check (char_length(wann) between 1 and 120),
   dauer text not null default 'nach Absprache' check (char_length(dauer) <= 40),
   stadtteil text not null references public.stadtteile (name),
   lat double precision not null,
@@ -197,12 +197,15 @@ create table if not exists public.gesuche (
 -- Für Projekte, die vor dem Ablauf-Ausbau angelegt wurden
 alter table public.gesuche add column if not exists bis date;
 alter table public.gesuche add column if not exists laeuft_ab timestamptz not null default (now() + interval '21 days');
+-- Termin-Text mit mehreren Tagen und Uhrzeit („Mo. 16., Mi. 18. oder Fr. 20. Nov., gegen 16:30 Uhr“)
+alter table public.gesuche drop constraint if exists gesuche_wann_check;
+alter table public.gesuche add constraint gesuche_wann_check check (char_length(wann) between 1 and 120);
 create index if not exists gesuche_status_idx on public.gesuche (status);
 create index if not exists gesuche_ersteller_idx on public.gesuche (ersteller);
 create index if not exists gesuche_helfer_idx on public.gesuche (helfer);
 create index if not exists gesuche_offen_idx on public.gesuche (laeuft_ab) where status = 'offen';
 
--- Offene Gesuche sehen alle, bis der Termin vorbei ist (spätestens nach 21 Tagen).
+-- Offene Gesuche sehen alle, bis der Termin vorbei ist (ohne Termin nach 21 Tagen).
 -- Eigene Gesuche und Zusagen sehen die Beteiligten immer.
 alter table public.gesuche enable row level security;
 drop policy if exists "Offene und eigene Gesuche lesen" on public.gesuche;
@@ -306,17 +309,14 @@ revoke all on public.meldungen from anon, authenticated;
 -- ---------------------------------------------------------------------
 
 -- Wann läuft ein offenes Gesuch ab? Um Mitternacht nach dem letzten gewünschten Tag
--- (deutsche Zeit), spätestens 21 Tage ab jetzt. Ohne Termin: nach 21 Tagen.
+-- (deutsche Zeit). Der Tag liegt höchstens 60 Tage voraus (termin_pruefen). Ohne Termin: nach 21 Tagen.
 create or replace function public.ablauf(p_bis date)
 returns timestamptz
 language sql
 stable
 set search_path = ''
 as $$
-  select least(
-    now() + interval '21 days',
-    coalesce(((p_bis + 1)::timestamp at time zone 'Europe/Berlin'), now() + interval '21 days')
-  );
+  select coalesce(((p_bis + 1)::timestamp at time zone 'Europe/Berlin'), now() + interval '21 days');
 $$;
 
 -- Prüft den Termin: heute oder in den nächsten 60 Tagen
@@ -329,8 +329,11 @@ as $$
 declare
   heute date := (now() at time zone 'Europe/Berlin')::date;
 begin
-  if p_bis is not null and (p_bis < heute or p_bis > heute + 60) then
+  if p_bis is not null and p_bis < heute then
     raise exception 'Bitte wähle einen Termin ab heute.';
+  end if;
+  if p_bis is not null and p_bis > heute + 60 then
+    raise exception 'Termine gehen höchstens 60 Tage im Voraus.';
   end if;
 end;
 $$;

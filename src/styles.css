@@ -694,3 +694,43 @@ h2 { font-size: 1.375rem; line-height: 1.2; letter-spacing: -0.016em; }
 .tabs { background: color-mix(in srgb, var(--surface) 82%, transparent); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
 .tab { font-weight: 600; }
 .sheet { border-radius: 16px 16px 0 0; }
+
+/* ===== Terminkalender im Anfrage-Formular ===== */
+.termin .segment { margin-bottom: 14px; }
+.kal { padding: 12px 10px 10px; border-radius: 16px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+.kal-kopf { display: flex; align-items: center; justify-content: space-between; padding: 0 2px 8px; }
+.kal-monat { font-weight: 700; font-size: 1.0625rem; letter-spacing: -0.01em; }
+.kal-pfeil { width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--you); font-size: 1.75rem; line-height: 1; cursor: pointer; }
+.kal-pfeil:hover:not(:disabled) { background: var(--tile); }
+.kal-pfeil:disabled { color: var(--line); cursor: default; }
+.kal-raster { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px 0; justify-items: center; }
+.kal-wt { padding: 4px 0 6px; font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.02em; }
+.kal-tag { width: 44px; height: 44px; max-width: 100%; border: 0; border-radius: 50%; background: transparent; color: var(--ink); font-size: 1.0625rem; font-variant-numeric: tabular-nums; cursor: pointer; transition: background .15s, color .15s; }
+.kal-tag:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--tile); }
+.kal-tag.ist-heute { color: var(--you); font-weight: 700; }
+.kal-tag[aria-pressed="true"] { background: var(--ink); color: var(--surface); font-weight: 700; }
+.kal-tag:disabled { color: var(--muted); opacity: .45; cursor: default; }
+.kal-tag:focus-visible, .kal-pfeil:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.kal-hinweis { margin: 8px 4px 0; font-size: 0.8125rem; color: var(--muted); text-align: center; }
+.wahl-gruppe + .wahl-gruppe { margin-top: 14px; }
+.wahl-titel { display: block; margin: 0 0 8px; font-size: 0.9375rem; font-weight: 600; color: var(--muted); }
+.wahl-raster-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.wahl-raster-3 .wahl-knopf { padding: 8px 4px; min-height: 56px; }
+.wahl-raster-zeit { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.wahl-raster-zeit .wahl-knopf { grid-column: span 2; }
+.wahl-raster-zeit .wahl-knopf:nth-child(n+4) { grid-column: span 3; }
+.wahl-knopf { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1.2; }
+.wahl-knopf small { font-size: 0.75rem; font-weight: 400; color: var(--muted); }
+.wahl-knopf[aria-pressed="true"] small { color: inherit; opacity: .8; }
+.wahl-knopf:disabled { opacity: .4; cursor: default; }
+.wahl-knopf:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.uhrzeit-feld { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 14px; border-radius: 12px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); font-weight: 600; }
+.uhrzeit-feld[hidden] { display: none; }
+.uhrzeit-feld input { min-height: 44px; padding: 6px 10px; border: 0; border-radius: 10px; background: var(--tile); color: var(--ink); font: inherit; font-size: 1.0625rem; font-variant-numeric: tabular-nums; }
+.termin-text { display: flex; align-items: center; gap: 8px; margin: 4px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--tile); font-weight: 600; }
+.termin-text:empty { display: none; }
+@media (max-width: 360px) {
+  .kal-tag { width: 38px; height: 38px; font-size: 1rem; }
+  .wahl-raster-3 .wahl-knopf, .wahl-raster-zeit .wahl-knopf { font-size: 0.8125rem; padding: 8px 4px; }
+  .kal-hinweis { font-size: 0.75rem; }
+}

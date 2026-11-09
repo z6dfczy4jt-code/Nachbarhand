@@ -4,7 +4,7 @@
  * - Anfragen, Nachrichten und Kartenkacheln: nie zwischenspeichern, die kommen immer frisch aus dem Netz.
  * Nach Änderungen an Dateien in assets/ die Versionsnummer erhöhen.
  */
-const VERSION = 'handdrauf-2026-11-3';
+const VERSION = 'handdrauf-2026-11-4';
 const HUELLE = [
   './',
   'manifest.webmanifest',

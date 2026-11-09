@@ -54,7 +54,7 @@ Wenn sich `supabase/schema.sql` geändert hat, das Skript im **SQL Editor** noch
 | Regel | Umsetzung |
 | --- | --- |
 | Adresse nur für Beteiligte | Eigene Tabelle `gesuch_adressen`, lesbar nur für die Person, die die Anfrage gestellt hat, und die Person, die zugesagt hat |
-| Alte Anfragen verschwinden | Offene Anfragen sieht man nur bis Mitternacht nach dem gewünschten Termin, höchstens 21 Tage. Danach kann niemand mehr zusagen. Wer die Anfrage erstellt hat, sieht es weiter und kann einen neuen Termin wählen |
+| Alte Anfragen verschwinden | Offene Anfragen sieht man nur bis Mitternacht nach dem letzten gewünschten Tag (Termine höchstens 60 Tage im Voraus, ohne Termin 21 Tage). Danach kann niemand mehr zusagen. Wer die Anfrage erstellt hat, sieht es weiter und kann einen neuen Termin wählen |
 | Bearbeiten nur vor der Zusage | Eigene Anfragen lassen sich ändern, solange niemand zugesagt hat. Neuer Stadtteil = neue ungefähre Lage |
 | Blockieren | Wer jemanden blockiert, sieht dessen Anfragen nicht mehr und umgekehrt. Zusagen und Nachrichten zwischen beiden sind gesperrt, laufende Zusagen enden. Die Hilfsfunktionen liegen im Schema `privat`, das Supabase nicht über die API anbietet |
 | Wortfilter | Anfragen und Nachrichten mit beleidigenden Wörtern lehnt die Datenbank ab (`privat.anstoessig`, dieselbe Liste prüft die App vorab) |
