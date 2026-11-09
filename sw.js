@@ -4,7 +4,7 @@
  * - Anfragen, Nachrichten und Kartenkacheln: nie zwischenspeichern, die kommen immer frisch aus dem Netz.
  * Nach Änderungen an Dateien in assets/ die Versionsnummer erhöhen.
  */
-const VERSION = 'handdrauf-2026-11-4';
+const VERSION = 'handdrauf-2026-11-5';
 const HUELLE = [
   './',
   'manifest.webmanifest',
@@ -12,7 +12,13 @@ const HUELLE = [
   'assets/icon-192.png',
   'assets/icon-512.png',
   'assets/apple-touch-icon.png',
-  'assets/vendor/leaflet-1.9.4.js'
+  'assets/vendor/leaflet-1.9.4.js',
+  'assets/vendor/three-0.170.0.module.min.js',
+  'assets/fonts/barlow-regular.woff',
+  'assets/fonts/barlow-medium.woff',
+  'assets/fonts/barlow-semibold.woff',
+  'assets/fonts/barlowsemicondensed-semibold.woff',
+  'assets/fonts/barlowsemicondensed-bold.woff'
 ];
 const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@';
 

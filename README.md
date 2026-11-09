@@ -17,7 +17,8 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 | `src/body.html` | Bildschirme und Bedien-Symbole |
 | `src/kategorien/` | Tätigkeits-Bilder (3D-Objekte aus Microsoft Fluent Emoji, MIT-Lizenz), werden beim Bauen eingebettet |
 | `src/kopfzeichen.svg` | Logo für die Kopfzeile (folgt hellem und dunklem Design) |
-| `src/styles.css` | Gestaltung, helles und dunkles Design, drei Schriftgrößen |
+| `src/styles.css` | Gestaltung „Garbsen in Miniatur“: Schiefer, Klinkerrot, Rapsgelb; helles und dunkles Design, drei Schriftgrößen |
+| `src/garbsen3d.js` | Die Nachbarschaft als 3D-Modell auf der Startseite (Three.js), offene Anfragen als Preisschilder über den Dächern |
 | `src/app.js` | App-Logik, Karte, Demo- und Live-Modus, Nachrichten, Melden |
 | `src/fragen.js` | Häufige Fragen (`#fragen`) |
 | `src/recht.js` | Impressum, Datenschutzerklärung, Nutzungsbedingungen, Regeln (Fassung für die Testphase, vor dem Start anwaltlich prüfen lassen) |
@@ -26,7 +27,7 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 | `supabase/updates/` | Einzelne Datenbank-Updates zum Einfügen im SQL Editor |
 | `sw.js` | Offline-Hülle: Seite zuerst aus dem Netz, feste Dateien aus dem Speicher, Anfragen und Karte nie zwischengespeichert |
 | `tools/build.py` | Baut aus `src/` die fertige `index.html` |
-| `assets/` | App-Icons, Leaflet und Schriftdateien für das Vorschaubild |
+| `assets/` | App-Icons, Leaflet, Three.js, Schriften (Barlow) und das Standbild der Miniatur für Geräte ohne 3D |
 | `manifest.webmanifest` | Angaben für „Zum Home-Bildschirm“ |
 | `design/logo/` | Logo „Hand Drauf“ als SVG (gestapelt, quer, hell, dunkel, App-Icon) und die Vorlage |
 | `design/` | Skripte: `trace.py` zeichnet den Handschlag aus der Vorlage nach, `marke.py` setzt Logo und Icons |
@@ -39,7 +40,8 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 
 - Kartenbibliothek: [Leaflet](https://leafletjs.com) 1.9.4 (BSD-2-Clause), liegt unter `assets/vendor/`
 - Kartenkacheln: © [OpenStreetMap](https://www.openstreetmap.org/copyright)-Mitwirkende, Ersatz: © [CARTO](https://carto.com/attributions)
-- Schrift: in der App die Systemschrift des Geräts (iPhone: San Francisco). Montserrat in der Wortmarke, Bricolage Grotesque und Atkinson Hyperlegible nur im Vorschaubild (alle SIL Open Font License)
+- 3D: [Three.js](https://threejs.org) r170 (MIT), liegt unter `assets/vendor/`. Das Modell selbst (Häuser, Hecken, Kanal) ist im Code gebaut, ohne fremde Modelldateien
+- Schrift: Barlow und Barlow Semi Condensed (SIL Open Font License), nach den deutschen Straßenschildern. Montserrat in der Wortmarke, Bricolage Grotesque und Atkinson Hyperlegible nur im Vorschaubild für geteilte Links (alle SIL Open Font License)
 - Tätigkeits-Bilder: Microsoft Fluent Emoji 3D (MIT-Lizenz), siehe `src/kategorien/LIZENZ-fluent-emoji.txt`
 - Lage der Stadtteile: OpenStreetMap (Haltestellen) und GeoNames
 - Im Demo-Modus sind alle Personen und Anfragen erfunden. Es fließt kein Geld.

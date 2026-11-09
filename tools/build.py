@@ -14,8 +14,14 @@ WURZEL = pathlib.Path(__file__).resolve().parent.parent
 SRC = WURZEL / 'src'
 LEAFLET_JS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'   # nur Vorschau
 LEAFLET_LOKAL = 'assets/vendor/leaflet-1.9.4.js'                                # GitHub Pages
-# Schrift: die Systemschrift des Geräts (iPhone: San Francisco, Android: Roboto, Windows: Segoe UI).
-# Keine Webfonts, nichts wird nachgeladen.
+DREI_LOKAL = './assets/vendor/three-0.170.0.module.min.js'                      # Three.js für die Miniatur
+DREI_CDN = 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js'  # nur Vorschau
+# Schrift: Barlow, gebaut nach den deutschen Straßenschildern (DIN 1451). Auf GitHub Pages aus assets/fonts,
+# in der Vorschau von Google Fonts.
+SCHRIFTEN = [('Barlow', 400, 'barlow-regular'), ('Barlow', 500, 'barlow-medium'), ('Barlow', 600, 'barlow-semibold'),
+             ('Barlow Semi Condensed', 600, 'barlowsemicondensed-semibold'), ('Barlow Semi Condensed', 700, 'barlowsemicondensed-bold')]
+GOOGLE_FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+                '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap">')
 # Setzt Design und Schriftgröße vor dem ersten Zeichnen, damit nichts aufblitzt
 FRUEH = ('<script>try{var a=JSON.parse(localStorage.getItem("handdrauf-ansicht")||"{}"),r=document.documentElement;'
          'if(a.thema==="dunkel"||a.thema==="hell")r.setAttribute("data-theme",a.thema==="dunkel"?"dark":"light");'
@@ -61,16 +67,32 @@ def bilder():
 def teile(vorschau):
     leaflet_css = (SRC / 'vendor' / 'leaflet-1.9.4.css').read_text()
     styles = (SRC / 'styles.css').read_text()
+    schriften = '' if vorschau else '\n'.join(
+        f'@font-face {{ font-family: "{f}"; font-style: normal; font-weight: {w}; font-display: swap; src: url("assets/fonts/{d}.woff") format("woff"); }}'
+        for f, w, d in SCHRIFTEN)
+    assert '/*SCHRIFTEN*/' in styles
+    styles = styles.replace('/*SCHRIFTEN*/', schriften)
+    if vorschau:
+        # Die Vorschau ist eine einzelne Datei: Standbild der Miniatur (für Geräte ohne 3D) einbetten
+        import base64
+        bild = 'data:image/webp;base64,' + base64.b64encode((WURZEL / 'assets/garbsen-miniatur.webp').read_bytes()).decode()
+        assert 'url("assets/garbsen-miniatur.webp")' in styles
+        styles = styles.replace('url("assets/garbsen-miniatur.webp")', f'url("{bild}")')
     body = (SRC / 'body.html').read_text().replace('<!--KOPFZEICHEN-->', (SRC / 'kopfzeichen.svg').read_text().strip())
     defs, intro, feier = handschlag()
     body = body.replace('<!--HANDSCHLAG-DEFS-->', defs).replace('<!--INTRO-SVG-->', intro).replace('<!--FEIER-SVG-->', feier)
-    app = '\n'.join([bilder()] + [(SRC / n).read_text() for n in ('recht.js', 'fragen.js', 'app.js')])
+    app = '\n'.join([bilder()] + [(SRC / n).read_text() for n in ('recht.js', 'fragen.js', 'garbsen3d.js', 'app.js')])
     if vorschau:
         alt = 'const VORSCHAU = false;'
         assert alt in app
         app = app.replace(alt, 'const VORSCHAU = true;')
+        alt = f"const DREI_URL = '{DREI_LOKAL}';"
+        assert alt in app
+        app = app.replace(alt, f"const DREI_URL = '{DREI_CDN}';")
     leaflet = LEAFLET_JS if vorschau else LEAFLET_LOKAL
-    kopf = f'{FRUEH}\n<style>\n{leaflet_css}</style>\n<style>\n{styles}</style>'
+    schrift_kopf = GOOGLE_FONTS if vorschau else ''.join(
+        f'<link rel="preload" href="assets/fonts/{d}.woff" as="font" type="font/woff" crossorigin>' for _, _, d in SCHRIFTEN if d in ('barlow-regular', 'barlowsemicondensed-bold'))
+    kopf = f'{FRUEH}\n{schrift_kopf}\n<style>\n{leaflet_css}</style>\n<style>\n{styles}</style>'
     rumpf = f'{body}\n<script src="{leaflet}"></script>\n<script>\n{app}</script>\n'
     return kopf, rumpf
 

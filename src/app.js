@@ -4,6 +4,8 @@
   /* ===== Betriebsart ===== */
   // Wird beim Bauen für die Claude-Vorschau auf true gesetzt: Dort ist keine Datenbank erreichbar, also immer Demo.
   const VORSCHAU = false;
+  // Three.js für die Miniatur auf der Startseite (in der Vorschau aus dem CDN, sonst aus assets/)
+  const DREI_URL = './assets/vendor/three-0.170.0.module.min.js';
   // Läuft die App als iPhone-App (Capacitor)? Dann liegt sie lokal auf dem Gerät, Links zeigen auf die Website.
   const NATIV = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
   const OEFFENTLICH = 'https://z6dfczy4jt-code.github.io/Nachbarhand/';
@@ -764,8 +766,8 @@
       <span class="ico">${icon(g.kat)}</span>
       <span class="card-main">
         <span class="card-title">${esc(g.titel)}</span>
-        <span class="card-ort">${icon('ort', 'i-xs')}${esc(g.stadtteil)} · ${distanz(g)}</span>
-        <span class="card-meta">${esc(g.eigen ? 'Deine Anfrage' : g.wer)} · ${esc(wannText(g))}</span>
+        <span class="card-meta"><span class="card-wann">${esc(wannText(g))}</span> <span class="card-wer">${esc(g.eigen ? 'Deine Anfrage' : g.wer)}</span></span>
+        <span class="card-ort"><span class="ortsschild">${esc(g.stadtteil)}</span><span>${distanz(g)}</span></span>
         ${extra}
       </span>
       <span class="price">${euroKurz(g.betrag)}</span>
@@ -804,12 +806,16 @@
     $('#anzahl-text').textContent = zeigeIch() ? `${anzahl} · ${ort.stadtteil}` : `${anzahl} in Garbsen`;
 
     if (istLive() && !db.geladen) {
+      ui.miniListe = [];
+      miniSchilder();
       $('#liste').innerHTML = db.fehler
         ? `<div class="leer"><p><strong>Die Anfragen konnten nicht geladen werden.</strong></p><p>${esc(db.fehler)}</p><button type="button" class="btn btn-secondary btn-auto" data-neu-laden>Erneut versuchen</button></div>`
         : `<p class="lade">Anfragen werden geladen …</p>`;
       return;
     }
     const treffer = sortiere(offene.filter((g) => passt(g) && (ui.stadtteil === 'alle' || g.stadtteil === ui.stadtteil)));
+    ui.miniListe = ui.sort === 'termin' ? [...treffer].sort((a, b) => (terminWert(a) - terminWert(b)) || (meterVonMir(a) - meterVonMir(b))) : treffer;
+    miniSchilder();
     if (!treffer.length) {
       const q = ui.suche.trim();
       const wo = ui.stadtteil === 'alle' ? '' : ` in ${esc(ui.stadtteil)}`;
@@ -935,6 +941,45 @@
       ? zeilen(eigene.map((g) => karteHTML(g, pills(g))))
       : `<p class="leer-klein">Noch keine Anfragen.</p>`;
   }
+
+  /* ===== Garbsen als Miniatur (3D, Startseite) ===== */
+  const mini = { welt: null, laedt: false };
+  function miniSchilder() {
+    if (!mini.welt) return;
+    mini.welt.schilder((ui.miniListe || []).map((g) => ({
+      id: g.id,
+      text: euroKurz(g.betrag),
+      bild: KAT_BILDER[g.kat] || '',
+      art: g.helfer === 'ich' ? 'zugesagt' : '',
+      label: `${g.titel}, ${euroKurz(g.betrag)}, ${wannText(g)}, ${g.stadtteil}`,
+    })));
+  }
+  async function miniStarten() {
+    const huelle = $('#mini');
+    if (!huelle || mini.welt || mini.laedt) return;
+    mini.laedt = true;
+    try {
+      const THREE = await import(DREI_URL);
+      // Erst aufbauen, wenn Start-Animation und Begrüßung weg sind, damit man das Aufbauen sieht
+      await new Promise((ok) => { const warte = () => (!$('#start').hidden || ($('#intro') && !$('#intro').hidden && getComputedStyle($('#intro')).display !== 'none')) ? setTimeout(warte, 300) : ok(); warte(); });
+      mini.welt = garbsenMiniatur(THREE, huelle, { nacht: dunklesThema(), wennSchild: (id) => oeffnen(id, document.activeElement) });
+      if (!mini.welt) throw new Error('Kein WebGL');
+      miniSchilder();
+    } catch (e) {
+      console.warn('Miniatur nicht verfügbar:', e && e.message);
+      huelle.classList.add('ohne-3d');
+    } finally {
+      mini.laedt = false;
+    }
+  }
+  const miniThema = () => { if (mini.welt) mini.welt.nacht(dunklesThema()); };
+  // Unter einem Blatt oder der Feier muss die Szene nicht weiterlaufen
+  const miniRuhe = () => { if (mini.welt) mini.welt.ruhe(!$('#sheet').hidden || !$('#feier').hidden); };
+  if (window.matchMedia) {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addEventListener) mq.addEventListener('change', miniThema);
+  }
+  new MutationObserver(miniThema).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   /* ===== Karte (Leaflet) ===== */
   const kartenStatus = { map: null, kacheln: null, anbieter: 0, pins: null, bereich: null, stadtteile: null, labels: null, vereinfacht: false, geladen: 0, fehler: 0, marker: new Map() };
@@ -1600,6 +1645,7 @@
     $('#sheet').hidden = false;
     $('#sheet').scrollTop = 0;
     document.body.classList.add('sheet-offen');
+    miniRuhe();
     const c = $('#sheet [data-close]');
     if (c) c.focus({ preventScroll: true });
   }
@@ -1636,6 +1682,7 @@
     $('#backdrop').hidden = true;
     $('#sheet').hidden = true;
     document.body.classList.remove('sheet-offen');
+    miniRuhe();
     renderKarte();
     let ziel = (ui.zuletzt && ui.zuletzt.isConnected) ? ui.zuletzt : (id ? $(`#view-${ui.view} .card[data-id="${id}"]`) : null);
     if (!ziel && id && ui.view === 'karte' && kartenStatus.marker.has(id)) ziel = kartenStatus.marker.get(id).getElement();
@@ -1651,6 +1698,7 @@
     el.hidden = false;
     void el.offsetWidth; // Animation neu starten
     el.classList.add('spielt');
+    miniRuhe();
     $('#toast').classList.remove('zeigen');
     $('#feier-titel').textContent = titel;
     $('#feier-text').textContent = text;
@@ -1668,6 +1716,7 @@
     setTimeout(() => {
       el.hidden = true;
       el.classList.remove('spielt', 'geht');
+      miniRuhe();
       const f = !$('#sheet').hidden && ($('#sheet [data-stern="1"]') || $('#sheet .btn'));
       if (f) f.focus({ preventScroll: true });
     }, 200);
@@ -2725,6 +2774,7 @@
     try { gesehen = localStorage.getItem(START_SPEICHER) === '1'; } catch (e) { gesehen = true; }
     if (!gesehen) startZeigen();
   }
+  miniStarten();
   starteLive().then((live) => {
     if (!live) { if (linkId(start)) gesuchAusLink(linkId(start)); return; }
     renderStadtteilAuswahl();
