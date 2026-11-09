@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F5F5F7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#EDF1F5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C131D" media="(prefers-color-scheme: dark)">
 <meta name="description" content="Nachbarschaftshilfe in Garbsen: kleine Hilfen in deiner Nähe finden oder selbst anfragen.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Hand Drauf">
@@ -725,6 +725,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
   --r-l: 22px;
   --r-m: 16px;
   --r-s: 11px;
+  --mini-bild-tag: url("assets/garbsen-miniatur.webp");
+  --mini-bild-nacht: url("assets/garbsen-miniatur-nacht.webp");
+  --mini-bild: var(--mini-bild-tag);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -737,6 +740,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     --schatten-1: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 10px rgba(0, 0, 0, .3);
     --schatten-2: 0 2px 6px rgba(0, 0, 0, .4), 0 14px 36px rgba(0, 0, 0, .5);
     --glas: color-mix(in srgb, #1B2839 72%, transparent); --glas-rand: rgba(255, 255, 255, .08);
+    --mini-bild: var(--mini-bild-nacht);
     color-scheme: dark;
   }
 }
@@ -750,6 +754,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   --schatten-1: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 10px rgba(0, 0, 0, .3);
   --schatten-2: 0 2px 6px rgba(0, 0, 0, .4), 0 14px 36px rgba(0, 0, 0, .5);
   --glas: color-mix(in srgb, #1B2839 72%, transparent); --glas-rand: rgba(255, 255, 255, .08);
+  --mini-bild: var(--mini-bild-nacht);
   color-scheme: dark;
 }
 
@@ -811,10 +816,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ----- Ortsschild: Stadtteile wie das gelbe Schild am Ortseingang ----- */
 .ortsschild {
-  display: inline-flex; align-items: center; padding: 1px 7px 0; border-radius: 4px;
+  display: inline-flex; align-items: center; padding: 1px 8px 0; border-radius: 4px;
   background: var(--accent); color: #11161C;
   box-shadow: inset 0 0 0 1.5px var(--accent), inset 0 0 0 2.5px #11161C;
-  font-family: var(--f-display); font-weight: 600; font-size: 0.8125rem; line-height: 1.45; letter-spacing: 0.01em; white-space: nowrap;
+  font-family: var(--f-display); font-weight: 600; font-size: 0.875rem; line-height: 1.45; letter-spacing: 0.01em; white-space: nowrap;
 }
 
 /* ----- Preisschild: gelb, mit Loch, überall dort, wo es um Geld geht ----- */
@@ -848,7 +853,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
     background-image: radial-gradient(1.2px 1.2px at 12% 18%, #fff, transparent), radial-gradient(1px 1px at 28% 8%, #fff, transparent), radial-gradient(1.4px 1.4px at 46% 22%, #fff, transparent), radial-gradient(1px 1px at 63% 10%, #fff, transparent), radial-gradient(1.2px 1.2px at 81% 26%, #fff, transparent), radial-gradient(1px 1px at 91% 7%, #fff, transparent), radial-gradient(1px 1px at 5% 36%, #fff, transparent), radial-gradient(1px 1px at 72% 40%, #fff, transparent); }
 }
 .mini-leinwand { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.mini.ohne-3d { background-image: url("assets/garbsen-miniatur.webp"), linear-gradient(180deg, var(--sky-oben) 0%, var(--sky-unten) 72%); background-size: cover; background-position: center 40%; cursor: default; }
+.mini.ohne-3d, .start-bild { background-image: var(--mini-bild), linear-gradient(180deg, var(--sky-oben) 0%, var(--sky-unten) 72%); background-size: contain, cover; background-repeat: no-repeat; background-position: center 60%, center; }
+.mini.ohne-3d { cursor: default; touch-action: auto; height: clamp(230px, 64vw, 300px); }
+.mini.ohne-3d .mini-anker { display: none; }
 .mini-schilder { position: absolute; inset: 0; pointer-events: none; }
 /* Anker am Dach: Stiel und Nagel, darüber das Schild als Knopf */
 .mini-anker { --stiel: 14px; position: absolute; left: 0; top: 0; width: 0; height: 0; opacity: 0; transition: opacity .3s ease calc(var(--i) * 70ms); }
@@ -957,7 +964,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .link-als-knopf { display: inline-flex; align-items: center; }
 .icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--tile); color: var(--ink); display: grid; place-items: center; cursor: pointer; flex: none; }
 
-.pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; line-height: 1.35; white-space: nowrap; }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 0.875rem; font-weight: 600; line-height: 1.35; white-space: nowrap; }
 .pill-muted { background: var(--tile); color: var(--muted); }
 .pill-good { background: var(--good-bg); color: var(--hedge); }
 .pill-warn { background: var(--warn-bg); color: var(--warn); }
@@ -968,10 +975,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .karte-kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .karte { position: relative; width: 100%; height: clamp(380px, 64vh, 620px); border-radius: var(--r-xl); overflow: hidden; background: var(--map-land); box-shadow: var(--schatten-1); isolation: isolate; }
 #map { position: absolute; inset: 0; }
-.leaflet-container { background: var(--map-land); font-family: var(--f-body); font-size: 0.8125rem; }
-.leaflet-container .leaflet-control-attribution { background: color-mix(in srgb, var(--surface) 86%, transparent); color: var(--muted); font-size: 0.6562rem; line-height: 1.5; padding: 1px 7px; border-radius: 8px 0 0 0; }
+.leaflet-container { background: var(--map-land); font-family: var(--f-body); font-size: 0.875rem; }
+.leaflet-container .leaflet-control-attribution { background: color-mix(in srgb, var(--surface) 86%, transparent); color: var(--muted); font-size: 0.875rem; line-height: 1.4; padding: 1px 8px; border-radius: 8px 0 0 0; }
 .leaflet-container .leaflet-control-attribution a { color: var(--ink); }
-.leaflet-control-scale-line { border-color: var(--muted); color: var(--ink); background: color-mix(in srgb, var(--surface) 80%, transparent); font-size: 0.6875rem; }
+.leaflet-control-scale-line { border-color: var(--muted); color: var(--ink); background: color-mix(in srgb, var(--surface) 80%, transparent); font-size: 0.875rem; }
 .leaflet-bottom.leaflet-left .leaflet-control { margin-left: 14px; margin-bottom: 14px; }
 .karte-knoepfe { position: absolute; top: 14px; right: 14px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
 .knopf-gruppe { display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; box-shadow: var(--schatten-2); background: var(--glas); -webkit-backdrop-filter: blur(16px) saturate(170%); backdrop-filter: blur(16px) saturate(170%); }
@@ -999,12 +1006,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .pin-zugesagt { --pin-bg: var(--surface); --pin-fg: var(--ink); box-shadow: inset 0 0 0 2px var(--ink), 0 4px 10px rgba(17, 22, 28, .25); }
 .pin-abgelaufen { --pin-bg: var(--surface); --pin-fg: var(--muted); box-shadow: inset 0 0 0 1.5px var(--muted); }
 .pin.is-aktiv { --pin-bg: var(--klinker); --pin-fg: var(--on-klinker); transform: translate(-50%, calc(-100% - 8px)) scale(1.14); box-shadow: 0 6px 16px rgba(17, 22, 28, .35); }
-.zoom-weit .pin { font-size: 0.8125rem; padding: 1px 7px 0; transform: translate(-50%, calc(-100% - 7px)); }
+.zoom-weit .pin { font-size: 0.875rem; padding: 1px 6px 0; transform: translate(-50%, calc(-100% - 7px)); }
 .zoom-weit .pin:hover { transform: translate(-50%, calc(-100% - 7px)) scale(1.06); }
 .zoom-weit .pin.is-aktiv { transform: translate(-50%, calc(-100% - 7px)) scale(1.14); }
 .ich { position: absolute; left: 0; top: 0; width: 18px; height: 18px; border-radius: 50%; background: var(--you); border: 3px solid #fff; transform: translate(-50%, -50%); box-shadow: 0 0 0 7px color-mix(in srgb, var(--you) 22%, transparent), 0 2px 6px rgba(0,0,0,.25); }
-.ich-label { position: absolute; left: 0; top: 0; transform: translate(-50%, 13px); font-size: 0.8125rem; font-weight: 700; color: var(--you); text-shadow: 0 0 3px var(--surface), 0 0 3px var(--surface); white-space: nowrap; }
-.stadtteil-label span { position: absolute; left: 0; top: 0; transform: translate(-50%, 5px); white-space: nowrap; font-family: var(--f-display); font-size: 0.75rem; font-weight: 600; letter-spacing: .02em; color: var(--map-label); text-shadow: 0 0 3px var(--map-land), 0 0 3px var(--map-land), 0 0 2px var(--map-land); pointer-events: none; }
+.ich-label { position: absolute; left: 0; top: 0; transform: translate(-50%, 13px); font-size: 0.875rem; font-weight: 700; color: var(--you); text-shadow: 0 0 3px var(--surface), 0 0 3px var(--surface); white-space: nowrap; }
+.stadtteil-label span { position: absolute; left: 0; top: 0; transform: translate(-50%, 5px); white-space: nowrap; font-family: var(--f-display); font-size: 0.875rem; font-weight: 600; letter-spacing: .02em; color: var(--map-label); text-shadow: 0 0 3px var(--map-land), 0 0 3px var(--map-land), 0 0 2px var(--map-land); pointer-events: none; }
 .stadtteil-label span.versteckt { visibility: hidden; }
 .leaflet-container path.stadtteil-flaeche { fill: var(--map-area); fill-opacity: 1; stroke: var(--map-edge); stroke-width: 1; stroke-opacity: 1; }
 .leaflet-container path.bereich-kreis { fill: var(--accent); fill-opacity: .18; stroke: var(--ink); stroke-width: 2; stroke-opacity: .8; stroke-dasharray: 6 5; }
@@ -1066,8 +1073,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .fakten dt { font-size: 0.875rem; font-weight: 500; color: var(--muted); }
 .fakten dd { margin: 2px 0 0; font-weight: 600; font-size: 1.0625rem; }
 .fakt-leise { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-weight: 400; }
-.fakten dd .fakt-leise { margin-left: 6px; font-size: 0.875rem; }
-.fakten dd > .fakt-leise:first-child { margin-left: 0; font-size: 1rem; }
+.fakt-zusatz { display: block; margin-top: 1px; color: var(--muted); font-weight: 400; font-size: 0.875rem; }
 .beschreibung { max-width: 62ch; font-size: 1.0625rem; line-height: 1.5; }
 .stand { margin: -10px 0 0; color: var(--muted); font-size: 0.9375rem; font-weight: 600; }
 .stand-warn { color: var(--warn); }
@@ -1111,7 +1117,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .feld input:focus, .feld textarea:focus, .feld select:focus { box-shadow: inset 0 0 0 2px var(--ink); outline: none; }
 .feld input:focus-visible, .feld textarea:focus-visible, .feld select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .feld [aria-invalid="true"] { box-shadow: inset 0 0 0 2px var(--crit); }
-.feld-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.feld-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: end; }
 @media (max-width: 360px) { .feld-row { grid-template-columns: 1fr; } }
 .feld-hinweis { font-size: 0.875rem; color: var(--muted); margin-top: -10px; }
 .fehler { color: var(--crit); font-size: 0.9375rem; font-weight: 600; }
@@ -1170,12 +1176,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .wahl span { display: flex; flex-direction: column; gap: 1px; line-height: 1.2; align-items: center; justify-content: center; min-height: 52px; padding: 8px 10px; border-radius: var(--r-s); background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line); font-weight: 600; text-align: center; cursor: pointer; }
 .wahl input:checked + span { background: var(--ink); color: var(--surface); box-shadow: none; }
 .wahl input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
-.wahl-datum { font-size: 0.8125rem; font-weight: 400; color: var(--muted); }
+.wahl-datum { font-size: 0.875rem; font-weight: 400; color: var(--muted); }
 .wahl input:checked + span .wahl-datum { color: inherit; opacity: .8; }
 .wahl-datum:empty { display: none; }
 .wahl-knopf { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1.2; min-height: 50px; padding: 8px 10px; border: 0; border-radius: var(--r-s); background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line); color: var(--ink); font-weight: 600; font-size: 1rem; cursor: pointer; transition: background .15s, color .15s; }
 .wahl-knopf[aria-pressed="true"] { background: var(--ink); color: var(--surface); box-shadow: none; }
-.wahl-knopf small { font-size: 0.8125rem; font-weight: 400; color: var(--muted); }
+.wahl-knopf small { font-size: 0.875rem; font-weight: 400; color: var(--muted); }
 .wahl-knopf[aria-pressed="true"] small { color: inherit; opacity: .8; }
 .wahl-knopf:disabled { opacity: .4; cursor: default; }
 .wahl-knopf:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
@@ -1202,7 +1208,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .kal-pfeil:hover:not(:disabled) { background: color-mix(in srgb, var(--tile) 80%, var(--ink) 10%); }
 .kal-pfeil:disabled { background: transparent; color: var(--line); cursor: default; }
 .kal-raster { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px 0; justify-items: center; }
-.kal-wt { padding: 4px 0 6px; font-size: 0.8125rem; font-weight: 600; color: var(--muted); }
+.kal-wt { padding: 4px 0 6px; font-size: 0.875rem; font-weight: 600; color: var(--muted); }
 .kal-tag { position: relative; width: 44px; height: 44px; max-width: 100%; border: 0; border-radius: 50%; background: transparent; color: var(--ink); font-size: 1.125rem; font-weight: 500; font-variant-numeric: tabular-nums; cursor: pointer; transition: background .15s, color .15s, transform .2s cubic-bezier(.3, 1.6, .5, 1); }
 .kal-tag:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--tile); }
 .kal-tag.ist-heute { color: var(--klinker); font-weight: 700; }
@@ -1226,7 +1232,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (max-width: 360px) {
   .kal-tag { width: 38px; height: 38px; font-size: 1rem; }
   .wahl-raster-3 .wahl-knopf, .wahl-raster-zeit .wahl-knopf { font-size: 0.875rem; padding: 8px 4px; }
-  .kal-hinweis { font-size: 0.8125rem; }
 }
 
 /* ----- Aufträge ----- */
@@ -1255,7 +1260,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   box-shadow: var(--schatten-2), inset 0 0 0 1px var(--glas-rand);
 }
 .tabs-inner { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; }
-.tab { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 58px; padding: 7px 2px 6px; border-radius: 24px; color: var(--muted); font-weight: 600; font-size: min(0.8125rem, 14px); white-space: nowrap; text-decoration: none; transition: background .2s, color .2s; }
+.tab { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 58px; padding: 7px 2px 6px; border-radius: 24px; color: var(--muted); font-weight: 600; font-size: min(0.875rem, 15px); letter-spacing: -0.005em; white-space: nowrap; text-decoration: none; transition: background .2s, color .2s; }
 .tab .i { width: 24px; height: 24px; }
 .tab[aria-current="page"] { color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); }
 .tab-plus { width: 46px; height: 28px; border-radius: 999px; background: var(--klinker); color: var(--on-klinker); display: grid; place-items: center; box-shadow: 0 3px 8px color-mix(in srgb, var(--klinker) 40%, transparent); }
@@ -1274,7 +1279,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .chat-leer { margin: 0; color: var(--muted); font-size: 1rem; }
 .blase { align-self: flex-start; max-width: 85%; padding: 10px 14px 8px; border-radius: 20px 20px 20px 6px; background: var(--tile); color: var(--ink); }
 .blase p { margin: 0; font-size: 1.0625rem; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
-.blase time { display: block; margin-top: 2px; font-size: 0.8125rem; color: var(--muted); }
+.blase time { display: block; margin-top: 2px; font-size: 0.875rem; color: var(--muted); }
 .blase-ich { align-self: flex-end; border-radius: 20px 20px 6px 20px; background: var(--ink); color: var(--surface); }
 .blase-ich time { color: inherit; opacity: .72; }
 .chat-form { display: flex; gap: 8px; align-items: flex-end; }
@@ -1327,10 +1332,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .menue-titel { font-size: 2rem; margin: 0; }
 .menue-gruppe { display: grid; gap: 8px; }
 .menue-gruppe .h-klein { margin: 6px 0 2px; }
-.menue-zeile { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; }
-.menue-zeile .segment { flex: none; }
-.menue-zeile select { max-width: 60%; }
-.menue-label { font-weight: 600; }
+.menue-zeile { display: grid; gap: 6px; }
+.menue-zeile + .menue-zeile { margin-top: 6px; }
+.menue-label { font-weight: 600; font-size: 0.9375rem; color: var(--muted); }
+.menue-zeile select { width: 100%; min-height: 52px; padding: 13px 40px 13px 15px; border: 0; border-radius: var(--r-s); background-color: var(--tile); color: var(--ink); font-weight: 600; -webkit-appearance: none; appearance: none; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 22px) 52%, calc(100% - 16px) 52%; background-size: 6px 6px; background-repeat: no-repeat; }
 .menue-liste { display: grid; border-radius: var(--r-m); background: var(--tile); overflow: hidden; }
 .menue-link { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 54px; padding: 0 18px; border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--ink); font: inherit; font-weight: 600; text-decoration: none; text-align: left; cursor: pointer; }
 .menue-link:last-child { border-bottom: 0; }
@@ -1363,7 +1370,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* ----- Begrüßung ----- */
 .start { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; background: var(--paper); padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); overflow-y: auto; }
 .start[hidden] { display: none; }
-.start-inhalt { position: relative; width: 100%; max-width: 440px; display: grid; gap: 20px; padding-top: 40px; }
+.start-inhalt { position: relative; width: 100%; max-width: 440px; display: grid; gap: 18px; padding-top: 44px; }
+.start-bild { height: clamp(150px, 26vh, 230px); border-radius: var(--r-xl); }
+.start-schrift { display: grid; gap: 10px; }
+.start-schrift .wahl-knopf { min-height: 64px; flex-direction: row; justify-content: space-between; padding: 10px 18px; text-align: left; }
+.start-schrift .wahl-knopf span:last-child { color: var(--muted); font-weight: 400; }
+.start-schrift .wahl-knopf[aria-pressed="true"] span:last-child { color: inherit; opacity: .8; }
+.start-probe { margin: 0; padding: 16px 18px; border-radius: var(--r-l); background: var(--surface); box-shadow: var(--schatten-1); }
+.start-probe strong { display: block; font-family: var(--f-display); font-size: 1.25rem; }
 .start-ueber { position: absolute; top: 0; right: 0; }
 .start-logo .marke-logo { height: 52px; width: auto; color: var(--ink); }
 .start h1 { margin: 0; font-size: 2.5rem; line-height: 1.02; outline: none; }
@@ -1379,6 +1393,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .start-punkte { display: flex; justify-content: center; gap: 8px; }
 .start-punkte span { width: 8px; height: 8px; border-radius: 50%; background: var(--line); transition: width .25s; }
 .start-punkte span.an { width: 26px; border-radius: 4px; background: var(--klinker); }
+@media (max-height: 700px) { .start-bild { height: 120px; } .start-liste li { padding: 12px 16px; } }
 
 /* ----- Hinweise ----- */
 .beispiel-band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 14px; margin: -2px 0 4px; padding: 10px 16px; border-radius: var(--r-m); background: var(--warn-bg); color: var(--ink); font-size: 1rem; }
@@ -1465,6 +1480,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
   <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="i-menue" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-schild" viewBox="0 0 24 24"><path d="M12 3.5 5 6v5.5c0 4.3 2.9 7.6 7 9 4.1-1.4 7-4.7 7-9V6l-7-2.5z"/><path d="m9 12 2.2 2.2L15.2 10"/></symbol>
+  <symbol id="i-telefon" viewBox="0 0 24 24"><path d="M6.6 4h3l1.5 4-2 1.5a11 11 0 0 0 5.4 5.4l1.5-2 4 1.5v3a1.6 1.6 0 0 1-1.7 1.6C11.6 18.6 5.400 12.4 5 5.700A1.600 1.600 0 0 1 6.600 4z"/></symbol>
+  <symbol id="i-laut" viewBox="0 0 24 24"><path d="M4 9.500v5h3.500l4.500 3.500V6L7.500 9.500H4z"/><path d="M15.500 9a4 4 0 0 1 0 6M18 6.500a7.500 7.500 0 0 1 0 11"/></symbol>
+  <symbol id="i-glocke" viewBox="0 0 24 24"><path d="M6 16.500V11a6 6 0 0 1 12 0v5.500l1.500 2h-15l1.500-2z"/><path d="M10 20.500a2.200 2.200 0 0 0 4 0"/></symbol>
+  <symbol id="i-drucken" viewBox="0 0 24 24"><path d="M7 8V4h10v4M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2"/><path d="M7 14h10v6H7z"/></symbol>
+  <symbol id="i-auge" viewBox="0 0 24 24"><path d="M2.500 12S6 5.500 12 5.500 21.500 12 21.500 12 18 18.500 12 18.500 2.500 12 2.500 12z"/><circle cx="12" cy="12" r="2.800"/></symbol>
+  <symbol id="i-wieder" viewBox="0 0 24 24"><path d="M19.500 12a7.500 7.500 0 1 1-2.200-5.300"/><path d="M19.500 4.500v4h-4"/></symbol>
   <path id="hs-form" fill-rule="evenodd" d="M417.88 103.75Q417.94 102.88 417.58 101.62Q417.22 100.38 416.36 99.53Q415.50 98.68 414.88 98.41Q414.25 98.14 413.44 98.01Q412.62 97.88 411.38 98.06Q410.12 98.25 406.12 100.17Q402.12 102.10 379.25 112.38Q356.38 122.65 352.00 124.87Q347.62 127.08 343.38 129.74Q339.12 132.39 335.69 135.38Q332.25 138.38 327.62 143.06Q323.00 147.75 322.50 148.13Q322.00 148.51 321.56 148.62Q321.12 148.74 320.44 148.41Q319.75 148.08 307.19 136.73Q294.62 125.38 288.58 120.06Q282.53 114.75 282.02 114.06Q281.51 113.38 281.55 113.08Q281.58 112.78 281.92 112.59Q282.25 112.40 285.69 112.39Q289.12 112.38 292.19 111.97Q295.25 111.57 300.31 110.16Q305.38 108.75 306.56 108.21Q307.75 107.67 308.44 107.13Q309.12 106.60 309.66 105.92Q310.19 105.25 310.46 104.62Q310.72 104.00 310.80 103.31Q310.88 102.62 310.74 101.81Q310.61 101.00 310.18 100.06Q309.75 99.12 309.00 98.47Q308.25 97.82 307.56 97.53Q306.88 97.24 305.62 97.22Q304.38 97.19 300.50 98.40Q296.62 99.61 292.88 100.18Q289.12 100.75 286.06 100.69Q283.00 100.62 280.69 100.23Q278.38 99.83 275.12 98.82Q271.88 97.81 268.75 96.30Q265.62 94.79 261.69 92.33Q257.75 89.88 252.88 86.35Q248.00 82.83 246.69 82.12Q245.38 81.40 243.88 80.78Q242.38 80.17 240.75 79.74Q239.12 79.32 237.06 79.10Q235.00 78.88 233.12 78.88Q231.25 78.88 229.50 79.05Q227.75 79.22 225.69 79.63Q223.62 80.04 221.25 80.93Q218.88 81.82 215.88 84.00Q212.88 86.18 209.56 89.40Q206.25 92.62 203.06 95.40Q199.88 98.18 197.88 99.56Q195.88 100.93 193.88 101.92Q191.88 102.92 190.31 103.37Q188.75 103.82 187.00 104.10Q185.25 104.38 182.38 104.31Q179.50 104.25 178.19 104.06Q176.88 103.86 175.50 103.40Q174.12 102.94 173.19 102.39Q172.25 101.83 171.79 101.29Q171.33 100.75 171.28 100.12Q171.22 99.50 171.62 98.81Q172.03 98.12 184.12 82.75Q196.21 67.38 197.85 65.62Q199.50 63.88 200.56 62.97Q201.62 62.06 204.50 60.23Q207.38 58.40 214.38 55.74Q221.38 53.08 229.06 50.42Q236.75 47.75 240.12 46.91Q243.50 46.07 247.31 45.60Q251.12 45.12 253.81 45.12Q256.50 45.12 259.12 45.42Q261.75 45.71 269.31 47.26Q276.88 48.81 281.00 49.42Q285.12 50.03 287.94 50.26Q290.75 50.50 294.50 50.50Q298.25 50.50 301.94 50.08Q305.62 49.67 308.31 49.08Q311.00 48.49 316.56 46.57Q322.12 44.65 327.94 42.22Q333.75 39.79 353.12 30.53Q372.50 21.28 373.19 20.76Q373.88 20.25 374.41 19.62Q374.94 19.00 375.28 18.25Q375.62 17.50 375.75 16.50Q375.88 15.50 375.71 14.62Q375.54 13.75 375.16 13.06Q374.78 12.38 374.14 11.83Q373.50 11.29 372.75 10.97Q372.00 10.64 371.06 10.51Q370.12 10.38 368.69 10.72Q367.25 11.06 355.31 16.89Q343.38 22.72 331.25 28.33Q319.12 33.93 314.88 35.45Q310.62 36.97 306.69 37.88Q302.75 38.78 300.19 39.01Q297.62 39.25 293.62 39.19Q289.62 39.12 285.31 38.59Q281.00 38.06 276.12 36.94Q271.25 35.82 267.38 35.15Q263.50 34.47 260.38 34.24Q257.25 34.00 254.31 34.00Q251.38 34.00 248.00 34.29Q244.62 34.58 241.25 35.31Q237.88 36.04 227.25 39.58Q216.62 43.12 215.62 43.31Q214.62 43.50 207.12 41.92Q199.62 40.33 195.62 39.98Q191.62 39.62 188.38 39.62Q185.12 39.62 179.75 40.10Q174.38 40.58 168.00 41.74Q161.62 42.90 156.81 43.39Q152.00 43.88 149.69 43.88Q147.38 43.88 142.44 43.33Q137.50 42.79 134.19 42.12Q130.88 41.46 126.38 40.23Q121.88 39.00 115.00 36.17Q108.12 33.35 99.94 29.60Q91.75 25.85 82.31 21.25Q72.88 16.65 66.75 13.92Q60.62 11.19 59.75 10.94Q58.88 10.69 57.88 10.69Q56.88 10.68 56.19 10.87Q55.50 11.06 54.62 11.56Q53.75 12.06 53.28 12.59Q52.82 13.12 52.54 13.75Q52.26 14.38 52.19 15.56Q52.12 16.75 52.23 17.25Q52.33 17.75 53.05 18.83Q53.76 19.92 55.76 21.22Q57.75 22.53 65.06 25.82Q72.38 29.11 86.44 35.77Q100.50 42.43 108.12 45.54Q115.75 48.65 120.56 50.19Q125.38 51.72 131.31 53.00Q137.25 54.28 139.81 54.58Q142.38 54.88 147.19 55.00Q152.00 55.12 156.12 54.76Q160.25 54.40 167.56 53.18Q174.88 51.96 178.50 51.54Q182.12 51.12 186.12 51.06Q190.12 51.00 191.56 51.10Q193.00 51.21 193.75 51.42Q194.50 51.64 194.72 51.94Q194.94 52.25 194.78 52.62Q194.61 53.00 192.24 55.19Q189.88 57.38 187.97 59.62Q186.07 61.88 173.32 78.31Q160.57 94.75 160.01 95.88Q159.44 97.00 159.13 98.12Q158.82 99.25 158.88 101.06Q158.93 102.88 159.56 104.38Q160.19 105.88 161.41 107.32Q162.62 108.76 163.69 109.63Q164.75 110.50 166.69 111.74Q168.62 112.97 169.88 113.53Q171.12 114.08 173.38 114.69Q175.62 115.31 178.81 115.59Q182.00 115.88 184.62 115.69Q187.25 115.51 189.56 115.11Q191.88 114.71 195.00 113.65Q198.12 112.60 202.06 110.16Q206.00 107.72 209.19 105.11Q212.38 102.50 216.56 98.31Q220.75 94.12 222.38 92.88Q224.00 91.64 224.88 91.26Q225.75 90.89 227.44 90.57Q229.12 90.25 231.94 90.19Q234.75 90.12 235.56 90.28Q236.38 90.44 237.00 90.77Q237.62 91.10 250.19 101.78Q262.75 112.47 290.72 137.17Q318.68 161.88 319.62 163.38Q320.57 164.88 320.85 166.25Q321.12 167.62 320.99 169.25Q320.86 170.88 320.07 172.56Q319.28 174.25 318.14 175.27Q317.00 176.29 315.38 177.01Q313.75 177.74 312.00 177.87Q310.25 178.00 309.12 177.77Q308.00 177.54 306.94 177.07Q305.88 176.60 305.00 176.02Q304.12 175.44 290.31 163.74Q276.50 152.04 268.75 145.28Q261.00 138.51 260.00 137.99Q259.00 137.46 258.06 137.30Q257.12 137.14 256.12 137.35Q255.12 137.56 254.19 138.12Q253.25 138.69 252.62 139.53Q252.00 140.38 251.69 141.62Q251.38 142.88 251.53 143.75Q251.68 144.62 252.18 145.44Q252.68 146.25 253.72 147.34Q254.75 148.43 266.81 158.44Q278.88 168.46 286.12 174.79Q293.36 181.12 294.43 182.44Q295.50 183.75 296.16 184.94Q296.82 186.12 297.03 187.19Q297.25 188.25 297.15 189.56Q297.06 190.88 296.68 192.06Q296.31 193.25 295.85 194.06Q295.39 194.88 294.44 195.85Q293.50 196.83 292.50 197.47Q291.50 198.10 290.19 198.51Q288.88 198.92 287.75 198.96Q286.62 199.00 285.50 198.81Q284.38 198.62 283.56 198.30Q282.75 197.97 281.44 197.15Q280.12 196.32 272.94 190.37Q265.75 184.42 255.69 175.79Q245.62 167.17 243.31 165.03Q241.00 162.89 239.81 162.12Q238.62 161.35 238.00 161.14Q237.38 160.93 236.25 160.94Q235.12 160.94 234.12 161.33Q233.12 161.71 232.43 162.35Q231.74 163.00 231.28 164.06Q230.82 165.12 230.91 166.56Q231.00 168.00 231.47 168.88Q231.93 169.75 233.28 171.09Q234.62 172.43 248.81 184.64Q263.00 196.85 265.31 198.99Q267.62 201.12 268.69 202.50Q269.76 203.88 270.19 205.38Q270.62 206.88 270.59 208.06Q270.56 209.25 270.15 210.50Q269.74 211.75 268.93 212.88Q268.12 214.00 267.12 214.89Q266.12 215.78 265.25 216.22Q264.38 216.67 263.31 216.90Q262.25 217.12 260.88 217.01Q259.50 216.90 258.19 216.60Q256.88 216.29 256.00 215.87Q255.12 215.44 254.06 214.69Q253.00 213.93 236.56 200.28Q220.12 186.64 219.19 186.10Q218.25 185.56 217.62 185.40Q217.00 185.25 215.88 185.34Q214.75 185.43 213.88 185.76Q213.00 186.08 212.22 186.92Q211.43 187.75 211.06 188.75Q210.69 189.75 210.78 191.00Q210.88 192.25 211.40 193.25Q211.93 194.25 218.90 200.27Q225.88 206.29 229.50 209.19Q233.12 212.08 237.00 215.55Q240.88 219.01 241.56 219.94Q242.25 220.88 242.50 221.94Q242.75 223.00 242.66 223.75Q242.57 224.50 242.30 225.31Q242.03 226.12 241.61 226.75Q241.19 227.38 240.60 227.93Q240.00 228.49 238.94 229.10Q237.88 229.72 237.00 230.03Q236.12 230.33 234.88 230.54Q233.62 230.75 232.50 230.71Q231.38 230.67 230.38 230.45Q229.38 230.24 226.75 229.17Q224.12 228.10 220.56 225.78Q217.00 223.47 215.08 221.92Q213.15 220.38 212.87 219.75Q212.58 219.12 212.85 216.38Q213.12 213.62 212.96 211.44Q212.79 209.25 212.24 207.56Q211.68 205.88 210.73 204.06Q209.78 202.25 208.67 200.88Q207.56 199.50 206.03 198.12Q204.50 196.75 202.88 195.83Q201.25 194.90 199.56 194.31Q197.88 193.71 197.35 193.35Q196.83 192.99 196.67 192.49Q196.50 192.00 196.50 189.56Q196.50 187.12 196.31 185.88Q196.11 184.62 195.48 182.81Q194.85 181.00 194.03 179.62Q193.22 178.25 191.86 176.75Q190.50 175.25 188.75 173.86Q187.00 172.47 185.44 171.65Q183.88 170.82 181.19 170.00Q178.50 169.18 178.01 168.84Q177.53 168.50 177.28 168.00Q177.04 167.50 176.58 164.38Q176.11 161.25 175.27 159.38Q174.43 157.50 173.38 156.00Q172.32 154.50 171.28 153.38Q170.25 152.25 168.88 151.08Q167.50 149.92 166.56 149.31Q165.62 148.71 163.69 147.93Q161.75 147.15 158.81 146.83Q155.88 146.50 153.25 146.94Q150.62 147.38 148.75 148.14Q146.88 148.90 145.44 149.69Q144.00 150.49 143.56 150.53Q143.12 150.57 142.73 150.28Q142.33 150.00 140.70 147.50Q139.07 145.00 137.16 143.19Q135.25 141.39 133.06 140.23Q130.88 139.07 128.50 138.53Q126.12 138.00 123.88 138.10Q121.62 138.21 119.12 138.90Q116.62 139.58 114.38 140.86Q112.12 142.14 110.06 143.94Q108.00 145.74 107.38 145.84Q106.75 145.94 106.12 145.53Q105.50 145.12 103.31 142.91Q101.12 140.69 97.81 137.93Q94.50 135.17 91.69 133.19Q88.88 131.22 85.38 129.25Q81.88 127.28 76.62 124.78Q71.38 122.28 48.00 111.94Q24.62 101.60 21.81 100.20Q19.00 98.81 17.31 98.40Q15.62 98.00 14.81 98.08Q14.00 98.15 13.19 98.48Q12.38 98.81 11.78 99.28Q11.19 99.76 10.80 100.38Q10.40 101.00 10.17 101.75Q9.94 102.50 9.91 103.25Q9.88 104.00 10.06 104.75Q10.24 105.50 10.81 106.31Q11.38 107.12 12.31 107.83Q13.25 108.54 15.25 109.69Q17.25 110.85 29.44 116.09Q41.62 121.33 55.75 127.74Q69.88 134.15 74.88 136.67Q79.88 139.19 82.00 140.53Q84.12 141.88 86.56 143.72Q89.00 145.57 91.44 147.85Q93.88 150.12 95.22 151.62Q96.56 153.12 97.24 154.19Q97.92 155.25 97.90 155.81Q97.89 156.38 96.89 159.00Q95.89 161.62 95.51 163.75Q95.12 165.88 95.28 168.44Q95.44 171.00 95.87 172.62Q96.29 174.25 96.85 175.56Q97.40 176.88 98.42 178.44Q99.43 180.00 101.34 181.76Q103.25 183.51 105.31 184.67Q107.38 185.82 109.94 186.48Q112.50 187.14 113.15 187.51Q113.81 187.89 114.06 188.51Q114.31 189.12 114.51 191.31Q114.71 193.50 115.07 194.94Q115.43 196.38 116.33 198.19Q117.22 200.00 118.76 202.00Q120.29 204.00 122.27 205.65Q124.25 207.29 126.62 208.42Q129.00 209.54 130.62 209.91Q132.25 210.28 134.81 210.30Q137.38 210.32 137.88 210.47Q138.38 210.61 138.76 211.06Q139.15 211.50 139.67 213.38Q140.19 215.25 141.14 217.06Q142.08 218.88 143.29 220.38Q144.50 221.88 145.88 223.06Q147.25 224.24 148.62 225.04Q150.00 225.85 152.06 226.59Q154.12 227.33 155.75 227.60Q157.38 227.88 159.56 227.75Q161.75 227.62 162.31 227.74Q162.88 227.85 163.39 228.36Q163.90 228.88 164.59 230.75Q165.28 232.62 165.90 233.69Q166.53 234.75 167.83 236.38Q169.12 238.00 170.12 238.92Q171.12 239.85 172.62 240.78Q174.12 241.72 175.44 242.30Q176.75 242.88 178.31 243.28Q179.88 243.68 181.81 243.78Q183.75 243.88 185.25 243.71Q186.75 243.54 188.12 243.21Q189.50 242.88 192.00 241.71Q194.50 240.54 196.19 239.21Q197.88 237.88 201.25 234.31Q204.62 230.75 205.25 230.39Q205.88 230.03 206.50 230.17Q207.12 230.31 211.94 233.43Q216.75 236.56 220.19 238.43Q223.62 240.31 226.31 241.04Q229.00 241.78 231.75 241.83Q234.50 241.88 235.94 241.71Q237.38 241.54 239.00 241.15Q240.62 240.75 242.00 240.24Q243.38 239.72 244.62 238.98Q245.88 238.24 246.94 237.37Q248.00 236.50 249.37 235.00Q250.74 233.50 251.29 232.56Q251.85 231.62 252.44 230.12Q253.04 228.62 253.52 228.19Q254.00 227.76 254.38 227.70Q254.75 227.64 257.88 228.01Q261.00 228.38 262.88 228.26Q264.75 228.15 266.88 227.60Q269.00 227.04 270.62 226.31Q272.25 225.57 273.69 224.56Q275.12 223.56 276.62 221.97Q278.12 220.38 279.24 218.44Q280.35 216.50 281.14 214.06Q281.93 211.62 282.28 211.10Q282.64 210.58 283.26 210.38Q283.88 210.17 286.50 210.27Q289.12 210.38 290.75 210.09Q292.38 209.81 293.81 209.37Q295.25 208.93 297.00 207.99Q298.75 207.04 300.69 205.46Q302.62 203.88 304.15 201.94Q305.67 200.00 306.60 198.25Q307.54 196.50 308.19 193.81Q308.85 191.12 309.18 190.60Q309.51 190.07 310.13 189.83Q310.75 189.60 313.81 189.15Q316.88 188.71 318.69 188.09Q320.50 187.47 322.56 186.22Q324.62 184.97 326.28 183.42Q327.93 181.88 328.94 180.44Q329.94 179.00 330.50 177.88Q331.06 176.75 331.57 175.06Q332.08 173.38 332.35 171.75Q332.62 170.12 332.69 169.12Q332.75 168.12 332.47 165.88Q332.18 163.62 331.26 160.94Q330.35 158.25 330.38 157.50Q330.40 156.75 330.95 156.00Q331.50 155.25 335.25 151.50Q339.00 147.75 341.44 145.55Q343.88 143.35 347.12 140.97Q350.38 138.58 353.62 136.74Q356.88 134.90 373.19 127.40Q389.50 119.90 398.31 116.09Q407.12 112.28 410.56 110.56Q414.00 108.85 415.06 108.15Q416.12 107.44 416.67 106.85Q417.21 106.25 417.51 105.44Q417.81 104.62 417.88 103.75ZM197.44 205.85Q198.38 206.36 199.06 207.06Q199.74 207.75 200.23 208.62Q200.72 209.50 201.11 211.06Q201.50 212.62 201.50 213.62Q201.50 214.62 201.33 215.44Q201.17 216.25 200.80 217.06Q200.43 217.88 199.74 218.81Q199.06 219.75 195.22 223.90Q191.38 228.06 190.19 229.12Q189.00 230.18 187.75 231.04Q186.50 231.90 185.25 232.20Q184.00 232.50 182.88 232.40Q181.75 232.31 180.62 231.95Q179.50 231.60 178.62 231.02Q177.75 230.44 176.49 228.78Q175.22 227.12 174.80 225.31Q174.38 223.50 174.47 222.62Q174.56 221.75 174.83 220.94Q175.10 220.12 176.28 218.50Q177.47 216.88 182.67 211.78Q187.88 206.69 188.94 205.96Q190.00 205.22 190.81 204.96Q191.62 204.69 193.00 204.69Q194.38 204.69 195.44 205.01Q196.50 205.33 197.44 205.85ZM181.00 182.43Q182.12 183.21 182.81 183.98Q183.50 184.75 183.83 185.38Q184.17 186.00 184.43 186.94Q184.69 187.88 184.73 189.12Q184.76 190.38 184.52 191.38Q184.28 192.38 183.86 193.25Q183.44 194.12 181.97 195.88Q180.50 197.62 174.81 203.62Q169.12 209.62 166.06 212.41Q163.00 215.19 161.62 215.68Q160.25 216.17 158.88 216.17Q157.50 216.18 156.38 215.83Q155.25 215.49 154.19 214.77Q153.12 214.06 152.01 212.59Q150.90 211.12 150.58 210.25Q150.26 209.38 150.13 208.50Q150.00 207.62 150.22 206.25Q150.44 204.88 150.95 203.88Q151.46 202.88 152.10 202.06Q152.75 201.25 160.44 193.38Q168.12 185.50 170.25 183.67Q172.38 181.83 173.69 181.32Q175.00 180.81 176.25 180.81Q177.50 180.82 178.69 181.24Q179.88 181.65 181.00 182.43ZM161.06 159.71Q162.25 160.46 163.15 161.54Q164.06 162.62 164.52 163.69Q164.99 164.75 165.18 166.31Q165.38 167.88 165.08 169.38Q164.79 170.88 163.80 172.50Q162.81 174.12 157.97 179.38Q153.12 184.62 147.88 189.88Q142.62 195.12 141.19 196.37Q139.75 197.61 138.94 198.10Q138.12 198.60 136.94 198.92Q135.75 199.25 134.44 199.12Q133.12 198.99 131.88 198.47Q130.62 197.96 129.50 197.10Q128.38 196.25 127.66 195.31Q126.94 194.38 126.41 193.25Q125.88 192.12 125.69 191.12Q125.50 190.12 125.59 188.94Q125.68 187.75 125.98 186.88Q126.28 186.00 126.83 185.06Q127.39 184.12 129.32 181.88Q131.25 179.62 140.00 170.69Q148.75 161.75 150.31 160.55Q151.88 159.35 153.00 158.87Q154.12 158.39 155.44 158.26Q156.75 158.12 158.31 158.54Q159.88 158.96 161.06 159.71ZM127.25 150.07Q128.00 150.44 128.75 151.03Q129.50 151.62 130.12 152.38Q130.75 153.12 131.28 154.06Q131.82 155.00 132.06 155.81Q132.31 156.62 132.34 157.75Q132.38 158.88 132.18 160.00Q131.99 161.12 131.31 162.44Q130.62 163.75 126.62 168.06Q122.62 172.38 121.00 173.68Q119.38 174.99 118.62 175.30Q117.88 175.61 116.50 175.81Q115.12 176.00 114.00 175.77Q112.88 175.54 111.69 174.95Q110.50 174.36 109.24 173.12Q107.99 171.88 107.52 171.06Q107.06 170.25 106.82 169.38Q106.58 168.50 106.54 167.56Q106.50 166.62 106.65 165.75Q106.79 164.88 107.53 163.31Q108.26 161.75 112.63 157.25Q117.00 152.75 118.62 151.53Q120.25 150.32 121.31 149.87Q122.38 149.42 123.50 149.33Q124.62 149.25 125.56 149.47Q126.50 149.69 127.25 150.07Z"/><clipPath id="hs-clip-l"><polygon points="-60,-40 214,-40 206,42 160,86 150,104 166,118 208,124 214,176 206,205 210,290 -60,290"/></clipPath><clipPath id="hs-clip-r"><polygon points="214,-40 206,42 160,86 150,104 166,118 208,124 214,176 206,205 210,290 480,290 480,-40"/></clipPath>
   <symbol id="i-kalender" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4M8 14h2.5M13.5 14H16M8 17h2.5"/></symbol>
   <symbol id="i-stern" viewBox="0 0 24 24"><path d="m12 4 2.4 5 5.4.6-4 3.7 1.1 5.4L12 16l-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z"/></symbol>
@@ -1950,7 +1972,8 @@ function FRAGEN_TEXTE(c) {
    Ein Stück Nachbarschaft zum Anfassen: Klinkerhäuser mit Schieferdach, Hecken, eine Straße mit Gehweg,
    der Kanal vorne und ein Rapsfeld. Über den Dächern hängen die offenen Anfragen als Preisschilder.
    Die Schilder sind echte Knöpfe im HTML (lesbar, antippbar, mit Tastatur erreichbar), die Szene liegt dahinter.
-   Aufruf: garbsenMiniatur(THREE, huelle, { nacht, wennSchild, foto }) → { schilder(liste), nacht(an), ende() } */
+   Aufruf: garbsenMiniatur(THREE, huelle, { nacht, wennSchild, foto, pruefen, zuLangsam }) → { schilder(liste), nacht(an), ruhe(an), ende() }
+   pruefen: beim Aufbauen messen, ob das Gerät die Szene flüssig schafft. Wenn nicht: erst ohne Schatten, dann zuLangsam(). */
 function garbsenMiniatur(THREE, huelle, opt = {}) {
   const reduziert = !!opt.foto || matchMedia('(prefers-reduced-motion: reduce)').matches;
   const leinwand = document.createElement('canvas');
@@ -2480,13 +2503,36 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     renderer.render(szene, kamera);
     schilderSetzen();
   }
+  // Schafft das Gerät die Szene? Gemessen wird in den ersten Sekunden, in denen jedes Bild gezeichnet wird.
+  // Unter 24 Bildern pro Sekunde: erst ohne Schatten und in einfacher Auflösung, dann als Standbild (opt.zuLangsam).
+  let messung = opt.pruefen && !reduziert ? { seit: 0, bilder: 0, stufe: 0 } : null;
+  function messen(t) {
+    if (!messung) return;
+    if (!messung.seit) { messung.seit = t; return; } // das erste Bild baut Texturen und Schatten auf
+    messung.bilder++;
+    const dauer = t - messung.seit;
+    if (dauer < 900) return;
+    if (messung.bilder / dauer * 1000 >= 24) { messung = null; return; }
+    if (messung.stufe === 0) {
+      renderer.shadowMap.enabled = false;
+      sonne.castShadow = false;
+      renderer.setPixelRatio(1);
+      szene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => { m.needsUpdate = true; }); });
+      einpassen();
+      messung = { seit: 0, bilder: 0, stufe: 1 };
+    } else {
+      messung = null;
+      if (opt.zuLangsam) setTimeout(opt.zuLangsam, 0);
+    }
+  }
   function schleife(t) {
     if (!laeuft || pause) { laeuft = false; return; }
     // Ohne Bewegung reichen 30 Bilder pro Sekunde
     const aufbauFertig = start && t - start > AUFBAU_MS + 600;
-    if (aufbauFertig && !ziehen && t - letzte < 31) { requestAnimationFrame(schleife); return; }
+    if (aufbauFertig && !messung && !ziehen && t - letzte < 31) { requestAnimationFrame(schleife); return; }
     zeichnen(t);
     letzte = t;
+    messen(t);
     if (reduziert && aufbauFertig && Math.abs(ziel - winkel) < 0.001 && ++ruhig > 2) { laeuft = false; return; }
     // Akku schonen: nach 15 Sekunden ohne Berührung bleibt die Szene stehen (die Schilder schweben per CSS weiter)
     if (aufbauFertig && !ziehen && t - aktiv > 15000) { laeuft = false; return; }
@@ -2495,6 +2541,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   function wecken() {
     ruhig = 0;
     aktiv = performance.now();
+    if (messung && !laeuft) { messung.seit = 0; messung.bilder = 0; } // nach einer Pause neu messen
     if (!laeuft && sichtbar && !pause && !document.hidden) { laeuft = true; requestAnimationFrame(schleife); }
   }
   const aus = () => { laeuft = false; };
@@ -2743,9 +2790,11 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   const ANSICHT_OPTIONEN = {
     thema: [['auto', 'Automatisch'], ['hell', 'Hell'], ['dunkel', 'Dunkel']],
     schrift: [['normal', 'Normal'], ['gross', 'Groß'], ['sehr-gross', 'Sehr groß']],
-    start: [['entdecken', 'Liste'], ['karte', 'Karte']]
+    start: [['entdecken', 'Liste'], ['karte', 'Karte']],
+    // Modell auf der Startseite: „auto“ prüft beim Start, ob das Gerät die 3D-Szene flüssig schafft
+    modell: [['auto', 'Automatisch'], ['an', 'Bewegt (3D)'], ['aus', 'Als Bild']]
   };
-  const ansicht = { thema: 'auto', schrift: 'normal', start: 'entdecken' };
+  const ansicht = { thema: 'auto', schrift: 'normal', start: 'entdecken', modell: 'auto' };
   try {
     const gespeichert = JSON.parse(localStorage.getItem(ANSICHT_SPEICHER) || '{}');
     Object.keys(ansicht).forEach((k) => {
@@ -2757,19 +2806,25 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     if (ansicht.thema === 'auto') r.removeAttribute('data-theme');
     else r.setAttribute('data-theme', ansicht.thema === 'dunkel' ? 'dark' : 'light');
     if (ansicht.schrift === 'normal') r.removeAttribute('data-schrift'); else r.setAttribute('data-schrift', ansicht.schrift);
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = getComputedStyle(r).getPropertyValue('--paper').trim() || '#F3F5F1';
+    // Farbe der Statusleiste: bei „Automatisch“ je nach Gerät hell oder dunkel, sonst passend zum gewählten Design
+    const papier = getComputedStyle(r).getPropertyValue('--paper').trim() || '#EDF1F5';
+    document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
+      if (!m.dataset.standard) m.dataset.standard = m.content;
+      m.content = ansicht.thema === 'auto' ? m.dataset.standard : papier;
+    });
   }
   function ansichtSetzen(k, w) {
     if (!ANSICHT_OPTIONEN[k] || !ANSICHT_OPTIONEN[k].some(([x]) => x === w)) return;
     ansicht[k] = w;
     try { localStorage.setItem(ANSICHT_SPEICHER, JSON.stringify(ansicht)); } catch (e) { /* nur für diese Sitzung */ }
     ansichtAnwenden();
+    if (k === 'modell') miniNeu();
   }
   ansichtAnwenden();
 
   // Stadtteil aus der Begrüßung (nur auf diesem Gerät). Angemeldet zählt der Stadtteil im Profil.
   const START_SPEICHER = 'handdrauf-start-gesehen';
+  const START_FASSUNG = '2'; // erhöhen, wenn alle die Begrüßung noch einmal sehen sollen
   const ORT_SPEICHER = 'handdrauf-stadtteil';
   let gewaehlterOrt = null;
   try { const o = localStorage.getItem(ORT_SPEICHER); if (STADTTEILE.some((x) => x.name === o)) gewaehlterOrt = o; } catch (e) { /* ohne Speicher */ }
@@ -3498,23 +3553,49 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       label: `${g.titel}, ${euroKurz(g.betrag)}, ${wannText(g)}, ${g.stadtteil}`,
     })));
   }
+  // Sparsam: wenig Arbeitsspeicher oder Datensparmodus. Dann gleich das Standbild, ohne 700 KB für die 3D-Szene zu laden.
+  // Auch wenn die Szene auf diesem Gerät zuletzt geruckelt hat (zwei Wochen lang merken, danach neu probieren).
+  const LANGSAM_SPEICHER = 'handdrauf-3d-langsam';
+  function miniSparsam() {
+    if ((navigator.connection && navigator.connection.saveData) || (navigator.deviceMemory && navigator.deviceMemory <= 2)) return true;
+    try { return Date.now() - Number(localStorage.getItem(LANGSAM_SPEICHER) || 0) < 14 * TAG_MS; } catch (e) { return false; }
+  }
+  function miniAlsBild() {
+    const huelle = $('#mini');
+    if (mini.welt) { mini.welt.ende(); mini.welt = null; }
+    huelle.querySelectorAll('.mini-anker').forEach((a) => a.remove());
+    huelle.classList.add('ohne-3d');
+  }
   async function miniStarten() {
     const huelle = $('#mini');
     if (!huelle || mini.welt || mini.laedt) return;
+    if (ansicht.modell === 'aus' || (ansicht.modell === 'auto' && miniSparsam())) { miniAlsBild(); return; }
     mini.laedt = true;
     try {
       const THREE = await import(DREI_URL);
       // Erst aufbauen, wenn Start-Animation und Begrüßung weg sind, damit man das Aufbauen sieht
       await new Promise((ok) => { const warte = () => (!$('#start').hidden || ($('#intro') && !$('#intro').hidden && getComputedStyle($('#intro')).display !== 'none')) ? setTimeout(warte, 300) : ok(); warte(); });
-      mini.welt = garbsenMiniatur(THREE, huelle, { nacht: dunklesThema(), wennSchild: (id) => oeffnen(id, document.activeElement) });
+      if (ansicht.modell === 'aus') { miniAlsBild(); return; }
+      huelle.classList.remove('ohne-3d');
+      mini.welt = garbsenMiniatur(THREE, huelle, {
+        nacht: dunklesThema(),
+        wennSchild: (id) => oeffnen(id, document.activeElement),
+        // „Automatisch“: Ruckelt die Szene, wird sie zum Bild. „Bewegt (3D)“ erzwingt sie.
+        pruefen: ansicht.modell === 'auto',
+        zuLangsam: () => { try { localStorage.setItem(LANGSAM_SPEICHER, String(Date.now())); } catch (e) { /* nur für diese Sitzung */ } miniAlsBild(); }
+      });
       if (!mini.welt) throw new Error('Kein WebGL');
       miniSchilder();
     } catch (e) {
       console.warn('Miniatur nicht verfügbar:', e && e.message);
-      huelle.classList.add('ohne-3d');
+      miniAlsBild();
     } finally {
       mini.laedt = false;
     }
+  }
+  function miniNeu() { // nach einer Änderung im Menü
+    if (ansicht.modell === 'aus') { miniAlsBild(); return; }
+    if (!mini.welt) miniStarten();
   }
   const miniThema = () => { if (mini.welt) mini.welt.nacht(dunklesThema()); };
   // Unter einem Blatt oder der Feier muss die Szene nicht weiterlaufen
@@ -3786,7 +3867,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     const echteAdresse = adresse && !(g.eigen && !live && adresse === g.stadtteil) ? adresse : '';
     let adressZeile;
     if (!beteiligt) adressZeile = `<span class="fakt-leise">${icon('schloss', 'i-xs')}nach der Zusage</span>`;
-    else if (echteAdresse) adressZeile = `${esc(echteAdresse)}<span class="fakt-leise">${g.eigen ? 'sieht nur, wer zusagt' : 'nur für dich sichtbar'}</span>`;
+    else if (echteAdresse) adressZeile = `${esc(echteAdresse)}<span class="fakt-zusatz">${g.eigen ? 'sieht nur, wer zusagt' : 'nur für dich sichtbar'}</span>`;
     else adressZeile = `<span class="fakt-leise">${adresse === null ? 'wird geladen …' : g.eigen ? 'nur der Stadtteil' : 'nicht verfügbar'}</span>`;
 
     html += `<div class="betrag">
@@ -4073,6 +4154,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
         ${gruppe('thema', 'Design')}
         ${gruppe('schrift', 'Schrift')}
         ${gruppe('start', 'Start mit')}
+        ${gruppe('modell', 'Modell auf der Startseite')}
         ${ohneKonto ? `<div class="menue-zeile"><label class="menue-label" for="ansicht-ort">Stadtteil</label><select id="ansicht-ort">${gewaehlterOrt ? '' : '<option value="">Bitte wählen</option>'}${stadtteilOptionen(gewaehlterOrt || '', false)}</select></div>` : ''}
       </section>
       ${istLive() ? '' : blockListeHTML()}
@@ -4683,7 +4765,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   const istInstalliert = () => NATIV || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
   const istIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const installierenMoeglich = () => !VORSCHAU && !istInstalliert() && (!!installEreignis || istIOS());
-  function startGesehen() { try { return localStorage.getItem(START_SPEICHER) === '1'; } catch (e) { return true; } }
+  function startGesehen() { try { return localStorage.getItem(START_SPEICHER) === START_FASSUNG; } catch (e) { return true; } }
   function renderInstallieren() {
     const el = $('#installieren');
     let weg = false;
@@ -4767,33 +4849,41 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
 
   /* ===== Begrüßung beim ersten Start (Vorbild: Too Good To Go, BlaBlaCar) ===== */
   let startSeite = 0;
+  const START_SEITEN = 4;
   function startHTML() {
-    const punkte = (n) => `<div class="start-punkte" aria-hidden="true">${[0, 1, 2].map((i) => `<span class="${i === n ? 'an' : ''}"></span>`).join('')}</div>`;
+    const punkte = (n) => `<div class="start-punkte" aria-hidden="true">${Array.from({ length: START_SEITEN }, (_, i) => `<span class="${i === n ? 'an' : ''}"></span>`).join('')}</div>`;
     const ueber = `<button type="button" class="link-btn start-ueber" data-start="fertig">Überspringen</button>`;
     const fuss = (n, knopf, aktion) => `<div class="start-fuss">${punkte(n)}<button type="button" class="btn btn-primary" data-start="${aktion}">${knopf}</button></div>`;
     if (startSeite === 0) return `${ueber}
-      <div class="start-logo">${$('.marke-logo') ? $('.marke-logo').outerHTML : ''}</div>
+      <div class="start-bild" role="img" aria-label="Eine kleine Nachbarschaft als Modell: Häuser, Gärten, eine Straße"></div>
       <h1 id="start-titel" tabindex="-1">Nachbarn helfen Nachbarn</h1>
       <p class="start-text">Rasen mähen, Einkauf hochtragen, Drucker einrichten: kleine Hilfen in Garbsen, gegen eine kleine Aufwandsentschädigung.</p>
       <ul class="start-liste">
-        <li>${icon('winken')}<span><strong>Hilfe suchen</strong>Eine Anfrage in vier kurzen Schritten stellen.</span></li>
-        <li>${icon('stecknadel')}<span><strong>Helfen</strong>Auf der Karte sehen, wo in deiner Nähe Hilfe gebraucht wird.</span></li>
+        <li>${icon('winken')}<span><strong>Hilfe suchen</strong>Für dich oder für jemanden aus der Familie, in vier kurzen Schritten.</span></li>
+        <li>${icon('stecknadel')}<span><strong>Helfen</strong>Sehen, wo in deiner Nähe Hilfe gebraucht wird.</span></li>
       </ul>
       ${fuss(0, 'Weiter', 'weiter')}`;
     if (startSeite === 1) return `${ueber}
+      <h1 id="start-titel" tabindex="-1">Gut lesbar?</h1>
+      <p class="start-text">Wähle die Schriftgröße, die für dich angenehm ist. Du kannst sie später im Menü ändern.</p>
+      <div class="start-schrift" role="group" aria-label="Schriftgröße">${ANSICHT_OPTIONEN.schrift.map(([w, n], i) =>
+        `<button type="button" class="wahl-knopf" data-start-schrift="${w}" aria-pressed="${ansicht.schrift === w}"><span style="font-size:${[17, 20, 23][i]}px">${n}</span><span style="font-size:${[17, 20, 23][i]}px" aria-hidden="true">Abc</span></button>`).join('')}</div>
+      <p class="start-probe"><strong>Hecke schneiden</strong>Samstag, vormittags in Havelse. So groß ist die Schrift in der App.</p>
+      ${fuss(1, 'Weiter', 'weiter')}`;
+    if (startSeite === 2) return `${ueber}
       <h1 id="start-titel" tabindex="-1">Wo wohnst du?</h1>
       <p class="start-text">Dann zeigen wir dir zuerst, was in deiner Nähe los ist. Deine Adresse brauchen wir dafür nicht.</p>
       <div class="start-orte" role="group" aria-label="Stadtteil wählen">${STADTTEIL_NAMEN.map((n) =>
         `<button type="button" class="wahl-knopf" data-start-ort="${esc(n)}" aria-pressed="${gewaehlterOrt === n}">${esc(n)}</button>`).join('')}</div>
-      ${fuss(1, gewaehlterOrt ? 'Weiter' : 'Ohne Stadtteil weiter', 'weiter')}`;
+      ${fuss(2, gewaehlterOrt ? 'Weiter' : 'Ohne Stadtteil weiter', 'weiter')}`;
     return `${ueber}
       <h1 id="start-titel" tabindex="-1">So bleibt es sicher</h1>
       <ul class="start-liste">
         <li>${icon('schloss')}<span><strong>Adresse erst nach der Zusage</strong>Auf der Karte erscheint nur ein Punkt im Stadtteil.</span></li>
-        <li>${icon('stern')}<span><strong>Echte Profile und Bewertungen</strong>Helfen kann man ab 18. Nach jedem Auftrag bewertet ihr euch gegenseitig.</span></li>
-        <li>${icon('flagge')}<span><strong>Melden in jedem Auftrag</strong>Wir prüfen jede Meldung.</span></li>
+        <li>${icon('schild')}<span><strong>Ein Code an der Tür</strong>Wer hilft, nennt einen Code, den nur ihr beide kennt.</span></li>
+        <li>${icon('stern')}<span><strong>Bewertungen und Melden</strong>Helfen kann man ab 18. Nach jedem Auftrag bewertet ihr euch, und wir prüfen jede Meldung.</span></li>
       </ul>
-      ${fuss(2, 'Los geht’s', 'fertig')}`;
+      ${fuss(3, 'Los geht’s', 'fertig')}`;
   }
   function renderStart(fokus) {
     $('#start-inhalt').innerHTML = startHTML();
@@ -4809,7 +4899,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   function startBeenden() {
     $('#start').hidden = true;
     document.body.classList.remove('sheet-offen');
-    try { localStorage.setItem(START_SPEICHER, '1'); } catch (e) { /* nur für diese Sitzung */ }
+    try { localStorage.setItem(START_SPEICHER, START_FASSUNG); } catch (e) { /* nur für diese Sitzung */ }
     renderStadtteilAuswahl();
     renderAlles();
     const h = $(`#h-${ui.view}`);
@@ -4818,6 +4908,8 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   $('#start').addEventListener('click', (e) => {
     const ort = e.target.closest('[data-start-ort]');
     if (ort) { ortWaehlen(ort.dataset.startOrt); renderStart(`[data-start-ort="${CSS.escape(ort.dataset.startOrt)}"]`); return; }
+    const schrift = e.target.closest('[data-start-schrift]');
+    if (schrift) { ansichtSetzen('schrift', schrift.dataset.startSchrift); renderStart(`[data-start-schrift="${schrift.dataset.startSchrift}"]`); return; }
     const a = e.target.closest('[data-start]');
     if (!a) return;
     if (a.dataset.start === 'weiter') { startSeite += 1; renderStart(); }
@@ -5314,9 +5406,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   if (istSeite(start)) oeffnePanel(start);
   else if (linkId(start)) { /* geteilte Anfrage: erst die Anfrage zeigen, die Begrüßung kommt beim nächsten Besuch */ }
   else {
-    let gesehen = false;
-    try { gesehen = localStorage.getItem(START_SPEICHER) === '1'; } catch (e) { gesehen = true; }
-    if (!gesehen) startZeigen();
+    if (!startGesehen()) startZeigen();
   }
   miniStarten();
   starteLive().then((live) => {

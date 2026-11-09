@@ -199,9 +199,11 @@
   const ANSICHT_OPTIONEN = {
     thema: [['auto', 'Automatisch'], ['hell', 'Hell'], ['dunkel', 'Dunkel']],
     schrift: [['normal', 'Normal'], ['gross', 'Groß'], ['sehr-gross', 'Sehr groß']],
-    start: [['entdecken', 'Liste'], ['karte', 'Karte']]
+    start: [['entdecken', 'Liste'], ['karte', 'Karte']],
+    // Modell auf der Startseite: „auto“ prüft beim Start, ob das Gerät die 3D-Szene flüssig schafft
+    modell: [['auto', 'Automatisch'], ['an', 'Bewegt (3D)'], ['aus', 'Als Bild']]
   };
-  const ansicht = { thema: 'auto', schrift: 'normal', start: 'entdecken' };
+  const ansicht = { thema: 'auto', schrift: 'normal', start: 'entdecken', modell: 'auto' };
   try {
     const gespeichert = JSON.parse(localStorage.getItem(ANSICHT_SPEICHER) || '{}');
     Object.keys(ansicht).forEach((k) => {
@@ -213,19 +215,25 @@
     if (ansicht.thema === 'auto') r.removeAttribute('data-theme');
     else r.setAttribute('data-theme', ansicht.thema === 'dunkel' ? 'dark' : 'light');
     if (ansicht.schrift === 'normal') r.removeAttribute('data-schrift'); else r.setAttribute('data-schrift', ansicht.schrift);
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = getComputedStyle(r).getPropertyValue('--paper').trim() || '#F3F5F1';
+    // Farbe der Statusleiste: bei „Automatisch“ je nach Gerät hell oder dunkel, sonst passend zum gewählten Design
+    const papier = getComputedStyle(r).getPropertyValue('--paper').trim() || '#EDF1F5';
+    document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
+      if (!m.dataset.standard) m.dataset.standard = m.content;
+      m.content = ansicht.thema === 'auto' ? m.dataset.standard : papier;
+    });
   }
   function ansichtSetzen(k, w) {
     if (!ANSICHT_OPTIONEN[k] || !ANSICHT_OPTIONEN[k].some(([x]) => x === w)) return;
     ansicht[k] = w;
     try { localStorage.setItem(ANSICHT_SPEICHER, JSON.stringify(ansicht)); } catch (e) { /* nur für diese Sitzung */ }
     ansichtAnwenden();
+    if (k === 'modell') miniNeu();
   }
   ansichtAnwenden();
 
   // Stadtteil aus der Begrüßung (nur auf diesem Gerät). Angemeldet zählt der Stadtteil im Profil.
   const START_SPEICHER = 'handdrauf-start-gesehen';
+  const START_FASSUNG = '2'; // erhöhen, wenn alle die Begrüßung noch einmal sehen sollen
   const ORT_SPEICHER = 'handdrauf-stadtteil';
   let gewaehlterOrt = null;
   try { const o = localStorage.getItem(ORT_SPEICHER); if (STADTTEILE.some((x) => x.name === o)) gewaehlterOrt = o; } catch (e) { /* ohne Speicher */ }
@@ -954,23 +962,49 @@
       label: `${g.titel}, ${euroKurz(g.betrag)}, ${wannText(g)}, ${g.stadtteil}`,
     })));
   }
+  // Sparsam: wenig Arbeitsspeicher oder Datensparmodus. Dann gleich das Standbild, ohne 700 KB für die 3D-Szene zu laden.
+  // Auch wenn die Szene auf diesem Gerät zuletzt geruckelt hat (zwei Wochen lang merken, danach neu probieren).
+  const LANGSAM_SPEICHER = 'handdrauf-3d-langsam';
+  function miniSparsam() {
+    if ((navigator.connection && navigator.connection.saveData) || (navigator.deviceMemory && navigator.deviceMemory <= 2)) return true;
+    try { return Date.now() - Number(localStorage.getItem(LANGSAM_SPEICHER) || 0) < 14 * TAG_MS; } catch (e) { return false; }
+  }
+  function miniAlsBild() {
+    const huelle = $('#mini');
+    if (mini.welt) { mini.welt.ende(); mini.welt = null; }
+    huelle.querySelectorAll('.mini-anker').forEach((a) => a.remove());
+    huelle.classList.add('ohne-3d');
+  }
   async function miniStarten() {
     const huelle = $('#mini');
     if (!huelle || mini.welt || mini.laedt) return;
+    if (ansicht.modell === 'aus' || (ansicht.modell === 'auto' && miniSparsam())) { miniAlsBild(); return; }
     mini.laedt = true;
     try {
       const THREE = await import(DREI_URL);
       // Erst aufbauen, wenn Start-Animation und Begrüßung weg sind, damit man das Aufbauen sieht
       await new Promise((ok) => { const warte = () => (!$('#start').hidden || ($('#intro') && !$('#intro').hidden && getComputedStyle($('#intro')).display !== 'none')) ? setTimeout(warte, 300) : ok(); warte(); });
-      mini.welt = garbsenMiniatur(THREE, huelle, { nacht: dunklesThema(), wennSchild: (id) => oeffnen(id, document.activeElement) });
+      if (ansicht.modell === 'aus') { miniAlsBild(); return; }
+      huelle.classList.remove('ohne-3d');
+      mini.welt = garbsenMiniatur(THREE, huelle, {
+        nacht: dunklesThema(),
+        wennSchild: (id) => oeffnen(id, document.activeElement),
+        // „Automatisch“: Ruckelt die Szene, wird sie zum Bild. „Bewegt (3D)“ erzwingt sie.
+        pruefen: ansicht.modell === 'auto',
+        zuLangsam: () => { try { localStorage.setItem(LANGSAM_SPEICHER, String(Date.now())); } catch (e) { /* nur für diese Sitzung */ } miniAlsBild(); }
+      });
       if (!mini.welt) throw new Error('Kein WebGL');
       miniSchilder();
     } catch (e) {
       console.warn('Miniatur nicht verfügbar:', e && e.message);
-      huelle.classList.add('ohne-3d');
+      miniAlsBild();
     } finally {
       mini.laedt = false;
     }
+  }
+  function miniNeu() { // nach einer Änderung im Menü
+    if (ansicht.modell === 'aus') { miniAlsBild(); return; }
+    if (!mini.welt) miniStarten();
   }
   const miniThema = () => { if (mini.welt) mini.welt.nacht(dunklesThema()); };
   // Unter einem Blatt oder der Feier muss die Szene nicht weiterlaufen
@@ -1242,7 +1276,7 @@
     const echteAdresse = adresse && !(g.eigen && !live && adresse === g.stadtteil) ? adresse : '';
     let adressZeile;
     if (!beteiligt) adressZeile = `<span class="fakt-leise">${icon('schloss', 'i-xs')}nach der Zusage</span>`;
-    else if (echteAdresse) adressZeile = `${esc(echteAdresse)}<span class="fakt-leise">${g.eigen ? 'sieht nur, wer zusagt' : 'nur für dich sichtbar'}</span>`;
+    else if (echteAdresse) adressZeile = `${esc(echteAdresse)}<span class="fakt-zusatz">${g.eigen ? 'sieht nur, wer zusagt' : 'nur für dich sichtbar'}</span>`;
     else adressZeile = `<span class="fakt-leise">${adresse === null ? 'wird geladen …' : g.eigen ? 'nur der Stadtteil' : 'nicht verfügbar'}</span>`;
 
     html += `<div class="betrag">
@@ -1529,6 +1563,7 @@
         ${gruppe('thema', 'Design')}
         ${gruppe('schrift', 'Schrift')}
         ${gruppe('start', 'Start mit')}
+        ${gruppe('modell', 'Modell auf der Startseite')}
         ${ohneKonto ? `<div class="menue-zeile"><label class="menue-label" for="ansicht-ort">Stadtteil</label><select id="ansicht-ort">${gewaehlterOrt ? '' : '<option value="">Bitte wählen</option>'}${stadtteilOptionen(gewaehlterOrt || '', false)}</select></div>` : ''}
       </section>
       ${istLive() ? '' : blockListeHTML()}
@@ -2139,7 +2174,7 @@
   const istInstalliert = () => NATIV || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
   const istIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const installierenMoeglich = () => !VORSCHAU && !istInstalliert() && (!!installEreignis || istIOS());
-  function startGesehen() { try { return localStorage.getItem(START_SPEICHER) === '1'; } catch (e) { return true; } }
+  function startGesehen() { try { return localStorage.getItem(START_SPEICHER) === START_FASSUNG; } catch (e) { return true; } }
   function renderInstallieren() {
     const el = $('#installieren');
     let weg = false;
@@ -2223,33 +2258,41 @@
 
   /* ===== Begrüßung beim ersten Start (Vorbild: Too Good To Go, BlaBlaCar) ===== */
   let startSeite = 0;
+  const START_SEITEN = 4;
   function startHTML() {
-    const punkte = (n) => `<div class="start-punkte" aria-hidden="true">${[0, 1, 2].map((i) => `<span class="${i === n ? 'an' : ''}"></span>`).join('')}</div>`;
+    const punkte = (n) => `<div class="start-punkte" aria-hidden="true">${Array.from({ length: START_SEITEN }, (_, i) => `<span class="${i === n ? 'an' : ''}"></span>`).join('')}</div>`;
     const ueber = `<button type="button" class="link-btn start-ueber" data-start="fertig">Überspringen</button>`;
     const fuss = (n, knopf, aktion) => `<div class="start-fuss">${punkte(n)}<button type="button" class="btn btn-primary" data-start="${aktion}">${knopf}</button></div>`;
     if (startSeite === 0) return `${ueber}
-      <div class="start-logo">${$('.marke-logo') ? $('.marke-logo').outerHTML : ''}</div>
+      <div class="start-bild" role="img" aria-label="Eine kleine Nachbarschaft als Modell: Häuser, Gärten, eine Straße"></div>
       <h1 id="start-titel" tabindex="-1">Nachbarn helfen Nachbarn</h1>
       <p class="start-text">Rasen mähen, Einkauf hochtragen, Drucker einrichten: kleine Hilfen in Garbsen, gegen eine kleine Aufwandsentschädigung.</p>
       <ul class="start-liste">
-        <li>${icon('winken')}<span><strong>Hilfe suchen</strong>Eine Anfrage in vier kurzen Schritten stellen.</span></li>
-        <li>${icon('stecknadel')}<span><strong>Helfen</strong>Auf der Karte sehen, wo in deiner Nähe Hilfe gebraucht wird.</span></li>
+        <li>${icon('winken')}<span><strong>Hilfe suchen</strong>Für dich oder für jemanden aus der Familie, in vier kurzen Schritten.</span></li>
+        <li>${icon('stecknadel')}<span><strong>Helfen</strong>Sehen, wo in deiner Nähe Hilfe gebraucht wird.</span></li>
       </ul>
       ${fuss(0, 'Weiter', 'weiter')}`;
     if (startSeite === 1) return `${ueber}
+      <h1 id="start-titel" tabindex="-1">Gut lesbar?</h1>
+      <p class="start-text">Wähle die Schriftgröße, die für dich angenehm ist. Du kannst sie später im Menü ändern.</p>
+      <div class="start-schrift" role="group" aria-label="Schriftgröße">${ANSICHT_OPTIONEN.schrift.map(([w, n], i) =>
+        `<button type="button" class="wahl-knopf" data-start-schrift="${w}" aria-pressed="${ansicht.schrift === w}"><span style="font-size:${[17, 20, 23][i]}px">${n}</span><span style="font-size:${[17, 20, 23][i]}px" aria-hidden="true">Abc</span></button>`).join('')}</div>
+      <p class="start-probe"><strong>Hecke schneiden</strong>Samstag, vormittags in Havelse. So groß ist die Schrift in der App.</p>
+      ${fuss(1, 'Weiter', 'weiter')}`;
+    if (startSeite === 2) return `${ueber}
       <h1 id="start-titel" tabindex="-1">Wo wohnst du?</h1>
       <p class="start-text">Dann zeigen wir dir zuerst, was in deiner Nähe los ist. Deine Adresse brauchen wir dafür nicht.</p>
       <div class="start-orte" role="group" aria-label="Stadtteil wählen">${STADTTEIL_NAMEN.map((n) =>
         `<button type="button" class="wahl-knopf" data-start-ort="${esc(n)}" aria-pressed="${gewaehlterOrt === n}">${esc(n)}</button>`).join('')}</div>
-      ${fuss(1, gewaehlterOrt ? 'Weiter' : 'Ohne Stadtteil weiter', 'weiter')}`;
+      ${fuss(2, gewaehlterOrt ? 'Weiter' : 'Ohne Stadtteil weiter', 'weiter')}`;
     return `${ueber}
       <h1 id="start-titel" tabindex="-1">So bleibt es sicher</h1>
       <ul class="start-liste">
         <li>${icon('schloss')}<span><strong>Adresse erst nach der Zusage</strong>Auf der Karte erscheint nur ein Punkt im Stadtteil.</span></li>
-        <li>${icon('stern')}<span><strong>Echte Profile und Bewertungen</strong>Helfen kann man ab 18. Nach jedem Auftrag bewertet ihr euch gegenseitig.</span></li>
-        <li>${icon('flagge')}<span><strong>Melden in jedem Auftrag</strong>Wir prüfen jede Meldung.</span></li>
+        <li>${icon('schild')}<span><strong>Ein Code an der Tür</strong>Wer hilft, nennt einen Code, den nur ihr beide kennt.</span></li>
+        <li>${icon('stern')}<span><strong>Bewertungen und Melden</strong>Helfen kann man ab 18. Nach jedem Auftrag bewertet ihr euch, und wir prüfen jede Meldung.</span></li>
       </ul>
-      ${fuss(2, 'Los geht’s', 'fertig')}`;
+      ${fuss(3, 'Los geht’s', 'fertig')}`;
   }
   function renderStart(fokus) {
     $('#start-inhalt').innerHTML = startHTML();
@@ -2265,7 +2308,7 @@
   function startBeenden() {
     $('#start').hidden = true;
     document.body.classList.remove('sheet-offen');
-    try { localStorage.setItem(START_SPEICHER, '1'); } catch (e) { /* nur für diese Sitzung */ }
+    try { localStorage.setItem(START_SPEICHER, START_FASSUNG); } catch (e) { /* nur für diese Sitzung */ }
     renderStadtteilAuswahl();
     renderAlles();
     const h = $(`#h-${ui.view}`);
@@ -2274,6 +2317,8 @@
   $('#start').addEventListener('click', (e) => {
     const ort = e.target.closest('[data-start-ort]');
     if (ort) { ortWaehlen(ort.dataset.startOrt); renderStart(`[data-start-ort="${CSS.escape(ort.dataset.startOrt)}"]`); return; }
+    const schrift = e.target.closest('[data-start-schrift]');
+    if (schrift) { ansichtSetzen('schrift', schrift.dataset.startSchrift); renderStart(`[data-start-schrift="${schrift.dataset.startSchrift}"]`); return; }
     const a = e.target.closest('[data-start]');
     if (!a) return;
     if (a.dataset.start === 'weiter') { startSeite += 1; renderStart(); }
@@ -2770,9 +2815,7 @@
   if (istSeite(start)) oeffnePanel(start);
   else if (linkId(start)) { /* geteilte Anfrage: erst die Anfrage zeigen, die Begrüßung kommt beim nächsten Besuch */ }
   else {
-    let gesehen = false;
-    try { gesehen = localStorage.getItem(START_SPEICHER) === '1'; } catch (e) { gesehen = true; }
-    if (!gesehen) startZeigen();
+    if (!startGesehen()) startZeigen();
   }
   miniStarten();
   starteLive().then((live) => {

@@ -2,7 +2,8 @@
    Ein Stück Nachbarschaft zum Anfassen: Klinkerhäuser mit Schieferdach, Hecken, eine Straße mit Gehweg,
    der Kanal vorne und ein Rapsfeld. Über den Dächern hängen die offenen Anfragen als Preisschilder.
    Die Schilder sind echte Knöpfe im HTML (lesbar, antippbar, mit Tastatur erreichbar), die Szene liegt dahinter.
-   Aufruf: garbsenMiniatur(THREE, huelle, { nacht, wennSchild, foto }) → { schilder(liste), nacht(an), ende() } */
+   Aufruf: garbsenMiniatur(THREE, huelle, { nacht, wennSchild, foto, pruefen, zuLangsam }) → { schilder(liste), nacht(an), ruhe(an), ende() }
+   pruefen: beim Aufbauen messen, ob das Gerät die Szene flüssig schafft. Wenn nicht: erst ohne Schatten, dann zuLangsam(). */
 function garbsenMiniatur(THREE, huelle, opt = {}) {
   const reduziert = !!opt.foto || matchMedia('(prefers-reduced-motion: reduce)').matches;
   const leinwand = document.createElement('canvas');
@@ -532,13 +533,36 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     renderer.render(szene, kamera);
     schilderSetzen();
   }
+  // Schafft das Gerät die Szene? Gemessen wird in den ersten Sekunden, in denen jedes Bild gezeichnet wird.
+  // Unter 24 Bildern pro Sekunde: erst ohne Schatten und in einfacher Auflösung, dann als Standbild (opt.zuLangsam).
+  let messung = opt.pruefen && !reduziert ? { seit: 0, bilder: 0, stufe: 0 } : null;
+  function messen(t) {
+    if (!messung) return;
+    if (!messung.seit) { messung.seit = t; return; } // das erste Bild baut Texturen und Schatten auf
+    messung.bilder++;
+    const dauer = t - messung.seit;
+    if (dauer < 900) return;
+    if (messung.bilder / dauer * 1000 >= 24) { messung = null; return; }
+    if (messung.stufe === 0) {
+      renderer.shadowMap.enabled = false;
+      sonne.castShadow = false;
+      renderer.setPixelRatio(1);
+      szene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => { m.needsUpdate = true; }); });
+      einpassen();
+      messung = { seit: 0, bilder: 0, stufe: 1 };
+    } else {
+      messung = null;
+      if (opt.zuLangsam) setTimeout(opt.zuLangsam, 0);
+    }
+  }
   function schleife(t) {
     if (!laeuft || pause) { laeuft = false; return; }
     // Ohne Bewegung reichen 30 Bilder pro Sekunde
     const aufbauFertig = start && t - start > AUFBAU_MS + 600;
-    if (aufbauFertig && !ziehen && t - letzte < 31) { requestAnimationFrame(schleife); return; }
+    if (aufbauFertig && !messung && !ziehen && t - letzte < 31) { requestAnimationFrame(schleife); return; }
     zeichnen(t);
     letzte = t;
+    messen(t);
     if (reduziert && aufbauFertig && Math.abs(ziel - winkel) < 0.001 && ++ruhig > 2) { laeuft = false; return; }
     // Akku schonen: nach 15 Sekunden ohne Berührung bleibt die Szene stehen (die Schilder schweben per CSS weiter)
     if (aufbauFertig && !ziehen && t - aktiv > 15000) { laeuft = false; return; }
@@ -547,6 +571,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   function wecken() {
     ruhig = 0;
     aktiv = performance.now();
+    if (messung && !laeuft) { messung.seit = 0; messung.bilder = 0; } // nach einer Pause neu messen
     if (!laeuft && sichtbar && !pause && !document.hidden) { laeuft = true; requestAnimationFrame(schleife); }
   }
   const aus = () => { laeuft = false; };

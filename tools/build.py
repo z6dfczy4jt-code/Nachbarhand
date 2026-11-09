@@ -75,9 +75,10 @@ def teile(vorschau):
     if vorschau:
         # Die Vorschau ist eine einzelne Datei: Standbild der Miniatur (für Geräte ohne 3D) einbetten
         import base64
-        bild = 'data:image/webp;base64,' + base64.b64encode((WURZEL / 'assets/garbsen-miniatur.webp').read_bytes()).decode()
-        assert 'url("assets/garbsen-miniatur.webp")' in styles
-        styles = styles.replace('url("assets/garbsen-miniatur.webp")', f'url("{bild}")')
+        for datei in ('garbsen-miniatur.webp', 'garbsen-miniatur-nacht.webp'):
+            bild = 'data:image/webp;base64,' + base64.b64encode((WURZEL / 'assets' / datei).read_bytes()).decode()
+            assert styles.count(f'url("assets/{datei}")') == 1, datei
+            styles = styles.replace(f'url("assets/{datei}")', f'url("{bild}")')
     body = (SRC / 'body.html').read_text().replace('<!--KOPFZEICHEN-->', (SRC / 'kopfzeichen.svg').read_text().strip())
     defs, intro, feier = handschlag()
     body = body.replace('<!--HANDSCHLAG-DEFS-->', defs).replace('<!--INTRO-SVG-->', intro).replace('<!--FEIER-SVG-->', feier)
@@ -106,8 +107,8 @@ def standalone():
     return ('<!doctype html>\n<html lang="de">\n<head>\n'
             '<meta charset="utf-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
-            '<meta name="theme-color" content="#F5F5F7" media="(prefers-color-scheme: light)">\n'
-            '<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">\n'
+            '<meta name="theme-color" content="#EDF1F5" media="(prefers-color-scheme: light)">\n'
+            '<meta name="theme-color" content="#0C131D" media="(prefers-color-scheme: dark)">\n'
             '<meta name="description" content="Nachbarschaftshilfe in Garbsen: kleine Hilfen in deiner Nähe finden oder selbst anfragen.">\n'
             # Link-Vorschau in WhatsApp, Signal, Facebook, Mail (Bild aus design/vorschau.py)
             '<meta property="og:type" content="website">\n'
