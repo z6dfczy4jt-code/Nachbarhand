@@ -51,22 +51,7 @@
     betreiber: { name: '', anschrift: '', email: '', telefon: '' }
   };
 
-  const KARTE = {
-    // Kartenkacheln ohne API-Key. Lädt ein Anbieter nicht, nimmt die App automatisch den nächsten.
-    // OpenStreetMap erlaubt das für kleine Projekte mit Namensnennung; bei vielen Nutzern auf einen eigenen Anbieter wechseln.
-    anbieter: [
-      { name: 'OpenStreetMap', url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', maxNativeZoom: 19,
-        quelle: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende' },
-      { name: 'OpenStreetMap Deutschland', url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png', maxNativeZoom: 18,
-        quelle: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende, <a href="https://www.openstreetmap.de">openstreetmap.de</a>' },
-      { name: 'CARTO', url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', maxNativeZoom: 20, subdomains: 'abcd',
-        quelle: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende &copy; <a href="https://carto.com/attributions">CARTO</a>' }
-    ],
-    ortsQuelle: 'Orte: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende, GeoNames',
-    grenzen: [[52.33, 9.38], [52.55, 9.76]],      // so weit lässt sich die Karte verschieben
-    minZoom: 11,
-    maxZoom: 18
-  };
+
 
   // Stadtteile von Garbsen. Mittelpunkte aus OpenStreetMap-Haltestellen und GeoNames, auf ca. 100 m genau.
   // Dieselbe Liste steht in supabase/schema.sql.
@@ -154,7 +139,7 @@
 
   const SPEICHER = 'nachbarhand-prototyp-v3';
   const VIEWS = ['entdecken', 'karte', 'neu', 'auftraege'];
-  const RECHT = RECHT_TEXTE(CONFIG.betreiber, (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+  const RECHT = RECHT_TEXTE(CONFIG.betreiber, (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
   const FRAGEN = FRAGEN_TEXTE(CONFIG);
   const istSeite = (n) => !!RECHT[n] || n === 'fragen'; // Seiten mit eigener Adresse (#impressum, #fragen …)
   const EIGEN_VERSATZ = [[180, -150], [-160, 170], [220, 160], [-210, -190]]; // Demo: Meter Nord/Ost ab deinem Standort
@@ -254,7 +239,7 @@
   }
 
   /* ===== Hilfsfunktionen ===== */
-  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const euro = (n) => n.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
   const euroKurz = (n) => Number.isInteger(n) ? `${n} €` : euro(n);
   const katName = (id) => (KATEGORIEN.find((k) => k.id === id) || {}).name || '';
@@ -342,7 +327,7 @@
       const n = daten[i + 1];
       return `${WOCHENTAGE[d.getDay()]} ${d.getDate()}.${!n || n.getMonth() !== d.getMonth() ? ' ' + MONATE[d.getMonth()] : ''}`;
     });
-    return teile.length === 1 ? teile[0] : `${teile.slice(0, -1).join(', ')} oder ${teile.at(-1)}`;
+    return teile.length === 1 ? teile[0] : `${teile.slice(0, -1).join(', ')} oder ${teile[teile.length - 1]}`;
   }
   const uhrzeitText = (hhmm) => { const [h, m] = String(hhmm || '16:00').split(':').map(Number); return `gegen ${h}${m ? ':' + String(m).padStart(2, '0') : ''} Uhr`; };
   // Liest den Termin aus dem Wann-Text: „Di. 10. Nov., nachmittags“, „Sa./So. 14./15. Nov.“, „Woche 16.–22. Nov.“,
@@ -356,8 +341,9 @@
   }
   // Alle Tage mit Datum aus einem Text wie „Mo. 16., Mi. 18. oder Fr. 20. Nov.“ (Monat gilt rückwärts)
   function datenAusText(datum) {
-    const tage = [...datum.matchAll(/(\d{1,2})\.(?:\s(Jan\.|Feb\.|März|Apr\.|Mai|Juni|Juli|Aug\.|Sept\.|Okt\.|Nov\.|Dez\.))?/g)]
-      .map((m) => [Number(m[1]), m[2] ? MONAT_INDEX[m[2]] : null]);
+    const tage = [];
+    const muster = /(\d{1,2})\.(?:\s(Jan\.|Feb\.|März|Apr\.|Mai|Juni|Juli|Aug\.|Sept\.|Okt\.|Nov\.|Dez\.))?/g;
+    for (let m = muster.exec(datum); m; m = muster.exec(datum)) tage.push([Number(m[1]), m[2] ? MONAT_INDEX[m[2]] : null]);
     if (!tage.some((t) => t[1] !== null)) return [];
     for (let k = tage.length - 2; k >= 0; k--) if (tage[k][1] === null) tage[k][1] = tage[k + 1][1];
     for (let k = 1; k < tage.length; k++) if (tage[k][1] === null) tage[k][1] = tage[k - 1][1];
@@ -374,7 +360,7 @@
     const daten = datenAusText(datum);
     if (daten.length) {
       von = daten[0];
-      bis = daten.at(-1);
+      bis = daten[daten.length - 1];
       genau = true;
     } else if (/^Heute/.test(datum)) von = bis = heute();
     else if (/^Morgen/.test(datum)) von = bis = plusTage(heute(), 1);
@@ -418,7 +404,8 @@
   const demoAblauf = (bis) => bis ? +plusTage(ausIso(bis), 1) : Date.now() + MAX_TAGE * TAG_MS;
 
   /* ===== Anstößige Wörter (App Store 1.2). Dieselbe Liste prüft die Datenbank in privat.anstoessig. ===== */
-  const ANSTOESSIG = new RegExp('(?<![a-zäöüß])(hure|fotze|wichser|arschloch|spast(i|en)?(?![a-zäöüß])|mongo(?![a-zäöüß])|nutte|(ge)?fick(en|t|st|e|er|te|ten)?(?![a-zäöüß])|bitch|kanake|neger|nigger|schwuchtel|vergewaltig)' +
+  // Ohne „Lookbehind“ (?<!…): Das können iPhones erst ab iOS 16.4, ältere würden beim Start abstürzen
+  const ANSTOESSIG = new RegExp('(?:^|[^a-zäöüß])(hure|fotze|wichser|arschloch|spast(i|en)?(?![a-zäöüß])|mongo(?![a-zäöüß])|nutte|(ge)?fick(en|t|st|e|er|te|ten)?(?![a-zäöüß])|bitch|kanake|neger|nigger|schwuchtel|vergewaltig)' +
     '|hurensohn|schlampe|missgeburt|heil hitler|sieg heil');
   const anstoessig = (t) => ANSTOESSIG.test(String(t || '').toLowerCase().replace(/[013457@$]/g, (z) => ({ 0: 'o', 1: 'i', 3: 'e', 4: 'a', 5: 's', 7: 't', '@': 'a', $: 's' }[z])));
 
@@ -1059,8 +1046,25 @@
   }
   new MutationObserver(miniThema).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-  /* ===== Karte (Leaflet) ===== */
-  const kartenStatus = { map: null, kacheln: null, anbieter: 0, pins: null, bereich: null, stadtteile: null, labels: null, vereinfacht: false, geladen: 0, fehler: 0, marker: new Map() };
+  /* ===== Karte: eigene Zeichnung von Garbsen (SVG) =====
+     Ohne Kartendienst und ohne Kartenbilder: lädt sofort, geht offline und auf älteren Geräten.
+     Die Stadtteile sind vereinfacht: Flächen um die Ortsmitten, wo sie sich berühren, geteilt.
+     Weit weg zeigt jeder Stadtteil ein Sammel-Schild mit der Zahl der Anfragen, beim Hineinzoomen
+     erscheinen die einzelnen Preisschilder. Lagen sind ohnehin ungefähr (100 bis 400 m neben der Adresse). */
+  const KARTE = {
+    mitte: { lat: 52.44, lng: 9.575 },
+    groesster: 0.45,  // so nah lässt sich heranzoomen (Bildpunkte je Meter). Näher bringt nichts, die Lagen sind ungefähr
+    flaeche: 1.7,     // Fläche eines Stadtteils: so viel größer als der Radius in STADTTEILE
+    stadt: 1.9,       // Stadtgebiet: so weit reicht die helle Fläche um jeden Stadtteil
+    luecke: 34,       // Meter Abstand zwischen benachbarten Stadtteilen
+    sockel: 5         // Bildpunkte „Dicke“ der Stadtteil-Platten (wie bei der Miniatur)
+  };
+  const M_LAT = 110574;
+  const M_LNG = 111320 * Math.cos(KARTE.mitte.lat * Math.PI / 180);
+  const inMeter = (lat, lng) => ({ x: (lng - KARTE.mitte.lng) * M_LNG, y: (KARTE.mitte.lat - lat) * M_LAT });
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const kartenStatus = { svg: null, welt: null, schicht: null, huelle: null, w: 0, h: 0, blick: null, ruhig: null,
+    formen: [], grenzen: null, bewegt: false, gezogen: 0, marker: new Map(), elemente: [], gruppen: [], stufe: null, animation: 0 };
 
   function dunklesThema() {
     const t = document.documentElement.getAttribute('data-theme');
@@ -1068,210 +1072,443 @@
     if (t === 'light') return false;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
-  function kachelSchicht(i) {
-    const a = KARTE.anbieter[i];
-    const s = window.L.tileLayer(a.url, { maxZoom: KARTE.maxZoom, maxNativeZoom: a.maxNativeZoom, subdomains: a.subdomains || 'abc', attribution: a.quelle });
-    s.on('tileload', () => { kartenStatus.geladen++; });
-    s.on('tileerror', () => {
-      kartenStatus.fehler++;
-      if (!kartenStatus.geladen && kartenStatus.fehler >= 4) naechsterAnbieter();
+
+  // Polygon an einer Geraden abschneiden: behält die Punkte mit n·p <= g (Sutherland-Hodgman)
+  function abschneiden(pkt, nx, ny, g) {
+    const aus = [];
+    for (let i = 0; i < pkt.length; i++) {
+      const p = pkt[i], q = pkt[(i + 1) % pkt.length];
+      const dp = p.x * nx + p.y * ny - g, dq = q.x * nx + q.y * ny - g;
+      if (dp <= 0) aus.push(p);
+      if ((dp <= 0) !== (dq <= 0)) { const t = dp / (dp - dq); aus.push({ x: p.x + (q.x - p.x) * t, y: p.y + (q.y - p.y) * t }); }
+    }
+    return aus;
+  }
+  // Ecken weich machen (Chaikin)
+  function glaetten(pkt) {
+    const aus = [];
+    for (let i = 0; i < pkt.length; i++) {
+      const p = pkt[i], q = pkt[(i + 1) % pkt.length];
+      aus.push({ x: p.x * 0.75 + q.x * 0.25, y: p.y * 0.75 + q.y * 0.25 }, { x: p.x * 0.25 + q.x * 0.75, y: p.y * 0.25 + q.y * 0.75 });
+    }
+    return aus;
+  }
+  // Leicht unregelmäßiger Kreis als Punktliste
+  function welle(c, R, phase, n) {
+    const pkt = [];
+    for (let i = 0; i < n; i++) {
+      const w = i / n * Math.PI * 2;
+      const f = 1 + 0.07 * Math.sin(3 * w + phase) + 0.04 * Math.sin(5 * w + phase * 2);
+      pkt.push({ x: c.x + Math.cos(w) * R * f, y: c.y + Math.sin(w) * R * f });
+    }
+    return pkt;
+  }
+  const alsPfad = (pkt) => 'M' + pkt.map((p) => `${Math.round(p.x)} ${Math.round(p.y)}`).join('L') + 'Z';
+  // Stadtteil-Flächen: leicht unregelmäßige Kreise, Überschneidungen nach dem Potenzdiagramm geteilt
+  function stadtteilFormen() {
+    const teile = STADTTEILE.map((s) => ({ s, c: inMeter(s.lat, s.lng), R: s.r * KARTE.flaeche }));
+    return teile.map((a) => {
+      const phase = a.s.name.length * 0.9 + a.s.name.charCodeAt(0) * 0.13;
+      let pkt = welle(a.c, a.R, phase, 40);
+      teile.forEach((b) => {
+        if (b === a) return;
+        const dx = b.c.x - a.c.x, dy = b.c.y - a.c.y, d = Math.hypot(dx, dy);
+        if (d >= (a.R + b.R) * 1.12) return;
+        const g = ((b.c.x * b.c.x + b.c.y * b.c.y) - (a.c.x * a.c.x + a.c.y * a.c.y) - b.R * b.R + a.R * a.R) / (2 * d) - KARTE.luecke / 2;
+        pkt = abschneiden(pkt, dx / d, dy / d, g);
+      });
+      pkt = glaetten(glaetten(pkt));
+      const d = alsPfad(pkt);
+      return { name: a.s.name, c: a.c, R: a.R, d, pkt, phase };
     });
-    return s;
-  }
-  function naechsterAnbieter() {
-    const k = kartenStatus;
-    if (k.vereinfacht || !k.map) return;
-    if (k.kacheln && k.map.hasLayer(k.kacheln)) k.map.removeLayer(k.kacheln);
-    k.anbieter++;
-    k.fehler = 0;
-    if (k.anbieter >= KARTE.anbieter.length) { vereinfachen(); return; }
-    k.kacheln = kachelSchicht(k.anbieter).addTo(k.map);
   }
 
-  // Ganz Garbsen zeigen. Ist die Karte hoch genug, liegt die Stadt unterhalb der Kartenknöpfe, sonst links daneben.
-  function zeigeGanzGarbsen() {
-    const map = kartenStatus.map;
-    const bounds = window.L.latLngBounds(STADTTEILE.map((s) => [s.lat, s.lng]));
-    const knoepfe = document.querySelector('.karte-knoepfe');
-    const unterKnoepfen = knoepfe.offsetTop + knoepfe.offsetHeight + 30;
-    const hoch = map.getSize().y - unterKnoepfen - 40 > map.getSize().x * 0.7;
-    map.fitBounds(bounds, hoch
-      ? { paddingTopLeft: [26, unterKnoepfen], paddingBottomRight: [26, 40] }
-      : { paddingTopLeft: [40, 40], paddingBottomRight: [72, 40] });
-  }
-
-  // Bei weiter Ansicht werden die Preisschilder kompakter, damit sie sich weniger überdecken.
-  function zoomKlasse() {
-    const map = kartenStatus.map;
-    if (map) map.getContainer().classList.toggle('zoom-weit', map.getZoom() < 12.75);
+  function svgEl(name, attr) {
+    const el = document.createElementNS(SVG_NS, name);
+    Object.keys(attr || {}).forEach((k) => el.setAttribute(k, attr[k]));
+    return el;
   }
 
   function initKarte() {
-    if (kartenStatus.map) return true;
-    const L = window.L;
-    if (!L || !L.map) { $('#karte-fehler').hidden = false; return false; }
+    const k = kartenStatus;
+    if (k.svg) return true;
+    const huelle = $('#map');
+    if (!huelle || !document.createElementNS) { $('#karte-fehler').hidden = false; return false; }
+    k.huelle = huelle;
+    k.formen = stadtteilFormen();
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    k.formen.forEach((f) => f.pkt.forEach((p) => { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }));
+    k.grenzen = { x0, y0, x1, y1 };
 
-    const map = L.map('map', {
-      zoomControl: false,
-      zoomSnap: 0.25,
-      zoomDelta: 0.5,
-      wheelPxPerZoomLevel: 90,
-      minZoom: KARTE.minZoom,
-      maxZoom: KARTE.maxZoom,
-      maxBounds: KARTE.grenzen,
-      maxBoundsViscosity: 0.85
+    const svg = svgEl('svg', { class: 'k-svg', 'aria-hidden': 'true', focusable: 'false' });
+    const welt = svgEl('g', { class: 'k-welt' });
+    const sockel = svgEl('g', { class: 'k-sockel' });
+    const flaechen = svgEl('g', { class: 'k-flaechen' });
+    // Stadtgebiet: weiche Fläche um alle Stadtteile, damit Garbsen als eine Stadt erkennbar ist
+    const stadtRand = svgEl('g', { class: 'k-stadt-rand' }), stadt = svgEl('g', { class: 'k-stadt' });
+    k.formen.forEach((f) => {
+      stadtRand.appendChild(svgEl('path', { d: alsPfad(welle(f.c, f.R * KARTE.stadt + 70, f.phase + 1, 32)) }));
+      stadt.appendChild(svgEl('path', { d: alsPfad(welle(f.c, f.R * KARTE.stadt, f.phase + 1, 32)) }));
     });
-    map.attributionControl.setPrefix(false);
-    L.control.scale({ imperial: false, position: 'bottomleft', maxWidth: 100 }).addTo(map);
-    map.createPane('stadtteile').style.zIndex = 350;
-    map.createPane('labels').style.zIndex = 450;
-    map.getPane('labels').style.pointerEvents = 'none';
-
-    kartenStatus.map = map;
-    // In der Claude-Vorschau sind Kartenbilder gesperrt: dort gleich die vereinfachte Karte
-    if (!VORSCHAU) kartenStatus.kacheln = kachelSchicht(0).addTo(map);
-    aktualisiereKachelThema();
-    kartenStatus.bereich = L.layerGroup().addTo(map);
-    kartenStatus.pins = L.layerGroup().addTo(map);
-
-    map.on('zoomend', () => { zoomKlasse(); labelsAufraeumen(); });
-    map.on('resize moveend', labelsAufraeumen);
-    map.on('click', () => { if (ui.markiert) { ui.markiert = null; renderKarte(); } });
-    zeigeGanzGarbsen();
-    zoomKlasse();
-    if (VORSCHAU) vereinfachen();
+    welt.appendChild(stadtRand); welt.appendChild(stadt);
+    k.formen.forEach((f) => {
+      sockel.appendChild(svgEl('path', { d: f.d }));
+      const p = svgEl('path', { d: f.d, class: 'k-flaeche', 'data-stadtteil': f.name });
+      flaechen.appendChild(p);
+      f.el = p;
+    });
+    k.bereich = svgEl('circle', { class: 'k-bereich', r: CONFIG.bereichMeter, cx: 0, cy: 0 });
+    k.bereich.style.display = 'none';
+    welt.appendChild(sockel); welt.appendChild(flaechen); welt.appendChild(k.bereich);
+    svg.appendChild(welt);
+    const schicht = document.createElement('div');
+    schicht.className = 'k-schicht';
+    const massstab = document.createElement('div');
+    massstab.className = 'k-massstab';
+    massstab.setAttribute('aria-hidden', 'true');
+    huelle.textContent = '';
+    huelle.appendChild(svg); huelle.appendChild(schicht); huelle.appendChild(massstab);
+    Object.assign(k, { svg, welt, schicht, massstab, sockel });
+    kartenBedienung();
+    kartenGroesse(true);
+    if (window.ResizeObserver) new ResizeObserver(() => kartenGroesse(false)).observe(huelle);
+    else window.addEventListener('resize', () => kartenGroesse(false));
     return true;
   }
 
-  // Wenn keine Kartenbilder laden dürfen (z. B. in der Claude-Vorschau), zeigen wir die Stadtteile als vereinfachte Karte.
-  function vereinfachen() {
+  // Ausschnitt, der ganz Garbsen zeigt. Ist die Karte hoch genug, liegt die Stadt unterhalb der Knöpfe, sonst links daneben.
+  function blickAufAlles() {
+    const k = kartenStatus, g = k.grenzen;
+    const knoepfe = document.querySelector('.karte-knoepfe');
+    const unter = knoepfe ? knoepfe.offsetTop + knoepfe.offsetHeight + 10 : 70;
+    const neben = knoepfe ? k.w - knoepfe.offsetLeft + 10 : 70;
+    const bw = g.x1 - g.x0, bh = g.y1 - g.y0;
+    // Die Stadt liegt unter den Knöpfen oder links daneben, je nachdem, wo sie größer wird
+    const plaene = [{ l: 12, r: 12, o: unter, u: 30 }, { l: 12, r: neben, o: 14, u: 30 }].map((rand) => ({ rand, s: Math.min((k.w - rand.l - rand.r) / bw, (k.h - rand.o - rand.u) / bh) }));
+    const { rand, s } = plaene[0].s >= plaene[1].s ? plaene[0] : plaene[1];
+    return { s, x: rand.l + (k.w - rand.l - rand.r - bw * s) / 2 - g.x0 * s, y: rand.o + (k.h - rand.o - rand.u - bh * s) / 2 - g.y0 * s };
+  }
+  // Ausschnitt um einen Punkt (Meter) mit Maßstab s
+  function blickAuf(m, s) {
     const k = kartenStatus;
-    if (k.vereinfacht || !k.map) return;
-    k.vereinfacht = true;
-    const L = window.L;
-    if (k.kacheln && k.map.hasLayer(k.kacheln)) k.map.removeLayer(k.kacheln);
-    k.map.attributionControl.addAttribution(KARTE.ortsQuelle);
-    k.stadtteile = L.layerGroup(STADTTEILE.map((s) => L.circle([s.lat, s.lng], {
-      radius: s.r, pane: 'stadtteile', className: 'stadtteil-flaeche', interactive: false, weight: 1
-    }))).addTo(k.map);
-    k.labels = L.layerGroup(STADTTEILE.map((s) => L.marker([s.lat, s.lng], {
-      pane: 'labels', interactive: false, keyboard: false,
-      icon: L.divIcon({ className: 'stadtteil-label', html: `<span>${esc(s.name)}</span>`, iconSize: null })
-    }))).addTo(k.map);
-    $('#karte-hinweis').hidden = !VORSCHAU;
-    $('#legende-stadtteil').hidden = false;
-    requestAnimationFrame(labelsAufraeumen);
+    return { s, x: k.w / 2 - m.x * s, y: k.h / 2 - m.y * s };
+  }
+  function blickBegrenzen(b) {
+    const k = kartenStatus, g = k.grenzen;
+    const alles = blickAufAlles();
+    const s = Math.max(alles.s * 0.85, Math.min(KARTE.groesster, b.s));
+    // Garbsen darf nicht ganz aus dem Bild rutschen
+    const x = Math.min(k.w * 0.6 - g.x0 * s, Math.max(k.w * 0.4 - g.x1 * s, b.x));
+    const y = Math.min(k.h * 0.6 - g.y0 * s, Math.max(k.h * 0.4 - g.y1 * s, b.y));
+    return { s, x, y };
   }
 
-  // Blendet Stadtteil-Namen aus, die von Preisschildern, Knöpfen oder anderen Namen verdeckt würden.
-  function labelsAufraeumen() {
+  function kartenGroesse(neu) {
     const k = kartenStatus;
-    if (!k.labels || !k.map) return;
-    const rahmen = k.map.getContainer().getBoundingClientRect();
-    const belegt = [document.querySelector('.karte-knoepfe').getBoundingClientRect()];
-    k.pins.eachLayer((m) => {
-      const pin = m.getElement() && m.getElement().querySelector('.pin');
-      if (pin) belegt.push(pin.getBoundingClientRect());
+    if (!k.huelle) return;
+    const w = k.huelle.clientWidth, h = k.huelle.clientHeight;
+    if (!w || !h || (w === k.w && h === k.h && !neu)) return;
+    const mitte = k.blick && k.w ? { x: (k.w / 2 - k.blick.x) / k.blick.s, y: (k.h / 2 - k.blick.y) / k.blick.s } : null;
+    k.w = w; k.h = h;
+    k.svg.setAttribute('width', w); k.svg.setAttribute('height', h);
+    // Ohne eigene Bewegung bleibt ganz Garbsen im Bild, sonst bleibt die Mitte stehen
+    if (!k.blick || !k.bewegt || !mitte) k.blick = blickAufAlles();
+    else k.blick = blickBegrenzen(blickAuf(mitte, k.blick.s));
+    zeichneBlick();
+  }
+
+  function zeichneBlick() {
+    const k = kartenStatus, b = k.blick;
+    if (!k.svg || !b) return;
+    k.welt.setAttribute('transform', `matrix(${b.s} 0 0 ${b.s} ${b.x} ${b.y})`);
+    // Die Platten sind immer gleich dick, egal wie nah man herangeht
+    k.sockel.setAttribute('transform', `translate(0 ${(KARTE.sockel / b.s).toFixed(1)})`);
+    // Bei jeder halben Zoomstufe neu sortieren, welche Schilder zusammengefasst werden
+    if (zoomStufe(b.s) !== k.stufe) { renderKarte(true); return; }
+    k.elemente.forEach((e) => {
+      const x = Math.round(e.m.x * b.s + b.x), y = Math.round(e.m.y * b.s + b.y);
+      // Was weit außerhalb liegt, wird nicht gezeichnet und ist auch mit der Tastatur nicht erreichbar
+      const drin = x > -80 && x < k.w + 80 && y > -60 && y < k.h + 80;
+      if (drin !== e.drin) { e.drin = drin; e.el.style.visibility = drin ? '' : 'hidden'; }
+      if (drin) e.el.style.transform = `translate(${x}px, ${y}px)`;
     });
-    k.labels.eachLayer((m) => {
-      const el = m.getElement();
-      const span = el && el.firstElementChild;
-      if (!span) return;
-      span.classList.remove('versteckt');
-      span.style.marginLeft = '0px';
-      let r = span.getBoundingClientRect();
-      // Namen am Rand nach innen schieben statt sie abzuschneiden
-      const links = rahmen.left + 6 - r.left, rechts = rahmen.right - 6 - r.right;
-      if (links > 0 || rechts < 0) {
-        span.style.marginLeft = (links > 0 ? links : rechts) + 'px';
-        r = span.getBoundingClientRect();
+    // Maßstab: eine runde Strecke zwischen 60 und 130 Bildpunkten
+    const strecken = [50, 100, 200, 500, 1000, 2000, 5000];
+    const m = strecken.find((x) => x * b.s >= 50) || 5000;
+    k.massstab.style.width = Math.round(m * b.s) + 'px';
+    k.massstab.textContent = m >= 1000 ? `${m / 1000} km` : `${m} m`;
+    clearTimeout(k.ruhig);
+    k.ruhig = setTimeout(namenAufraeumen, 120);
+  }
+
+  const zoomStufe = (s) => Math.round(Math.log(s) / Math.LN2 * 2);
+
+  function blickSetzen(ziel, sanft) {
+    const k = kartenStatus;
+    ziel = blickBegrenzen(ziel);
+    cancelAnimationFrame(k.animation);
+    const weniger = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!sanft || weniger || !k.blick) { k.blick = ziel; zeichneBlick(); return; }
+    const von = k.blick, start = performance.now(), dauer = 320;
+    const schritt = (t) => {
+      const f = Math.min(1, (t - start) / dauer), e = 1 - Math.pow(1 - f, 3);
+      // Maßstab logarithmisch, damit das Zoomen gleichmäßig wirkt
+      const s = von.s * Math.pow(ziel.s / von.s, e);
+      const mv = { x: (k.w / 2 - von.x) / von.s, y: (k.h / 2 - von.y) / von.s }, mz = { x: (k.w / 2 - ziel.x) / ziel.s, y: (k.h / 2 - ziel.y) / ziel.s };
+      k.blick = blickAuf({ x: mv.x + (mz.x - mv.x) * e, y: mv.y + (mz.y - mv.y) * e }, s);
+      zeichneBlick();
+      if (f < 1) k.animation = requestAnimationFrame(schritt);
+    };
+    k.animation = requestAnimationFrame(schritt);
+  }
+  function zoomen(faktor, px, py, sanft) {
+    const k = kartenStatus, b = k.blick;
+    if (!b) return;
+    if (px === undefined) { px = k.w / 2; py = k.h / 2; }
+    const s = Math.max(blickAufAlles().s * 0.85, Math.min(KARTE.groesster, b.s * faktor));
+    k.bewegt = true;
+    blickSetzen({ s, x: px - (px - b.x) * s / b.s, y: py - (py - b.y) * s / b.s }, sanft);
+  }
+  function zeigeStadtteil(name) {
+    const f = kartenStatus.formen.find((x) => x.name === name);
+    if (!f) return;
+    const k = kartenStatus;
+    kartenStatus.bewegt = true;
+    blickSetzen(blickAuf({ x: f.c.x, y: f.c.y + 60 }, Math.min(k.w, k.h) * 0.8 / (2 * f.R)), true);
+  }
+  function zeigeGanzGarbsen() { kartenStatus.bewegt = false; blickSetzen(blickAufAlles(), true); }
+
+  // Ziehen, Zwei-Finger-Zoom, Doppeltippen, Mausrad und Tasten
+  function kartenBedienung() {
+    const k = kartenStatus, h = k.huelle;
+    const finger = new Map();
+    let start = null, letzterTipp = 0, letzterOrt = null;
+    const ort = (e) => { const r = h.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+    const runter = (id, p, ziel) => {
+      cancelAnimationFrame(k.animation);
+      finger.set(id, p);
+      if (finger.size === 1) start = { p, blick: k.blick, ziel, weg: 0 };
+      else if (finger.size === 2) {
+        const [a, b] = [...finger.values()];
+        start = { pinch: true, abstand: Math.hypot(a.x - b.x, a.y - b.y) || 1, mitte: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, blick: k.blick, weg: 99 };
       }
-      const draussen = r.top < rahmen.top || r.bottom > rahmen.bottom - 24 || Math.abs(parseFloat(span.style.marginLeft)) > r.width / 2;
-      const kollidiert = belegt.some((b) => r.left < b.right + 1 && r.right > b.left - 1 && r.top < b.bottom + 1 && r.bottom > b.top - 1);
-      if (draussen || kollidiert) span.classList.add('versteckt'); else belegt.push(r);
+    };
+    const bewegen = (id, p) => {
+      if (!finger.has(id) || !start) return false;
+      finger.set(id, p);
+      if (start.pinch && finger.size >= 2) {
+        const [a, b] = [...finger.values()];
+        const abstand = Math.hypot(a.x - b.x, a.y - b.y) || 1, mitte = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        const s = Math.max(blickAufAlles().s * 0.85, Math.min(KARTE.groesster, start.blick.s * abstand / start.abstand));
+        const f = s / start.blick.s;
+        k.bewegt = true;
+        k.blick = blickBegrenzen({ s, x: mitte.x - (start.mitte.x - start.blick.x) * f, y: mitte.y - (start.mitte.y - start.blick.y) * f });
+        zeichneBlick();
+        return true;
+      }
+      const dx = p.x - start.p.x, dy = p.y - start.p.y;
+      start.weg = Math.max(start.weg, Math.hypot(dx, dy));
+      if (start.weg < 7) return false;
+      k.bewegt = true;
+      k.huelle.classList.add('ist-gezogen');
+      k.blick = blickBegrenzen({ s: start.blick.s, x: start.blick.x + dx, y: start.blick.y + dy });
+      zeichneBlick();
+      return true;
+    };
+    const hoch = (id, p, ziel) => {
+      if (!finger.has(id)) return;
+      finger.delete(id);
+      k.huelle.classList.remove('ist-gezogen');
+      if (!start) return;
+      const war = start;
+      if (finger.size === 1) { const [rest] = [...finger.values()]; start = { p: rest, blick: k.blick, weg: 99 }; return; }
+      start = null;
+      if (war.weg >= 7 || war.pinch) { k.gezogen = Date.now(); return; }
+      // Tippen: zweimal kurz hintereinander zoomt hinein, einmal auf einen Stadtteil zeigt ihn
+      const jetzt = Date.now();
+      if (jetzt - letzterTipp < 320 && letzterOrt && Math.hypot(p.x - letzterOrt.x, p.y - letzterOrt.y) < 30) {
+        letzterTipp = 0; zoomen(2, p.x, p.y, true); return;
+      }
+      letzterTipp = jetzt; letzterOrt = p;
+      if (ziel && ziel.closest && ziel.closest('button, a')) return;
+      const flaeche = ziel && ziel.getAttribute && ziel.getAttribute('data-stadtteil');
+      setTimeout(() => {
+        if (letzterTipp !== jetzt) return;
+        if (ui.markiert) { ui.markiert = null; renderKarte(); }
+        if (flaeche) zeigeStadtteil(flaeche);
+      }, 330);
+    };
+    if (window.PointerEvent) {
+      h.addEventListener('pointerdown', (e) => { if (e.button === 0 || e.pointerType !== 'mouse') runter(e.pointerId, ort(e), e.target); });
+      h.addEventListener('pointermove', (e) => {
+        if (bewegen(e.pointerId, ort(e)) && !h.hasPointerCapture(e.pointerId)) { try { h.setPointerCapture(e.pointerId); } catch (err) { /* egal */ } }
+      });
+      const ende = (e) => hoch(e.pointerId, ort(e), e.target);
+      h.addEventListener('pointerup', ende);
+      h.addEventListener('pointercancel', (e) => { finger.delete(e.pointerId); start = null; h.classList.remove('ist-gezogen'); });
+    } else {
+      // Ältere iPhones (vor iOS 13) kennen keine Pointer-Events
+      const jedes = (e, fn) => { for (let i = 0; i < e.changedTouches.length; i++) { const t = e.changedTouches[i]; fn(t.identifier, ort(t), e.target); } };
+      h.addEventListener('touchstart', (e) => jedes(e, runter), { passive: true });
+      h.addEventListener('touchmove', (e) => { let b = false; jedes(e, (id, p) => { b = bewegen(id, p) || b; }); if (b && e.cancelable) e.preventDefault(); }, { passive: false });
+      h.addEventListener('touchend', (e) => jedes(e, hoch));
+      h.addEventListener('touchcancel', () => { finger.clear(); start = null; });
+      h.addEventListener('mousedown', (e) => runter('maus', ort(e), e.target));
+      window.addEventListener('mousemove', (e) => bewegen('maus', ort(e)));
+      window.addEventListener('mouseup', (e) => hoch('maus', ort(e), e.target));
+    }
+    // Alte iPhones würden bei zwei Fingern sonst die ganze Seite vergrößern
+    h.addEventListener('gesturestart', (e) => e.preventDefault());
+    // Ein Klick direkt nach dem Ziehen öffnet nichts
+    h.addEventListener('click', (e) => { if (Date.now() - k.gezogen < 350) { e.preventDefault(); e.stopPropagation(); } }, true);
+    h.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const p = ort(e);
+      zoomen(Math.exp(-Math.max(-60, Math.min(60, e.deltaY)) * 0.006), p.x, p.y, false);
+    }, { passive: false });
+    h.addEventListener('keydown', (e) => {
+      if (e.target !== h) return;
+      const schieb = { ArrowLeft: [80, 0], ArrowRight: [-80, 0], ArrowUp: [0, 80], ArrowDown: [0, -80] }[e.key];
+      if (schieb) { e.preventDefault(); k.bewegt = true; blickSetzen({ s: k.blick.s, x: k.blick.x + schieb[0], y: k.blick.y + schieb[1] }, true); }
+      else if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomen(1.6, undefined, undefined, true); }
+      else if (e.key === '-') { e.preventDefault(); zoomen(1 / 1.6, undefined, undefined, true); }
+      else if (e.key === '0') { e.preventDefault(); zeigeGanzGarbsen(); }
     });
   }
 
-  function aktualisiereKachelThema() {
+  // Namen der Stadtteile ausblenden, wenn sie Schilder, Knöpfe oder andere Namen verdecken würden
+  function namenAufraeumen() {
     const k = kartenStatus;
-    // Die Kacheln gibt es nur hell; im dunklen Design werden sie per Filter abgedunkelt
-    if (k.map) k.map.getContainer().classList.toggle('karte-dunkel', dunklesThema());
+    if (!k.schicht) return;
+    const rahmen = k.huelle.getBoundingClientRect();
+    const fest = [...document.querySelectorAll('.karte-knoepfe, .k-quelle, #map .k-massstab')].map((el) => el.getBoundingClientRect());
+    const schilder = [...k.schicht.querySelectorAll('.k-pin .pin, .k-sammel')].map((el) => el.getBoundingClientRect());
+    const belegt = fest.slice();
+    const namen = [...k.schicht.querySelectorAll('.k-name')];
+    // Erst alles messen, dann umschalten. Ausgeblendete Namen behalten ihre Größe, das Messen bleibt also richtig.
+    const gemessen = namen.map((n) => ({ n, r: n.getBoundingClientRect(), rang: Number(n.dataset.rang) }));
+    gemessen.sort((a, b) => b.rang - a.rang);
+    gemessen.forEach((x) => {
+      const r = x.r;
+      const draussen = r.left < rahmen.left + 4 || r.right > rahmen.right - 4 || r.top < rahmen.top + 4 || r.bottom > rahmen.bottom - 26;
+      const trifft = (b) => r.left < b.right + 2 && r.right > b.left - 2 && r.top < b.bottom + 2 && r.bottom > b.top - 2;
+      x.weg = draussen || belegt.some(trifft) || schilder.some(trifft);
+      if (!x.weg) belegt.push(r);
+    });
+    gemessen.forEach((x) => { if (x.n.classList.contains('versteckt') !== x.weg) x.n.classList.toggle('versteckt', x.weg); });
   }
 
-  function renderKarte() {
-    const sichtbar = gesuche.filter((g) => passt(g) && !versteckt(g) && (g.eigen || (g.status === 'offen' && !abgelaufen(g)) || g.helfer === 'ich'));
-    $('#karte-anzahl').textContent = `${sichtbar.length} ${sichtbar.length === 1 ? 'Anfrage' : 'Anfragen'}${ui.kat !== 'alle' ? ' · ' + katName(ui.kat) : ''}`;
-    $('#karte-leer').hidden = !(istLive() && db.geladen && !sichtbar.length && ui.kat === 'alle' && !ui.suche.trim());
+  // nurZoom: beim Zoomen bleiben Auswahl und Beschriftungen gleich, nur die Schilder werden neu zusammengefasst
+  function renderKarte(nurZoom) {
     const k = kartenStatus;
-    if (!k.map) return;
-    const L = window.L;
-    k.pins.clearLayers();
-    k.bereich.clearLayers();
+    let sichtbar = k.sichtbar;
+    if (nurZoom !== true || !sichtbar) {
+      sichtbar = gesuche.filter((g) => passt(g) && !versteckt(g) && (g.eigen || (g.status === 'offen' && !abgelaufen(g)) || g.helfer === 'ich'));
+      k.sichtbar = sichtbar;
+      k.texte = new Map();
+      $('#karte-anzahl').textContent = `${sichtbar.length} ${sichtbar.length === 1 ? 'Anfrage' : 'Anfragen'}${ui.kat !== 'alle' ? ' · ' + katName(ui.kat) : ''}`;
+      $('#karte-leer').hidden = !(istLive() && db.geladen && !sichtbar.length && ui.kat === 'alle' && !ui.suche.trim());
+    }
+    if (!k.svg || !k.blick) return;
+    k.stufe = zoomStufe(k.blick.s);
     k.marker.clear();
-
     const hervor = ui.offen || ui.markiert;
     const aktiv = gesuche.find((g) => g.id === hervor);
-    if (aktiv && !aktiv.eigen) {
-      L.circle([aktiv.lat, aktiv.lng], { radius: CONFIG.bereichMeter, className: 'bereich-kreis', interactive: false }).addTo(k.bereich);
-    }
+    // Ungefährer Bereich der gewählten Anfrage
+    if (aktiv && !aktiv.eigen && sichtbar.includes(aktiv)) {
+      const m = inMeter(aktiv.lat, aktiv.lng);
+      k.bereich.setAttribute('cx', Math.round(m.x)); k.bereich.setAttribute('cy', Math.round(m.y));
+      k.bereich.style.display = '';
+    } else k.bereich.style.display = 'none';
+    // Eigener Stadtteil hervorgehoben
+    const mein = zeigeIch() ? meinOrt().stadtteil : '';
+    k.formen.forEach((f) => f.el.classList.toggle('k-mein', f.name === mein));
 
-    if (zeigeIch()) {
-      const ort = meinOrt();
-      L.marker([ort.lat, ort.lng], {
-        interactive: false, keyboard: false, zIndexOffset: -500,
-        icon: L.divIcon({ className: 'ich-anker', html: '<span class="ich"></span><span class="ich-label">Du</span>', iconSize: null })
-      }).addTo(k.pins);
-    }
-
-    sichtbar.forEach((g) => {
-      const cls = [g.eigen ? 'pin-eigen' : '', abgelaufen(g) ? 'pin-abgelaufen' : '', g.helfer === 'ich' ? 'pin-zugesagt' : '', g.id === hervor ? 'is-aktiv' : ''].join(' ');
-      const m = L.marker([g.lat, g.lng], {
-        riseOnHover: true,
-        zIndexOffset: g.id === hervor ? 1000 : 0,
-        icon: L.divIcon({
-          className: 'pin-anker',
-          iconSize: null,
-          html: `<span class="pin ${cls}" aria-hidden="true">${g.helfer === 'ich' ? icon('check', 'i-xs') : ''}${euroKurz(g.betrag)}</span>`
-        })
-      });
-      m.on('click', () => oeffnen(g.id, m.getElement()));
-      m.addTo(k.pins);
-      const el = m.getElement();
-      if (el) {
-        el.setAttribute('role', 'button');
-        el.setAttribute('tabindex', '0');
-        el.setAttribute('aria-label', `${g.titel}, ${euro(g.betrag)}, ${g.stadtteil}, ${distanz(g)}${g.eigen ? (abgelaufen(g) ? ', deine Anfrage, abgelaufen' : ', deine Anfrage') : ''}`);
-        el.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); oeffnen(g.id, el); }
-        });
-      }
-      k.marker.set(g.id, m);
+    // Schilder, die sich auf dem Bildschirm berühren würden, werden zu einem Sammel-Schild mit der Zahl.
+    // Die gewählte Anfrage bleibt immer einzeln sichtbar.
+    const s = k.blick.s, zusammen = s < KARTE.groesster * 0.98;
+    const gruppen = [];
+    const reihenfolge = sichtbar.slice().sort((a, b) => (b.id === hervor) - (a.id === hervor) || (b.eigen || b.helfer === 'ich') - (a.eigen || a.helfer === 'ich'));
+    reihenfolge.forEach((g) => {
+      const m = inMeter(g.lat, g.lng);
+      // Preisschilder sind breiter als hoch: berühren sich, wenn sie weniger als 56 × 42 Bildpunkte auseinander liegen
+      const ziel = g.id === hervor || !zusammen ? null : gruppen.find((gr) => !gr.fest && Math.abs(gr.m.x - m.x) * s < 56 && Math.abs(gr.m.y - m.y) * s < 42);
+      if (!ziel) { gruppen.push({ liste: [g], punkte: [m], m, fest: g.id === hervor }); return; }
+      ziel.liste.push(g); ziel.punkte.push(m);
+      const n = ziel.punkte.length;
+      ziel.m = { x: ziel.punkte.reduce((t, p) => t + p.x, 0) / n, y: ziel.punkte.reduce((t, p) => t + p.y, 0) / n };
     });
-    requestAnimationFrame(labelsAufraeumen);
+    k.gruppen = gruppen;
+    // Die ganze Schicht als ein Stück HTML: auf alten Geräten deutlich schneller als jedes Schild einzeln
+    const teile = [];
+    const anker = (m, html, cls, id) => teile.push({ m, html, cls: cls || '', id });
+    const text = (g) => {
+      let t = k.texte.get(g.id);
+      if (!t) {
+        t = esc(`${g.titel}, ${euro(g.betrag)}, ${g.stadtteil}, ${distanz(g)}${g.eigen ? (abgelaufen(g) ? ', deine Anfrage, abgelaufen' : ', deine Anfrage') : ''}${g.helfer === 'ich' ? ', deine Zusage' : ''}`);
+        k.texte.set(g.id, t);
+      }
+      return t;
+    };
+    // Namen der Stadtteile zuerst, damit Schilder darüber liegen
+    const anzahl = new Map();
+    sichtbar.forEach((g) => anzahl.set(g.stadtteil, (anzahl.get(g.stadtteil) || 0) + 1));
+    k.formen.forEach((f) => {
+      const istMein = f.name === mein;
+      const rang = (istMein ? 1000 : 0) + (anzahl.get(f.name) || 0) * 10 + f.R / 100;
+      anker(f.c, `<span class="k-name${istMein ? ' k-name-mein' : ''}" data-rang="${rang}" aria-hidden="true">${istMein ? '<b>Du</b>' : ''}${esc(f.name)}</span>`, istMein ? 'k-mein-anker' : '');
+    });
+    gruppen.forEach((gr, i) => {
+      if (gr.liste.length > 1) {
+        const ab = Math.min(...gr.liste.map((g) => g.betrag));
+        const orte = [...new Set(gr.liste.map((g) => g.stadtteil))];
+        const eigene = gr.liste.some((g) => g.eigen || g.helfer === 'ich');
+        const label = `${gr.liste.length} Anfragen in ${orte.length > 2 ? orte.slice(0, 2).join(', ') + ' und Umgebung' : orte.join(' und ')}, ab ${euroKurz(ab)}. Hineinzoomen`;
+        anker(gr.m, `<button type="button" class="k-sammel${eigene ? ' k-sammel-eigen' : ''}" data-sammel="${i}" aria-label="${esc(label)}">${gr.liste.length}</button>`);
+        return;
+      }
+      const g = gr.liste[0];
+      const cls = [g.eigen ? 'pin-eigen' : '', abgelaufen(g) ? 'pin-abgelaufen' : '', g.helfer === 'ich' ? 'pin-zugesagt' : '', g.id === hervor ? 'is-aktiv' : ''].join(' ');
+      anker(gr.m, `<button type="button" class="k-pin" data-oeffne="${esc(g.id)}" aria-label="${text(g)}"><span class="pin ${cls}">${g.helfer === 'ich' ? icon('check', 'i-xs') : ''}${euroKurz(g.betrag)}</span></button>`, g.id === hervor ? 'k-oben' : '', g.id);
+    });
+    const b = k.blick;
+    k.schicht.innerHTML = teile.map((t) => `<div class="k-anker ${t.cls}" style="transform:translate(${Math.round(t.m.x * b.s + b.x)}px,${Math.round(t.m.y * b.s + b.y)}px)">${t.html}</div>`).join('');
+    const kinder = k.schicht.children;
+    k.elemente = teile.map((t, i) => {
+      if (t.id) k.marker.set(t.id, kinder[i].firstElementChild);
+      return { el: kinder[i], m: t.m, drin: true };
+    });
+    zeichneBlick();
   }
 
   function zentriereAuf(id) {
     const g = gesuche.find((x) => x.id === id);
-    const map = kartenStatus.map;
-    if (g && map) map.setView([g.lat, g.lng], Math.max(map.getZoom(), 15), { animate: false });
+    const k = kartenStatus;
+    if (!g || !k.blick) return;
+    k.bewegt = true;
+    blickSetzen(blickAuf(inMeter(g.lat, g.lng), Math.max(k.blick.s, 0.22)), false);
   }
 
   document.querySelector('.karte-knoepfe').addEventListener('click', (e) => {
     const b = e.target.closest('[data-karte]');
-    const map = kartenStatus.map;
-    if (!b || !map) return;
+    if (!b || !kartenStatus.blick) return;
     const was = b.dataset.karte;
-    if (was === 'rein') map.zoomIn();
-    else if (was === 'raus') map.zoomOut();
-    else if (was === 'ich') { const o = meinOrt(); map.setView([o.lat, o.lng], 15); }
+    if (was === 'rein') zoomen(1.8, undefined, undefined, true);
+    else if (was === 'raus') zoomen(1 / 1.8, undefined, undefined, true);
+    else if (was === 'ich') zeigeStadtteil(meinOrt().stadtteil);
     else if (was === 'alles') zeigeGanzGarbsen();
   });
-
-  if (window.matchMedia) {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    if (mq.addEventListener) mq.addEventListener('change', aktualisiereKachelThema);
-  }
-  new MutationObserver(aktualisiereKachelThema).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  // Sammel-Schild antippen: so weit hineinzoomen, dass die Anfragen auseinanderrücken
+  document.querySelector('#map').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-sammel]');
+    const k = kartenStatus, gr = b && k.gruppen[Number(b.dataset.sammel)];
+    if (!gr) return;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    gr.punkte.forEach((p) => { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); });
+    const passend = Math.min((k.w - 140) / Math.max(1, x1 - x0), (k.h - 160) / Math.max(1, y1 - y0));
+    k.bewegt = true;
+    blickSetzen(blickAuf({ x: (x0 + x1) / 2, y: (y0 + y1) / 2 }, Math.min(KARTE.groesster, Math.max(k.blick.s * 1.6, Math.min(passend, k.blick.s * 3)))), true);
+  });
 
   /* ===== Detail-Ansicht und Konto (Bottom Sheet) ===== */
   function sheetGesuchHTML(g) {
@@ -1568,7 +1805,7 @@
   function profilDaten(g) {
     if (!istLive()) {
       const n = Number(String(g.id).replace(/\D/g, '')) || 0;
-      return { name: g.wer, kuerzel: g.initialen, stadtteil: g.stadtteil, dabei: DEMO_DABEI.at(n % DEMO_DABEI.length),
+      return { name: g.wer, kuerzel: g.initialen, stadtteil: g.stadtteil, dabei: DEMO_DABEI[n % DEMO_DABEI.length],
         sterne: g.sterne, bewertungen: g.bewertungen || 0, hilfen: Math.max(0, (g.bewertungen || 0) - 3 - (n % 4)), gesuche: Math.min(g.bewertungen || 0, 3 + (n % 5)), volljaehrig: true };
     }
     const id = g.eigen ? g.helferId : g.erstellerId;
@@ -1787,10 +2024,9 @@
     });
     if (view !== 'karte') ui.markiert = null;
     if (view === 'karte' && initKarte()) {
-      kartenStatus.map.invalidateSize({ pan: false });
+      kartenGroesse(false);
       if (ui.zentrieren) { zentriereAuf(ui.zentrieren); ui.zentrieren = null; }
       renderKarte();
-      labelsAufraeumen();
     }
     if (view === 'auftraege') renderAuftraege();
     window.scrollTo(0, 0);
@@ -1855,7 +2091,7 @@
     miniRuhe();
     renderKarte();
     let ziel = (ui.zuletzt && ui.zuletzt.isConnected) ? ui.zuletzt : (id ? $(`#view-${ui.view} .card[data-id="${id}"]`) : null);
-    if (!ziel && id && ui.view === 'karte' && kartenStatus.marker.has(id)) ziel = kartenStatus.marker.get(id).getElement();
+    if (!ziel && id && ui.view === 'karte' && kartenStatus.marker.has(id)) ziel = kartenStatus.marker.get(id);
     if (ziel && ziel.focus) ziel.focus({ preventScroll: true });
   }
 
@@ -2300,7 +2536,7 @@
       ortWaehlen(e.target.value);
       renderStadtteilAuswahl();
       renderAlles();
-      if (kartenStatus.map) renderKarte();
+      renderKarte();
       meldung(`Stadtteil: ${e.target.value}`);
       return;
     }
@@ -2685,7 +2921,7 @@
       renderSheet();
       const zurueck = document.querySelector(`[data-ansicht="${opt.dataset.ansicht}"][data-wert="${opt.dataset.wert}"]`);
       if (zurueck) zurueck.focus({ preventScroll: true });
-      if (kartenStatus.map) kartenStatus.map.invalidateSize({ pan: false });
+      if (kartenStatus.svg) kartenGroesse(false);
       return;
     }
     if (e.target.closest('[data-neu-laden]')) { db.fehler = null; renderListe(); neuLaden(); return; }
@@ -2886,7 +3122,7 @@
     wizSchritt = n;
     form.querySelectorAll('.schritt').forEach((el) => { el.hidden = Number(el.dataset.schritt) !== n; });
     form.querySelectorAll('.wizard-leiste li').forEach((li, i) => { li.className = i < n ? 'ist-erreicht' : ''; });
-    $('#wizard-stand').textContent = `Schritt ${n} von 4: ${SCHRITT_NAMEN.at(n - 1)}`;
+    $('#wizard-stand').textContent = `Schritt ${n} von 4: ${SCHRITT_NAMEN[n - 1]}`;
     $('#neu-zurueck').hidden = n === 1;
     $('#neu-weiter').hidden = n === 4;
     $('#neu-senden').hidden = n !== 4;
@@ -2982,7 +3218,7 @@
     if (termin.modus === 'tag') {
       const daten = termin.tage.map(ausIso).filter((d) => d >= heute()).sort((x, y) => x - y);
       if (!daten.length) return { gueltig: false };
-      return { gueltig: true, text: tageText(daten), von: daten[0], bis: daten.at(-1) };
+      return { gueltig: true, text: tageText(daten), von: daten[0], bis: daten[daten.length - 1] };
     }
     if (termin.woche < 0) return { gueltig: false };
     const sp = wochenSpanne(termin.woche, termin.umfang);

@@ -39,10 +39,11 @@ function RECHT_TEXTE(b, e) {
 
         <h3>2. Wenn du die App aufrufst</h3>
         <p>Die App liegt bei GitHub Pages, einem Dienst von GitHub (GitHub B.V., Prins Bernhardplein 200, 1097 JB Amsterdam, Niederlande, und GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA). Beim Aufruf verarbeitet GitHub technisch notwendige Daten wie deine IP-Adresse, Zeitpunkt, Browser und Betriebssystem, um die Seite auszuliefern und vor Angriffen zu schützen. Rechtsgrundlage ist unser berechtigtes Interesse an einer sicheren, erreichbaren App (Art. 6 Abs. 1 lit. f DSGVO). Für Übermittlungen in die USA stützt sich GitHub auf das EU-US Data Privacy Framework und auf EU-Standardvertragsklauseln.</p>
-        <p>Schriften und die Kartenbibliothek liefern wir selbst aus. Dafür werden keine Daten an Google oder andere Anbieter übertragen.</p>
+        <p>Schriften, Bilder und die Bibliothek für das 3D-Modell liefern wir selbst aus. Dafür werden keine Daten an Google oder andere Anbieter übertragen.</p>
 
         <h3>3. Karte</h3>
-        <p>Die Kartenbilder lädt dein Gerät von den Servern der OpenStreetMap Foundation (St John’s Innovation Centre, Cowley Road, Cambridge, CB4 0WS, Großbritannien). Dabei wird deine IP-Adresse übertragen. Für Großbritannien gilt ein Angemessenheitsbeschluss der EU-Kommission. Sind diese Server nicht erreichbar, lädt die App die Kartenbilder von openstreetmap.de (FOSSGIS e.V., Deutschland) oder von CARTO. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO: Ohne Karte kann die App nicht zeigen, wo Hilfe gesucht wird.</p>
+        <p>Die Karte zeichnet die App selbst, als vereinfachte Übersicht der Stadtteile von Garbsen. Dafür lädt dein Gerät nichts von Kartendiensten, und es werden keine Daten an andere Anbieter übertragen. Die Lage der Stadtteile beruht auf Daten von OpenStreetMap (© OpenStreetMap-Mitwirkende, ODbL) und GeoNames (CC BY 4.0).</p>
+        <p>Anfragen erscheinen auf der Karte nur ungefähr: als Punkt 100 bis 400 Meter neben der echten Adresse oder, weiter herausgezoomt, als Zahl im Stadtteil.</p>
         <p>Deinen eigenen Standort fragt die App nicht ab. Sie rechnet Entfernungen von der Mitte deines Stadtteils aus.</p>
 
         <h3>4. Speicher auf deinem Gerät</h3>

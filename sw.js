@@ -1,11 +1,12 @@
 /* Hand Drauf: Offline-Hülle
  * - Die Seite selbst: immer zuerst aus dem Netz (damit Updates sofort ankommen), ohne Netz aus dem Speicher.
- * - Bilder, Leaflet und supabase-js: einmal laden, dann aus dem Speicher (die Dateien ändern sich nicht).
- * - Anfragen, Nachrichten und Kartenkacheln: nie zwischenspeichern, die kommen immer frisch aus dem Netz.
+ * - Bilder, Schriften, Three.js und supabase-js: einmal laden, dann aus dem Speicher (die Dateien ändern sich nicht).
+ * - Anfragen und Nachrichten: nie zwischenspeichern, die kommen immer frisch aus dem Netz.
+ *   Die Karte zeichnet die App selbst, dafür wird nichts nachgeladen.
  * - Benachrichtigungen: zeigt an, was die Datenbank schickt, und öffnet beim Antippen die passende Anfrage.
  * Nach Änderungen an Dateien in assets/ die Versionsnummer erhöhen.
  */
-const VERSION = 'handdrauf-2026-11-7';
+const VERSION = 'handdrauf-2026-11-8';
 const HUELLE = [
   './',
   'manifest.webmanifest',
@@ -16,7 +17,6 @@ const HUELLE = [
   'assets/badge-96.png',
   'assets/garbsen-miniatur.webp',
   'assets/garbsen-miniatur-nacht.webp',
-  'assets/vendor/leaflet-1.9.4.js',
   'assets/vendor/three-0.170.0.module.min.js',
   'assets/fonts/barlow-regular.woff',
   'assets/fonts/barlow-medium.woff',
@@ -79,7 +79,7 @@ self.addEventListener('fetch', (e) => {
       return netz;
     })());
   }
-  // Alles andere (Datenbank, Kartenkacheln): normal übers Netz
+  // Alles andere (Datenbank): normal übers Netz
 });
 
 // Benachrichtigung anzeigen. Die Datenbank schickt: t = Titel, b = Text, l = Ziel in der App, g = Marke

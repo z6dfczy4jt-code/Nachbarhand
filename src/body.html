@@ -92,7 +92,8 @@
       </div>
       <div class="chips kat-leiste" id="chips-karte" role="group" aria-label="Kategorie filtern"></div>
       <div class="karte">
-        <div id="map" role="region" aria-label="Karte von Garbsen mit Anfragen"></div>
+        <div id="map" role="region" tabindex="0" aria-label="Karte von Garbsen mit Anfragen. Verschieben mit den Pfeiltasten, zoomen mit Plus und Minus."></div>
+        <p class="k-quelle">© OpenStreetMap-Mitwirkende, GeoNames</p>
         <div class="karte-knoepfe">
           <div class="knopf-gruppe">
             <button type="button" class="karte-knopf" data-karte="rein" aria-label="Hineinzoomen"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
@@ -118,12 +119,10 @@
         <span><i class="sw sw-offen"></i>Sucht Hilfe</span>
         <span><i class="sw sw-eigen"></i>Deine Anfrage</span>
         <span><i class="sw sw-zugesagt"></i>Deine Zusage</span>
-        <span id="legende-stadtteil" hidden><i class="sw sw-stadtteil"></i>Stadtteil (ungefähr)</span>
+        <span><i class="sw sw-sammel" aria-hidden="true">3</i>Mehrere Anfragen</span>
+        <span><i class="sw sw-stadtteil"></i>Dein Stadtteil</span>
       </div>
-      <div class="hinweis-karte" id="karte-hinweis" hidden>
-        <svg class="i" aria-hidden="true"><use href="#i-info"/></svg>
-        <span><strong>Vereinfachte Karte.</strong> Diese Vorschau darf keine Kartenbilder nachladen. Sobald die App auf einem eigenen Server läuft, liegt hier die Straßenkarte von OpenStreetMap.</span>
-      </div>
+      <p class="karte-unterzeile">Die Stadtteile sind vereinfacht gezeichnet. Anfragen stehen nur ungefähr auf der Karte, 100 bis 400&nbsp;m neben der Adresse.</p>
     </section>
 
     <!-- ===== Anfrage erstellen ===== -->

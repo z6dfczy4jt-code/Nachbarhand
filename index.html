@@ -24,656 +24,6 @@
 <script>try{var a=JSON.parse(localStorage.getItem("handdrauf-ansicht")||"{}"),r=document.documentElement;if(a.thema==="dunkel"||a.thema==="hell")r.setAttribute("data-theme",a.thema==="dunkel"?"dark":"light");if(a.schrift==="gross"||a.schrift==="sehr-gross")r.setAttribute("data-schrift",a.schrift)}catch(e){}</script>
 <link rel="preload" href="assets/fonts/barlow-regular.woff" as="font" type="font/woff" crossorigin><link rel="preload" href="assets/fonts/barlowsemicondensed-bold.woff" as="font" type="font/woff" crossorigin>
 <style>
-/* Leaflet 1.9.4, BSD-2-Clause, (c) Volodymyr Agafonkin, CloudMade; Bildverweise entfernt */
-/* required styles */
-
-.leaflet-pane,
-.leaflet-tile,
-.leaflet-marker-icon,
-.leaflet-marker-shadow,
-.leaflet-tile-container,
-.leaflet-pane > svg,
-.leaflet-pane > canvas,
-.leaflet-zoom-box,
-.leaflet-image-layer,
-.leaflet-layer {
-	position: absolute;
-	left: 0;
-	top: 0;
-	}
-.leaflet-container {
-	overflow: hidden;
-	}
-.leaflet-tile,
-.leaflet-marker-icon,
-.leaflet-marker-shadow {
-	-webkit-user-select: none;
-	   -moz-user-select: none;
-	        user-select: none;
-	  -webkit-user-drag: none;
-	}
-/* Prevents IE11 from highlighting tiles in blue */
-.leaflet-tile::selection {
-	background: transparent;
-}
-/* Safari renders non-retina tile on retina better with this, but Chrome is worse */
-.leaflet-safari .leaflet-tile {
-	image-rendering: -webkit-optimize-contrast;
-	}
-/* hack that prevents hw layers "stretching" when loading new tiles */
-.leaflet-safari .leaflet-tile-container {
-	width: 1600px;
-	height: 1600px;
-	-webkit-transform-origin: 0 0;
-	}
-.leaflet-marker-icon,
-.leaflet-marker-shadow {
-	display: block;
-	}
-/* .leaflet-container svg: reset svg max-width decleration shipped in Joomla! (joomla.org) 3.x */
-/* .leaflet-container img: map is broken in FF if you have max-width: 100% on tiles */
-.leaflet-container .leaflet-overlay-pane svg {
-	max-width: none !important;
-	max-height: none !important;
-	}
-.leaflet-container .leaflet-marker-pane img,
-.leaflet-container .leaflet-shadow-pane img,
-.leaflet-container .leaflet-tile-pane img,
-.leaflet-container img.leaflet-image-layer,
-.leaflet-container .leaflet-tile {
-	max-width: none !important;
-	max-height: none !important;
-	width: auto;
-	padding: 0;
-	}
-
-.leaflet-container img.leaflet-tile {
-	/* See: https://bugs.chromium.org/p/chromium/issues/detail?id=600120 */
-	mix-blend-mode: plus-lighter;
-}
-
-.leaflet-container.leaflet-touch-zoom {
-	-ms-touch-action: pan-x pan-y;
-	touch-action: pan-x pan-y;
-	}
-.leaflet-container.leaflet-touch-drag {
-	-ms-touch-action: pinch-zoom;
-	/* Fallback for FF which doesn't support pinch-zoom */
-	touch-action: none;
-	touch-action: pinch-zoom;
-}
-.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom {
-	-ms-touch-action: none;
-	touch-action: none;
-}
-.leaflet-container {
-	-webkit-tap-highlight-color: transparent;
-}
-.leaflet-container a {
-	-webkit-tap-highlight-color: rgba(51, 181, 229, 0.4);
-}
-.leaflet-tile {
-	filter: inherit;
-	visibility: hidden;
-	}
-.leaflet-tile-loaded {
-	visibility: inherit;
-	}
-.leaflet-zoom-box {
-	width: 0;
-	height: 0;
-	-moz-box-sizing: border-box;
-	     box-sizing: border-box;
-	z-index: 800;
-	}
-/* workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=888319 */
-.leaflet-overlay-pane svg {
-	-moz-user-select: none;
-	}
-
-.leaflet-pane         { z-index: 400; }
-
-.leaflet-tile-pane    { z-index: 200; }
-.leaflet-overlay-pane { z-index: 400; }
-.leaflet-shadow-pane  { z-index: 500; }
-.leaflet-marker-pane  { z-index: 600; }
-.leaflet-tooltip-pane   { z-index: 650; }
-.leaflet-popup-pane   { z-index: 700; }
-
-.leaflet-map-pane canvas { z-index: 100; }
-.leaflet-map-pane svg    { z-index: 200; }
-
-.leaflet-vml-shape {
-	width: 1px;
-	height: 1px;
-	}
-.lvml {
-	display: inline-block;
-	position: absolute;
-	}
-
-/* control positioning */
-
-.leaflet-control {
-	position: relative;
-	z-index: 800;
-	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
-	pointer-events: auto;
-	}
-.leaflet-top,
-.leaflet-bottom {
-	position: absolute;
-	z-index: 1000;
-	pointer-events: none;
-	}
-.leaflet-top {
-	top: 0;
-	}
-.leaflet-right {
-	right: 0;
-	}
-.leaflet-bottom {
-	bottom: 0;
-	}
-.leaflet-left {
-	left: 0;
-	}
-.leaflet-control {
-	float: left;
-	clear: both;
-	}
-.leaflet-right .leaflet-control {
-	float: right;
-	}
-.leaflet-top .leaflet-control {
-	margin-top: 10px;
-	}
-.leaflet-bottom .leaflet-control {
-	margin-bottom: 10px;
-	}
-.leaflet-left .leaflet-control {
-	margin-left: 10px;
-	}
-.leaflet-right .leaflet-control {
-	margin-right: 10px;
-	}
-
-/* zoom and fade animations */
-
-.leaflet-fade-anim .leaflet-popup {
-	opacity: 0;
-	-webkit-transition: opacity 0.2s linear;
-	   -moz-transition: opacity 0.2s linear;
-	        transition: opacity 0.2s linear;
-	}
-.leaflet-fade-anim .leaflet-map-pane .leaflet-popup {
-	opacity: 1;
-	}
-.leaflet-zoom-animated {
-	-webkit-transform-origin: 0 0;
-	    -ms-transform-origin: 0 0;
-	        transform-origin: 0 0;
-	}
-svg.leaflet-zoom-animated {
-	will-change: transform;
-}
-
-.leaflet-zoom-anim .leaflet-zoom-animated {
-	-webkit-transition: -webkit-transform 0.25s cubic-bezier(0,0,0.25,1);
-	   -moz-transition:    -moz-transform 0.25s cubic-bezier(0,0,0.25,1);
-	        transition:         transform 0.25s cubic-bezier(0,0,0.25,1);
-	}
-.leaflet-zoom-anim .leaflet-tile,
-.leaflet-pan-anim .leaflet-tile {
-	-webkit-transition: none;
-	   -moz-transition: none;
-	        transition: none;
-	}
-
-.leaflet-zoom-anim .leaflet-zoom-hide {
-	visibility: hidden;
-	}
-
-/* cursors */
-
-.leaflet-interactive {
-	cursor: pointer;
-	}
-.leaflet-grab {
-	cursor: -webkit-grab;
-	cursor:    -moz-grab;
-	cursor:         grab;
-	}
-.leaflet-crosshair,
-.leaflet-crosshair .leaflet-interactive {
-	cursor: crosshair;
-	}
-.leaflet-popup-pane,
-.leaflet-control {
-	cursor: auto;
-	}
-.leaflet-dragging .leaflet-grab,
-.leaflet-dragging .leaflet-grab .leaflet-interactive,
-.leaflet-dragging .leaflet-marker-draggable {
-	cursor: move;
-	cursor: -webkit-grabbing;
-	cursor:    -moz-grabbing;
-	cursor:         grabbing;
-	}
-
-/* marker & overlays interactivity */
-.leaflet-marker-icon,
-.leaflet-marker-shadow,
-.leaflet-image-layer,
-.leaflet-pane > svg path,
-.leaflet-tile-container {
-	pointer-events: none;
-	}
-
-.leaflet-marker-icon.leaflet-interactive,
-.leaflet-image-layer.leaflet-interactive,
-.leaflet-pane > svg path.leaflet-interactive,
-svg.leaflet-image-layer.leaflet-interactive path {
-	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
-	pointer-events: auto;
-	}
-
-/* visual tweaks */
-
-.leaflet-container {
-	background: #ddd;
-	outline-offset: 1px;
-	}
-.leaflet-container a {
-	color: #0078A8;
-	}
-.leaflet-zoom-box {
-	border: 2px dotted #38f;
-	background: rgba(255,255,255,0.5);
-	}
-
-/* general typography */
-.leaflet-container {
-	font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	font-size: 0.75rem;
-	line-height: 1.5;
-	}
-
-/* general toolbar styles */
-
-.leaflet-bar {
-	box-shadow: 0 1px 5px rgba(0,0,0,0.65);
-	border-radius: 4px;
-	}
-.leaflet-bar a {
-	background-color: #fff;
-	border-bottom: 1px solid #ccc;
-	width: 26px;
-	height: 26px;
-	line-height: 26px;
-	display: block;
-	text-align: center;
-	text-decoration: none;
-	color: black;
-	}
-.leaflet-bar a,
-.leaflet-control-layers-toggle {
-	background-position: 50% 50%;
-	background-repeat: no-repeat;
-	display: block;
-	}
-.leaflet-bar a:hover,
-.leaflet-bar a:focus {
-	background-color: #f4f4f4;
-	}
-.leaflet-bar a:first-child {
-	border-top-left-radius: 4px;
-	border-top-right-radius: 4px;
-	}
-.leaflet-bar a:last-child {
-	border-bottom-left-radius: 4px;
-	border-bottom-right-radius: 4px;
-	border-bottom: none;
-	}
-.leaflet-bar a.leaflet-disabled {
-	cursor: default;
-	background-color: #f4f4f4;
-	color: #bbb;
-	}
-
-.leaflet-touch .leaflet-bar a {
-	width: 30px;
-	height: 30px;
-	line-height: 30px;
-	}
-.leaflet-touch .leaflet-bar a:first-child {
-	border-top-left-radius: 2px;
-	border-top-right-radius: 2px;
-	}
-.leaflet-touch .leaflet-bar a:last-child {
-	border-bottom-left-radius: 2px;
-	border-bottom-right-radius: 2px;
-	}
-
-/* zoom control */
-
-.leaflet-control-zoom-in,
-.leaflet-control-zoom-out {
-	font: bold 18px 'Lucida Console', Monaco, monospace;
-	text-indent: 1px;
-	}
-
-.leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out  {
-	font-size: 22px;
-	}
-
-/* layers control */
-
-.leaflet-control-layers {
-	box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-	background: #fff;
-	border-radius: 5px;
-	}
-.leaflet-control-layers-toggle {
-	width: 36px;
-	height: 36px;
-	}
-.leaflet-retina .leaflet-control-layers-toggle {
-	background-size: 26px 26px;
-	}
-.leaflet-touch .leaflet-control-layers-toggle {
-	width: 44px;
-	height: 44px;
-	}
-.leaflet-control-layers .leaflet-control-layers-list,
-.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
-	display: none;
-	}
-.leaflet-control-layers-expanded .leaflet-control-layers-list {
-	display: block;
-	position: relative;
-	}
-.leaflet-control-layers-expanded {
-	padding: 6px 10px 6px 6px;
-	color: #333;
-	background: #fff;
-	}
-.leaflet-control-layers-scrollbar {
-	overflow-y: scroll;
-	overflow-x: hidden;
-	padding-right: 5px;
-	}
-.leaflet-control-layers-selector {
-	margin-top: 2px;
-	position: relative;
-	top: 1px;
-	}
-.leaflet-control-layers label {
-	display: block;
-	font-size: 13px;
-	font-size: 1.08333em;
-	}
-.leaflet-control-layers-separator {
-	height: 0;
-	border-top: 1px solid #ddd;
-	margin: 5px -10px 5px -6px;
-	}
-
-/* Default icon URLs */
-.leaflet-default-icon-path { /* used only in path-guessing heuristic, see L.Icon.Default */
-	}
-
-/* attribution and scale controls */
-
-.leaflet-container .leaflet-control-attribution {
-	background: #fff;
-	background: rgba(255, 255, 255, 0.8);
-	margin: 0;
-	}
-.leaflet-control-attribution,
-.leaflet-control-scale-line {
-	padding: 0 5px;
-	color: #333;
-	line-height: 1.4;
-	}
-.leaflet-control-attribution a {
-	text-decoration: none;
-	}
-.leaflet-control-attribution a:hover,
-.leaflet-control-attribution a:focus {
-	text-decoration: underline;
-	}
-.leaflet-attribution-flag {
-	display: inline !important;
-	vertical-align: baseline !important;
-	width: 1em;
-	height: 0.6669em;
-	}
-.leaflet-left .leaflet-control-scale {
-	margin-left: 5px;
-	}
-.leaflet-bottom .leaflet-control-scale {
-	margin-bottom: 5px;
-	}
-.leaflet-control-scale-line {
-	border: 2px solid #777;
-	border-top: none;
-	line-height: 1.1;
-	padding: 2px 5px 1px;
-	white-space: nowrap;
-	-moz-box-sizing: border-box;
-	     box-sizing: border-box;
-	background: rgba(255, 255, 255, 0.8);
-	text-shadow: 1px 1px #fff;
-	}
-.leaflet-control-scale-line:not(:first-child) {
-	border-top: 2px solid #777;
-	border-bottom: none;
-	margin-top: -2px;
-	}
-.leaflet-control-scale-line:not(:first-child):not(:last-child) {
-	border-bottom: 2px solid #777;
-	}
-
-.leaflet-touch .leaflet-control-attribution,
-.leaflet-touch .leaflet-control-layers,
-.leaflet-touch .leaflet-bar {
-	box-shadow: none;
-	}
-.leaflet-touch .leaflet-control-layers,
-.leaflet-touch .leaflet-bar {
-	border: 2px solid rgba(0,0,0,0.2);
-	background-clip: padding-box;
-	}
-
-/* popup */
-
-.leaflet-popup {
-	position: absolute;
-	text-align: center;
-	margin-bottom: 20px;
-	}
-.leaflet-popup-content-wrapper {
-	padding: 1px;
-	text-align: left;
-	border-radius: 12px;
-	}
-.leaflet-popup-content {
-	margin: 13px 24px 13px 20px;
-	line-height: 1.3;
-	font-size: 13px;
-	font-size: 1.08333em;
-	min-height: 1px;
-	}
-.leaflet-popup-content p {
-	margin: 17px 0;
-	margin: 1.3em 0;
-	}
-.leaflet-popup-tip-container {
-	width: 40px;
-	height: 20px;
-	position: absolute;
-	left: 50%;
-	margin-top: -1px;
-	margin-left: -20px;
-	overflow: hidden;
-	pointer-events: none;
-	}
-.leaflet-popup-tip {
-	width: 17px;
-	height: 17px;
-	padding: 1px;
-
-	margin: -10px auto 0;
-	pointer-events: auto;
-
-	-webkit-transform: rotate(45deg);
-	   -moz-transform: rotate(45deg);
-	    -ms-transform: rotate(45deg);
-	        transform: rotate(45deg);
-	}
-.leaflet-popup-content-wrapper,
-.leaflet-popup-tip {
-	background: white;
-	color: #333;
-	box-shadow: 0 3px 14px rgba(0,0,0,0.4);
-	}
-.leaflet-container a.leaflet-popup-close-button {
-	position: absolute;
-	top: 0;
-	right: 0;
-	border: none;
-	text-align: center;
-	width: 24px;
-	height: 24px;
-	font: 16px/24px Tahoma, Verdana, sans-serif;
-	color: #757575;
-	text-decoration: none;
-	background: transparent;
-	}
-.leaflet-container a.leaflet-popup-close-button:hover,
-.leaflet-container a.leaflet-popup-close-button:focus {
-	color: #585858;
-	}
-.leaflet-popup-scrolled {
-	overflow: auto;
-	}
-
-.leaflet-oldie .leaflet-popup-content-wrapper {
-	-ms-zoom: 1;
-	}
-.leaflet-oldie .leaflet-popup-tip {
-	width: 24px;
-	margin: 0 auto;
-
-	-ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678)";
-	filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678);
-	}
-
-.leaflet-oldie .leaflet-control-zoom,
-.leaflet-oldie .leaflet-control-layers,
-.leaflet-oldie .leaflet-popup-content-wrapper,
-.leaflet-oldie .leaflet-popup-tip {
-	border: 1px solid #999;
-	}
-
-/* div icon */
-
-.leaflet-div-icon {
-	background: #fff;
-	border: 1px solid #666;
-	}
-
-/* Tooltip */
-/* Base styles for the element that has a tooltip */
-.leaflet-tooltip {
-	position: absolute;
-	padding: 6px;
-	background-color: #fff;
-	border: 1px solid #fff;
-	border-radius: 3px;
-	color: #222;
-	white-space: nowrap;
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
-	pointer-events: none;
-	box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-	}
-.leaflet-tooltip.leaflet-interactive {
-	cursor: pointer;
-	pointer-events: auto;
-	}
-.leaflet-tooltip-top:before,
-.leaflet-tooltip-bottom:before,
-.leaflet-tooltip-left:before,
-.leaflet-tooltip-right:before {
-	position: absolute;
-	pointer-events: none;
-	border: 6px solid transparent;
-	background: transparent;
-	content: "";
-	}
-
-/* Directions */
-
-.leaflet-tooltip-bottom {
-	margin-top: 6px;
-}
-.leaflet-tooltip-top {
-	margin-top: -6px;
-}
-.leaflet-tooltip-bottom:before,
-.leaflet-tooltip-top:before {
-	left: 50%;
-	margin-left: -6px;
-	}
-.leaflet-tooltip-top:before {
-	bottom: 0;
-	margin-bottom: -12px;
-	border-top-color: #fff;
-	}
-.leaflet-tooltip-bottom:before {
-	top: 0;
-	margin-top: -12px;
-	margin-left: -6px;
-	border-bottom-color: #fff;
-	}
-.leaflet-tooltip-left {
-	margin-left: -6px;
-}
-.leaflet-tooltip-right {
-	margin-left: 6px;
-}
-.leaflet-tooltip-left:before,
-.leaflet-tooltip-right:before {
-	top: 50%;
-	margin-top: -6px;
-	}
-.leaflet-tooltip-left:before {
-	right: 0;
-	margin-right: -12px;
-	border-left-color: #fff;
-	}
-.leaflet-tooltip-right:before {
-	left: 0;
-	margin-left: -12px;
-	border-right-color: #fff;
-	}
-
-/* Printing */
-
-@media print {
-	/* Prevent printers from removing background-images of controls. */
-	.leaflet-control {
-		-webkit-print-color-adjust: exact;
-		print-color-adjust: exact;
-		}
-	}
-</style>
-<style>
 /* ===== Hand Drauf: Garbsen in Miniatur =====
    Die Startseite zeigt die Nachbarschaft als kleines 3D-Modell (Klinker, Schiefer, Hecken, Kanal, Raps).
    Der Rest der App ist ruhig und nimmt zwei Dinge aus diesem Modell mit:
@@ -716,10 +66,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
   --map-area: #DCE4D8;
   --map-edge: #C3CDC0;
   --map-label: #586473;
+  --map-sockel: #AEBAAB;
+  --map-umland: #E1E7DC;
+  --map-stadt: #F3F5F0;
+  --map-stadt-rand: #CDD6C8;
+  --map-mein: #D5E2EE;
+  --map-hover: #E4EBE1;
   --schatten-1: 0 1px 2px rgba(28, 37, 48, .06), 0 2px 10px rgba(28, 37, 48, .05);
   --schatten-2: 0 2px 6px rgba(28, 37, 48, .06), 0 14px 36px rgba(28, 37, 48, .14);
   --shadow: var(--schatten-2);
-  --glas: color-mix(in srgb, #FFFFFF 74%, transparent);
+  --glas: rgba(255, 255, 255, .74);
   --glas-rand: rgba(255, 255, 255, .7);
   --f-body: "Barlow", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --f-display: "Barlow Semi Condensed", "Barlow", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
@@ -738,10 +94,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
     --accent: #F4B400; --accent-tief: #D99E00; --on-accent: #1F1A0A; --hedge: #4CC27A; --on-hedge: #062312; --good-bg: #10301E;
     --warn: #FFB44D; --warn-bg: #36270D; --crit: #FF7466; --crit-flaeche: #B3261E; --klinker-text: #F0907E; --focus: #5AA2FF; --you: #5AA2FF;
     --sky-oben: #08111F; --sky-unten: #1A2D4D;
-    --map-land: #152030; --map-area: #1D2A3B; --map-edge: #2E3D51; --map-label: #9AA6B5;
+    --map-land: #152030; --map-area: #22324A; --map-edge: #34465E; --map-label: #9AA6B5; --map-sockel: #0B121C; --map-umland: #0F1824; --map-stadt: #172232; --map-stadt-rand: #24334A; --map-mein: #1F3552; --map-hover: #233246;
     --schatten-1: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 10px rgba(0, 0, 0, .3);
     --schatten-2: 0 2px 6px rgba(0, 0, 0, .4), 0 14px 36px rgba(0, 0, 0, .5);
-    --glas: color-mix(in srgb, #1B2839 72%, transparent); --glas-rand: rgba(255, 255, 255, .08);
+    --glas: rgba(27, 40, 57, .72); --glas-rand: rgba(255, 255, 255, .08);
     --mini-bild: var(--mini-bild-nacht);
     color-scheme: dark;
   }
@@ -752,10 +108,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
   --accent: #F4B400; --accent-tief: #D99E00; --on-accent: #1F1A0A; --hedge: #4CC27A; --on-hedge: #062312; --good-bg: #10301E;
   --warn: #FFB44D; --warn-bg: #36270D; --crit: #FF7466; --crit-flaeche: #B3261E; --klinker-text: #F0907E; --focus: #5AA2FF; --you: #5AA2FF;
   --sky-oben: #08111F; --sky-unten: #1A2D4D;
-  --map-land: #152030; --map-area: #1D2A3B; --map-edge: #2E3D51; --map-label: #9AA6B5;
+  --map-land: #152030; --map-area: #22324A; --map-edge: #34465E; --map-label: #9AA6B5; --map-sockel: #0B121C; --map-umland: #0F1824; --map-stadt: #172232; --map-stadt-rand: #24334A; --map-mein: #1F3552; --map-hover: #233246;
   --schatten-1: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 10px rgba(0, 0, 0, .3);
   --schatten-2: 0 2px 6px rgba(0, 0, 0, .4), 0 14px 36px rgba(0, 0, 0, .5);
-  --glas: color-mix(in srgb, #1B2839 72%, transparent); --glas-rand: rgba(255, 255, 255, .08);
+  --glas: rgba(27, 40, 57, .72); --glas-rand: rgba(255, 255, 255, .08);
   --mini-bild: var(--mini-bild-nacht);
   color-scheme: dark;
 }
@@ -841,27 +197,28 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ----- Die Miniatur auf der Startseite ----- */
 .mini {
-  position: relative; height: clamp(300px, 88vw, 380px); margin-inline: -6px;
+  position: relative; height: 340px; height: clamp(300px, 88vw, 380px); margin-left: -6px; margin-right: -6px;
   border-radius: var(--r-xl); overflow: hidden; isolation: isolate;
+  background: linear-gradient(180deg, var(--sky-oben) 0%, var(--sky-unten) 72%);
   background: radial-gradient(120% 70% at 50% 108%, color-mix(in srgb, var(--sky-unten) 70%, var(--paper)) 0%, transparent 60%), linear-gradient(180deg, var(--sky-oben) 0%, var(--sky-unten) 72%);
   touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab;
 }
 .mini.ist-gezogen { cursor: grabbing; }
-.mini::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--glas-rand); pointer-events: none; }
+.mini::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--glas-rand); pointer-events: none; }
 /* Nachts: Sterne */
 :root[data-theme="dark"] .mini { --stiel-farbe: rgba(255, 255, 255, .55); }
-:root[data-theme="dark"] .mini::before { content: ""; position: absolute; inset: 0 0 45% 0; z-index: -1; opacity: .8;
+:root[data-theme="dark"] .mini::before { content: ""; position: absolute; top: 0; right: 0; bottom: 45%; left: 0; z-index: -1; opacity: .8;
   background-image: radial-gradient(1.2px 1.2px at 12% 18%, #fff, transparent), radial-gradient(1px 1px at 28% 8%, #fff, transparent), radial-gradient(1.4px 1.4px at 46% 22%, #fff, transparent), radial-gradient(1px 1px at 63% 10%, #fff, transparent), radial-gradient(1.2px 1.2px at 81% 26%, #fff, transparent), radial-gradient(1px 1px at 91% 7%, #fff, transparent), radial-gradient(1px 1px at 5% 36%, #fff, transparent), radial-gradient(1px 1px at 72% 40%, #fff, transparent); }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .mini { --stiel-farbe: rgba(255, 255, 255, .55); }
-  :root:not([data-theme="light"]) .mini::before { content: ""; position: absolute; inset: 0 0 45% 0; z-index: -1; opacity: .8;
+  :root:not([data-theme="light"]) .mini::before { content: ""; position: absolute; top: 0; right: 0; bottom: 45%; left: 0; z-index: -1; opacity: .8;
     background-image: radial-gradient(1.2px 1.2px at 12% 18%, #fff, transparent), radial-gradient(1px 1px at 28% 8%, #fff, transparent), radial-gradient(1.4px 1.4px at 46% 22%, #fff, transparent), radial-gradient(1px 1px at 63% 10%, #fff, transparent), radial-gradient(1.2px 1.2px at 81% 26%, #fff, transparent), radial-gradient(1px 1px at 91% 7%, #fff, transparent), radial-gradient(1px 1px at 5% 36%, #fff, transparent), radial-gradient(1px 1px at 72% 40%, #fff, transparent); }
 }
-.mini-leinwand { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.mini-leinwand { position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; display: block; }
 .mini.ohne-3d, .start-bild { background-image: var(--mini-bild), linear-gradient(180deg, var(--sky-oben) 0%, var(--sky-unten) 72%); background-size: contain, cover; background-repeat: no-repeat; background-position: center 60%, center; }
-.mini.ohne-3d { cursor: default; touch-action: auto; height: clamp(230px, 64vw, 300px); }
+.mini.ohne-3d { cursor: default; touch-action: auto; height: 260px; height: clamp(230px, 64vw, 300px); }
 .mini.ohne-3d .mini-anker { display: none; }
-.mini-schilder { position: absolute; inset: 0; pointer-events: none; }
+.mini-schilder { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; }
 /* Anker am Dach: Stiel und Nagel, darüber das Schild als Knopf */
 .mini-anker { --stiel: 14px; position: absolute; left: 0; top: 0; width: 0; height: 0; opacity: 0; transition: opacity .3s ease calc(var(--i) * 70ms); }
 .mini.ist-bereit .mini-anker { opacity: 1; }
@@ -898,7 +255,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .chip:hover { background: var(--raised); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
 .chip-radio { position: relative; display: inline-flex; }
-.chip-radio input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.chip-radio input { position: absolute; opacity: 0; top: 0; right: 0; bottom: 0; left: 0; margin: 0; cursor: pointer; }
 .chip-radio input:checked + .chip { background: var(--ink); color: var(--surface); }
 .chip-radio input:focus-visible + .chip { outline: 3px solid var(--focus); outline-offset: 2px; }
 .kat-leiste { gap: 6px; margin-inline: -16px; padding: 4px 16px 10px; }
@@ -978,64 +335,84 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ----- Karte ----- */
 .karte-kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.karte { position: relative; width: 100%; height: clamp(380px, 64vh, 620px); border-radius: var(--r-xl); overflow: hidden; background: var(--map-land); box-shadow: var(--schatten-1); isolation: isolate; }
-#map { position: absolute; inset: 0; }
-.leaflet-container { background: var(--map-land); font-family: var(--f-body); font-size: 0.875rem; }
-.leaflet-container .leaflet-control-attribution { background: color-mix(in srgb, var(--surface) 86%, transparent); color: var(--muted); font-size: 0.875rem; line-height: 1.4; padding: 1px 8px; border-radius: 8px 0 0 0; }
-.leaflet-container .leaflet-control-attribution a { color: var(--ink); }
-.leaflet-control-scale-line { border-color: var(--muted); color: var(--ink); background: color-mix(in srgb, var(--surface) 80%, transparent); font-size: 0.875rem; }
-.leaflet-bottom.leaflet-left .leaflet-control { margin-left: 14px; margin-bottom: 14px; }
-.karte-knoepfe { position: absolute; top: 14px; right: 14px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
-.knopf-gruppe { display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; box-shadow: var(--schatten-2); background: var(--glas); -webkit-backdrop-filter: blur(16px) saturate(170%); backdrop-filter: blur(16px) saturate(170%); }
-.knopf-gruppe .karte-knopf + .karte-knopf { border-top: 1px solid var(--line); }
-.karte-knopf { width: 46px; height: 46px; border: 0; background: transparent; color: var(--ink); display: grid; place-items: center; cursor: pointer; }
-.karte-knopf:hover { background: color-mix(in srgb, var(--tile) 60%, transparent); }
-.karte-fehler { position: absolute; inset: 0; z-index: 1001; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); background: var(--map-land); }
-.karte-dunkel .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.88) saturate(.6); }
-
-.pin-anker, .ich-anker, .stadtteil-label { width: 0; height: 0; }
-.pin-anker:focus { outline: none; }
-.pin-anker:focus-visible .pin { outline: 3px solid var(--focus); outline-offset: 2px; }
+.karte { position: relative; width: 100%; height: 460px; height: clamp(380px, 64vh, 620px); border-radius: var(--r-xl); overflow: hidden; background: var(--map-umland); box-shadow: var(--schatten-1); isolation: isolate; }
+/* Eigene Karte: SVG-Flächen, darüber eine Schicht mit Schildern (nur 2D-Verschiebungen, damit auch alte Geräte flüssig bleiben) */
+#map { position: absolute; top: 0; right: 0; bottom: 0; left: 0; overflow: hidden; touch-action: none; -ms-touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; cursor: grab; font-family: var(--f-body); }
+#map.ist-gezogen { cursor: grabbing; }
+#map:focus { outline: none; }
+#map:focus-visible { box-shadow: inset 0 0 0 3px var(--focus); }
+.k-svg { position: absolute; left: 0; top: 0; display: block; overflow: visible; }
+.k-stadt-rand path { fill: var(--map-stadt-rand); }
+.k-stadt path { fill: var(--map-stadt); }
+.k-sockel path { fill: var(--map-sockel); }
+.k-flaeche { fill: var(--map-area); stroke: var(--map-edge); stroke-width: 1px; vector-effect: non-scaling-stroke; cursor: pointer; }
+.k-flaeche.k-mein { fill: var(--map-mein); stroke: var(--you); stroke-width: 2px; }
+@media (hover: hover) { .k-flaeche:hover { fill: var(--map-hover); } .k-flaeche.k-mein:hover { fill: var(--map-mein); } }
+.k-bereich { fill: var(--accent); fill-opacity: .2; stroke: var(--ink); stroke-width: 2px; stroke-opacity: .8; stroke-dasharray: 6 5; vector-effect: non-scaling-stroke; pointer-events: none; }
+.k-schicht { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+.k-anker { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+.k-anker.k-oben { z-index: 3; }
+.k-name { position: absolute; left: 0; top: 0; -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%); white-space: nowrap; pointer-events: none;
+  font-family: var(--f-display); font-size: 0.875rem; font-weight: 600; letter-spacing: .02em; color: var(--map-label);
+  text-shadow: 0 0 3px var(--map-area), 0 0 3px var(--map-area), 0 0 2px var(--map-area); }
+.k-name.versteckt { visibility: hidden; }
+.k-name-mein { color: var(--ink); font-weight: 700; }
+.k-anker.k-mein-anker { z-index: 2; }
+.k-name b { display: inline-block; margin-right: 5px; padding: 1px 7px 0; border-radius: 999px; background: var(--you); color: var(--surface); font-weight: 700; text-shadow: none; }
+/* Ein Preisschild: der Knopf ist mindestens 44 × 44 groß, die Spitze zeigt auf die ungefähre Lage */
+.k-pin { position: absolute; left: 0; top: 0; -webkit-transform: translate(-50%, -100%); transform: translate(-50%, -100%); min-width: 44px; min-height: 44px; padding: 0 0 14px; margin: 0; border: 0; background: none; display: -webkit-flex; display: flex; -webkit-align-items: flex-end; align-items: flex-end; -webkit-justify-content: center; justify-content: center; cursor: pointer; font: inherit; color: inherit; }
+.k-pin:focus { outline: none; }
+.k-pin:focus-visible .pin { outline: 3px solid var(--focus); outline-offset: 2px; }
 .pin {
   --pin-bg: var(--accent); --pin-fg: var(--on-accent); --pin-rand: #11161C;
-  position: absolute; left: 0; top: 0; transform: translate(-50%, calc(-100% - 8px)); transform-origin: 50% 100%;
-  display: inline-flex; align-items: center; gap: 3px; padding: 3px 9px 2px; border-radius: 8px;
-  background: var(--pin-bg); color: var(--pin-fg); border: 0;
+  position: relative; display: inline-flex; align-items: center; padding: 3px 9px 2px; border-radius: 8px;
+  background: var(--pin-bg); color: var(--pin-fg);
   font-family: var(--f-display); font-weight: 700; font-size: 0.9375rem; line-height: 1.25; font-variant-numeric: tabular-nums; white-space: nowrap;
-  box-shadow: 0 1px 0 var(--accent-tief), 0 4px 10px rgba(17, 22, 28, .3); cursor: pointer; transition: transform .15s ease;
+  box-shadow: 0 1px 0 var(--accent-tief), 0 4px 10px rgba(17, 22, 28, .3); -webkit-transform-origin: 50% 100%; transform-origin: 50% 100%; transition: transform .15s ease;
 }
+.pin .i { margin-right: 3px; }
 .pin::after { content: ""; position: absolute; left: 50%; top: 100%; width: 2px; height: 8px; margin-left: -1px; background: var(--pin-rand); opacity: .6; }
-.pin::before { content: ""; position: absolute; left: 50%; top: calc(100% + 6px); width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--pin-rand); }
-.pin:hover { transform: translate(-50%, calc(-100% - 8px)) scale(1.06); }
+.pin::before { content: ""; position: absolute; left: 50%; top: 100%; margin-top: 6px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--pin-rand); }
+@media (hover: hover) { .k-pin:hover .pin { -webkit-transform: scale(1.06); transform: scale(1.06); } }
 .pin-eigen { --pin-bg: var(--hedge); --pin-fg: var(--on-hedge); }
 .pin-zugesagt { --pin-bg: var(--surface); --pin-fg: var(--ink); box-shadow: inset 0 0 0 2px var(--ink), 0 4px 10px rgba(17, 22, 28, .25); }
 .pin-abgelaufen { --pin-bg: var(--surface); --pin-fg: var(--muted); box-shadow: inset 0 0 0 1.5px var(--muted); }
-.pin.is-aktiv { --pin-bg: var(--klinker); --pin-fg: var(--on-klinker); transform: translate(-50%, calc(-100% - 8px)) scale(1.14); box-shadow: 0 6px 16px rgba(17, 22, 28, .35); }
-.zoom-weit .pin { font-size: 0.875rem; padding: 1px 6px 0; transform: translate(-50%, calc(-100% - 7px)); }
-.zoom-weit .pin:hover { transform: translate(-50%, calc(-100% - 7px)) scale(1.06); }
-.zoom-weit .pin.is-aktiv { transform: translate(-50%, calc(-100% - 7px)) scale(1.14); }
-.ich { position: absolute; left: 0; top: 0; width: 18px; height: 18px; border-radius: 50%; background: var(--you); border: 3px solid #fff; transform: translate(-50%, -50%); box-shadow: 0 0 0 7px color-mix(in srgb, var(--you) 22%, transparent), 0 2px 6px rgba(0,0,0,.25); }
-.ich-label { position: absolute; left: 0; top: 0; transform: translate(-50%, 13px); font-size: 0.875rem; font-weight: 700; color: var(--you); text-shadow: 0 0 3px var(--surface), 0 0 3px var(--surface); white-space: nowrap; }
-.stadtteil-label span { position: absolute; left: 0; top: 0; transform: translate(-50%, 5px); white-space: nowrap; font-family: var(--f-display); font-size: 0.875rem; font-weight: 600; letter-spacing: .02em; color: var(--map-label); text-shadow: 0 0 3px var(--map-land), 0 0 3px var(--map-land), 0 0 2px var(--map-land); pointer-events: none; }
-.stadtteil-label span.versteckt { visibility: hidden; }
-.leaflet-container path.stadtteil-flaeche { fill: var(--map-area); fill-opacity: 1; stroke: var(--map-edge); stroke-width: 1; stroke-opacity: 1; }
-.leaflet-container path.bereich-kreis { fill: var(--accent); fill-opacity: .18; stroke: var(--ink); stroke-width: 2; stroke-opacity: .8; stroke-dasharray: 6 5; }
+.pin.is-aktiv, .k-pin:hover .pin.is-aktiv { --pin-bg: var(--klinker); --pin-fg: var(--on-klinker); -webkit-transform: scale(1.14); transform: scale(1.14); box-shadow: 0 6px 16px rgba(17, 22, 28, .35); }
+/* Sammel-Schild: mehrere Anfragen in einem Stadtteil */
+.k-sammel { position: absolute; left: 0; top: 0; width: 46px; height: 46px; margin: -23px 0 0 -23px; padding: 0; border-radius: 50%; border: 3px solid var(--surface);
+  background: var(--accent); color: var(--on-accent); font-family: var(--f-display); font-weight: 700; font-size: 1.125rem; line-height: 1; font-variant-numeric: tabular-nums;
+  display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center;
+  box-shadow: 0 1px 0 var(--accent-tief), 0 5px 12px rgba(17, 22, 28, .3); cursor: pointer; transition: transform .15s ease; }
+.k-sammel-eigen { border-color: var(--hedge); }
+.k-sammel:focus { outline: none; }
+.k-sammel:focus-visible { box-shadow: 0 0 0 3px var(--focus); }
+@media (hover: hover) { .k-sammel:hover { -webkit-transform: scale(1.08); transform: scale(1.08); } }
+.k-massstab { position: absolute; left: 14px; bottom: 10px; height: 20px; padding: 0 4px; border: 2px solid var(--muted); border-top: 0; color: var(--ink); font-size: 0.875rem; line-height: 18px; text-align: center; white-space: nowrap; pointer-events: none; text-shadow: 0 0 3px var(--map-land), 0 0 3px var(--map-land); box-sizing: border-box; }
+.k-quelle { position: absolute; right: 0; bottom: 0; max-width: calc(100% - 150px); margin: 0; padding: 2px 10px; border-radius: 10px 0 0 0; background: var(--glas); color: var(--muted); font-size: 0.875rem; line-height: 1.35; text-align: right; pointer-events: none; }
+@media (max-width: 400px) { .k-quelle { max-width: none; left: 0; border-radius: 0; } .k-massstab { bottom: 32px; } }
+@media (prefers-reduced-motion: reduce) { .pin, .k-sammel { transition: none; } }
+.karte-unterzeile { margin: -4px 0 0; color: var(--muted); font-size: 0.9375rem; }
+.karte-knoepfe { position: absolute; top: 12px; right: 12px; z-index: 1000; display: -webkit-flex; display: flex; }
+.knopf-gruppe + .knopf-gruppe { margin-left: 10px; }
+.knopf-gruppe { display: -webkit-flex; display: flex; border-radius: 14px; overflow: hidden; box-shadow: var(--schatten-2); background: var(--glas); -webkit-backdrop-filter: blur(16px) saturate(170%); backdrop-filter: blur(16px) saturate(170%); }
+.knopf-gruppe .karte-knopf + .karte-knopf { border-left: 1px solid var(--line); }
+.karte-knopf { width: 46px; height: 46px; border: 0; background: transparent; color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+.karte-knopf:hover { background: color-mix(in srgb, var(--tile) 60%, transparent); }
+.karte-fehler { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 1001; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); background: var(--map-land); }
 .legende { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 0.875rem; color: var(--muted); }
 .legende span { display: inline-flex; align-items: center; gap: 7px; }
 .sw { width: 18px; height: 12px; border-radius: 4px; }
 .sw-offen { background: var(--accent); }
 .sw-eigen { background: var(--hedge); }
 .sw-zugesagt { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }
-.sw-stadtteil { width: 14px; height: 14px; border-radius: 50%; background: var(--map-area); box-shadow: inset 0 0 0 1px var(--map-edge); }
-.hinweis-karte { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r-m); background: var(--surface); color: var(--muted); font-size: 0.9375rem; }
-.hinweis-karte .i { color: var(--ink); margin-top: 2px; }
-.hinweis-karte strong { color: var(--ink); }
+.sw-stadtteil { width: 18px; height: 14px; border-radius: 5px; background: var(--map-mein); box-shadow: inset 0 0 0 2px var(--you), 0 2px 0 var(--map-sockel); }
+.sw-sammel { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--on-accent); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line); font: 700 0.8125rem/18px var(--f-display); font-style: normal; text-align: center; box-sizing: border-box; }
 .karte-leer { position: absolute; left: 14px; right: 14px; bottom: 32px; z-index: 1000; display: grid; gap: 12px; padding: 16px 18px; border-radius: var(--r-l); background: var(--surface); box-shadow: var(--schatten-2); }
 .karte-leer p { margin: 0; color: var(--muted); font-size: 1rem; }
 .karte-leer strong { color: var(--ink); }
 
 /* ----- Blatt von unten ----- */
-.backdrop { position: fixed; inset: 0; background: rgba(8, 13, 20, .46); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); z-index: 1400; animation: abdunkeln .25s ease both; }
+.backdrop { position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: rgba(8, 13, 20, .46); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); z-index: 1400; animation: abdunkeln .25s ease both; }
 @keyframes abdunkeln { from { opacity: 0; } to { opacity: 1; } }
 .sheet {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 1500; margin: 0 auto; max-width: 580px;
@@ -1166,7 +543,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .kachel-wahl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 @media (max-width: 400px) { .kachel-wahl { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .kachel-radio { position: relative; display: block; }
-.kachel-radio input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.kachel-radio input { position: absolute; opacity: 0; top: 0; right: 0; bottom: 0; left: 0; margin: 0; cursor: pointer; }
 .kachel-karte { display: grid; justify-items: center; gap: 6px; min-height: 104px; padding: 14px 6px 12px; border-radius: var(--r-l); background: var(--surface); box-shadow: var(--schatten-1); font-weight: 600; text-align: center; cursor: pointer; transition: box-shadow .2s, transform .2s; }
 .kachel-karte .bild { width: 54px; height: 54px; filter: drop-shadow(0 4px 3px rgba(28, 37, 48, .18)); transition: transform .3s cubic-bezier(.3, 1.6, .5, 1); }
 .kachel-radio input:checked + .kachel-karte { box-shadow: inset 0 0 0 2.5px var(--ink), var(--schatten-1); }
@@ -1177,7 +554,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .wahl-raster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .wahl-raster ~ .feld-hinweis, .wahl-raster ~ .fehler { margin-top: 8px; }
 .wahl { position: relative; display: block; }
-.wahl input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.wahl input { position: absolute; opacity: 0; top: 0; right: 0; bottom: 0; left: 0; margin: 0; cursor: pointer; }
 .wahl span { display: flex; flex-direction: column; gap: 1px; line-height: 1.2; align-items: center; justify-content: center; min-height: 52px; padding: 8px 10px; border-radius: var(--r-s); background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line); font-weight: 600; text-align: center; cursor: pointer; }
 .wahl input:checked + span { background: var(--ink); color: var(--surface); box-shadow: none; }
 .wahl input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
@@ -1267,7 +644,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tabs-inner { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; }
 .tab { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 58px; padding: 7px 2px 6px; border-radius: 24px; color: var(--muted); font-weight: 600; font-size: min(0.875rem, 15px); letter-spacing: -0.005em; white-space: nowrap; text-decoration: none; transition: background .2s, color .2s; }
 .tab .i { width: 24px; height: 24px; }
-.tab[aria-current="page"] { color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.tab[aria-current="page"] { color: var(--ink); background: rgba(128, 140, 155, .16); background: color-mix(in srgb, var(--ink) 8%, transparent); }
 .tab-plus { width: 46px; height: 28px; border-radius: 999px; background: var(--klinker); color: var(--on-klinker); display: grid; place-items: center; box-shadow: 0 3px 8px color-mix(in srgb, var(--klinker) 40%, transparent); }
 .tab-plus .i { width: 20px; height: 20px; stroke-width: 2.6; }
 .tab-icon { position: relative; display: inline-flex; }
@@ -1373,10 +750,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .profil-belege .i { color: var(--hedge); }
 
 /* ----- Begrüßung ----- */
-.start { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; background: var(--paper); padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); overflow-y: auto; }
+.start { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 2000; display: grid; place-items: center; background: var(--paper); padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); overflow-y: auto; }
 .start[hidden] { display: none; }
 .start-inhalt { position: relative; width: 100%; max-width: 440px; display: grid; gap: 18px; padding-top: 44px; }
-.start-bild { height: clamp(150px, 26vh, 230px); border-radius: var(--r-xl); }
+.start-bild { height: 190px; height: clamp(150px, 26vh, 230px); border-radius: var(--r-xl); }
 .start-schrift { display: grid; gap: 10px; }
 .start-schrift .wahl-knopf { min-height: 64px; flex-direction: row; justify-content: space-between; padding: 10px 18px; text-align: left; }
 .start-schrift .wahl-knopf span:last-child { color: var(--muted); font-weight: 400; }
@@ -1417,7 +794,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .hs-l, .hs-r, .hs-ganz, .hs-funken, .hs-wort { transform-box: fill-box; }
 .hs-ganz { transform-origin: 50% 55%; }
 .hs-funken { opacity: 0; transform-origin: 50% 100%; }
-.intro { position: fixed; inset: 0; z-index: 3000; display: grid; place-items: center; color: var(--ink);
+.intro { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 3000; display: grid; place-items: center; color: var(--ink);
   background: linear-gradient(180deg, var(--sky-oben) 0%, var(--sky-unten) 60%, var(--paper) 100%);
   animation: intro-weg .35s ease 1.85s forwards; }
 .intro .hs { width: min(70vw, 320px); height: auto; }
@@ -1435,7 +812,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @keyframes intro-weg { to { opacity: 0; visibility: hidden; } }
 
 /* ----- Handschlag: Job bestätigt ----- */
-.feier { position: fixed; inset: 0; z-index: 2600; display: grid; place-items: center; padding: 24px; background: rgba(8, 13, 20, .55); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.feier { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 2600; display: grid; place-items: center; padding: 24px; background: rgba(8, 13, 20, .55); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
 .feier-karte { width: min(100%, 350px); display: grid; justify-items: center; gap: 10px; padding: 30px 24px 22px; border-radius: var(--r-xl); background: var(--surface); color: var(--ink); text-align: center; box-shadow: var(--schatten-2); }
 .feier-scheibe { width: 172px; height: 172px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 40% 30%, #FFD34D 0%, var(--accent) 55%, var(--accent-tief) 100%); color: #172029; box-shadow: inset 0 -6px 0 rgba(0, 0, 0, .08); }
 .feier-scheibe .hs { width: 138px; height: auto; }
@@ -1502,7 +879,7 @@ a.btn { text-decoration: none; }
 .schalter-text { display: grid; gap: 1px; min-width: 0; }
 .schalter-text strong { font-weight: 600; }
 .schalter-text span { color: var(--muted); font-size: 0.9375rem; }
-.schalter { flex: none; position: relative; width: 56px; height: 34px; padding: 0; border: 0; border-radius: 999px; background: color-mix(in srgb, var(--muted) 45%, var(--tile)); cursor: pointer; transition: background .2s; }
+.schalter { flex: none; position: relative; width: 56px; height: 34px; padding: 0; border: 0; border-radius: 999px; background: #9AA4B1; background: color-mix(in srgb, var(--muted) 45%, var(--tile)); cursor: pointer; transition: background .2s; }
 .schalter span { position: absolute; left: 3px; top: 3px; width: 28px; height: 28px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .2s; }
 .schalter[aria-checked="true"] { background: var(--hedge); }
 .schalter[aria-checked="true"] span { transform: translateX(22px); }
@@ -1636,7 +1013,8 @@ a.btn { text-decoration: none; }
       </div>
       <div class="chips kat-leiste" id="chips-karte" role="group" aria-label="Kategorie filtern"></div>
       <div class="karte">
-        <div id="map" role="region" aria-label="Karte von Garbsen mit Anfragen"></div>
+        <div id="map" role="region" tabindex="0" aria-label="Karte von Garbsen mit Anfragen. Verschieben mit den Pfeiltasten, zoomen mit Plus und Minus."></div>
+        <p class="k-quelle">© OpenStreetMap-Mitwirkende, GeoNames</p>
         <div class="karte-knoepfe">
           <div class="knopf-gruppe">
             <button type="button" class="karte-knopf" data-karte="rein" aria-label="Hineinzoomen"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
@@ -1662,12 +1040,10 @@ a.btn { text-decoration: none; }
         <span><i class="sw sw-offen"></i>Sucht Hilfe</span>
         <span><i class="sw sw-eigen"></i>Deine Anfrage</span>
         <span><i class="sw sw-zugesagt"></i>Deine Zusage</span>
-        <span id="legende-stadtteil" hidden><i class="sw sw-stadtteil"></i>Stadtteil (ungefähr)</span>
+        <span><i class="sw sw-sammel" aria-hidden="true">3</i>Mehrere Anfragen</span>
+        <span><i class="sw sw-stadtteil"></i>Dein Stadtteil</span>
       </div>
-      <div class="hinweis-karte" id="karte-hinweis" hidden>
-        <svg class="i" aria-hidden="true"><use href="#i-info"/></svg>
-        <span><strong>Vereinfachte Karte.</strong> Diese Vorschau darf keine Kartenbilder nachladen. Sobald die App auf einem eigenen Server läuft, liegt hier die Straßenkarte von OpenStreetMap.</span>
-      </div>
+      <p class="karte-unterzeile">Die Stadtteile sind vereinfacht gezeichnet. Anfragen stehen nur ungefähr auf der Karte, 100 bis 400&nbsp;m neben der Adresse.</p>
     </section>
 
     <!-- ===== Anfrage erstellen ===== -->
@@ -1840,7 +1216,6 @@ a.btn { text-decoration: none; }
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/vendor/leaflet-1.9.4.js"></script>
 <script>
 /* Tätigkeits-Bilder: Microsoft Fluent Emoji 3D (MIT), siehe src/kategorien/LIZENZ-fluent-emoji.txt */
 const KAT_BILDER = {
@@ -1896,10 +1271,11 @@ function RECHT_TEXTE(b, e) {
 
         <h3>2. Wenn du die App aufrufst</h3>
         <p>Die App liegt bei GitHub Pages, einem Dienst von GitHub (GitHub B.V., Prins Bernhardplein 200, 1097 JB Amsterdam, Niederlande, und GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA). Beim Aufruf verarbeitet GitHub technisch notwendige Daten wie deine IP-Adresse, Zeitpunkt, Browser und Betriebssystem, um die Seite auszuliefern und vor Angriffen zu schützen. Rechtsgrundlage ist unser berechtigtes Interesse an einer sicheren, erreichbaren App (Art. 6 Abs. 1 lit. f DSGVO). Für Übermittlungen in die USA stützt sich GitHub auf das EU-US Data Privacy Framework und auf EU-Standardvertragsklauseln.</p>
-        <p>Schriften und die Kartenbibliothek liefern wir selbst aus. Dafür werden keine Daten an Google oder andere Anbieter übertragen.</p>
+        <p>Schriften, Bilder und die Bibliothek für das 3D-Modell liefern wir selbst aus. Dafür werden keine Daten an Google oder andere Anbieter übertragen.</p>
 
         <h3>3. Karte</h3>
-        <p>Die Kartenbilder lädt dein Gerät von den Servern der OpenStreetMap Foundation (St John’s Innovation Centre, Cowley Road, Cambridge, CB4 0WS, Großbritannien). Dabei wird deine IP-Adresse übertragen. Für Großbritannien gilt ein Angemessenheitsbeschluss der EU-Kommission. Sind diese Server nicht erreichbar, lädt die App die Kartenbilder von openstreetmap.de (FOSSGIS e.V., Deutschland) oder von CARTO. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO: Ohne Karte kann die App nicht zeigen, wo Hilfe gesucht wird.</p>
+        <p>Die Karte zeichnet die App selbst, als vereinfachte Übersicht der Stadtteile von Garbsen. Dafür lädt dein Gerät nichts von Kartendiensten, und es werden keine Daten an andere Anbieter übertragen. Die Lage der Stadtteile beruht auf Daten von OpenStreetMap (© OpenStreetMap-Mitwirkende, ODbL) und GeoNames (CC BY 4.0).</p>
+        <p>Anfragen erscheinen auf der Karte nur ungefähr: als Punkt 100 bis 400 Meter neben der echten Adresse oder, weiter herausgezoomt, als Zahl im Stadtteil.</p>
         <p>Deinen eigenen Standort fragt die App nicht ab. Sie rechnet Entfernungen von der Mitte deines Stadtteils aus.</p>
 
         <h3>4. Speicher auf deinem Gerät</h3>
@@ -2779,22 +2155,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     betreiber: { name: '', anschrift: '', email: '', telefon: '' }
   };
 
-  const KARTE = {
-    // Kartenkacheln ohne API-Key. Lädt ein Anbieter nicht, nimmt die App automatisch den nächsten.
-    // OpenStreetMap erlaubt das für kleine Projekte mit Namensnennung; bei vielen Nutzern auf einen eigenen Anbieter wechseln.
-    anbieter: [
-      { name: 'OpenStreetMap', url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', maxNativeZoom: 19,
-        quelle: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende' },
-      { name: 'OpenStreetMap Deutschland', url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png', maxNativeZoom: 18,
-        quelle: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende, <a href="https://www.openstreetmap.de">openstreetmap.de</a>' },
-      { name: 'CARTO', url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', maxNativeZoom: 20, subdomains: 'abcd',
-        quelle: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende &copy; <a href="https://carto.com/attributions">CARTO</a>' }
-    ],
-    ortsQuelle: 'Orte: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende, GeoNames',
-    grenzen: [[52.33, 9.38], [52.55, 9.76]],      // so weit lässt sich die Karte verschieben
-    minZoom: 11,
-    maxZoom: 18
-  };
+
 
   // Stadtteile von Garbsen. Mittelpunkte aus OpenStreetMap-Haltestellen und GeoNames, auf ca. 100 m genau.
   // Dieselbe Liste steht in supabase/schema.sql.
@@ -2882,7 +2243,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
 
   const SPEICHER = 'nachbarhand-prototyp-v3';
   const VIEWS = ['entdecken', 'karte', 'neu', 'auftraege'];
-  const RECHT = RECHT_TEXTE(CONFIG.betreiber, (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+  const RECHT = RECHT_TEXTE(CONFIG.betreiber, (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
   const FRAGEN = FRAGEN_TEXTE(CONFIG);
   const istSeite = (n) => !!RECHT[n] || n === 'fragen'; // Seiten mit eigener Adresse (#impressum, #fragen …)
   const EIGEN_VERSATZ = [[180, -150], [-160, 170], [220, 160], [-210, -190]]; // Demo: Meter Nord/Ost ab deinem Standort
@@ -2982,7 +2343,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   }
 
   /* ===== Hilfsfunktionen ===== */
-  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const euro = (n) => n.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
   const euroKurz = (n) => Number.isInteger(n) ? `${n} €` : euro(n);
   const katName = (id) => (KATEGORIEN.find((k) => k.id === id) || {}).name || '';
@@ -3070,7 +2431,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       const n = daten[i + 1];
       return `${WOCHENTAGE[d.getDay()]} ${d.getDate()}.${!n || n.getMonth() !== d.getMonth() ? ' ' + MONATE[d.getMonth()] : ''}`;
     });
-    return teile.length === 1 ? teile[0] : `${teile.slice(0, -1).join(', ')} oder ${teile.at(-1)}`;
+    return teile.length === 1 ? teile[0] : `${teile.slice(0, -1).join(', ')} oder ${teile[teile.length - 1]}`;
   }
   const uhrzeitText = (hhmm) => { const [h, m] = String(hhmm || '16:00').split(':').map(Number); return `gegen ${h}${m ? ':' + String(m).padStart(2, '0') : ''} Uhr`; };
   // Liest den Termin aus dem Wann-Text: „Di. 10. Nov., nachmittags“, „Sa./So. 14./15. Nov.“, „Woche 16.–22. Nov.“,
@@ -3084,8 +2445,9 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   }
   // Alle Tage mit Datum aus einem Text wie „Mo. 16., Mi. 18. oder Fr. 20. Nov.“ (Monat gilt rückwärts)
   function datenAusText(datum) {
-    const tage = [...datum.matchAll(/(\d{1,2})\.(?:\s(Jan\.|Feb\.|März|Apr\.|Mai|Juni|Juli|Aug\.|Sept\.|Okt\.|Nov\.|Dez\.))?/g)]
-      .map((m) => [Number(m[1]), m[2] ? MONAT_INDEX[m[2]] : null]);
+    const tage = [];
+    const muster = /(\d{1,2})\.(?:\s(Jan\.|Feb\.|März|Apr\.|Mai|Juni|Juli|Aug\.|Sept\.|Okt\.|Nov\.|Dez\.))?/g;
+    for (let m = muster.exec(datum); m; m = muster.exec(datum)) tage.push([Number(m[1]), m[2] ? MONAT_INDEX[m[2]] : null]);
     if (!tage.some((t) => t[1] !== null)) return [];
     for (let k = tage.length - 2; k >= 0; k--) if (tage[k][1] === null) tage[k][1] = tage[k + 1][1];
     for (let k = 1; k < tage.length; k++) if (tage[k][1] === null) tage[k][1] = tage[k - 1][1];
@@ -3102,7 +2464,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     const daten = datenAusText(datum);
     if (daten.length) {
       von = daten[0];
-      bis = daten.at(-1);
+      bis = daten[daten.length - 1];
       genau = true;
     } else if (/^Heute/.test(datum)) von = bis = heute();
     else if (/^Morgen/.test(datum)) von = bis = plusTage(heute(), 1);
@@ -3146,7 +2508,8 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   const demoAblauf = (bis) => bis ? +plusTage(ausIso(bis), 1) : Date.now() + MAX_TAGE * TAG_MS;
 
   /* ===== Anstößige Wörter (App Store 1.2). Dieselbe Liste prüft die Datenbank in privat.anstoessig. ===== */
-  const ANSTOESSIG = new RegExp('(?<![a-zäöüß])(hure|fotze|wichser|arschloch|spast(i|en)?(?![a-zäöüß])|mongo(?![a-zäöüß])|nutte|(ge)?fick(en|t|st|e|er|te|ten)?(?![a-zäöüß])|bitch|kanake|neger|nigger|schwuchtel|vergewaltig)' +
+  // Ohne „Lookbehind“ (?<!…): Das können iPhones erst ab iOS 16.4, ältere würden beim Start abstürzen
+  const ANSTOESSIG = new RegExp('(?:^|[^a-zäöüß])(hure|fotze|wichser|arschloch|spast(i|en)?(?![a-zäöüß])|mongo(?![a-zäöüß])|nutte|(ge)?fick(en|t|st|e|er|te|ten)?(?![a-zäöüß])|bitch|kanake|neger|nigger|schwuchtel|vergewaltig)' +
     '|hurensohn|schlampe|missgeburt|heil hitler|sieg heil');
   const anstoessig = (t) => ANSTOESSIG.test(String(t || '').toLowerCase().replace(/[013457@$]/g, (z) => ({ 0: 'o', 1: 'i', 3: 'e', 4: 'a', 5: 's', 7: 't', '@': 'a', $: 's' }[z])));
 
@@ -3787,8 +3150,25 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   }
   new MutationObserver(miniThema).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-  /* ===== Karte (Leaflet) ===== */
-  const kartenStatus = { map: null, kacheln: null, anbieter: 0, pins: null, bereich: null, stadtteile: null, labels: null, vereinfacht: false, geladen: 0, fehler: 0, marker: new Map() };
+  /* ===== Karte: eigene Zeichnung von Garbsen (SVG) =====
+     Ohne Kartendienst und ohne Kartenbilder: lädt sofort, geht offline und auf älteren Geräten.
+     Die Stadtteile sind vereinfacht: Flächen um die Ortsmitten, wo sie sich berühren, geteilt.
+     Weit weg zeigt jeder Stadtteil ein Sammel-Schild mit der Zahl der Anfragen, beim Hineinzoomen
+     erscheinen die einzelnen Preisschilder. Lagen sind ohnehin ungefähr (100 bis 400 m neben der Adresse). */
+  const KARTE = {
+    mitte: { lat: 52.44, lng: 9.575 },
+    groesster: 0.45,  // so nah lässt sich heranzoomen (Bildpunkte je Meter). Näher bringt nichts, die Lagen sind ungefähr
+    flaeche: 1.7,     // Fläche eines Stadtteils: so viel größer als der Radius in STADTTEILE
+    stadt: 1.9,       // Stadtgebiet: so weit reicht die helle Fläche um jeden Stadtteil
+    luecke: 34,       // Meter Abstand zwischen benachbarten Stadtteilen
+    sockel: 5         // Bildpunkte „Dicke“ der Stadtteil-Platten (wie bei der Miniatur)
+  };
+  const M_LAT = 110574;
+  const M_LNG = 111320 * Math.cos(KARTE.mitte.lat * Math.PI / 180);
+  const inMeter = (lat, lng) => ({ x: (lng - KARTE.mitte.lng) * M_LNG, y: (KARTE.mitte.lat - lat) * M_LAT });
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const kartenStatus = { svg: null, welt: null, schicht: null, huelle: null, w: 0, h: 0, blick: null, ruhig: null,
+    formen: [], grenzen: null, bewegt: false, gezogen: 0, marker: new Map(), elemente: [], gruppen: [], stufe: null, animation: 0 };
 
   function dunklesThema() {
     const t = document.documentElement.getAttribute('data-theme');
@@ -3796,210 +3176,443 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     if (t === 'light') return false;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
-  function kachelSchicht(i) {
-    const a = KARTE.anbieter[i];
-    const s = window.L.tileLayer(a.url, { maxZoom: KARTE.maxZoom, maxNativeZoom: a.maxNativeZoom, subdomains: a.subdomains || 'abc', attribution: a.quelle });
-    s.on('tileload', () => { kartenStatus.geladen++; });
-    s.on('tileerror', () => {
-      kartenStatus.fehler++;
-      if (!kartenStatus.geladen && kartenStatus.fehler >= 4) naechsterAnbieter();
+
+  // Polygon an einer Geraden abschneiden: behält die Punkte mit n·p <= g (Sutherland-Hodgman)
+  function abschneiden(pkt, nx, ny, g) {
+    const aus = [];
+    for (let i = 0; i < pkt.length; i++) {
+      const p = pkt[i], q = pkt[(i + 1) % pkt.length];
+      const dp = p.x * nx + p.y * ny - g, dq = q.x * nx + q.y * ny - g;
+      if (dp <= 0) aus.push(p);
+      if ((dp <= 0) !== (dq <= 0)) { const t = dp / (dp - dq); aus.push({ x: p.x + (q.x - p.x) * t, y: p.y + (q.y - p.y) * t }); }
+    }
+    return aus;
+  }
+  // Ecken weich machen (Chaikin)
+  function glaetten(pkt) {
+    const aus = [];
+    for (let i = 0; i < pkt.length; i++) {
+      const p = pkt[i], q = pkt[(i + 1) % pkt.length];
+      aus.push({ x: p.x * 0.75 + q.x * 0.25, y: p.y * 0.75 + q.y * 0.25 }, { x: p.x * 0.25 + q.x * 0.75, y: p.y * 0.25 + q.y * 0.75 });
+    }
+    return aus;
+  }
+  // Leicht unregelmäßiger Kreis als Punktliste
+  function welle(c, R, phase, n) {
+    const pkt = [];
+    for (let i = 0; i < n; i++) {
+      const w = i / n * Math.PI * 2;
+      const f = 1 + 0.07 * Math.sin(3 * w + phase) + 0.04 * Math.sin(5 * w + phase * 2);
+      pkt.push({ x: c.x + Math.cos(w) * R * f, y: c.y + Math.sin(w) * R * f });
+    }
+    return pkt;
+  }
+  const alsPfad = (pkt) => 'M' + pkt.map((p) => `${Math.round(p.x)} ${Math.round(p.y)}`).join('L') + 'Z';
+  // Stadtteil-Flächen: leicht unregelmäßige Kreise, Überschneidungen nach dem Potenzdiagramm geteilt
+  function stadtteilFormen() {
+    const teile = STADTTEILE.map((s) => ({ s, c: inMeter(s.lat, s.lng), R: s.r * KARTE.flaeche }));
+    return teile.map((a) => {
+      const phase = a.s.name.length * 0.9 + a.s.name.charCodeAt(0) * 0.13;
+      let pkt = welle(a.c, a.R, phase, 40);
+      teile.forEach((b) => {
+        if (b === a) return;
+        const dx = b.c.x - a.c.x, dy = b.c.y - a.c.y, d = Math.hypot(dx, dy);
+        if (d >= (a.R + b.R) * 1.12) return;
+        const g = ((b.c.x * b.c.x + b.c.y * b.c.y) - (a.c.x * a.c.x + a.c.y * a.c.y) - b.R * b.R + a.R * a.R) / (2 * d) - KARTE.luecke / 2;
+        pkt = abschneiden(pkt, dx / d, dy / d, g);
+      });
+      pkt = glaetten(glaetten(pkt));
+      const d = alsPfad(pkt);
+      return { name: a.s.name, c: a.c, R: a.R, d, pkt, phase };
     });
-    return s;
-  }
-  function naechsterAnbieter() {
-    const k = kartenStatus;
-    if (k.vereinfacht || !k.map) return;
-    if (k.kacheln && k.map.hasLayer(k.kacheln)) k.map.removeLayer(k.kacheln);
-    k.anbieter++;
-    k.fehler = 0;
-    if (k.anbieter >= KARTE.anbieter.length) { vereinfachen(); return; }
-    k.kacheln = kachelSchicht(k.anbieter).addTo(k.map);
   }
 
-  // Ganz Garbsen zeigen. Ist die Karte hoch genug, liegt die Stadt unterhalb der Kartenknöpfe, sonst links daneben.
-  function zeigeGanzGarbsen() {
-    const map = kartenStatus.map;
-    const bounds = window.L.latLngBounds(STADTTEILE.map((s) => [s.lat, s.lng]));
-    const knoepfe = document.querySelector('.karte-knoepfe');
-    const unterKnoepfen = knoepfe.offsetTop + knoepfe.offsetHeight + 30;
-    const hoch = map.getSize().y - unterKnoepfen - 40 > map.getSize().x * 0.7;
-    map.fitBounds(bounds, hoch
-      ? { paddingTopLeft: [26, unterKnoepfen], paddingBottomRight: [26, 40] }
-      : { paddingTopLeft: [40, 40], paddingBottomRight: [72, 40] });
-  }
-
-  // Bei weiter Ansicht werden die Preisschilder kompakter, damit sie sich weniger überdecken.
-  function zoomKlasse() {
-    const map = kartenStatus.map;
-    if (map) map.getContainer().classList.toggle('zoom-weit', map.getZoom() < 12.75);
+  function svgEl(name, attr) {
+    const el = document.createElementNS(SVG_NS, name);
+    Object.keys(attr || {}).forEach((k) => el.setAttribute(k, attr[k]));
+    return el;
   }
 
   function initKarte() {
-    if (kartenStatus.map) return true;
-    const L = window.L;
-    if (!L || !L.map) { $('#karte-fehler').hidden = false; return false; }
+    const k = kartenStatus;
+    if (k.svg) return true;
+    const huelle = $('#map');
+    if (!huelle || !document.createElementNS) { $('#karte-fehler').hidden = false; return false; }
+    k.huelle = huelle;
+    k.formen = stadtteilFormen();
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    k.formen.forEach((f) => f.pkt.forEach((p) => { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }));
+    k.grenzen = { x0, y0, x1, y1 };
 
-    const map = L.map('map', {
-      zoomControl: false,
-      zoomSnap: 0.25,
-      zoomDelta: 0.5,
-      wheelPxPerZoomLevel: 90,
-      minZoom: KARTE.minZoom,
-      maxZoom: KARTE.maxZoom,
-      maxBounds: KARTE.grenzen,
-      maxBoundsViscosity: 0.85
+    const svg = svgEl('svg', { class: 'k-svg', 'aria-hidden': 'true', focusable: 'false' });
+    const welt = svgEl('g', { class: 'k-welt' });
+    const sockel = svgEl('g', { class: 'k-sockel' });
+    const flaechen = svgEl('g', { class: 'k-flaechen' });
+    // Stadtgebiet: weiche Fläche um alle Stadtteile, damit Garbsen als eine Stadt erkennbar ist
+    const stadtRand = svgEl('g', { class: 'k-stadt-rand' }), stadt = svgEl('g', { class: 'k-stadt' });
+    k.formen.forEach((f) => {
+      stadtRand.appendChild(svgEl('path', { d: alsPfad(welle(f.c, f.R * KARTE.stadt + 70, f.phase + 1, 32)) }));
+      stadt.appendChild(svgEl('path', { d: alsPfad(welle(f.c, f.R * KARTE.stadt, f.phase + 1, 32)) }));
     });
-    map.attributionControl.setPrefix(false);
-    L.control.scale({ imperial: false, position: 'bottomleft', maxWidth: 100 }).addTo(map);
-    map.createPane('stadtteile').style.zIndex = 350;
-    map.createPane('labels').style.zIndex = 450;
-    map.getPane('labels').style.pointerEvents = 'none';
-
-    kartenStatus.map = map;
-    // In der Claude-Vorschau sind Kartenbilder gesperrt: dort gleich die vereinfachte Karte
-    if (!VORSCHAU) kartenStatus.kacheln = kachelSchicht(0).addTo(map);
-    aktualisiereKachelThema();
-    kartenStatus.bereich = L.layerGroup().addTo(map);
-    kartenStatus.pins = L.layerGroup().addTo(map);
-
-    map.on('zoomend', () => { zoomKlasse(); labelsAufraeumen(); });
-    map.on('resize moveend', labelsAufraeumen);
-    map.on('click', () => { if (ui.markiert) { ui.markiert = null; renderKarte(); } });
-    zeigeGanzGarbsen();
-    zoomKlasse();
-    if (VORSCHAU) vereinfachen();
+    welt.appendChild(stadtRand); welt.appendChild(stadt);
+    k.formen.forEach((f) => {
+      sockel.appendChild(svgEl('path', { d: f.d }));
+      const p = svgEl('path', { d: f.d, class: 'k-flaeche', 'data-stadtteil': f.name });
+      flaechen.appendChild(p);
+      f.el = p;
+    });
+    k.bereich = svgEl('circle', { class: 'k-bereich', r: CONFIG.bereichMeter, cx: 0, cy: 0 });
+    k.bereich.style.display = 'none';
+    welt.appendChild(sockel); welt.appendChild(flaechen); welt.appendChild(k.bereich);
+    svg.appendChild(welt);
+    const schicht = document.createElement('div');
+    schicht.className = 'k-schicht';
+    const massstab = document.createElement('div');
+    massstab.className = 'k-massstab';
+    massstab.setAttribute('aria-hidden', 'true');
+    huelle.textContent = '';
+    huelle.appendChild(svg); huelle.appendChild(schicht); huelle.appendChild(massstab);
+    Object.assign(k, { svg, welt, schicht, massstab, sockel });
+    kartenBedienung();
+    kartenGroesse(true);
+    if (window.ResizeObserver) new ResizeObserver(() => kartenGroesse(false)).observe(huelle);
+    else window.addEventListener('resize', () => kartenGroesse(false));
     return true;
   }
 
-  // Wenn keine Kartenbilder laden dürfen (z. B. in der Claude-Vorschau), zeigen wir die Stadtteile als vereinfachte Karte.
-  function vereinfachen() {
+  // Ausschnitt, der ganz Garbsen zeigt. Ist die Karte hoch genug, liegt die Stadt unterhalb der Knöpfe, sonst links daneben.
+  function blickAufAlles() {
+    const k = kartenStatus, g = k.grenzen;
+    const knoepfe = document.querySelector('.karte-knoepfe');
+    const unter = knoepfe ? knoepfe.offsetTop + knoepfe.offsetHeight + 10 : 70;
+    const neben = knoepfe ? k.w - knoepfe.offsetLeft + 10 : 70;
+    const bw = g.x1 - g.x0, bh = g.y1 - g.y0;
+    // Die Stadt liegt unter den Knöpfen oder links daneben, je nachdem, wo sie größer wird
+    const plaene = [{ l: 12, r: 12, o: unter, u: 30 }, { l: 12, r: neben, o: 14, u: 30 }].map((rand) => ({ rand, s: Math.min((k.w - rand.l - rand.r) / bw, (k.h - rand.o - rand.u) / bh) }));
+    const { rand, s } = plaene[0].s >= plaene[1].s ? plaene[0] : plaene[1];
+    return { s, x: rand.l + (k.w - rand.l - rand.r - bw * s) / 2 - g.x0 * s, y: rand.o + (k.h - rand.o - rand.u - bh * s) / 2 - g.y0 * s };
+  }
+  // Ausschnitt um einen Punkt (Meter) mit Maßstab s
+  function blickAuf(m, s) {
     const k = kartenStatus;
-    if (k.vereinfacht || !k.map) return;
-    k.vereinfacht = true;
-    const L = window.L;
-    if (k.kacheln && k.map.hasLayer(k.kacheln)) k.map.removeLayer(k.kacheln);
-    k.map.attributionControl.addAttribution(KARTE.ortsQuelle);
-    k.stadtteile = L.layerGroup(STADTTEILE.map((s) => L.circle([s.lat, s.lng], {
-      radius: s.r, pane: 'stadtteile', className: 'stadtteil-flaeche', interactive: false, weight: 1
-    }))).addTo(k.map);
-    k.labels = L.layerGroup(STADTTEILE.map((s) => L.marker([s.lat, s.lng], {
-      pane: 'labels', interactive: false, keyboard: false,
-      icon: L.divIcon({ className: 'stadtteil-label', html: `<span>${esc(s.name)}</span>`, iconSize: null })
-    }))).addTo(k.map);
-    $('#karte-hinweis').hidden = !VORSCHAU;
-    $('#legende-stadtteil').hidden = false;
-    requestAnimationFrame(labelsAufraeumen);
+    return { s, x: k.w / 2 - m.x * s, y: k.h / 2 - m.y * s };
+  }
+  function blickBegrenzen(b) {
+    const k = kartenStatus, g = k.grenzen;
+    const alles = blickAufAlles();
+    const s = Math.max(alles.s * 0.85, Math.min(KARTE.groesster, b.s));
+    // Garbsen darf nicht ganz aus dem Bild rutschen
+    const x = Math.min(k.w * 0.6 - g.x0 * s, Math.max(k.w * 0.4 - g.x1 * s, b.x));
+    const y = Math.min(k.h * 0.6 - g.y0 * s, Math.max(k.h * 0.4 - g.y1 * s, b.y));
+    return { s, x, y };
   }
 
-  // Blendet Stadtteil-Namen aus, die von Preisschildern, Knöpfen oder anderen Namen verdeckt würden.
-  function labelsAufraeumen() {
+  function kartenGroesse(neu) {
     const k = kartenStatus;
-    if (!k.labels || !k.map) return;
-    const rahmen = k.map.getContainer().getBoundingClientRect();
-    const belegt = [document.querySelector('.karte-knoepfe').getBoundingClientRect()];
-    k.pins.eachLayer((m) => {
-      const pin = m.getElement() && m.getElement().querySelector('.pin');
-      if (pin) belegt.push(pin.getBoundingClientRect());
+    if (!k.huelle) return;
+    const w = k.huelle.clientWidth, h = k.huelle.clientHeight;
+    if (!w || !h || (w === k.w && h === k.h && !neu)) return;
+    const mitte = k.blick && k.w ? { x: (k.w / 2 - k.blick.x) / k.blick.s, y: (k.h / 2 - k.blick.y) / k.blick.s } : null;
+    k.w = w; k.h = h;
+    k.svg.setAttribute('width', w); k.svg.setAttribute('height', h);
+    // Ohne eigene Bewegung bleibt ganz Garbsen im Bild, sonst bleibt die Mitte stehen
+    if (!k.blick || !k.bewegt || !mitte) k.blick = blickAufAlles();
+    else k.blick = blickBegrenzen(blickAuf(mitte, k.blick.s));
+    zeichneBlick();
+  }
+
+  function zeichneBlick() {
+    const k = kartenStatus, b = k.blick;
+    if (!k.svg || !b) return;
+    k.welt.setAttribute('transform', `matrix(${b.s} 0 0 ${b.s} ${b.x} ${b.y})`);
+    // Die Platten sind immer gleich dick, egal wie nah man herangeht
+    k.sockel.setAttribute('transform', `translate(0 ${(KARTE.sockel / b.s).toFixed(1)})`);
+    // Bei jeder halben Zoomstufe neu sortieren, welche Schilder zusammengefasst werden
+    if (zoomStufe(b.s) !== k.stufe) { renderKarte(true); return; }
+    k.elemente.forEach((e) => {
+      const x = Math.round(e.m.x * b.s + b.x), y = Math.round(e.m.y * b.s + b.y);
+      // Was weit außerhalb liegt, wird nicht gezeichnet und ist auch mit der Tastatur nicht erreichbar
+      const drin = x > -80 && x < k.w + 80 && y > -60 && y < k.h + 80;
+      if (drin !== e.drin) { e.drin = drin; e.el.style.visibility = drin ? '' : 'hidden'; }
+      if (drin) e.el.style.transform = `translate(${x}px, ${y}px)`;
     });
-    k.labels.eachLayer((m) => {
-      const el = m.getElement();
-      const span = el && el.firstElementChild;
-      if (!span) return;
-      span.classList.remove('versteckt');
-      span.style.marginLeft = '0px';
-      let r = span.getBoundingClientRect();
-      // Namen am Rand nach innen schieben statt sie abzuschneiden
-      const links = rahmen.left + 6 - r.left, rechts = rahmen.right - 6 - r.right;
-      if (links > 0 || rechts < 0) {
-        span.style.marginLeft = (links > 0 ? links : rechts) + 'px';
-        r = span.getBoundingClientRect();
+    // Maßstab: eine runde Strecke zwischen 60 und 130 Bildpunkten
+    const strecken = [50, 100, 200, 500, 1000, 2000, 5000];
+    const m = strecken.find((x) => x * b.s >= 50) || 5000;
+    k.massstab.style.width = Math.round(m * b.s) + 'px';
+    k.massstab.textContent = m >= 1000 ? `${m / 1000} km` : `${m} m`;
+    clearTimeout(k.ruhig);
+    k.ruhig = setTimeout(namenAufraeumen, 120);
+  }
+
+  const zoomStufe = (s) => Math.round(Math.log(s) / Math.LN2 * 2);
+
+  function blickSetzen(ziel, sanft) {
+    const k = kartenStatus;
+    ziel = blickBegrenzen(ziel);
+    cancelAnimationFrame(k.animation);
+    const weniger = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!sanft || weniger || !k.blick) { k.blick = ziel; zeichneBlick(); return; }
+    const von = k.blick, start = performance.now(), dauer = 320;
+    const schritt = (t) => {
+      const f = Math.min(1, (t - start) / dauer), e = 1 - Math.pow(1 - f, 3);
+      // Maßstab logarithmisch, damit das Zoomen gleichmäßig wirkt
+      const s = von.s * Math.pow(ziel.s / von.s, e);
+      const mv = { x: (k.w / 2 - von.x) / von.s, y: (k.h / 2 - von.y) / von.s }, mz = { x: (k.w / 2 - ziel.x) / ziel.s, y: (k.h / 2 - ziel.y) / ziel.s };
+      k.blick = blickAuf({ x: mv.x + (mz.x - mv.x) * e, y: mv.y + (mz.y - mv.y) * e }, s);
+      zeichneBlick();
+      if (f < 1) k.animation = requestAnimationFrame(schritt);
+    };
+    k.animation = requestAnimationFrame(schritt);
+  }
+  function zoomen(faktor, px, py, sanft) {
+    const k = kartenStatus, b = k.blick;
+    if (!b) return;
+    if (px === undefined) { px = k.w / 2; py = k.h / 2; }
+    const s = Math.max(blickAufAlles().s * 0.85, Math.min(KARTE.groesster, b.s * faktor));
+    k.bewegt = true;
+    blickSetzen({ s, x: px - (px - b.x) * s / b.s, y: py - (py - b.y) * s / b.s }, sanft);
+  }
+  function zeigeStadtteil(name) {
+    const f = kartenStatus.formen.find((x) => x.name === name);
+    if (!f) return;
+    const k = kartenStatus;
+    kartenStatus.bewegt = true;
+    blickSetzen(blickAuf({ x: f.c.x, y: f.c.y + 60 }, Math.min(k.w, k.h) * 0.8 / (2 * f.R)), true);
+  }
+  function zeigeGanzGarbsen() { kartenStatus.bewegt = false; blickSetzen(blickAufAlles(), true); }
+
+  // Ziehen, Zwei-Finger-Zoom, Doppeltippen, Mausrad und Tasten
+  function kartenBedienung() {
+    const k = kartenStatus, h = k.huelle;
+    const finger = new Map();
+    let start = null, letzterTipp = 0, letzterOrt = null;
+    const ort = (e) => { const r = h.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+    const runter = (id, p, ziel) => {
+      cancelAnimationFrame(k.animation);
+      finger.set(id, p);
+      if (finger.size === 1) start = { p, blick: k.blick, ziel, weg: 0 };
+      else if (finger.size === 2) {
+        const [a, b] = [...finger.values()];
+        start = { pinch: true, abstand: Math.hypot(a.x - b.x, a.y - b.y) || 1, mitte: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, blick: k.blick, weg: 99 };
       }
-      const draussen = r.top < rahmen.top || r.bottom > rahmen.bottom - 24 || Math.abs(parseFloat(span.style.marginLeft)) > r.width / 2;
-      const kollidiert = belegt.some((b) => r.left < b.right + 1 && r.right > b.left - 1 && r.top < b.bottom + 1 && r.bottom > b.top - 1);
-      if (draussen || kollidiert) span.classList.add('versteckt'); else belegt.push(r);
+    };
+    const bewegen = (id, p) => {
+      if (!finger.has(id) || !start) return false;
+      finger.set(id, p);
+      if (start.pinch && finger.size >= 2) {
+        const [a, b] = [...finger.values()];
+        const abstand = Math.hypot(a.x - b.x, a.y - b.y) || 1, mitte = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        const s = Math.max(blickAufAlles().s * 0.85, Math.min(KARTE.groesster, start.blick.s * abstand / start.abstand));
+        const f = s / start.blick.s;
+        k.bewegt = true;
+        k.blick = blickBegrenzen({ s, x: mitte.x - (start.mitte.x - start.blick.x) * f, y: mitte.y - (start.mitte.y - start.blick.y) * f });
+        zeichneBlick();
+        return true;
+      }
+      const dx = p.x - start.p.x, dy = p.y - start.p.y;
+      start.weg = Math.max(start.weg, Math.hypot(dx, dy));
+      if (start.weg < 7) return false;
+      k.bewegt = true;
+      k.huelle.classList.add('ist-gezogen');
+      k.blick = blickBegrenzen({ s: start.blick.s, x: start.blick.x + dx, y: start.blick.y + dy });
+      zeichneBlick();
+      return true;
+    };
+    const hoch = (id, p, ziel) => {
+      if (!finger.has(id)) return;
+      finger.delete(id);
+      k.huelle.classList.remove('ist-gezogen');
+      if (!start) return;
+      const war = start;
+      if (finger.size === 1) { const [rest] = [...finger.values()]; start = { p: rest, blick: k.blick, weg: 99 }; return; }
+      start = null;
+      if (war.weg >= 7 || war.pinch) { k.gezogen = Date.now(); return; }
+      // Tippen: zweimal kurz hintereinander zoomt hinein, einmal auf einen Stadtteil zeigt ihn
+      const jetzt = Date.now();
+      if (jetzt - letzterTipp < 320 && letzterOrt && Math.hypot(p.x - letzterOrt.x, p.y - letzterOrt.y) < 30) {
+        letzterTipp = 0; zoomen(2, p.x, p.y, true); return;
+      }
+      letzterTipp = jetzt; letzterOrt = p;
+      if (ziel && ziel.closest && ziel.closest('button, a')) return;
+      const flaeche = ziel && ziel.getAttribute && ziel.getAttribute('data-stadtteil');
+      setTimeout(() => {
+        if (letzterTipp !== jetzt) return;
+        if (ui.markiert) { ui.markiert = null; renderKarte(); }
+        if (flaeche) zeigeStadtteil(flaeche);
+      }, 330);
+    };
+    if (window.PointerEvent) {
+      h.addEventListener('pointerdown', (e) => { if (e.button === 0 || e.pointerType !== 'mouse') runter(e.pointerId, ort(e), e.target); });
+      h.addEventListener('pointermove', (e) => {
+        if (bewegen(e.pointerId, ort(e)) && !h.hasPointerCapture(e.pointerId)) { try { h.setPointerCapture(e.pointerId); } catch (err) { /* egal */ } }
+      });
+      const ende = (e) => hoch(e.pointerId, ort(e), e.target);
+      h.addEventListener('pointerup', ende);
+      h.addEventListener('pointercancel', (e) => { finger.delete(e.pointerId); start = null; h.classList.remove('ist-gezogen'); });
+    } else {
+      // Ältere iPhones (vor iOS 13) kennen keine Pointer-Events
+      const jedes = (e, fn) => { for (let i = 0; i < e.changedTouches.length; i++) { const t = e.changedTouches[i]; fn(t.identifier, ort(t), e.target); } };
+      h.addEventListener('touchstart', (e) => jedes(e, runter), { passive: true });
+      h.addEventListener('touchmove', (e) => { let b = false; jedes(e, (id, p) => { b = bewegen(id, p) || b; }); if (b && e.cancelable) e.preventDefault(); }, { passive: false });
+      h.addEventListener('touchend', (e) => jedes(e, hoch));
+      h.addEventListener('touchcancel', () => { finger.clear(); start = null; });
+      h.addEventListener('mousedown', (e) => runter('maus', ort(e), e.target));
+      window.addEventListener('mousemove', (e) => bewegen('maus', ort(e)));
+      window.addEventListener('mouseup', (e) => hoch('maus', ort(e), e.target));
+    }
+    // Alte iPhones würden bei zwei Fingern sonst die ganze Seite vergrößern
+    h.addEventListener('gesturestart', (e) => e.preventDefault());
+    // Ein Klick direkt nach dem Ziehen öffnet nichts
+    h.addEventListener('click', (e) => { if (Date.now() - k.gezogen < 350) { e.preventDefault(); e.stopPropagation(); } }, true);
+    h.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const p = ort(e);
+      zoomen(Math.exp(-Math.max(-60, Math.min(60, e.deltaY)) * 0.006), p.x, p.y, false);
+    }, { passive: false });
+    h.addEventListener('keydown', (e) => {
+      if (e.target !== h) return;
+      const schieb = { ArrowLeft: [80, 0], ArrowRight: [-80, 0], ArrowUp: [0, 80], ArrowDown: [0, -80] }[e.key];
+      if (schieb) { e.preventDefault(); k.bewegt = true; blickSetzen({ s: k.blick.s, x: k.blick.x + schieb[0], y: k.blick.y + schieb[1] }, true); }
+      else if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomen(1.6, undefined, undefined, true); }
+      else if (e.key === '-') { e.preventDefault(); zoomen(1 / 1.6, undefined, undefined, true); }
+      else if (e.key === '0') { e.preventDefault(); zeigeGanzGarbsen(); }
     });
   }
 
-  function aktualisiereKachelThema() {
+  // Namen der Stadtteile ausblenden, wenn sie Schilder, Knöpfe oder andere Namen verdecken würden
+  function namenAufraeumen() {
     const k = kartenStatus;
-    // Die Kacheln gibt es nur hell; im dunklen Design werden sie per Filter abgedunkelt
-    if (k.map) k.map.getContainer().classList.toggle('karte-dunkel', dunklesThema());
+    if (!k.schicht) return;
+    const rahmen = k.huelle.getBoundingClientRect();
+    const fest = [...document.querySelectorAll('.karte-knoepfe, .k-quelle, #map .k-massstab')].map((el) => el.getBoundingClientRect());
+    const schilder = [...k.schicht.querySelectorAll('.k-pin .pin, .k-sammel')].map((el) => el.getBoundingClientRect());
+    const belegt = fest.slice();
+    const namen = [...k.schicht.querySelectorAll('.k-name')];
+    // Erst alles messen, dann umschalten. Ausgeblendete Namen behalten ihre Größe, das Messen bleibt also richtig.
+    const gemessen = namen.map((n) => ({ n, r: n.getBoundingClientRect(), rang: Number(n.dataset.rang) }));
+    gemessen.sort((a, b) => b.rang - a.rang);
+    gemessen.forEach((x) => {
+      const r = x.r;
+      const draussen = r.left < rahmen.left + 4 || r.right > rahmen.right - 4 || r.top < rahmen.top + 4 || r.bottom > rahmen.bottom - 26;
+      const trifft = (b) => r.left < b.right + 2 && r.right > b.left - 2 && r.top < b.bottom + 2 && r.bottom > b.top - 2;
+      x.weg = draussen || belegt.some(trifft) || schilder.some(trifft);
+      if (!x.weg) belegt.push(r);
+    });
+    gemessen.forEach((x) => { if (x.n.classList.contains('versteckt') !== x.weg) x.n.classList.toggle('versteckt', x.weg); });
   }
 
-  function renderKarte() {
-    const sichtbar = gesuche.filter((g) => passt(g) && !versteckt(g) && (g.eigen || (g.status === 'offen' && !abgelaufen(g)) || g.helfer === 'ich'));
-    $('#karte-anzahl').textContent = `${sichtbar.length} ${sichtbar.length === 1 ? 'Anfrage' : 'Anfragen'}${ui.kat !== 'alle' ? ' · ' + katName(ui.kat) : ''}`;
-    $('#karte-leer').hidden = !(istLive() && db.geladen && !sichtbar.length && ui.kat === 'alle' && !ui.suche.trim());
+  // nurZoom: beim Zoomen bleiben Auswahl und Beschriftungen gleich, nur die Schilder werden neu zusammengefasst
+  function renderKarte(nurZoom) {
     const k = kartenStatus;
-    if (!k.map) return;
-    const L = window.L;
-    k.pins.clearLayers();
-    k.bereich.clearLayers();
+    let sichtbar = k.sichtbar;
+    if (nurZoom !== true || !sichtbar) {
+      sichtbar = gesuche.filter((g) => passt(g) && !versteckt(g) && (g.eigen || (g.status === 'offen' && !abgelaufen(g)) || g.helfer === 'ich'));
+      k.sichtbar = sichtbar;
+      k.texte = new Map();
+      $('#karte-anzahl').textContent = `${sichtbar.length} ${sichtbar.length === 1 ? 'Anfrage' : 'Anfragen'}${ui.kat !== 'alle' ? ' · ' + katName(ui.kat) : ''}`;
+      $('#karte-leer').hidden = !(istLive() && db.geladen && !sichtbar.length && ui.kat === 'alle' && !ui.suche.trim());
+    }
+    if (!k.svg || !k.blick) return;
+    k.stufe = zoomStufe(k.blick.s);
     k.marker.clear();
-
     const hervor = ui.offen || ui.markiert;
     const aktiv = gesuche.find((g) => g.id === hervor);
-    if (aktiv && !aktiv.eigen) {
-      L.circle([aktiv.lat, aktiv.lng], { radius: CONFIG.bereichMeter, className: 'bereich-kreis', interactive: false }).addTo(k.bereich);
-    }
+    // Ungefährer Bereich der gewählten Anfrage
+    if (aktiv && !aktiv.eigen && sichtbar.includes(aktiv)) {
+      const m = inMeter(aktiv.lat, aktiv.lng);
+      k.bereich.setAttribute('cx', Math.round(m.x)); k.bereich.setAttribute('cy', Math.round(m.y));
+      k.bereich.style.display = '';
+    } else k.bereich.style.display = 'none';
+    // Eigener Stadtteil hervorgehoben
+    const mein = zeigeIch() ? meinOrt().stadtteil : '';
+    k.formen.forEach((f) => f.el.classList.toggle('k-mein', f.name === mein));
 
-    if (zeigeIch()) {
-      const ort = meinOrt();
-      L.marker([ort.lat, ort.lng], {
-        interactive: false, keyboard: false, zIndexOffset: -500,
-        icon: L.divIcon({ className: 'ich-anker', html: '<span class="ich"></span><span class="ich-label">Du</span>', iconSize: null })
-      }).addTo(k.pins);
-    }
-
-    sichtbar.forEach((g) => {
-      const cls = [g.eigen ? 'pin-eigen' : '', abgelaufen(g) ? 'pin-abgelaufen' : '', g.helfer === 'ich' ? 'pin-zugesagt' : '', g.id === hervor ? 'is-aktiv' : ''].join(' ');
-      const m = L.marker([g.lat, g.lng], {
-        riseOnHover: true,
-        zIndexOffset: g.id === hervor ? 1000 : 0,
-        icon: L.divIcon({
-          className: 'pin-anker',
-          iconSize: null,
-          html: `<span class="pin ${cls}" aria-hidden="true">${g.helfer === 'ich' ? icon('check', 'i-xs') : ''}${euroKurz(g.betrag)}</span>`
-        })
-      });
-      m.on('click', () => oeffnen(g.id, m.getElement()));
-      m.addTo(k.pins);
-      const el = m.getElement();
-      if (el) {
-        el.setAttribute('role', 'button');
-        el.setAttribute('tabindex', '0');
-        el.setAttribute('aria-label', `${g.titel}, ${euro(g.betrag)}, ${g.stadtteil}, ${distanz(g)}${g.eigen ? (abgelaufen(g) ? ', deine Anfrage, abgelaufen' : ', deine Anfrage') : ''}`);
-        el.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); oeffnen(g.id, el); }
-        });
-      }
-      k.marker.set(g.id, m);
+    // Schilder, die sich auf dem Bildschirm berühren würden, werden zu einem Sammel-Schild mit der Zahl.
+    // Die gewählte Anfrage bleibt immer einzeln sichtbar.
+    const s = k.blick.s, zusammen = s < KARTE.groesster * 0.98;
+    const gruppen = [];
+    const reihenfolge = sichtbar.slice().sort((a, b) => (b.id === hervor) - (a.id === hervor) || (b.eigen || b.helfer === 'ich') - (a.eigen || a.helfer === 'ich'));
+    reihenfolge.forEach((g) => {
+      const m = inMeter(g.lat, g.lng);
+      // Preisschilder sind breiter als hoch: berühren sich, wenn sie weniger als 56 × 42 Bildpunkte auseinander liegen
+      const ziel = g.id === hervor || !zusammen ? null : gruppen.find((gr) => !gr.fest && Math.abs(gr.m.x - m.x) * s < 56 && Math.abs(gr.m.y - m.y) * s < 42);
+      if (!ziel) { gruppen.push({ liste: [g], punkte: [m], m, fest: g.id === hervor }); return; }
+      ziel.liste.push(g); ziel.punkte.push(m);
+      const n = ziel.punkte.length;
+      ziel.m = { x: ziel.punkte.reduce((t, p) => t + p.x, 0) / n, y: ziel.punkte.reduce((t, p) => t + p.y, 0) / n };
     });
-    requestAnimationFrame(labelsAufraeumen);
+    k.gruppen = gruppen;
+    // Die ganze Schicht als ein Stück HTML: auf alten Geräten deutlich schneller als jedes Schild einzeln
+    const teile = [];
+    const anker = (m, html, cls, id) => teile.push({ m, html, cls: cls || '', id });
+    const text = (g) => {
+      let t = k.texte.get(g.id);
+      if (!t) {
+        t = esc(`${g.titel}, ${euro(g.betrag)}, ${g.stadtteil}, ${distanz(g)}${g.eigen ? (abgelaufen(g) ? ', deine Anfrage, abgelaufen' : ', deine Anfrage') : ''}${g.helfer === 'ich' ? ', deine Zusage' : ''}`);
+        k.texte.set(g.id, t);
+      }
+      return t;
+    };
+    // Namen der Stadtteile zuerst, damit Schilder darüber liegen
+    const anzahl = new Map();
+    sichtbar.forEach((g) => anzahl.set(g.stadtteil, (anzahl.get(g.stadtteil) || 0) + 1));
+    k.formen.forEach((f) => {
+      const istMein = f.name === mein;
+      const rang = (istMein ? 1000 : 0) + (anzahl.get(f.name) || 0) * 10 + f.R / 100;
+      anker(f.c, `<span class="k-name${istMein ? ' k-name-mein' : ''}" data-rang="${rang}" aria-hidden="true">${istMein ? '<b>Du</b>' : ''}${esc(f.name)}</span>`, istMein ? 'k-mein-anker' : '');
+    });
+    gruppen.forEach((gr, i) => {
+      if (gr.liste.length > 1) {
+        const ab = Math.min(...gr.liste.map((g) => g.betrag));
+        const orte = [...new Set(gr.liste.map((g) => g.stadtteil))];
+        const eigene = gr.liste.some((g) => g.eigen || g.helfer === 'ich');
+        const label = `${gr.liste.length} Anfragen in ${orte.length > 2 ? orte.slice(0, 2).join(', ') + ' und Umgebung' : orte.join(' und ')}, ab ${euroKurz(ab)}. Hineinzoomen`;
+        anker(gr.m, `<button type="button" class="k-sammel${eigene ? ' k-sammel-eigen' : ''}" data-sammel="${i}" aria-label="${esc(label)}">${gr.liste.length}</button>`);
+        return;
+      }
+      const g = gr.liste[0];
+      const cls = [g.eigen ? 'pin-eigen' : '', abgelaufen(g) ? 'pin-abgelaufen' : '', g.helfer === 'ich' ? 'pin-zugesagt' : '', g.id === hervor ? 'is-aktiv' : ''].join(' ');
+      anker(gr.m, `<button type="button" class="k-pin" data-oeffne="${esc(g.id)}" aria-label="${text(g)}"><span class="pin ${cls}">${g.helfer === 'ich' ? icon('check', 'i-xs') : ''}${euroKurz(g.betrag)}</span></button>`, g.id === hervor ? 'k-oben' : '', g.id);
+    });
+    const b = k.blick;
+    k.schicht.innerHTML = teile.map((t) => `<div class="k-anker ${t.cls}" style="transform:translate(${Math.round(t.m.x * b.s + b.x)}px,${Math.round(t.m.y * b.s + b.y)}px)">${t.html}</div>`).join('');
+    const kinder = k.schicht.children;
+    k.elemente = teile.map((t, i) => {
+      if (t.id) k.marker.set(t.id, kinder[i].firstElementChild);
+      return { el: kinder[i], m: t.m, drin: true };
+    });
+    zeichneBlick();
   }
 
   function zentriereAuf(id) {
     const g = gesuche.find((x) => x.id === id);
-    const map = kartenStatus.map;
-    if (g && map) map.setView([g.lat, g.lng], Math.max(map.getZoom(), 15), { animate: false });
+    const k = kartenStatus;
+    if (!g || !k.blick) return;
+    k.bewegt = true;
+    blickSetzen(blickAuf(inMeter(g.lat, g.lng), Math.max(k.blick.s, 0.22)), false);
   }
 
   document.querySelector('.karte-knoepfe').addEventListener('click', (e) => {
     const b = e.target.closest('[data-karte]');
-    const map = kartenStatus.map;
-    if (!b || !map) return;
+    if (!b || !kartenStatus.blick) return;
     const was = b.dataset.karte;
-    if (was === 'rein') map.zoomIn();
-    else if (was === 'raus') map.zoomOut();
-    else if (was === 'ich') { const o = meinOrt(); map.setView([o.lat, o.lng], 15); }
+    if (was === 'rein') zoomen(1.8, undefined, undefined, true);
+    else if (was === 'raus') zoomen(1 / 1.8, undefined, undefined, true);
+    else if (was === 'ich') zeigeStadtteil(meinOrt().stadtteil);
     else if (was === 'alles') zeigeGanzGarbsen();
   });
-
-  if (window.matchMedia) {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    if (mq.addEventListener) mq.addEventListener('change', aktualisiereKachelThema);
-  }
-  new MutationObserver(aktualisiereKachelThema).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  // Sammel-Schild antippen: so weit hineinzoomen, dass die Anfragen auseinanderrücken
+  document.querySelector('#map').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-sammel]');
+    const k = kartenStatus, gr = b && k.gruppen[Number(b.dataset.sammel)];
+    if (!gr) return;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    gr.punkte.forEach((p) => { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); });
+    const passend = Math.min((k.w - 140) / Math.max(1, x1 - x0), (k.h - 160) / Math.max(1, y1 - y0));
+    k.bewegt = true;
+    blickSetzen(blickAuf({ x: (x0 + x1) / 2, y: (y0 + y1) / 2 }, Math.min(KARTE.groesster, Math.max(k.blick.s * 1.6, Math.min(passend, k.blick.s * 3)))), true);
+  });
 
   /* ===== Detail-Ansicht und Konto (Bottom Sheet) ===== */
   function sheetGesuchHTML(g) {
@@ -4296,7 +3909,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   function profilDaten(g) {
     if (!istLive()) {
       const n = Number(String(g.id).replace(/\D/g, '')) || 0;
-      return { name: g.wer, kuerzel: g.initialen, stadtteil: g.stadtteil, dabei: DEMO_DABEI.at(n % DEMO_DABEI.length),
+      return { name: g.wer, kuerzel: g.initialen, stadtteil: g.stadtteil, dabei: DEMO_DABEI[n % DEMO_DABEI.length],
         sterne: g.sterne, bewertungen: g.bewertungen || 0, hilfen: Math.max(0, (g.bewertungen || 0) - 3 - (n % 4)), gesuche: Math.min(g.bewertungen || 0, 3 + (n % 5)), volljaehrig: true };
     }
     const id = g.eigen ? g.helferId : g.erstellerId;
@@ -4515,10 +4128,9 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     });
     if (view !== 'karte') ui.markiert = null;
     if (view === 'karte' && initKarte()) {
-      kartenStatus.map.invalidateSize({ pan: false });
+      kartenGroesse(false);
       if (ui.zentrieren) { zentriereAuf(ui.zentrieren); ui.zentrieren = null; }
       renderKarte();
-      labelsAufraeumen();
     }
     if (view === 'auftraege') renderAuftraege();
     window.scrollTo(0, 0);
@@ -4583,7 +4195,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     miniRuhe();
     renderKarte();
     let ziel = (ui.zuletzt && ui.zuletzt.isConnected) ? ui.zuletzt : (id ? $(`#view-${ui.view} .card[data-id="${id}"]`) : null);
-    if (!ziel && id && ui.view === 'karte' && kartenStatus.marker.has(id)) ziel = kartenStatus.marker.get(id).getElement();
+    if (!ziel && id && ui.view === 'karte' && kartenStatus.marker.has(id)) ziel = kartenStatus.marker.get(id);
     if (ziel && ziel.focus) ziel.focus({ preventScroll: true });
   }
 
@@ -5028,7 +4640,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       ortWaehlen(e.target.value);
       renderStadtteilAuswahl();
       renderAlles();
-      if (kartenStatus.map) renderKarte();
+      renderKarte();
       meldung(`Stadtteil: ${e.target.value}`);
       return;
     }
@@ -5413,7 +5025,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       renderSheet();
       const zurueck = document.querySelector(`[data-ansicht="${opt.dataset.ansicht}"][data-wert="${opt.dataset.wert}"]`);
       if (zurueck) zurueck.focus({ preventScroll: true });
-      if (kartenStatus.map) kartenStatus.map.invalidateSize({ pan: false });
+      if (kartenStatus.svg) kartenGroesse(false);
       return;
     }
     if (e.target.closest('[data-neu-laden]')) { db.fehler = null; renderListe(); neuLaden(); return; }
@@ -5614,7 +5226,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     wizSchritt = n;
     form.querySelectorAll('.schritt').forEach((el) => { el.hidden = Number(el.dataset.schritt) !== n; });
     form.querySelectorAll('.wizard-leiste li').forEach((li, i) => { li.className = i < n ? 'ist-erreicht' : ''; });
-    $('#wizard-stand').textContent = `Schritt ${n} von 4: ${SCHRITT_NAMEN.at(n - 1)}`;
+    $('#wizard-stand').textContent = `Schritt ${n} von 4: ${SCHRITT_NAMEN[n - 1]}`;
     $('#neu-zurueck').hidden = n === 1;
     $('#neu-weiter').hidden = n === 4;
     $('#neu-senden').hidden = n !== 4;
@@ -5710,7 +5322,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     if (termin.modus === 'tag') {
       const daten = termin.tage.map(ausIso).filter((d) => d >= heute()).sort((x, y) => x - y);
       if (!daten.length) return { gueltig: false };
-      return { gueltig: true, text: tageText(daten), von: daten[0], bis: daten.at(-1) };
+      return { gueltig: true, text: tageText(daten), von: daten[0], bis: daten[daten.length - 1] };
     }
     if (termin.woche < 0) return { gueltig: false };
     const sp = wochenSpanne(termin.woche, termin.umfang);

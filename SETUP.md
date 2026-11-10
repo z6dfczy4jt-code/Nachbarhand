@@ -67,7 +67,7 @@ Nutzer können eine Anfrage oder eine beteiligte Person melden. Die Meldungen si
 
 Wenn sich `supabase/schema.sql` geändert hat, das Skript im **SQL Editor** noch einmal ausführen (oder Claude bitten, es über die Supabase-Verbindung einzuspielen). Vorhandene Daten bleiben erhalten. Kleinere Updates liegen zusätzlich einzeln in `supabase/updates/`.
 
-Ändern sich Dateien in `assets/` (Schriften, Icons, Leaflet), in `sw.js` die Versionsnummer `VERSION` erhöhen, damit installierte Apps die neuen Dateien laden. Die Seite selbst lädt die App immer zuerst frisch aus dem Netz.
+Ändern sich Dateien in `assets/` (Schriften, Icons, Three.js), in `sw.js` die Versionsnummer `VERSION` erhöhen, damit installierte Apps die neuen Dateien laden. Die Seite selbst lädt die App immer zuerst frisch aus dem Netz.
 
 ## Gut zu wissen
 

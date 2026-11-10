@@ -24,16 +24,15 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 | `src/kopfzeichen.svg` | Logo für die Kopfzeile (folgt hellem und dunklem Design) |
 | `src/styles.css` | Gestaltung „Garbsen in Miniatur“: Schiefer, Klinkerrot, Rapsgelb; helles und dunkles Design, drei Schriftgrößen |
 | `src/garbsen3d.js` | Die Nachbarschaft als 3D-Modell auf der Startseite (Three.js), offene Anfragen als Preisschilder über den Dächern |
-| `src/app.js` | App-Logik, Karte, Demo- und Live-Modus, Nachrichten, Melden |
+| `src/app.js` | App-Logik, eigene Karte von Garbsen (SVG, ohne Kartendienst), Demo- und Live-Modus, Nachrichten, Melden |
 | `src/fragen.js` | Häufige Fragen (`#fragen`) |
 | `src/recht.js` | Impressum, Datenschutzerklärung, Nutzungsbedingungen, Regeln (Fassung für die Testphase, vor dem Start anwaltlich prüfen lassen) |
-| `src/vendor/leaflet-1.9.4.css` | Stile der Kartenbibliothek Leaflet |
 | `supabase/schema.sql` | Tabellen, Zugriffsregeln und Funktionen für Supabase |
 | `supabase/updates/` | Einzelne Datenbank-Updates zum Einfügen im SQL Editor |
 | `supabase/functions/push/` | Edge Function für Benachrichtigungen: Verschlüsselung (RFC 8291) und Absender-Nachweis (VAPID) mit Bordmitteln |
-| `sw.js` | Offline-Hülle: Seite zuerst aus dem Netz, feste Dateien aus dem Speicher, Anfragen und Karte nie zwischengespeichert. Zeigt Benachrichtigungen an |
+| `sw.js` | Offline-Hülle: Seite zuerst aus dem Netz, feste Dateien aus dem Speicher, Anfragen nie zwischengespeichert. Zeigt Benachrichtigungen an |
 | `tools/build.py` | Baut aus `src/` die fertige `index.html` |
-| `assets/` | App-Icons, Leaflet, Three.js, Schriften (Barlow) und das Standbild der Miniatur für Geräte ohne 3D |
+| `assets/` | App-Icons, Three.js, Schriften (Barlow) und das Standbild der Miniatur für Geräte ohne 3D |
 | `manifest.webmanifest` | Angaben für „Zum Home-Bildschirm“ |
 | `design/logo/` | Logo „Hand Drauf“ als SVG (gestapelt, quer, hell, dunkel, App-Icon) und die Vorlage |
 | `design/` | Skripte: `trace.py` zeichnet den Handschlag aus der Vorlage nach, `marke.py` setzt Logo und Icons |
@@ -45,8 +44,7 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 
 ## Daten und Quellen
 
-- Kartenbibliothek: [Leaflet](https://leafletjs.com) 1.9.4 (BSD-2-Clause), liegt unter `assets/vendor/`
-- Kartenkacheln: © [OpenStreetMap](https://www.openstreetmap.org/copyright)-Mitwirkende, Ersatz: © [CARTO](https://carto.com/attributions)
+- Karte: eigene Zeichnung im Code (`src/app.js`, Abschnitt „Karte“). Die Stadtteile sind vereinfachte Flächen um ihre Mittelpunkte, ohne Kartendienst und ohne Kartenbilder. Lage der Mittelpunkte: © [OpenStreetMap](https://www.openstreetmap.org/copyright)-Mitwirkende (ODbL) und [GeoNames](https://www.geonames.org) (CC BY 4.0)
 - 3D: [Three.js](https://threejs.org) r170 (MIT), liegt unter `assets/vendor/`. Das Modell selbst (Häuser, Hecken, Kanal) ist im Code gebaut, ohne fremde Modelldateien
 - Schrift: Barlow und Barlow Semi Condensed (SIL Open Font License), nach den deutschen Straßenschildern. Montserrat in der Wortmarke (SIL Open Font License)
 - Tätigkeits-Bilder: Microsoft Fluent Emoji 3D (MIT-Lizenz), siehe `src/kategorien/LIZENZ-fluent-emoji.txt`
