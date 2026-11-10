@@ -8,7 +8,8 @@
   const DREI_URL = './assets/vendor/three-0.170.0.module.min.js';
   // Läuft die App als iPhone-App (Capacitor)? Dann liegt sie lokal auf dem Gerät, Links zeigen auf die Website.
   const NATIV = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-  const OEFFENTLICH = 'https://z6dfczy4jt-code.github.io/Nachbarhand/';
+  // Alle Angaben für den Betrieb stehen in einstellungen.json; der Build setzt sie hier als EINSTELLUNGEN ein.
+  const OEFFENTLICH = EINSTELLUNGEN.adresse;
   const PLUGINS = {};
   function plugin(name) { // native Erweiterungen (@capacitor/share, @capacitor/filesystem), nur in der iPhone-App
     if (!NATIV) return null;
@@ -25,15 +26,13 @@
   // Leer = Demo-Modus mit erfundenen Beispieldaten.
   // Supabase-Projekt „hand-drauf“ (Frankfurt). Beide Werte sind öffentlich; die Zugriffsregeln in der Datenbank schützen die Daten.
   // Niemals den Secret- oder service_role-Key hier eintragen.
-  const LIVE = {
-    url: 'https://hgfwbjesolgneyapehta.supabase.co',
-    key: 'sb_publishable_aHSISOj3lPHJwpWqa64gnA_iLcJV1w3'
-  };
-  const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js';
+  const LIVE = { url: EINSTELLUNGEN.supabase.url, key: EINSTELLUNGEN.supabase.key };
+  // supabase-js: vom eigenen Server, wenn die Datei in assets/vendor liegt (siehe SERVER.md), sonst vom CDN
+  const SUPABASE_JS = EINSTELLUNGEN.supabaseJs;
 
   /* ===== Einstellungen: Gebühren, Regeln und Karte hier anpassen ===== */
   const CONFIG = {
-    gebuehren: false,          // Weg 2 (Bezahlung über die App mit Gebühren). Erst einschalten, wenn Stripe eingerichtet ist
+    gebuehren: !!EINSTELLUNGEN.gebuehren, // Weg 2 (Bezahlung über die App mit Gebühren). Erst einschalten, wenn Stripe eingerichtet ist
     gebuehrAuftraggeber: 0.99, // Weg 2: fester Betrag, den die suchende Person zusätzlich zahlt
     provisionHelfer: 0.05,     // Weg 2: Anteil, der vom Betrag des Helfers abgeht
     minBetrag: 5,
@@ -42,16 +41,17 @@
     bereichMeter: 250,         // Radius des ungefähren Bereichs um eine Anfrage
     // Kartenbilder: ohne Eintrag die amtliche Straßenkarte basemap.de (Bund und Länder, kostenlos, ohne Schlüssel).
     // Optional mit kostenlosem Schlüssel von carto.com (siehe SETUP.md) der Stil „Voyager“. Der Schlüssel ist öffentlich.
-    karte: { carto: '' },
+    karte: { carto: EINSTELLUNGEN.karte.carto || '' },
     // Anmelden mit einem Code per E-Mail statt mit Passwort. Erst einschalten, wenn der E-Mail-Versand
     // eingerichtet ist und die E-Mail-Vorlage den Code enthält (siehe SETUP.md).
-    codeLogin: false,
+    codeLogin: !!EINSTELLUNGEN.codeLogin,
     // Öffentlicher Schlüssel für Benachrichtigungen aufs Handy (Web Push). Der private Schlüssel liegt
     // nur in der Datenbank. Leer = Benachrichtigungen aus.
-    push: 'BAeSkBv6_TrKXn_vTxc3F5qJOLIJ2bIjB3ro4IFlHjX32LlpKFu4quz2Wr5DVsCatqeKFvXfYHgCZRPQr29zAuc',
+    push: EINSTELLUNGEN.push || '',
     ich: { name: 'Tim', initialen: 'TS', stadtteil: 'Garbsen-Mitte', lat: 52.4248, lng: 9.5962 }, // Demo-Person
     // Betreiber für Impressum und Datenschutz. Vor dem öffentlichen Start ausfüllen.
-    betreiber: { name: '', anschrift: '', email: '', telefon: '' }
+    betreiber: EINSTELLUNGEN.betreiber,
+    hosting: EINSTELLUNGEN.hosting
   };
 
 
@@ -142,7 +142,7 @@
 
   const SPEICHER = 'nachbarhand-prototyp-v3';
   const VIEWS = ['entdecken', 'karte', 'neu', 'auftraege'];
-  const RECHT = RECHT_TEXTE(CONFIG.betreiber, (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+  const RECHT = RECHT_TEXTE(CONFIG.betreiber, Object.assign({ supabaseCdn: /^https?:/.test(SUPABASE_JS) }, CONFIG.hosting), (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
   const FRAGEN = FRAGEN_TEXTE(CONFIG);
   const istSeite = (n) => !!RECHT[n] || n === 'fragen'; // Seiten mit eigener Adresse (#impressum, #fragen …)
   const EIGEN_VERSATZ = [[180, -150], [-160, 170], [220, 160], [-210, -190]]; // Demo: Meter Nord/Ost ab deinem Standort
@@ -2956,6 +2956,39 @@
   if ('serviceWorker' in navigator && !VORSCHAU && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* ohne Offline-Hülle weiter */ }); });
   }
+
+  /* ===== Neue Fassung und Verbindung =====
+     Liegt die App lange offen (z. B. auf dem Startbildschirm), fragt sie beim Zurückkehren nach, ob es eine neue
+     Fassung gibt, und bietet „Neu laden“ an. Ohne Internet steht oben ein kurzer Hinweis. */
+  const FASSUNG = EINSTELLUNGEN.fassung || '';
+  let fassungZuletzt = 0;
+  async function fassungPruefen(sofort) {
+    if (VORSCHAU || NATIV || !FASSUNG || !window.fetch || document.visibilityState === 'hidden') return;
+    if (!sofort && Date.now() - fassungZuletzt < 20 * 60 * 1000) return;
+    fassungZuletzt = Date.now();
+    try {
+      const antwort = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!antwort.ok) return;
+      const neu = await antwort.json();
+      if (neu && neu.fassung && neu.fassung !== FASSUNG) $('#neue-fassung').hidden = false;
+    } catch (e) { /* ohne Netz: beim nächsten Mal */ }
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') fassungPruefen(); });
+  setInterval(() => fassungPruefen(), 5 * 60 * 1000);
+  // Kurz nach dem Start einmal: falls die Seite ohne Netz aus dem Speicher kam
+  setTimeout(() => fassungPruefen(true), 8000);
+  $('#neue-fassung').addEventListener('click', (e) => {
+    if (e.target.closest('[data-neu-laden]')) location.reload();
+    else if (e.target.closest('[data-spaeter]')) $('#neue-fassung').hidden = true;
+  });
+  function verbindungZeigen() {
+    const offline = !VORSCHAU && navigator.onLine === false;
+    $('#offline').hidden = !offline;
+    document.documentElement.classList.toggle('ist-offline', offline);
+  }
+  window.addEventListener('online', verbindungZeigen);
+  window.addEventListener('offline', verbindungZeigen);
+  verbindungZeigen();
 
   /* ===== Benachrichtigungen aufs Handy (Web Push) =====
      Das Gerät meldet sich beim Dienst seines Browsers an und gibt uns eine Adresse dafür. Die Datenbank

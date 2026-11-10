@@ -4,14 +4,67 @@
     python3 tools/build.py                    -> index.html (für GitHub Pages)
     python3 tools/build.py --vorschau ZIEL    -> zusätzlich eine Fassung für die Claude-Vorschau
     python3 tools/build.py --app              -> zusätzlich app/www/ für die iPhone-App (Capacitor, siehe APP-STORE.md)
+    python3 tools/build.py --dist             -> zusätzlich dist/ für den eigenen Server (siehe SERVER.md)
+
+Alle Angaben für den Betrieb (Adresse, Datenbank, Betreiber, Hosting) stehen in einstellungen.json.
 
 Die Vorschau-Fassung ist ein HTML-Fragment ohne <html>/<head> und startet immer im Demo-Modus.
 """
+import json
 import pathlib
+import re
 import sys
 
 WURZEL = pathlib.Path(__file__).resolve().parent.parent
 SRC = WURZEL / 'src'
+SUPABASE_VERSION = '2.110.1'
+SUPABASE_CDN = f'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@{SUPABASE_VERSION}/dist/umd/supabase.js'
+
+
+def fehler(text):
+    sys.exit(f'\nFEHLER in einstellungen.json: {text}\n')
+
+
+def einstellungen_laden():
+    """einstellungen.json lesen und prüfen. Felder, die mit _ beginnen, sind Erklärungen."""
+    import base64
+    try:
+        roh = json.loads((WURZEL / 'einstellungen.json').read_text())
+    except json.JSONDecodeError as e:
+        fehler(f'Die Datei ist kein gültiges JSON (Zeile {e.lineno}): {e.msg}. Oft fehlt ein Komma oder ein Anführungszeichen.')
+    ohne = lambda d: {k: ohne(v) for k, v in d.items() if not k.startswith('_')} if isinstance(d, dict) else d
+    e = ohne(roh)
+    adresse = e.get('adresse', '')
+    if not re.match(r'^https://[^/\s]+(/[^\s]*)?$', adresse) or not adresse.endswith('/'):
+        fehler(f'"adresse" muss mit https:// beginnen und mit / enden, zum Beispiel https://handdrauf-garbsen.de/ (jetzt: {adresse!r})')
+    sb = e.get('supabase') or {}
+    key = sb.get('key', '')
+    if key.startswith('sb_secret_'):
+        fehler('Bei "supabase" → "key" steht ein Secret Key. Der darf niemals in die App! Den Publishable Key (sb_publishable_...) eintragen.')
+    if key.count('.') == 2:
+        try:
+            teil = key.split('.')[1]
+            inhalt = json.loads(base64.urlsafe_b64decode(teil + '=' * (-len(teil) % 4)))
+            if inhalt.get('role') == 'service_role':
+                fehler('Bei "supabase" → "key" steht der service_role-Key. Der darf niemals in die App! Den anon- oder Publishable Key eintragen.')
+        except (ValueError, json.JSONDecodeError):
+            pass
+    if sb.get('url') and not re.match(r'^https://[^/\s]+$', sb['url']):
+        fehler(f'"supabase" → "url" muss so aussehen: https://xxxx.supabase.co (ohne / am Ende)')
+    h = e.get('hosting') or {}
+    if h.get('art') not in ('github', 'server'):
+        fehler('"hosting" → "art" muss "github" oder "server" sein.')
+    e.setdefault('betreiber', {})
+    for feld in ('name', 'anschrift', 'email', 'telefon'):
+        e['betreiber'].setdefault(feld, '')
+    e.setdefault('karte', {}).setdefault('carto', '')
+    # supabase-js: liegt die Datei in assets/vendor, kommt sie vom eigenen Server
+    lokal = WURZEL / f'assets/vendor/supabase-js-{SUPABASE_VERSION}.js'
+    e['supabaseJs'] = f'./assets/vendor/{lokal.name}' if lokal.exists() else SUPABASE_CDN
+    return e
+
+
+EINSTELLUNGEN = einstellungen_laden()
 DREI_LOKAL = './assets/vendor/three-0.170.0.module.min.js'                      # Three.js für die Miniatur
 DREI_CDN = 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js'  # nur Vorschau
 # Schrift: Barlow, gebaut nach den deutschen Straßenschildern (DIN 1451). Auf GitHub Pages aus assets/fonts,
@@ -20,10 +73,24 @@ SCHRIFTEN = [('Barlow', 400, 'barlow-regular'), ('Barlow', 500, 'barlow-medium')
              ('Barlow Semi Condensed', 600, 'barlowsemicondensed-semibold'), ('Barlow Semi Condensed', 700, 'barlowsemicondensed-bold')]
 GOOGLE_FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
                 '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap">')
-# Setzt Design und Schriftgröße vor dem ersten Zeichnen, damit nichts aufblitzt
+# Erstes Skript der Seite (bewusst altes JavaScript, läuft auch auf sehr alten Geräten):
+# 1. setzt Design und Schriftgröße vor dem ersten Zeichnen, damit nichts aufblitzt
+# 2. meldet technische Fehler der App an die Datenbank (public.fehler_melden), auch wenn die App auf einem
+#    alten Gerät gar nicht erst startet. Ohne Namen und Inhalte, höchstens 5 je Besuch.
 FRUEH = ('<script>try{var a=JSON.parse(localStorage.getItem("handdrauf-ansicht")||"{}"),r=document.documentElement;'
          'if(a.thema==="dunkel"||a.thema==="hell")r.setAttribute("data-theme",a.thema==="dunkel"?"dark":"light");'
-         'if(a.schrift==="gross"||a.schrift==="sehr-gross")r.setAttribute("data-schrift",a.schrift)}catch(e){}</script>')
+         'if(a.schrift==="gross"||a.schrift==="sehr-gross")r.setAttribute("data-schrift",a.schrift)}catch(e){}'
+         '(function(){var U=%(url)s,K=%(key)s,F=%(fassung)s,n=0,g={};if(!U||!window.addEventListener)return;'
+         'function m(t,s){try{t=String(t||"");s=String(s||"");if(!t||n>=5||/ResizeObserver loop|^Script error/i.test(t)||g[t])return;g[t]=1;n++;'
+         'var x=new XMLHttpRequest();x.open("POST",U+"/rest/v1/rpc/fehler_melden");x.setRequestHeader("Content-Type","application/json");'
+         'x.setRequestHeader("apikey",K);x.onload=function(){if(x.status===404)n=99};'
+         'x.send(JSON.stringify({p_nachricht:t.slice(0,300),p_stelle:s.slice(0,200),p_geraet:String(navigator.userAgent).slice(0,200),p_fassung:F}))}catch(e){}}'
+         'window.addEventListener("error",function(e){if(!e||!e.message)return;var f=String(e.filename||"");'
+         'if(f&&f.indexOf(location.protocol+"//"+location.host)!==0)return;'
+         'm(e.message,f.replace(/[?#].*$/,"").split("/").pop()+":"+(e.lineno||0)+":"+(e.colno||0))});'
+         'window.addEventListener("unhandledrejection",function(e){var r=e&&e.reason,t=r&&(r.message||String(r))||"";'
+         'if(/fetch|load failed|network|abort|timeout|JWT|auth/i.test(t))return;m("Promise: "+t,"")});'
+         'window.hdFehler=m})();</script>')
 
 
 def handschlag():
@@ -63,9 +130,15 @@ def bilder():
 
 
 def qr():
-    """QR-Code zur App für das Blatt „Nachbarn einladen“ (erzeugt von design/aushang.py)."""
-    import json
-    return 'const QR_SVG = ' + json.dumps((WURZEL / 'assets/qr.svg').read_text().strip()) + ';'
+    """QR-Code zur App für „Nachbarn einladen“, immer passend zur Adresse in einstellungen.json."""
+    sys.path.insert(0, str(WURZEL / 'design'))
+    from qr import qr_svg
+    svg = qr_svg(ADRESSE).strip()
+    datei = WURZEL / 'assets/qr.svg'
+    if not datei.exists() or datei.read_text().strip() != svg:
+        datei.write_text(svg + '\n')
+        print('Neue Adresse: assets/qr.svg erneuert. Den Aushang bitte neu erzeugen: python3 design/aushang.py')
+    return 'const QR_SVG = ' + json.dumps(svg) + ';'
 
 
 def inset_ausschreiben(css):
@@ -102,7 +175,13 @@ def teile(vorschau):
     body = (SRC / 'body.html').read_text().replace('<!--KOPFZEICHEN-->', (SRC / 'kopfzeichen.svg').read_text().strip())
     defs, intro, feier = handschlag()
     body = body.replace('<!--HANDSCHLAG-DEFS-->', defs).replace('<!--INTRO-SVG-->', intro).replace('<!--FEIER-SVG-->', feier)
-    app = '\n'.join([bilder(), qr()] + [(SRC / n).read_text() for n in ('recht.js', 'fragen.js', 'garbsen3d.js', 'app.js')])
+    import hashlib
+    oeffentlich = {k: EINSTELLUNGEN[k] for k in ('adresse', 'supabase', 'push', 'betreiber', 'hosting', 'karte', 'codeLogin', 'gebuehren', 'supabaseJs') if k in EINSTELLUNGEN}
+    programm = '\n'.join([bilder(), qr()] + [(SRC / n).read_text() for n in ('recht.js', 'fragen.js', 'garbsen3d.js', 'app.js')])
+    # Fassung: Fingerabdruck von Programm, Aussehen und Einstellungen. Ändert sich bei jeder neuen Version.
+    fassung = hashlib.sha256((programm + styles + body + json.dumps(oeffentlich, sort_keys=True)).encode()).hexdigest()[:10]
+    oeffentlich['fassung'] = 'vorschau' if vorschau else fassung
+    app = 'const EINSTELLUNGEN = ' + json.dumps(oeffentlich, ensure_ascii=False) + ';\n' + programm
     if vorschau:
         alt = 'const VORSCHAU = false;'
         assert alt in app
@@ -112,17 +191,21 @@ def teile(vorschau):
         app = app.replace(alt, f"const DREI_URL = '{DREI_CDN}';")
     schrift_kopf = GOOGLE_FONTS if vorschau else ''.join(
         f'<link rel="preload" href="assets/fonts/{d}.woff" as="font" type="font/woff" crossorigin>' for _, _, d in SCHRIFTEN if d in ('barlow-regular', 'barlowsemicondensed-bold'))
-    kopf = f'{FRUEH}\n{schrift_kopf}\n<style>\n{styles}</style>'
+    db = {} if vorschau else EINSTELLUNGEN['supabase']
+    frueh = FRUEH % {'url': json.dumps(db.get('url', '')), 'key': json.dumps(db.get('key', '')), 'fassung': json.dumps(oeffentlich['fassung'])}
+    kopf = f'{frueh}\n{schrift_kopf}\n<style>\n{styles}</style>'
     rumpf = f'{body}\n<script>\n{app}</script>\n'
-    return kopf, rumpf
+    return kopf, rumpf, oeffentlich['fassung']
 
 
 # Öffentliche Adresse der App (für die Link-Vorschau, dort sind nur volle Adressen erlaubt)
-ADRESSE = 'https://z6dfczy4jt-code.github.io/Nachbarhand/'
+ADRESSE = EINSTELLUNGEN['adresse']
 
 
 def standalone():
-    kopf, rumpf = teile(False)
+    kopf, rumpf, fassung = teile(False)
+    # Die App fragt diese Datei ab und sagt Bescheid, wenn es eine neue Fassung gibt
+    (WURZEL / 'version.json').write_text(json.dumps({'fassung': fassung}) + '\n')
     return ('<!doctype html>\n<html lang="de">\n<head>\n'
             '<meta charset="utf-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
@@ -148,8 +231,142 @@ def standalone():
             f'{kopf}\n</head>\n<body>\n{rumpf}</body>\n</html>\n')
 
 
+def inhaltsrichtlinie(html, einst=None, genau_zwei=True):
+    """Content-Security-Policy für den eigenen Server: erlaubt genau das, was die App braucht.
+
+    Die beiden eingebetteten Skripte (Design vor dem ersten Zeichnen, die App selbst) werden über
+    ihren Fingerabdruck (SHA-256) zugelassen, fremde Skripte nicht.
+    """
+    import base64
+    import hashlib
+    from urllib.parse import urlparse
+    einst = einst or EINSTELLUNGEN
+    skripte = re.findall(r'<script>(.*?)</script>', html, re.S)
+    assert not genau_zwei or len(skripte) == 2, f'erwartet 2 eingebettete Skripte, gefunden {len(skripte)}'
+    hashes = ' '.join("'sha256-" + base64.b64encode(hashlib.sha256(t.encode()).digest()).decode() + "'" for t in skripte)
+    cdn = einst['supabaseJs'].startswith('http')
+    db = urlparse(einst['supabase']['url']).netloc if einst['supabase'].get('url') else ''
+    karten = ['https://sgx.geodatenzentrum.de', 'https://tile.openstreetmap.org', 'https://tile.openstreetmap.de']
+    if einst['karte'].get('carto'):
+        karten.append('https://basemaps.cartocdn.com')
+    teile = [
+        "default-src 'self'",
+        f"script-src 'self' {hashes}" + (' https://cdn.jsdelivr.net' if cdn else ''),
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob: " + ' '.join(karten),
+        "font-src 'self'",
+        "connect-src 'self'" + (f' https://{db} wss://{db}' if db else '') + (' https://cdn.jsdelivr.net' if cdn else ''),
+        "worker-src 'self'",
+        "manifest-src 'self'",
+        "media-src 'self'",
+        "object-src 'none'",
+        "frame-src 'none'",
+        "frame-ancestors 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        'upgrade-insecure-requests',
+    ]
+    return '; '.join(teile)
+
+
+# Kopfzeilen für alle Antworten des eigenen Servers
+def kopfzeilen(csp):
+    return [
+        ('Strict-Transport-Security', 'max-age=31536000'),
+        ('X-Content-Type-Options', 'nosniff'),
+        ('Referrer-Policy', 'strict-origin-when-cross-origin'),
+        ('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()'),
+        ('X-Frame-Options', 'DENY'),
+        ('Cross-Origin-Opener-Policy', 'same-origin'),
+        ('Content-Security-Policy', csp),
+    ]
+
+
+SEITE_404 = """<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nicht gefunden · Hand Drauf</title><link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#EDF1F5;color:#1C2530;font:18px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;text-align:center;padding:24px;box-sizing:border-box}
+a{display:inline-block;margin-top:16px;padding:12px 20px;border-radius:12px;background:#A3392B;color:#fff;text-decoration:none;font-weight:600}
+@media (prefers-color-scheme:dark){body{background:#0C131D;color:#E8EDF3}}</style></head>
+<body><main><h1 style="font-size:24px;margin:0 0 8px">Diese Seite gibt es nicht.</h1><p style="margin:0">Vielleicht ist der Link alt oder unvollständig.</p><a href="/">Zu Hand Drauf</a></main></body></html>
+"""
+
+
+def dist_bauen(html):
+    """dist/ enthält genau die Dateien für den eigenen Server. Dazu die Kopfzeilen in server/erzeugt/."""
+    import shutil
+    from urllib.parse import urlparse
+    dist = WURZEL / 'dist'
+    # Den Ordner selbst behalten (der Server hat ihn eingebunden), nur den Inhalt erneuern
+    dist.mkdir(exist_ok=True)
+    for alt in dist.iterdir():
+        shutil.rmtree(alt) if alt.is_dir() and not alt.is_symlink() else alt.unlink()
+    (dist / 'index.html').write_text(html)
+    for datei in ('sw.js', 'manifest.webmanifest', 'version.json'):
+        shutil.copy(WURZEL / datei, dist / datei)
+    shutil.copytree(WURZEL / 'assets', dist / 'assets')
+    (dist / '404.html').write_text(SEITE_404)
+    (dist / 'robots.txt').write_text('User-agent: *\nAllow: /\n')
+    mail = EINSTELLUNGEN['betreiber'].get('email')
+    if mail:
+        from datetime import date, timedelta
+        (dist / '.well-known').mkdir()
+        (dist / '.well-known/security.txt').write_text(
+            f'Contact: mailto:{mail}\nExpires: {(date.today() + timedelta(days=365)).isoformat()}T00:00:00.000Z\n'
+            f'Preferred-Languages: de, en\nCanonical: {ADRESSE}.well-known/security.txt\n')
+    csp = inhaltsrichtlinie(html)
+    kz = kopfzeilen(csp)
+    # Webspace mit Apache (z. B. Strato, IONOS, all-inkl): .htaccess wird mit hochgeladen
+    (dist / '.htaccess').write_text(HTACCESS.replace('#KOPFZEILEN', '\n'.join(f'  Header always set {k} "{v}"' for k, v in kz)))
+    # Eigener Server mit Caddy (server/Caddyfile bindet diese Datei ein)
+    erzeugt = WURZEL / 'server/erzeugt'
+    erzeugt.mkdir(parents=True, exist_ok=True)
+    (erzeugt / 'kopfzeilen.caddy').write_text('# Erzeugt von tools/build.py --dist. Nicht von Hand ändern.\nheader {\n'
+                                             + ''.join(f'\t{k} "{v}"\n' for k, v in kz) + '\t-Server\n}\n')
+    (erzeugt / 'adresse.txt').write_text(urlparse(ADRESSE).netloc + '\n')
+    groesse = sum(f.stat().st_size for f in dist.rglob('*') if f.is_file())
+    print('Server-Dateien', dist, groesse, 'Bytes')
+    if urlparse(ADRESSE).path not in ('', '/'):
+        print('Hinweis: Die Adresse hat einen Unterordner. Für den eigenen Server am besten eine eigene Domain ohne Unterordner eintragen.')
+
+
+HTACCESS = r"""# Hand Drauf auf einem Webspace mit Apache. Erzeugt von tools/build.py --dist.
+Options -Indexes
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+<IfModule mod_headers.c>
+#KOPFZEILEN
+  <FilesMatch "^(index\.html|sw\.js|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  <FilesMatch "\.(png|webp|svg|woff|js|pdf)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+  <FilesMatch "^sw\.js$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript text/javascript application/json application/manifest+json image/svg+xml text/plain
+</IfModule>
+
+AddType application/manifest+json .webmanifest
+AddType font/woff .woff
+AddType image/webp .webp
+"""
+
+
 def vorschau_fragment():
-    kopf, rumpf = teile(True)
+    kopf, rumpf, _ = teile(True)
     return ('<title>Hand Drauf</title>\n'
             '<meta name="claude:viewport-fit-sides" content="cover">\n'
             f'{kopf}\n{rumpf}')
@@ -169,6 +386,8 @@ if __name__ == '__main__':
         # Alles aus assets/ außer dem Vorschaubild für geteilte Links
         shutil.copytree(WURZEL / 'assets', www / 'assets', dirs_exist_ok=True, ignore=shutil.ignore_patterns('vorschau.png'))
         print('App-Dateien', www, sum(f.stat().st_size for f in www.rglob('*') if f.is_file()), 'Bytes')
+    if '--dist' in sys.argv:
+        dist_bauen(ziel.read_text())
     if '--vorschau' in sys.argv:
         pfad = pathlib.Path(sys.argv[sys.argv.index('--vorschau') + 1])
         pfad.write_text(vorschau_fragment())

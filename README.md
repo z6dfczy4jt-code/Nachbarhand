@@ -5,7 +5,9 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 - **Live:** https://z6dfczy4jt-code.github.io/Nachbarhand/ (das Repository heißt noch Nachbarhand, die App „Hand Drauf“)
 - **Live** läuft die App mit der Supabase-Datenbank: echte Konten, gemeinsame Anfragen, Nachrichten. Stand und offene Schritte: [SETUP.md](SETUP.md)
 - **Ohne Datenbank** (oder wenn sie nicht erreichbar ist) zeigt die App eine Demo mit erfundenen Beispielen. Die Vorschau in Claude ist immer die Demo.
-- **Gebühren:** In der Testphase aus. Für Weg 2 (Bezahlung über die App) in `src/app.js` `CONFIG.gebuehren` auf `true` setzen, sobald Stripe eingerichtet ist.
+- **Einstellungen:** Adresse, Datenbank, Betreiber, Hosting und Schalter stehen in [`einstellungen.json`](einstellungen.json). Danach neu bauen.
+- **Eigener Server:** [SERVER.md](SERVER.md) (Docker mit Caddy oder Webspace mit Apache)
+- **Gebühren:** In der Testphase aus. Für Weg 2 (Bezahlung über die App) in `einstellungen.json` `gebuehren` auf `true` setzen, sobald Stripe eingerichtet ist.
 - **Beispiele:** https://z6dfczy4jt-code.github.io/Nachbarhand/?beispiele zeigt die erfundenen Beispiele auch dann, wenn die Datenbank läuft, mit einem Hinweisband. Gut zum Vorführen, solange noch wenige echte Anfragen da sind.
 - **iPhone-App:** vorbereitet mit Capacitor, gebaut wird sie an einem Mac. Anleitung, Apple-Regeln und Texte für den App Store: [APP-STORE.md](APP-STORE.md)
 - **Als Web-App:** Auf dem Handy lässt sich die Seite auf den Startbildschirm legen und startet dann ohne Browserleiste. Die App-Hülle (Seite, Bilder, Karte) lädt auch bei schlechtem Netz.
@@ -24,14 +26,17 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 | `src/kopfzeichen.svg` | Logo für die Kopfzeile (folgt hellem und dunklem Design) |
 | `src/styles.css` | Gestaltung „Garbsen in Miniatur“: Schiefer, Klinkerrot, Rapsgelb; helles und dunkles Design, drei Schriftgrößen |
 | `src/garbsen3d.js` | Die Nachbarschaft als 3D-Modell auf der Startseite (Three.js), offene Anfragen als Preisschilder über den Dächern |
-| `src/app.js` | App-Logik, eigene Karte von Garbsen (SVG, ohne Kartendienst), Demo- und Live-Modus, Nachrichten, Melden |
+| `src/app.js` | App-Logik, eigene Karte (Straßenkarte basemap.de, ohne Kartenbibliothek), Demo- und Live-Modus, Nachrichten, Melden |
 | `src/fragen.js` | Häufige Fragen (`#fragen`) |
 | `src/recht.js` | Impressum, Datenschutzerklärung, Nutzungsbedingungen, Regeln (Fassung für die Testphase, vor dem Start anwaltlich prüfen lassen) |
 | `supabase/schema.sql` | Tabellen, Zugriffsregeln und Funktionen für Supabase |
 | `supabase/updates/` | Einzelne Datenbank-Updates zum Einfügen im SQL Editor |
 | `supabase/functions/push/` | Edge Function für Benachrichtigungen: Verschlüsselung (RFC 8291) und Absender-Nachweis (VAPID) mit Bordmitteln |
 | `sw.js` | Offline-Hülle: Seite zuerst aus dem Netz, feste Dateien aus dem Speicher, Anfragen nie zwischengespeichert. Zeigt Benachrichtigungen an |
-| `tools/build.py` | Baut aus `src/` die fertige `index.html` |
+| `einstellungen.json` | Alle Angaben für den Betrieb an einer Stelle: Adresse, Datenbank, Push, Betreiber, Hosting, Schalter. Der Build prüft sie |
+| `tools/build.py` | Baut aus `src/` die fertige `index.html` und `version.json`; mit `--dist` den Ordner `dist/` für den eigenen Server |
+| `server/` | Eigener Server: `Caddyfile`, `docker-compose.yml`, `aktualisieren.sh`, Datensicherung `sicherung.sh` (siehe SERVER.md) |
+| `version.json` | Fassung der App. Die App fragt sie ab und bietet bei einer neuen Fassung „Neu laden“ an |
 | `assets/` | App-Icons, Three.js, Schriften (Barlow) und das Standbild der Miniatur für Geräte ohne 3D |
 | `manifest.webmanifest` | Angaben für „Zum Home-Bildschirm“ |
 | `design/logo/` | Logo „Hand Drauf“ als SVG (gestapelt, quer, hell, dunkel, App-Icon) und die Vorlage |

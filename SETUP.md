@@ -1,8 +1,8 @@
 # Datenbank (Supabase)
 
-**Stand (10. November 2026):** Alle Updates sind eingespielt, zuletzt „Für jemand anderen“, Telefon, Sicherheits-Code, Zähler und Benachrichtigungen (`supabase/updates/2026-11-fuer-wen-code-benachrichtigungen.sql`). Die Edge Function `push` ist eingerichtet. **Noch offen:** Teil 5 (`supabase/updates/2026-11-erinnerungen-richtwerte.sql`: Erinnerungen, Preisvorschläge aus echten Anfragen, „Ich helfe gern bei …“). Die App läuft auch ohne ihn, nutzt die neuen Funktionen aber erst danach. Das Supabase-Projekt **hand-drauf** läuft in Frankfurt (Projekt-ID `hgfwbjesolgneyapehta`, kostenloser Plan). Tabellen, Zugriffsregeln und Funktionen aus [`supabase/schema.sql`](supabase/schema.sql) sind eingespielt und getestet. Die App ist verbunden (`LIVE` in `src/app.js`) und läuft auf GitHub Pages mit echten Konten.
+**Stand (10. November 2026):** Eingespielt bis Teil 4 (`supabase/updates/2026-11-fuer-wen-code-benachrichtigungen.sql`). Die Edge Function `push` ist eingerichtet. **Noch offen:** Teil 5 (`2026-11-erinnerungen-richtwerte.sql`: Erinnerungen, Preisvorschläge aus echten Anfragen, „Ich helfe gern bei …“) und Teil 6 (`2026-11-fehlerberichte-indizes.sql`: Fehlerberichte der App, schnellere Indizes). Die App läuft auch ohne sie, nutzt die neuen Funktionen aber erst danach. Das Supabase-Projekt **hand-drauf** läuft in Frankfurt (Projekt-ID `hgfwbjesolgneyapehta`, kostenloser Plan). Tabellen, Zugriffsregeln und Funktionen aus [`supabase/schema.sql`](supabase/schema.sql) sind eingespielt und getestet. Die App ist verbunden (`supabase` in `einstellungen.json`) und läuft auf GitHub Pages mit echten Konten. Für den Umzug auf einen eigenen Server: [SERVER.md](SERVER.md).
 
-In `src/app.js` stehen nur die **Project URL** und der **Publishable key**. Beide sind öffentlich. Den **Secret key** bzw. **service_role** Key niemals weitergeben oder in die App schreiben.
+In `einstellungen.json` stehen nur die **Project URL** und der **Publishable key**. Beide sind öffentlich. Den **Secret key** bzw. **service_role** Key niemals weitergeben oder in die App schreiben. Der Build bricht ab, wenn dort ein solcher Schlüssel steht.
 
 ## Noch zu tun im Supabase-Dashboard
 
@@ -28,16 +28,16 @@ Der eingebaute E-Mail-Versand von Supabase schickt Bestätigungs-E-Mails **nur a
 
 ### 4. Anmelden mit Code (ohne Passwort) freischalten
 
-In der App ist alles fertig, aber noch ausgeschaltet (`CONFIG.codeLogin: false` in `src/app.js`), weil es den eigenen E-Mail-Versand aus Schritt 3 braucht. Danach:
+In der App ist alles fertig, aber noch ausgeschaltet (`"codeLogin": false` in `einstellungen.json`), weil es den eigenen E-Mail-Versand aus Schritt 3 braucht. Danach:
 
 1. **Authentication** → **Emails** → **Templates** → **Magic Link**: Betreff z. B. „Dein Code für Hand Drauf“, im Text statt des Links den Code einsetzen: `Dein Code: {{ .Token }}` (gilt eine Stunde).
-2. In `src/app.js` `codeLogin: true` setzen und neu bauen (`python3 tools/build.py`).
+2. In `einstellungen.json` `"codeLogin": true` setzen und neu bauen (`python3 tools/build.py`).
 
 Dann können sich alle ohne Passwort anmelden: E-Mail eingeben, Code mit 6 Ziffern aus der E-Mail abtippen. Das ersetzt auch „Passwort vergessen“.
 
 ### 5. Betreiber eintragen
 
-Für Impressum und Datenschutzerklärung in `src/app.js` unter `CONFIG.betreiber` Name, ladungsfähige Anschrift und E-Mail eintragen. Solange die Felder leer sind, zeigen die Rechtstexte einen gelben Hinweis.
+Für Impressum und Datenschutzerklärung in `einstellungen.json` unter `betreiber` Name, ladungsfähige Anschrift und E-Mail eintragen. Solange die Felder leer sind, zeigen die Rechtstexte einen gelben Hinweis.
 
 ## Benachrichtigungen aufs Handy
 
@@ -59,7 +59,11 @@ Eingerichtet am 10. November 2026, nichts mehr zu tun. So funktioniert es:
 
 Die Straßenkarte kommt ohne Einrichtung von [basemap.de](https://basemap.de), der amtlichen Webkarte von Bund und Ländern (kostenlos, ohne Schlüssel, Server in Deutschland, Lizenz CC BY 4.0). Ist basemap.de nicht erreichbar, nimmt die App OpenStreetMap, ohne Netz zeichnet sie Garbsen vereinfacht selbst.
 
-Optional: Mit einem kostenlosen Schlüssel von [carto.com](https://carto.com/basemaps) zeigt die Karte zuerst den Stil „Voyager“ (nachts „Dark Matter“). Den Schlüssel in `src/app.js` bei `CONFIG.karte.carto` eintragen und neu bauen. Gewerblich ist das bis 1 Million Kartenbilder im Monat kostenlos. CARTO sitzt in den USA, dann muss die Datenschutzerklärung (Abschnitt 3) ergänzt werden.
+Optional: Mit einem kostenlosen Schlüssel von [carto.com](https://carto.com/basemaps) zeigt die Karte zuerst den Stil „Voyager“ (nachts „Dark Matter“). Den Schlüssel in `einstellungen.json` bei `karte` → `carto` eintragen und neu bauen. Gewerblich ist das bis 1 Million Kartenbilder im Monat kostenlos. CARTO sitzt in den USA, dann muss die Datenschutzerklärung (Abschnitt 3) ergänzt werden.
+
+## Fehlerberichte ansehen (nach Teil 6)
+
+Stürzt die App auf einem Gerät ab, schickt sie eine kurze technische Meldung (ohne Namen und Inhalte). In Supabase links **Table Editor** → oben das Schema **privat** wählen → Tabelle **fehlerberichte**. Spalte `anzahl` zeigt, wie oft derselbe Fehler an diesem Tag kam, `geraet` den Browser. Nach 30 Tagen werden die Meldungen gelöscht. Am einfachsten: die Zeilen kopieren und Claude geben.
 
 ## Meldungen prüfen
 

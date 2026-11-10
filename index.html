@@ -21,7 +21,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<script>try{var a=JSON.parse(localStorage.getItem("handdrauf-ansicht")||"{}"),r=document.documentElement;if(a.thema==="dunkel"||a.thema==="hell")r.setAttribute("data-theme",a.thema==="dunkel"?"dark":"light");if(a.schrift==="gross"||a.schrift==="sehr-gross")r.setAttribute("data-schrift",a.schrift)}catch(e){}</script>
+<script>try{var a=JSON.parse(localStorage.getItem("handdrauf-ansicht")||"{}"),r=document.documentElement;if(a.thema==="dunkel"||a.thema==="hell")r.setAttribute("data-theme",a.thema==="dunkel"?"dark":"light");if(a.schrift==="gross"||a.schrift==="sehr-gross")r.setAttribute("data-schrift",a.schrift)}catch(e){}(function(){var U="https://hgfwbjesolgneyapehta.supabase.co",K="sb_publishable_aHSISOj3lPHJwpWqa64gnA_iLcJV1w3",F="18f388710f",n=0,g={};if(!U||!window.addEventListener)return;function m(t,s){try{t=String(t||"");s=String(s||"");if(!t||n>=5||/ResizeObserver loop|^Script error/i.test(t)||g[t])return;g[t]=1;n++;var x=new XMLHttpRequest();x.open("POST",U+"/rest/v1/rpc/fehler_melden");x.setRequestHeader("Content-Type","application/json");x.setRequestHeader("apikey",K);x.onload=function(){if(x.status===404)n=99};x.send(JSON.stringify({p_nachricht:t.slice(0,300),p_stelle:s.slice(0,200),p_geraet:String(navigator.userAgent).slice(0,200),p_fassung:F}))}catch(e){}}window.addEventListener("error",function(e){if(!e||!e.message)return;var f=String(e.filename||"");if(f&&f.indexOf(location.protocol+"//"+location.host)!==0)return;m(e.message,f.replace(/[?#].*$/,"").split("/").pop()+":"+(e.lineno||0)+":"+(e.colno||0))});window.addEventListener("unhandledrejection",function(e){var r=e&&e.reason,t=r&&(r.message||String(r))||"";if(/fetch|load failed|network|abort|timeout|JWT|auth/i.test(t))return;m("Promise: "+t,"")});window.hdFehler=m})();</script>
 <link rel="preload" href="assets/fonts/barlow-regular.woff" as="font" type="font/woff" crossorigin><link rel="preload" href="assets/fonts/barlowsemicondensed-bold.woff" as="font" type="font/woff" crossorigin>
 <style>
 /* ===== Hand Drauf: Garbsen in Miniatur =====
@@ -678,6 +678,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 1600; max-width: calc(100% - 32px); width: max-content; background: var(--ink); color: var(--surface); padding: 13px 18px; border-radius: 999px; font-weight: 600; font-size: 1rem; box-shadow: var(--schatten-2); opacity: 0; pointer-events: none; transition: opacity .2s, transform .25s cubic-bezier(.3, 1.4, .5, 1); }
 .toast.zeigen { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+/* Ohne Internet: schmaler Streifen oben */
+html.ist-offline body { padding-top: 34px; }
+.offline-hinweis { position: fixed; left: 0; right: 0; top: 0; z-index: 1700; padding: calc(6px + env(safe-area-inset-top, 0px)) 16px 6px; background: var(--warn-bg); color: var(--warn); font-weight: 600; font-size: 0.9375rem; text-align: center; box-shadow: var(--schatten-1); }
+/* Neue Fassung: Karte über der Tab-Leiste, bleibt bis zur Entscheidung */
+.neue-fassung { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); -webkit-transform: translateX(-50%); transform: translateX(-50%); z-index: 1650; width: calc(100% - 32px); max-width: 440px; box-sizing: border-box; padding: 14px 16px; border-radius: var(--r-l); background: var(--surface); color: var(--ink); box-shadow: var(--schatten-2); }
+.neue-fassung p { margin: 0 0 10px; font-weight: 600; }
+.neue-fassung-knoepfe { display: -webkit-flex; display: flex; -webkit-justify-content: flex-end; justify-content: flex-end; }
+.neue-fassung-knoepfe .btn + .btn { margin-left: 10px; }
 
 /* ----- Nachrichten ----- */
 .chat { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding-top: 16px; border-top: 1px solid var(--line); }
@@ -1242,8 +1250,17 @@ a.btn { text-decoration: none; }
   <div class="sheet-inner" id="sheet-inhalt"></div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="offline-hinweis" id="offline" role="status" hidden>Keine Internetverbindung. Du siehst den letzten Stand.</div>
+<div class="neue-fassung" id="neue-fassung" role="status" hidden>
+  <p>Es gibt eine neue Fassung von Hand Drauf.</p>
+  <div class="neue-fassung-knoepfe">
+    <button type="button" class="btn btn-secondary btn-auto" data-spaeter>Später</button>
+    <button type="button" class="btn btn-primary btn-auto" data-neu-laden>Neu laden</button>
+  </div>
+</div>
 
 <script>
+const EINSTELLUNGEN = {"adresse": "https://z6dfczy4jt-code.github.io/Nachbarhand/", "supabase": {"url": "https://hgfwbjesolgneyapehta.supabase.co", "key": "sb_publishable_aHSISOj3lPHJwpWqa64gnA_iLcJV1w3"}, "push": "BAeSkBv6_TrKXn_vTxc3F5qJOLIJ2bIjB3ro4IFlHjX32LlpKFu4quz2Wr5DVsCatqeKFvXfYHgCZRPQr29zAuc", "betreiber": {"name": "", "anschrift": "", "email": "", "telefon": ""}, "hosting": {"art": "github", "anbieter": "", "standort": ""}, "karte": {"carto": ""}, "codeLogin": false, "gebuehren": false, "supabaseJs": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js", "fassung": "18f388710f"};
 /* Tätigkeits-Bilder: Microsoft Fluent Emoji 3D (MIT), siehe src/kategorien/LIZENZ-fluent-emoji.txt */
 const KAT_BILDER = {
   alle: 'data:image/webp;base64,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',
@@ -1260,9 +1277,9 @@ const QR_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 37 37\" 
 /* Rechtstexte von Hand Drauf: Impressum, Datenschutz, Nutzungsbedingungen, Regeln.
    Fassung für die Testphase (Weg 1: ohne Bezahlung über die App). Vor dem öffentlichen Start
    von einer Anwältin oder einem Anwalt für IT-Recht prüfen lassen.
-   b = Betreiberdaten aus CONFIG.betreiber, e = HTML-Escape-Funktion. */
+   b = Betreiberdaten, h = Hosting (beides aus einstellungen.json), e = HTML-Escape-Funktion. */
 const RECHT_STAND = 'November 2026';
-function RECHT_TEXTE(b, e) {
+function RECHT_TEXTE(b, h, e) {
   const fehlt = !b.name || !b.anschrift || !b.email;
   const name = b.name ? e(b.name) : '<span class="platzhalter">[Name des Betreibers]</span>';
   const anschrift = b.anschrift ? e(b.anschrift).replace(/\n/g, '<br>') : '<span class="platzhalter">[Straße, Hausnummer, PLZ, Ort]</span>';
@@ -1297,8 +1314,11 @@ function RECHT_TEXTE(b, e) {
         <p>${name}<br>${anschrift}<br>E-Mail: ${mail}</p>
 
         <h3>2. Wenn du die App aufrufst</h3>
-        <p>Die App liegt bei GitHub Pages, einem Dienst von GitHub (GitHub B.V., Prins Bernhardplein 200, 1097 JB Amsterdam, Niederlande, und GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA). Beim Aufruf verarbeitet GitHub technisch notwendige Daten wie deine IP-Adresse, Zeitpunkt, Browser und Betriebssystem, um die Seite auszuliefern und vor Angriffen zu schützen. Rechtsgrundlage ist unser berechtigtes Interesse an einer sicheren, erreichbaren App (Art. 6 Abs. 1 lit. f DSGVO). Für Übermittlungen in die USA stützt sich GitHub auf das EU-US Data Privacy Framework und auf EU-Standardvertragsklauseln.</p>
+        ${h && h.art === 'server' ? `<p>Die App liegt auf einem Server, den wir bei ${h.anbieter ? e(h.anbieter) : '<span class="platzhalter">[Anbieter mit Anschrift]</span>'} gemietet haben${h.standort ? ` (Standort: ${e(h.standort)})` : ''}. Mit dem Anbieter besteht ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO). Beim Aufruf verarbeitet der Server technisch notwendige Daten wie deine IP-Adresse, Zeitpunkt, Browser und Betriebssystem, um die Seite auszuliefern. Zugriffe protokolliert der Server nicht. Rechtsgrundlage ist unser berechtigtes Interesse an einer sicheren, erreichbaren App (Art. 6 Abs. 1 lit. f DSGVO).</p>`
+          : '<p>Die App liegt bei GitHub Pages, einem Dienst von GitHub (GitHub B.V., Prins Bernhardplein 200, 1097 JB Amsterdam, Niederlande, und GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA). Beim Aufruf verarbeitet GitHub technisch notwendige Daten wie deine IP-Adresse, Zeitpunkt, Browser und Betriebssystem, um die Seite auszuliefern und vor Angriffen zu schützen. Rechtsgrundlage ist unser berechtigtes Interesse an einer sicheren, erreichbaren App (Art. 6 Abs. 1 lit. f DSGVO). Für Übermittlungen in die USA stützt sich GitHub auf das EU-US Data Privacy Framework und auf EU-Standardvertragsklauseln.</p>'}
         <p>Schriften, Bilder und die Bibliothek für das 3D-Modell liefern wir selbst aus. Dafür werden keine Daten an Google oder andere Anbieter übertragen.</p>
+        <p>Tritt in der App ein technischer Fehler auf, schickt sie eine kurze Meldung an unsere Datenbank: den Fehlertext, die Stelle im Programm, Browser und Gerätetyp sowie die Fassung der App. Namen, Inhalte und deine IP-Adresse speichern wir dabei nicht. Gleiche Meldungen werden nur gezählt, nach 30 Tagen löschen wir sie. So finden wir Fehler, die nur auf bestimmten Geräten auftreten. Rechtsgrundlage ist unser berechtigtes Interesse an einer funktionierenden App (Art. 6 Abs. 1 lit. f DSGVO).</p>
+        ${h && h.supabaseCdn ? '<p>Die Programmbibliothek für die Verbindung zur Datenbank (supabase-js) lädt dein Gerät beim ersten Anmelden vom Dienst jsDelivr (www.jsdelivr.com). Dabei wird deine IP-Adresse an dessen Server übertragen. Rechtsgrundlage ist unser berechtigtes Interesse an einer funktionierenden App (Art. 6 Abs. 1 lit. f DSGVO).</p>' : ''}
 
         <h3>3. Karte</h3>
         <p>Die Kartenbilder (Straßen, Namen, Parks) lädt dein Gerät von basemap.de, der amtlichen Webkarte von Bund und Ländern. Die Server betreibt das Bundesamt für Kartographie und Geodäsie (BKG), Richard-Strauss-Allee 11, 60598 Frankfurt am Main. Dabei werden deine IP-Adresse und der gezeigte Kartenausschnitt übertragen. Sind diese Server nicht erreichbar, lädt die App die Kartenbilder von OpenStreetMap (OpenStreetMap Foundation, Großbritannien; für Großbritannien gilt ein Angemessenheitsbeschluss der EU-Kommission) oder von openstreetmap.de (FOSSGIS e.V., Deutschland). Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO: Ohne Karte kann die App nicht zeigen, wo Hilfe gesucht wird.</p>
@@ -2140,7 +2160,8 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   const DREI_URL = './assets/vendor/three-0.170.0.module.min.js';
   // Läuft die App als iPhone-App (Capacitor)? Dann liegt sie lokal auf dem Gerät, Links zeigen auf die Website.
   const NATIV = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-  const OEFFENTLICH = 'https://z6dfczy4jt-code.github.io/Nachbarhand/';
+  // Alle Angaben für den Betrieb stehen in einstellungen.json; der Build setzt sie hier als EINSTELLUNGEN ein.
+  const OEFFENTLICH = EINSTELLUNGEN.adresse;
   const PLUGINS = {};
   function plugin(name) { // native Erweiterungen (@capacitor/share, @capacitor/filesystem), nur in der iPhone-App
     if (!NATIV) return null;
@@ -2157,15 +2178,13 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   // Leer = Demo-Modus mit erfundenen Beispieldaten.
   // Supabase-Projekt „hand-drauf“ (Frankfurt). Beide Werte sind öffentlich; die Zugriffsregeln in der Datenbank schützen die Daten.
   // Niemals den Secret- oder service_role-Key hier eintragen.
-  const LIVE = {
-    url: 'https://hgfwbjesolgneyapehta.supabase.co',
-    key: 'sb_publishable_aHSISOj3lPHJwpWqa64gnA_iLcJV1w3'
-  };
-  const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js';
+  const LIVE = { url: EINSTELLUNGEN.supabase.url, key: EINSTELLUNGEN.supabase.key };
+  // supabase-js: vom eigenen Server, wenn die Datei in assets/vendor liegt (siehe SERVER.md), sonst vom CDN
+  const SUPABASE_JS = EINSTELLUNGEN.supabaseJs;
 
   /* ===== Einstellungen: Gebühren, Regeln und Karte hier anpassen ===== */
   const CONFIG = {
-    gebuehren: false,          // Weg 2 (Bezahlung über die App mit Gebühren). Erst einschalten, wenn Stripe eingerichtet ist
+    gebuehren: !!EINSTELLUNGEN.gebuehren, // Weg 2 (Bezahlung über die App mit Gebühren). Erst einschalten, wenn Stripe eingerichtet ist
     gebuehrAuftraggeber: 0.99, // Weg 2: fester Betrag, den die suchende Person zusätzlich zahlt
     provisionHelfer: 0.05,     // Weg 2: Anteil, der vom Betrag des Helfers abgeht
     minBetrag: 5,
@@ -2174,16 +2193,17 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     bereichMeter: 250,         // Radius des ungefähren Bereichs um eine Anfrage
     // Kartenbilder: ohne Eintrag die amtliche Straßenkarte basemap.de (Bund und Länder, kostenlos, ohne Schlüssel).
     // Optional mit kostenlosem Schlüssel von carto.com (siehe SETUP.md) der Stil „Voyager“. Der Schlüssel ist öffentlich.
-    karte: { carto: '' },
+    karte: { carto: EINSTELLUNGEN.karte.carto || '' },
     // Anmelden mit einem Code per E-Mail statt mit Passwort. Erst einschalten, wenn der E-Mail-Versand
     // eingerichtet ist und die E-Mail-Vorlage den Code enthält (siehe SETUP.md).
-    codeLogin: false,
+    codeLogin: !!EINSTELLUNGEN.codeLogin,
     // Öffentlicher Schlüssel für Benachrichtigungen aufs Handy (Web Push). Der private Schlüssel liegt
     // nur in der Datenbank. Leer = Benachrichtigungen aus.
-    push: 'BAeSkBv6_TrKXn_vTxc3F5qJOLIJ2bIjB3ro4IFlHjX32LlpKFu4quz2Wr5DVsCatqeKFvXfYHgCZRPQr29zAuc',
+    push: EINSTELLUNGEN.push || '',
     ich: { name: 'Tim', initialen: 'TS', stadtteil: 'Garbsen-Mitte', lat: 52.4248, lng: 9.5962 }, // Demo-Person
     // Betreiber für Impressum und Datenschutz. Vor dem öffentlichen Start ausfüllen.
-    betreiber: { name: '', anschrift: '', email: '', telefon: '' }
+    betreiber: EINSTELLUNGEN.betreiber,
+    hosting: EINSTELLUNGEN.hosting
   };
 
 
@@ -2274,7 +2294,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
 
   const SPEICHER = 'nachbarhand-prototyp-v3';
   const VIEWS = ['entdecken', 'karte', 'neu', 'auftraege'];
-  const RECHT = RECHT_TEXTE(CONFIG.betreiber, (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+  const RECHT = RECHT_TEXTE(CONFIG.betreiber, Object.assign({ supabaseCdn: /^https?:/.test(SUPABASE_JS) }, CONFIG.hosting), (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
   const FRAGEN = FRAGEN_TEXTE(CONFIG);
   const istSeite = (n) => !!RECHT[n] || n === 'fragen'; // Seiten mit eigener Adresse (#impressum, #fragen …)
   const EIGEN_VERSATZ = [[180, -150], [-160, 170], [220, 160], [-210, -190]]; // Demo: Meter Nord/Ost ab deinem Standort
@@ -5088,6 +5108,39 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   if ('serviceWorker' in navigator && !VORSCHAU && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* ohne Offline-Hülle weiter */ }); });
   }
+
+  /* ===== Neue Fassung und Verbindung =====
+     Liegt die App lange offen (z. B. auf dem Startbildschirm), fragt sie beim Zurückkehren nach, ob es eine neue
+     Fassung gibt, und bietet „Neu laden“ an. Ohne Internet steht oben ein kurzer Hinweis. */
+  const FASSUNG = EINSTELLUNGEN.fassung || '';
+  let fassungZuletzt = 0;
+  async function fassungPruefen(sofort) {
+    if (VORSCHAU || NATIV || !FASSUNG || !window.fetch || document.visibilityState === 'hidden') return;
+    if (!sofort && Date.now() - fassungZuletzt < 20 * 60 * 1000) return;
+    fassungZuletzt = Date.now();
+    try {
+      const antwort = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!antwort.ok) return;
+      const neu = await antwort.json();
+      if (neu && neu.fassung && neu.fassung !== FASSUNG) $('#neue-fassung').hidden = false;
+    } catch (e) { /* ohne Netz: beim nächsten Mal */ }
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') fassungPruefen(); });
+  setInterval(() => fassungPruefen(), 5 * 60 * 1000);
+  // Kurz nach dem Start einmal: falls die Seite ohne Netz aus dem Speicher kam
+  setTimeout(() => fassungPruefen(true), 8000);
+  $('#neue-fassung').addEventListener('click', (e) => {
+    if (e.target.closest('[data-neu-laden]')) location.reload();
+    else if (e.target.closest('[data-spaeter]')) $('#neue-fassung').hidden = true;
+  });
+  function verbindungZeigen() {
+    const offline = !VORSCHAU && navigator.onLine === false;
+    $('#offline').hidden = !offline;
+    document.documentElement.classList.toggle('ist-offline', offline);
+  }
+  window.addEventListener('online', verbindungZeigen);
+  window.addEventListener('offline', verbindungZeigen);
+  verbindungZeigen();
 
   /* ===== Benachrichtigungen aufs Handy (Web Push) =====
      Das Gerät meldet sich beim Dienst seines Browsers an und gibt uns eine Adresse dafür. Die Datenbank

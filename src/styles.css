@@ -648,6 +648,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 1600; max-width: calc(100% - 32px); width: max-content; background: var(--ink); color: var(--surface); padding: 13px 18px; border-radius: 999px; font-weight: 600; font-size: 1rem; box-shadow: var(--schatten-2); opacity: 0; pointer-events: none; transition: opacity .2s, transform .25s cubic-bezier(.3, 1.4, .5, 1); }
 .toast.zeigen { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+/* Ohne Internet: schmaler Streifen oben */
+html.ist-offline body { padding-top: 34px; }
+.offline-hinweis { position: fixed; left: 0; right: 0; top: 0; z-index: 1700; padding: calc(6px + env(safe-area-inset-top, 0px)) 16px 6px; background: var(--warn-bg); color: var(--warn); font-weight: 600; font-size: 0.9375rem; text-align: center; box-shadow: var(--schatten-1); }
+/* Neue Fassung: Karte über der Tab-Leiste, bleibt bis zur Entscheidung */
+.neue-fassung { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); -webkit-transform: translateX(-50%); transform: translateX(-50%); z-index: 1650; width: calc(100% - 32px); max-width: 440px; box-sizing: border-box; padding: 14px 16px; border-radius: var(--r-l); background: var(--surface); color: var(--ink); box-shadow: var(--schatten-2); }
+.neue-fassung p { margin: 0 0 10px; font-weight: 600; }
+.neue-fassung-knoepfe { display: -webkit-flex; display: flex; -webkit-justify-content: flex-end; justify-content: flex-end; }
+.neue-fassung-knoepfe .btn + .btn { margin-left: 10px; }
 
 /* ----- Nachrichten ----- */
 .chat { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding-top: 16px; border-top: 1px solid var(--line); }

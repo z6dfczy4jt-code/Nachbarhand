@@ -1,9 +1,9 @@
 /* Rechtstexte von Hand Drauf: Impressum, Datenschutz, Nutzungsbedingungen, Regeln.
    Fassung für die Testphase (Weg 1: ohne Bezahlung über die App). Vor dem öffentlichen Start
    von einer Anwältin oder einem Anwalt für IT-Recht prüfen lassen.
-   b = Betreiberdaten aus CONFIG.betreiber, e = HTML-Escape-Funktion. */
+   b = Betreiberdaten, h = Hosting (beides aus einstellungen.json), e = HTML-Escape-Funktion. */
 const RECHT_STAND = 'November 2026';
-function RECHT_TEXTE(b, e) {
+function RECHT_TEXTE(b, h, e) {
   const fehlt = !b.name || !b.anschrift || !b.email;
   const name = b.name ? e(b.name) : '<span class="platzhalter">[Name des Betreibers]</span>';
   const anschrift = b.anschrift ? e(b.anschrift).replace(/\n/g, '<br>') : '<span class="platzhalter">[Straße, Hausnummer, PLZ, Ort]</span>';
@@ -38,8 +38,11 @@ function RECHT_TEXTE(b, e) {
         <p>${name}<br>${anschrift}<br>E-Mail: ${mail}</p>
 
         <h3>2. Wenn du die App aufrufst</h3>
-        <p>Die App liegt bei GitHub Pages, einem Dienst von GitHub (GitHub B.V., Prins Bernhardplein 200, 1097 JB Amsterdam, Niederlande, und GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA). Beim Aufruf verarbeitet GitHub technisch notwendige Daten wie deine IP-Adresse, Zeitpunkt, Browser und Betriebssystem, um die Seite auszuliefern und vor Angriffen zu schützen. Rechtsgrundlage ist unser berechtigtes Interesse an einer sicheren, erreichbaren App (Art. 6 Abs. 1 lit. f DSGVO). Für Übermittlungen in die USA stützt sich GitHub auf das EU-US Data Privacy Framework und auf EU-Standardvertragsklauseln.</p>
+        ${h && h.art === 'server' ? `<p>Die App liegt auf einem Server, den wir bei ${h.anbieter ? e(h.anbieter) : '<span class="platzhalter">[Anbieter mit Anschrift]</span>'} gemietet haben${h.standort ? ` (Standort: ${e(h.standort)})` : ''}. Mit dem Anbieter besteht ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO). Beim Aufruf verarbeitet der Server technisch notwendige Daten wie deine IP-Adresse, Zeitpunkt, Browser und Betriebssystem, um die Seite auszuliefern. Zugriffe protokolliert der Server nicht. Rechtsgrundlage ist unser berechtigtes Interesse an einer sicheren, erreichbaren App (Art. 6 Abs. 1 lit. f DSGVO).</p>`
+          : '<p>Die App liegt bei GitHub Pages, einem Dienst von GitHub (GitHub B.V., Prins Bernhardplein 200, 1097 JB Amsterdam, Niederlande, und GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA). Beim Aufruf verarbeitet GitHub technisch notwendige Daten wie deine IP-Adresse, Zeitpunkt, Browser und Betriebssystem, um die Seite auszuliefern und vor Angriffen zu schützen. Rechtsgrundlage ist unser berechtigtes Interesse an einer sicheren, erreichbaren App (Art. 6 Abs. 1 lit. f DSGVO). Für Übermittlungen in die USA stützt sich GitHub auf das EU-US Data Privacy Framework und auf EU-Standardvertragsklauseln.</p>'}
         <p>Schriften, Bilder und die Bibliothek für das 3D-Modell liefern wir selbst aus. Dafür werden keine Daten an Google oder andere Anbieter übertragen.</p>
+        <p>Tritt in der App ein technischer Fehler auf, schickt sie eine kurze Meldung an unsere Datenbank: den Fehlertext, die Stelle im Programm, Browser und Gerätetyp sowie die Fassung der App. Namen, Inhalte und deine IP-Adresse speichern wir dabei nicht. Gleiche Meldungen werden nur gezählt, nach 30 Tagen löschen wir sie. So finden wir Fehler, die nur auf bestimmten Geräten auftreten. Rechtsgrundlage ist unser berechtigtes Interesse an einer funktionierenden App (Art. 6 Abs. 1 lit. f DSGVO).</p>
+        ${h && h.supabaseCdn ? '<p>Die Programmbibliothek für die Verbindung zur Datenbank (supabase-js) lädt dein Gerät beim ersten Anmelden vom Dienst jsDelivr (www.jsdelivr.com). Dabei wird deine IP-Adresse an dessen Server übertragen. Rechtsgrundlage ist unser berechtigtes Interesse an einer funktionierenden App (Art. 6 Abs. 1 lit. f DSGVO).</p>' : ''}
 
         <h3>3. Karte</h3>
         <p>Die Kartenbilder (Straßen, Namen, Parks) lädt dein Gerät von basemap.de, der amtlichen Webkarte von Bund und Ländern. Die Server betreibt das Bundesamt für Kartographie und Geodäsie (BKG), Richard-Strauss-Allee 11, 60598 Frankfurt am Main. Dabei werden deine IP-Adresse und der gezeigte Kartenausschnitt übertragen. Sind diese Server nicht erreichbar, lädt die App die Kartenbilder von OpenStreetMap (OpenStreetMap Foundation, Großbritannien; für Großbritannien gilt ein Angemessenheitsbeschluss der EU-Kommission) oder von openstreetmap.de (FOSSGIS e.V., Deutschland). Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO: Ohne Karte kann die App nicht zeigen, wo Hilfe gesucht wird.</p>

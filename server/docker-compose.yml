@@ -1,0 +1,21 @@
+# Startet Hand Drauf auf dem eigenen Server: docker compose up -d   (im Ordner server/)
+# Vorher: python3 tools/build.py --dist   und   server/.env anlegen (Vorlage: .env.beispiel)
+services:
+  web:
+    image: caddy:2.8.4-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    env_file: .env
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./erzeugt:/etc/caddy/erzeugt:ro
+      - ../dist:/srv:ro
+      - caddy_daten:/data
+      - caddy_einstellungen:/config
+
+volumes:
+  caddy_daten:
+  caddy_einstellungen:

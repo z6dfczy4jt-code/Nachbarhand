@@ -1,0 +1,29 @@
+{
+  "_hinweis": "Alle Angaben für den Betrieb an einer Stelle. Nach jeder Änderung neu bauen: python3 tools/build.py (für den eigenen Server: python3 tools/build.py --dist). Siehe SERVER.md.",
+  "adresse": "https://z6dfczy4jt-code.github.io/Nachbarhand/",
+  "supabase": {
+    "_hinweis": "Nur Project URL und Publishable Key. Niemals den Secret- oder service_role-Key eintragen, der Build bricht dann ab.",
+    "url": "https://hgfwbjesolgneyapehta.supabase.co",
+    "key": "sb_publishable_aHSISOj3lPHJwpWqa64gnA_iLcJV1w3"
+  },
+  "push": "BAeSkBv6_TrKXn_vTxc3F5qJOLIJ2bIjB3ro4IFlHjX32LlpKFu4quz2Wr5DVsCatqeKFvXfYHgCZRPQr29zAuc",
+  "betreiber": {
+    "_hinweis": "Für Impressum und Datenschutz. Vor dem öffentlichen Start ausfüllen.",
+    "name": "",
+    "anschrift": "",
+    "email": "",
+    "telefon": ""
+  },
+  "hosting": {
+    "_hinweis": "art: github (GitHub Pages) oder server (eigener Server). Bei server: Anbieter mit Anschrift und Standort der Rechenzentren eintragen.",
+    "art": "github",
+    "anbieter": "",
+    "standort": ""
+  },
+  "karte": {
+    "_hinweis": "carto: optionaler Schlüssel von carto.com für den Kartenstil Voyager. Leer = basemap.de.",
+    "carto": ""
+  },
+  "codeLogin": false,
+  "gebuehren": false
+}

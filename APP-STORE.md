@@ -29,7 +29,7 @@ Quelle: [App Review Guidelines](https://developer.apple.com/app-store/review/gui
 | 1.2 Inhalte von Nutzern | Filter für anstößige Inhalte | Erledigt: Wortfilter in App und Datenbank |
 | | Melden und zeitnahe Reaktion | Erledigt: „Melden“ in jeder Anfrage. **Offen:** Meldungen wirklich zeitnah prüfen (Ziel: innerhalb von 24 Stunden) |
 | | Nutzer blockieren | Erledigt: im Profil, aufheben unter „Konto“ |
-| | Veröffentlichte Kontaktdaten | **Offen:** Betreiber-Daten in `CONFIG.betreiber` eintragen (Impressum, E-Mail) |
+| | Veröffentlichte Kontaktdaten | **Offen:** Betreiber-Daten in `einstellungen.json` (`betreiber`) eintragen (Impressum, E-Mail) |
 | 5.1.1 (v) | Konto in der App löschen | Erledigt: „Konto löschen“ unter „Konto“ |
 | 5.1.1 Datenschutz | Datenschutzerklärung in der App und in App Store Connect | Erledigt in der App. Link für App Store Connect: `https://z6dfczy4jt-code.github.io/Nachbarhand/#datenschutz` |
 | 3.1.3 (e) | Dienstleistungen, die außerhalb der App erbracht werden, **nicht** über In-App-Kauf bezahlen | Passt: Testphase ohne Bezahlung, später Stripe. Apple bekommt dafür keine Provision |
@@ -125,7 +125,7 @@ Bei jeder Änderung an der App: `npm run app:bauen`, in Xcode die **Build**-Numm
 ## Vor dem Einreichen: Liste
 
 - [ ] Entwicklerkonto (Privatperson oder Organisation) und App in App Store Connect anlegen
-- [ ] Betreiber-Daten in `CONFIG.betreiber` (Impressum, Kontakt-E-Mail) eintragen
+- [ ] Betreiber-Daten in `einstellungen.json` (`betreiber`) (Impressum, Kontakt-E-Mail) eintragen
 - [ ] E-Mail-Versand (SMTP) in Supabase einrichten, siehe `SETUP.md`
 - [ ] Test-Konto für Apple anlegen (E-Mail bestätigt, eine Beispiel-Anfrage)
 - [ ] Push-Mitteilungen einbauen (empfohlen wegen Regel 4.2, braucht den Apple-Push-Schlüssel aus dem Entwicklerkonto)

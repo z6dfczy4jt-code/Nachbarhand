@@ -1,0 +1,37 @@
+# Hand Drauf auf dem eigenen Server (Caddy holt das HTTPS-Zertifikat selbst).
+# Domain und E-Mail stehen in server/.env (Vorlage: .env.beispiel). Anleitung: SERVER.md
+{
+	email {$EMAIL}
+}
+
+{$DOMAIN} {
+	root * /srv
+	encode zstd gzip
+
+	# Sicherheits-Kopfzeilen (Content-Security-Policy usw.), erzeugt von: python3 tools/build.py --dist
+	import /etc/caddy/erzeugt/kopfzeilen.caddy
+
+	# Seite, Offline-Hülle und Manifest immer frisch prüfen, damit Updates sofort ankommen
+	@frisch path / /index.html /sw.js /manifest.webmanifest
+	header @frisch Cache-Control "no-cache"
+	# Bilder, Schriften, Bibliotheken: eine Woche aus dem Speicher des Geräts
+	@dateien path /assets/*
+	header @dateien Cache-Control "public, max-age=604800"
+
+	# Die .htaccess ist nur für Webspace mit Apache gedacht
+	@versteckt path /.htaccess
+	respond @versteckt 404
+
+	# Keine Zugriffsprotokolle (Datenschutz): Caddy schreibt sie nur mit der Anweisung "log".
+	file_server
+
+	handle_errors {
+		rewrite * /404.html
+		file_server
+	}
+}
+
+# www.domain leitet auf die Domain ohne www
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}

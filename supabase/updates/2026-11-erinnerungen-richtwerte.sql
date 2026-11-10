@@ -1,4 +1,4 @@
--- Hand Drauf: Datenbank-Update November 2026, Teil 5 (eingespielt am 10. November 2026)
+-- Hand Drauf: Datenbank-Update November 2026, Teil 5 (noch nicht eingespielt, siehe SETUP.md)
 -- * Erinnerungen per Benachrichtigung: am Abend vor dem Termin, am Tag danach („erledigt melden?“),
 --   und wenn eine Bestätigung fehlt. Stündlich über pg_cron.
 -- * Übliche Beträge je Tätigkeit aus echten Anfragen (richtwerte)

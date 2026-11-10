@@ -2,3 +2,9 @@ app/www/
 node_modules/
 .DS_Store
 __pycache__/
+dist/
+server/erzeugt/
+server/.env
+server/sicherung.env
+server/sicherungen/
+weiterleitung/
