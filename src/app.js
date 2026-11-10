@@ -1194,10 +1194,11 @@
     kartenStatus.huelle.classList.add('ohne-kacheln');
     kartenStatus.huelle.classList.remove('k-filter');
     $('.k-quelle').textContent = 'Vereinfacht · Lage: © OpenStreetMap-Mitwirkende, GeoNames';
+    // Hinweis direkt auf der Karte, damit niemand die vereinfachte Zeichnung für die echte Karte hält
     const hinweis = $('#karte-hinweis');
-    hinweis.textContent = VORSCHAU
-      ? 'In dieser Vorschau dürfen keine Kartenbilder geladen werden. In der App siehst du hier die Straßenkarte mit allen Straßen und Namen.'
-      : 'Die Straßenkarte ist gerade nicht erreichbar, deshalb siehst du Garbsen vereinfacht. Sobald das Internet wieder da ist, kommt sie zurück.';
+    hinweis.innerHTML = VORSCHAU
+      ? `<p><strong>Die echte Straßenkarte gibt es nur in der App.</strong> Hier im Chat darf die Vorschau keine Kartenbilder laden, deshalb siehst du Garbsen nur vereinfacht.</p><a class="btn btn-primary btn-auto" href="${OEFFENTLICH}#karte" target="_blank" rel="noopener">Karte in der App öffnen</a>`
+      : '<p><strong>Straßenkarte gerade nicht erreichbar.</strong> Du siehst Garbsen vereinfacht. Sobald das Internet wieder da ist, kommt sie zurück.</p>';
     hinweis.hidden = false;
     // Ohne Kartenbilder lässt sich nicht so nah heranzoomen
     if (kartenStatus.blick && kartenStatus.w) kartenStatus.blick = blickBegrenzen(kartenStatus.blick);
