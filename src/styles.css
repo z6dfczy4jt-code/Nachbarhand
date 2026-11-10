@@ -42,6 +42,7 @@
   --map-stadt-rand: #CDD6C8;
   --map-mein: #D5E2EE;
   --map-hover: #E4EBE1;
+  --map-kachel-grund: #F2EFE9;
   --schatten-1: 0 1px 2px rgba(28, 37, 48, .06), 0 2px 10px rgba(28, 37, 48, .05);
   --schatten-2: 0 2px 6px rgba(28, 37, 48, .06), 0 14px 36px rgba(28, 37, 48, .14);
   --shadow: var(--schatten-2);
@@ -64,7 +65,7 @@
     --accent: #F4B400; --accent-tief: #D99E00; --on-accent: #1F1A0A; --hedge: #4CC27A; --on-hedge: #062312; --good-bg: #10301E;
     --warn: #FFB44D; --warn-bg: #36270D; --crit: #FF7466; --crit-flaeche: #B3261E; --klinker-text: #F0907E; --focus: #5AA2FF; --you: #5AA2FF;
     --sky-oben: #08111F; --sky-unten: #1A2D4D;
-    --map-land: #152030; --map-area: #22324A; --map-edge: #34465E; --map-label: #9AA6B5; --map-sockel: #0B121C; --map-umland: #0F1824; --map-stadt: #172232; --map-stadt-rand: #24334A; --map-mein: #1F3552; --map-hover: #233246;
+    --map-land: #152030; --map-area: #22324A; --map-edge: #34465E; --map-label: #9AA6B5; --map-sockel: #0B121C; --map-umland: #0F1824; --map-stadt: #172232; --map-stadt-rand: #24334A; --map-mein: #1F3552; --map-hover: #233246; --map-kachel-grund: #1B1D22;
     --schatten-1: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 10px rgba(0, 0, 0, .3);
     --schatten-2: 0 2px 6px rgba(0, 0, 0, .4), 0 14px 36px rgba(0, 0, 0, .5);
     --glas: rgba(27, 40, 57, .72); --glas-rand: rgba(255, 255, 255, .08);
@@ -78,7 +79,7 @@
   --accent: #F4B400; --accent-tief: #D99E00; --on-accent: #1F1A0A; --hedge: #4CC27A; --on-hedge: #062312; --good-bg: #10301E;
   --warn: #FFB44D; --warn-bg: #36270D; --crit: #FF7466; --crit-flaeche: #B3261E; --klinker-text: #F0907E; --focus: #5AA2FF; --you: #5AA2FF;
   --sky-oben: #08111F; --sky-unten: #1A2D4D;
-  --map-land: #152030; --map-area: #22324A; --map-edge: #34465E; --map-label: #9AA6B5; --map-sockel: #0B121C; --map-umland: #0F1824; --map-stadt: #172232; --map-stadt-rand: #24334A; --map-mein: #1F3552; --map-hover: #233246;
+  --map-land: #152030; --map-area: #22324A; --map-edge: #34465E; --map-label: #9AA6B5; --map-sockel: #0B121C; --map-umland: #0F1824; --map-stadt: #172232; --map-stadt-rand: #24334A; --map-mein: #1F3552; --map-hover: #233246; --map-kachel-grund: #1B1D22;
   --schatten-1: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 10px rgba(0, 0, 0, .3);
   --schatten-2: 0 2px 6px rgba(0, 0, 0, .4), 0 14px 36px rgba(0, 0, 0, .5);
   --glas: rgba(27, 40, 57, .72); --glas-rand: rgba(255, 255, 255, .08);
@@ -312,6 +313,25 @@ button, input, select, textarea { font: inherit; color: inherit; }
 #map:focus { outline: none; }
 #map:focus-visible { box-shadow: inset 0 0 0 3px var(--focus); }
 .k-svg { position: absolute; left: 0; top: 0; display: block; overflow: visible; }
+/* Kartenbilder: eine Schicht, die beim Ziehen und Zoomen nur verschoben und skaliert wird */
+#map:not(.ohne-kacheln) { background: var(--map-kachel-grund); }
+.k-kacheln { position: absolute; left: 0; top: 0; width: 0; height: 0; -webkit-transform-origin: 0 0; transform-origin: 0 0; will-change: transform; }
+.k-kachel { position: absolute; display: block; max-width: none; margin: 0; border: 0; opacity: 0; transition: opacity .25s ease; pointer-events: none; -webkit-user-select: none; user-select: none; }
+.k-kachel.da { opacity: 1; }
+.k-veraendert { display: none; }
+:root[data-theme="dark"] #map.k-filter ~ .k-quelle .k-veraendert { display: inline; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #map.k-filter ~ .k-quelle .k-veraendert { display: inline; } }
+:root[data-theme="dark"] #map.k-filter .k-kacheln { -webkit-filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #map.k-filter .k-kacheln { -webkit-filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); } }
+/* Mit Kartenbildern braucht es die gezeichneten Stadtteile nicht */
+#map:not(.ohne-kacheln) .k-stadt-rand, #map:not(.ohne-kacheln) .k-stadt, #map:not(.ohne-kacheln) .k-sockel, #map:not(.ohne-kacheln) .k-flaechen { display: none; }
+#map:not(.ohne-kacheln) .k-bereich { fill-opacity: .16; }
+/* „Du“: blauer Punkt wie bei Kartendiensten, hier in der Mitte des eigenen Stadtteils */
+.k-ich { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
+.k-ich i { position: absolute; left: -10px; top: -10px; width: 20px; height: 20px; box-sizing: border-box; border-radius: 50%; background: var(--you); border: 3px solid #fff; box-shadow: 0 0 0 7px rgba(11, 99, 206, .18), 0 1px 4px rgba(0, 0, 0, .35); }
+.k-ich b { position: absolute; left: 16px; top: -12px; padding: 1px 8px 0; border-radius: 999px; background: var(--you); color: #fff; font-family: var(--f-display); font-size: 0.875rem; font-weight: 700; line-height: 1.5; white-space: nowrap; box-shadow: 0 1px 4px rgba(0, 0, 0, .3); }
+:root[data-theme="dark"] .k-ich b { color: #0B1A2E; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .k-ich b { color: #0B1A2E; } }
 .k-stadt-rand path { fill: var(--map-stadt-rand); }
 .k-stadt path { fill: var(--map-stadt); }
 .k-sockel path { fill: var(--map-sockel); }
@@ -359,6 +379,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (hover: hover) { .k-sammel:hover { -webkit-transform: scale(1.08); transform: scale(1.08); } }
 .k-massstab { position: absolute; left: 14px; bottom: 10px; height: 20px; padding: 0 4px; border: 2px solid var(--muted); border-top: 0; color: var(--ink); font-size: 0.875rem; line-height: 18px; text-align: center; white-space: nowrap; pointer-events: none; text-shadow: 0 0 3px var(--map-land), 0 0 3px var(--map-land); box-sizing: border-box; }
 .k-quelle { position: absolute; right: 0; bottom: 0; max-width: calc(100% - 150px); margin: 0; padding: 2px 10px; border-radius: 10px 0 0 0; background: var(--glas); color: var(--muted); font-size: 0.875rem; line-height: 1.35; text-align: right; pointer-events: none; }
+.k-quelle a { color: inherit; pointer-events: auto; }
 @media (max-width: 400px) { .k-quelle { max-width: none; left: 0; border-radius: 0; } .k-massstab { bottom: 32px; } }
 @media (prefers-reduced-motion: reduce) { .pin, .k-sammel { transition: none; } }
 .karte-unterzeile { margin: -4px 0 0; color: var(--muted); font-size: 0.9375rem; }
@@ -375,7 +396,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .sw-offen { background: var(--accent); }
 .sw-eigen { background: var(--hedge); }
 .sw-zugesagt { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }
-.sw-stadtteil { width: 18px; height: 14px; border-radius: 5px; background: var(--map-mein); box-shadow: inset 0 0 0 2px var(--you), 0 2px 0 var(--map-sockel); }
+.sw-ich { width: 14px; height: 14px; border-radius: 50%; background: var(--you); box-shadow: 0 0 0 2px #fff, 0 0 0 3px var(--line); margin: 0 2px; }
 .sw-sammel { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--on-accent); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line); font: 700 0.8125rem/18px var(--f-display); font-style: normal; text-align: center; box-sizing: border-box; }
 .karte-leer { position: absolute; left: 14px; right: 14px; bottom: 32px; z-index: 1000; display: grid; gap: 12px; padding: 16px 18px; border-radius: var(--r-l); background: var(--surface); box-shadow: var(--schatten-2); }
 .karte-leer p { margin: 0; color: var(--muted); font-size: 1rem; }

@@ -55,6 +55,12 @@ Eingerichtet am 10. November 2026, nichts mehr zu tun. So funktioniert es:
 
 **Neuer Schlüssel** (nur nötig, wenn der private Schlüssel jemals nach außen gelangt): In `index.ts` `ERLAUBT = ''` setzen und die Funktion neu veröffentlichen, dann im SQL Editor `select net.http_post(url := (select wert from privat.einstellungen where name = 'push_url'), body := '{"neu": true}'::jsonb, headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || (select wert from privat.einstellungen where name = 'push_jwt')));` ausführen, die Antwort aus `net._http_response` wie in `supabase/updates/2026-11-fuer-wen-code-benachrichtigungen.sql` beschrieben in `privat.einstellungen` speichern und den neuen öffentlichen Schlüssel in `index.ts` und `src/app.js` eintragen. Alle müssen Benachrichtigungen danach einmal neu einschalten.
 
+## Karte
+
+Die Straßenkarte kommt ohne Einrichtung von [basemap.de](https://basemap.de), der amtlichen Webkarte von Bund und Ländern (kostenlos, ohne Schlüssel, Server in Deutschland, Lizenz CC BY 4.0). Ist basemap.de nicht erreichbar, nimmt die App OpenStreetMap, ohne Netz zeichnet sie Garbsen vereinfacht selbst.
+
+Optional: Mit einem kostenlosen Schlüssel von [carto.com](https://carto.com/basemaps) zeigt die Karte zuerst den Stil „Voyager“ (nachts „Dark Matter“). Den Schlüssel in `src/app.js` bei `CONFIG.karte.carto` eintragen und neu bauen. Gewerblich ist das bis 1 Million Kartenbilder im Monat kostenlos. CARTO sitzt in den USA, dann muss die Datenschutzerklärung (Abschnitt 3) ergänzt werden.
+
 ## Meldungen prüfen
 
 Nutzer können eine Anfrage oder eine beteiligte Person melden. Die Meldungen sieht nur der Betreiber:

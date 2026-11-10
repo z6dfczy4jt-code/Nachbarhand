@@ -44,7 +44,7 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 
 ## Daten und Quellen
 
-- Karte: eigene Zeichnung im Code (`src/app.js`, Abschnitt „Karte“). Die Stadtteile sind vereinfachte Flächen um ihre Mittelpunkte, ohne Kartendienst und ohne Kartenbilder. Lage der Mittelpunkte: © [OpenStreetMap](https://www.openstreetmap.org/copyright)-Mitwirkende (ODbL) und [GeoNames](https://www.geonames.org) (CC BY 4.0)
+- Karte: eigene, schlanke Karte im Code (`src/app.js`, Abschnitt „Karte“), ohne Kartenbibliothek. Kartenbilder: [basemap.de](https://basemap.de) Web Raster, © GeoBasis-DE / [BKG](https://www.bkg.bund.de) ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)); Ersatz: © [OpenStreetMap](https://www.openstreetmap.org/copyright)-Mitwirkende. Optional CARTO „Voyager“ mit eigenem Schlüssel (`CONFIG.karte.carto`). Ohne Netz zeichnet die App die Stadtteile vereinfacht selbst; Lage der Mittelpunkte: OpenStreetMap und [GeoNames](https://www.geonames.org) (CC BY 4.0)
 - 3D: [Three.js](https://threejs.org) r170 (MIT), liegt unter `assets/vendor/`. Das Modell selbst (Häuser, Hecken, Kanal) ist im Code gebaut, ohne fremde Modelldateien
 - Schrift: Barlow und Barlow Semi Condensed (SIL Open Font License), nach den deutschen Straßenschildern. Montserrat in der Wortmarke (SIL Open Font License)
 - Tätigkeits-Bilder: Microsoft Fluent Emoji 3D (MIT-Lizenz), siehe `src/kategorien/LIZENZ-fluent-emoji.txt`

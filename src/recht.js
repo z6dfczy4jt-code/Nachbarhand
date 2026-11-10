@@ -42,7 +42,8 @@ function RECHT_TEXTE(b, e) {
         <p>Schriften, Bilder und die Bibliothek für das 3D-Modell liefern wir selbst aus. Dafür werden keine Daten an Google oder andere Anbieter übertragen.</p>
 
         <h3>3. Karte</h3>
-        <p>Die Karte zeichnet die App selbst, als vereinfachte Übersicht der Stadtteile von Garbsen. Dafür lädt dein Gerät nichts von Kartendiensten, und es werden keine Daten an andere Anbieter übertragen. Die Lage der Stadtteile beruht auf Daten von OpenStreetMap (© OpenStreetMap-Mitwirkende, ODbL) und GeoNames (CC BY 4.0).</p>
+        <p>Die Kartenbilder (Straßen, Namen, Parks) lädt dein Gerät von basemap.de, der amtlichen Webkarte von Bund und Ländern. Die Server betreibt das Bundesamt für Kartographie und Geodäsie (BKG), Richard-Strauss-Allee 11, 60598 Frankfurt am Main. Dabei werden deine IP-Adresse und der gezeigte Kartenausschnitt übertragen. Sind diese Server nicht erreichbar, lädt die App die Kartenbilder von OpenStreetMap (OpenStreetMap Foundation, Großbritannien; für Großbritannien gilt ein Angemessenheitsbeschluss der EU-Kommission) oder von openstreetmap.de (FOSSGIS e.V., Deutschland). Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO: Ohne Karte kann die App nicht zeigen, wo Hilfe gesucht wird.</p>
+        <p>Kartenbilder: © GeoBasis-DE / BKG, CC BY 4.0, bzw. © OpenStreetMap-Mitwirkende, ODbL. Sind keine Kartenbilder erreichbar, zeichnet die App die Stadtteile vereinfacht selbst; deren Lage beruht auf Daten von OpenStreetMap und GeoNames (CC BY 4.0).</p>
         <p>Anfragen erscheinen auf der Karte nur ungefähr: als Punkt 100 bis 400 Meter neben der echten Adresse oder, weiter herausgezoomt, als Zahl im Stadtteil.</p>
         <p>Deinen eigenen Standort fragt die App nicht ab. Sie rechnet Entfernungen von der Mitte deines Stadtteils aus.</p>
 

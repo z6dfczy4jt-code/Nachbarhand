@@ -40,6 +40,9 @@
     maxBetrag: 50,             // Obergrenze für Nachbarschaftshilfe
     freigrenze: 255,           // § 22 Nr. 3 EStG: unter 256 € Gewinn im Jahr steuerfrei
     bereichMeter: 250,         // Radius des ungefähren Bereichs um eine Anfrage
+    // Kartenbilder: ohne Eintrag die amtliche Straßenkarte basemap.de (Bund und Länder, kostenlos, ohne Schlüssel).
+    // Optional mit kostenlosem Schlüssel von carto.com (siehe SETUP.md) der Stil „Voyager“. Der Schlüssel ist öffentlich.
+    karte: { carto: '' },
     // Anmelden mit einem Code per E-Mail statt mit Passwort. Erst einschalten, wenn der E-Mail-Versand
     // eingerichtet ist und die E-Mail-Vorlage den Code enthält (siehe SETUP.md).
     codeLogin: false,
@@ -1046,25 +1049,31 @@
   }
   new MutationObserver(miniThema).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-  /* ===== Karte: eigene Zeichnung von Garbsen (SVG) =====
-     Ohne Kartendienst und ohne Kartenbilder: lädt sofort, geht offline und auf älteren Geräten.
-     Die Stadtteile sind vereinfacht: Flächen um die Ortsmitten, wo sie sich berühren, geteilt.
-     Weit weg zeigt jeder Stadtteil ein Sammel-Schild mit der Zahl der Anfragen, beim Hineinzoomen
-     erscheinen die einzelnen Preisschilder. Lagen sind ohnehin ungefähr (100 bis 400 m neben der Adresse). */
+  /* ===== Karte: eigene, schlanke Karte (ohne Kartenbibliothek) =====
+     Unten liegen Kartenbilder (Straßen, Namen, Parks) wie bei Google Maps, darüber Preisschilder.
+     Liegen Schilder dicht beieinander, steht dort eine Zahl; Antippen zoomt hinein.
+     Sind keine Kartenbilder erreichbar (offline, Vorschau), zeichnet die App die Stadtteile vereinfacht selbst.
+     Nur 2D-Verschiebungen und einfache Bilder, damit es auch auf älteren Handys flüssig läuft. */
   const KARTE = {
     mitte: { lat: 52.44, lng: 9.575 },
-    groesster: 0.45,  // so nah lässt sich heranzoomen (Bildpunkte je Meter). Näher bringt nichts, die Lagen sind ungefähr
-    flaeche: 1.7,     // Fläche eines Stadtteils: so viel größer als der Radius in STADTTEILE
-    stadt: 1.9,       // Stadtgebiet: so weit reicht die helle Fläche um jeden Stadtteil
-    luecke: 34,       // Meter Abstand zwischen benachbarten Stadtteilen
-    sockel: 5         // Bildpunkte „Dicke“ der Stadtteil-Platten (wie bei der Miniatur)
+    zoomMax: 18,       // so nah lässt sich mit Kartenbildern heranzoomen (einzelne Häuser)
+    zoomMaxOhne: 15.4, // so nah ohne Kartenbilder (dann gibt es nichts weiter zu sehen)
+    flaeche: 1.7,      // vereinfachte Zeichnung: Fläche eines Stadtteils, so viel größer als der Radius in STADTTEILE
+    stadt: 1.9,        // vereinfachte Zeichnung: so weit reicht die helle Fläche um jeden Stadtteil
+    luecke: 34,        // vereinfachte Zeichnung: Meter Abstand zwischen benachbarten Stadtteilen
+    sockel: 5          // vereinfachte Zeichnung: Bildpunkte „Dicke“ der Stadtteil-Platten
   };
-  const M_LAT = 110574;
-  const M_LNG = 111320 * Math.cos(KARTE.mitte.lat * Math.PI / 180);
-  const inMeter = (lat, lng) => ({ x: (lng - KARTE.mitte.lng) * M_LNG, y: (KARTE.mitte.lat - lat) * M_LAT });
+  // Web-Mercator wie bei allen Online-Karten. Einheit: Mercator-Meter, Nullpunkt in der Mitte von Garbsen.
+  const ERDE = 6378137, WELT = 2 * Math.PI * ERDE;
+  const mercator = (lat, lng) => ({ x: ERDE * lng * Math.PI / 180, y: -ERDE * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) });
+  const NULLPUNKT = mercator(KARTE.mitte.lat, KARTE.mitte.lng);
+  const DEHNUNG = 1 / Math.cos(KARTE.mitte.lat * Math.PI / 180); // Mercator-Meter je echtem Meter in Garbsen
+  const inMeter = (lat, lng) => { const p = mercator(lat, lng); return { x: p.x - NULLPUNKT.x, y: p.y - NULLPUNKT.y }; };
+  const massstabFuerZoom = (z) => 256 * Math.pow(2, z) / WELT;
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const kartenStatus = { svg: null, welt: null, schicht: null, huelle: null, w: 0, h: 0, blick: null, ruhig: null,
     formen: [], grenzen: null, bewegt: false, gezogen: 0, marker: new Map(), elemente: [], gruppen: [], stufe: null, animation: 0 };
+  const groesster = () => massstabFuerZoom(kacheln.aus ? KARTE.zoomMaxOhne : KARTE.zoomMax);
 
   function dunklesThema() {
     const t = document.documentElement.getAttribute('data-theme');
@@ -1106,7 +1115,7 @@
   const alsPfad = (pkt) => 'M' + pkt.map((p) => `${Math.round(p.x)} ${Math.round(p.y)}`).join('L') + 'Z';
   // Stadtteil-Flächen: leicht unregelmäßige Kreise, Überschneidungen nach dem Potenzdiagramm geteilt
   function stadtteilFormen() {
-    const teile = STADTTEILE.map((s) => ({ s, c: inMeter(s.lat, s.lng), R: s.r * KARTE.flaeche }));
+    const teile = STADTTEILE.map((s) => ({ s, c: inMeter(s.lat, s.lng), R: s.r * KARTE.flaeche * DEHNUNG }));
     return teile.map((a) => {
       const phase = a.s.name.length * 0.9 + a.s.name.charCodeAt(0) * 0.13;
       let pkt = welle(a.c, a.R, phase, 40);
@@ -1114,7 +1123,7 @@
         if (b === a) return;
         const dx = b.c.x - a.c.x, dy = b.c.y - a.c.y, d = Math.hypot(dx, dy);
         if (d >= (a.R + b.R) * 1.12) return;
-        const g = ((b.c.x * b.c.x + b.c.y * b.c.y) - (a.c.x * a.c.x + a.c.y * a.c.y) - b.R * b.R + a.R * a.R) / (2 * d) - KARTE.luecke / 2;
+        const g = ((b.c.x * b.c.x + b.c.y * b.c.y) - (a.c.x * a.c.x + a.c.y * a.c.y) - b.R * b.R + a.R * a.R) / (2 * d) - KARTE.luecke * DEHNUNG / 2;
         pkt = abschneiden(pkt, dx / d, dy / d, g);
       });
       pkt = glaetten(glaetten(pkt));
@@ -1128,6 +1137,180 @@
     Object.keys(attr || {}).forEach((k) => el.setAttribute(k, attr[k]));
     return el;
   }
+
+  /* ----- Kartenbilder (Kacheln) -----
+     Standard: basemap.de, die amtliche Straßenkarte von Bund und Ländern (BKG, Frankfurt). Kostenlos, ohne Schlüssel,
+     auch für kommerzielle Nutzung (CC BY 4.0), Server in Deutschland. Ersatz: OpenStreetMap.
+     Mit CONFIG.karte.carto (kostenloser Schlüssel von carto.com) zuerst der Stil „Voyager“, nachts „Dark Matter“.
+     Lädt ein Anbieter nicht, nimmt die App den nächsten, zuletzt die vereinfachte Zeichnung. */
+  const OSM_QUELLE = '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-Mitwirkende';
+  const kacheln = { el: null, quellen: [], nr: 0, z: null, vorZ: null, ref: null, bilder: new Map(), ok: 0, fehler: 0, aus: false, ruhe: 0 };
+  function kachelQuellen() {
+    const q = [];
+    const carto = CONFIG.karte && CONFIG.karte.carto;
+    if (carto) q.push({ url: 'https://basemaps.cartocdn.com/rastertiles/{stil}/{z}/{x}/{y}{r}.png?key=' + encodeURIComponent(carto), max: 20, retina: true, carto: true,
+      quelle: OSM_QUELLE + ' © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>' });
+    q.push({ url: 'https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_farbe/default/GLOBAL_WEBMERCATOR/{z}/{y}/{x}.png', max: 18,
+      quelle: `© <a href="https://www.bkg.bund.de" target="_blank" rel="noopener">GeoBasis-DE / BKG</a> (${new Date().getFullYear()}) <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a><span class="k-veraendert">, Farben angepasst</span>` });
+    q.push({ url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', max: 19, quelle: OSM_QUELLE + '<span class="k-veraendert">, Farben angepasst</span>' });
+    q.push({ url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png', max: 18, quelle: OSM_QUELLE + ', openstreetmap.de<span class="k-veraendert">, Farben angepasst</span>' });
+    return q;
+  }
+  function kachelUrl(q, z, x, y) {
+    return q.url.replace('{stil}', dunklesThema() ? 'dark_all' : 'voyager').replace('{z}', z).replace('{x}', x).replace('{y}', y)
+      .replace('{r}', q.retina && (window.devicePixelRatio || 1) > 1.4 ? '@2x' : '');
+  }
+  function kachelWeg(t, key) {
+    t.img.onload = t.img.onerror = null;
+    if (t.img.parentNode) t.img.parentNode.removeChild(t.img);
+    kacheln.bilder.delete(key);
+  }
+  function kachelnLeeren() {
+    kacheln.bilder.forEach((t, key) => kachelWeg(t, key));
+    kacheln.z = null; kacheln.vorZ = null; kacheln.ref = null;
+    if (kacheln.el) kacheln.el.style.transform = '';
+  }
+  function kachelnStarten() {
+    kacheln.quellen = VORSCHAU ? [] : kachelQuellen();
+    if (!kacheln.quellen.length || navigator.onLine === false) kachelnAus();
+    else kachelQuelleSetzen(0);
+  }
+  function kachelQuelleSetzen(nr) {
+    const kc = kacheln, q = kc.quellen[nr];
+    const warAus = kc.aus;
+    kachelnLeeren();
+    Object.assign(kc, { nr, ok: 0, fehler: 0, aus: false });
+    const h = kartenStatus.huelle;
+    h.classList.remove('ohne-kacheln');
+    h.classList.toggle('k-filter', !q.carto);
+    $('.k-quelle').innerHTML = q.quelle;
+    $('#karte-hinweis').hidden = true;
+    if (warAus) renderKarte();
+  }
+  function kachelnAus() {
+    const kc = kacheln;
+    kachelnLeeren();
+    kc.aus = true;
+    kartenStatus.huelle.classList.add('ohne-kacheln');
+    kartenStatus.huelle.classList.remove('k-filter');
+    $('.k-quelle').textContent = 'Vereinfacht · Lage: © OpenStreetMap-Mitwirkende, GeoNames';
+    const hinweis = $('#karte-hinweis');
+    hinweis.textContent = VORSCHAU
+      ? 'In dieser Vorschau dürfen keine Kartenbilder geladen werden. In der App siehst du hier die Straßenkarte mit allen Straßen und Namen.'
+      : 'Die Straßenkarte ist gerade nicht erreichbar, deshalb siehst du Garbsen vereinfacht. Sobald das Internet wieder da ist, kommt sie zurück.';
+    hinweis.hidden = false;
+    // Ohne Kartenbilder lässt sich nicht so nah heranzoomen
+    if (kartenStatus.blick && kartenStatus.w) kartenStatus.blick = blickBegrenzen(kartenStatus.blick);
+    renderKarte();
+  }
+  function kachelFehler() {
+    const kc = kacheln;
+    kc.fehler++;
+    if (kc.ok || kc.fehler < 4) return;
+    if (kc.nr + 1 < kc.quellen.length) { kachelQuelleSetzen(kc.nr + 1); if (kartenStatus.blick) kachelnLegen(kartenStatus.blick); }
+    else kachelnAus();
+  }
+  // Welche Zoomstufe der Kartenbilder passt zum Maßstab? Bilder werden zwischen 0,8- und 1,6-fach gezeigt,
+  // damit Straßennamen gut lesbar bleiben.
+  function kachelZoom(s) {
+    const q = kacheln.quellen[kacheln.nr];
+    return Math.max(9, Math.min(q.max, Math.floor(Math.log(s * WELT / 256) / Math.LN2 + 0.3)));
+  }
+  function kachelBereich(b, z) {
+    const k = kartenStatus, n = Math.pow(2, z), T = WELT / n;
+    const ox = NULLPUNKT.x + WELT / 2, oy = NULLPUNKT.y + WELT / 2;
+    const fest = (v) => Math.max(0, Math.min(n - 1, Math.floor(v / T)));
+    return { z, T, ox, oy, x0: fest(ox - b.x / b.s), x1: fest(ox + (k.w - b.x) / b.s), y0: fest(oy - b.y / b.s), y1: fest(oy + (k.h - b.y) / b.s) };
+  }
+  function neueKachel(z, x, y, key) {
+    const kc = kacheln;
+    const img = document.createElement('img');
+    img.className = 'k-kachel';
+    img.alt = '';
+    img.draggable = false;
+    img.setAttribute('decoding', 'async');
+    const t = { img, z, x, y, fertig: false, fehler: false };
+    img.onload = () => { t.fertig = true; img.className = 'k-kachel da'; kc.ok++; altesWeg(); };
+    img.onerror = () => { t.fehler = true; kachelFehler(); if (!kc.aus) altesWeg(); };
+    kc.bilder.set(key, t);
+    kc.el.appendChild(img);
+    img.src = kachelUrl(kc.quellen[kc.nr], z, x, y);
+  }
+  // Sind alle Bilder der neuen Zoomstufe da, verschwinden die der alten (bis dahin füllen sie die Lücken)
+  function altesWeg() {
+    const kc = kacheln;
+    let alle = true;
+    kc.bilder.forEach((t) => { if (t.z === kc.z && !t.fertig && !t.fehler) alle = false; });
+    if (alle) kc.bilder.forEach((t, key) => { if (t.z !== kc.z) kachelWeg(t, key); });
+  }
+  // Bilder für den Ausschnitt b holen und pixelgenau legen
+  function kachelnLegen(b) {
+    const kc = kacheln, k = kartenStatus;
+    if (kc.aus || !kc.el || !kc.quellen.length) return;
+    const r = kachelBereich(b, kachelZoom(b.s));
+    if (r.z !== kc.z) { kc.vorZ = kc.z; kc.z = r.z; }
+    kc.ref = { s: b.s, x: b.x, y: b.y };
+    kc.el.style.transform = '';
+    const brauche = {};
+    for (let x = r.x0; x <= r.x1; x++) for (let y = r.y0; y <= r.y1; y++) {
+      const key = r.z + '/' + x + '/' + y;
+      brauche[key] = true;
+      if (!kc.bilder.has(key)) neueKachel(r.z, x, y, key);
+    }
+    if (kc.aus) return; // alle Anbieter sind gescheitert
+    kc.bilder.forEach((t, key) => {
+      if (brauche[key]) return;
+      if (t.z === kc.z || t.z !== kc.vorZ || !t.fertig) { kachelWeg(t, key); return; }
+      // Ältere Stufe: nur behalten, solange sie im Bild liegt
+      const T = WELT / Math.pow(2, t.z);
+      const l = (t.x * T - r.ox) * b.s + b.x, o = (t.y * T - r.oy) * b.s + b.y;
+      if (l > k.w || o > k.h || l + T * b.s < 0 || o + T * b.s < 0) kachelWeg(t, key);
+    });
+    kc.bilder.forEach((t) => {
+      const T = WELT / Math.pow(2, t.z);
+      const l = Math.round((t.x * T - r.ox) * b.s + b.x), rr = Math.round(((t.x + 1) * T - r.ox) * b.s + b.x);
+      const o = Math.round((t.y * T - r.oy) * b.s + b.y), u = Math.round(((t.y + 1) * T - r.oy) * b.s + b.y);
+      t.img.style.cssText = `left:${l}px;top:${o}px;width:${rr - l}px;height:${u - o}px;z-index:${t.z === kc.z ? 2 : 1}`;
+    });
+    altesWeg();
+  }
+  // Pro Bild der Bewegung nur die ganze Schicht verschieben und skalieren. Neu gelegt wird erst,
+  // wenn Bilder fehlen oder die Bewegung kurz ruht (dann wieder gestochen scharf).
+  function zeichneKacheln(b) {
+    const kc = kacheln, k = kartenStatus;
+    if (kc.aus || !kc.el || !kc.quellen.length || ui.view !== 'karte') return;
+    // Beim Zoomen über mehrere Stufen erst am Ende neue Bilder holen (schont Datenvolumen und Kartenserver),
+    // beim Verschieben fehlende Ränder sofort nachladen
+    let neu = !kc.ref, andereStufe = false;
+    if (!neu) {
+      const r = kachelBereich(b, kachelZoom(b.s));
+      andereStufe = r.z !== kc.z;
+      for (let x = r.x0; x <= r.x1 && !neu && !andereStufe; x++) for (let y = r.y0; y <= r.y1 && !neu; y++) if (!kc.bilder.has(r.z + '/' + x + '/' + y)) neu = true;
+    }
+    clearTimeout(kc.ruhe);
+    if (neu) { kachelnLegen(b); return; }
+    const f = b.s / kc.ref.s;
+    kc.el.style.transform = f === 1 ? `translate(${b.x - kc.ref.x}px, ${b.y - kc.ref.y}px)` : `translate(${b.x - kc.ref.x * f}px, ${b.y - kc.ref.y * f}px) scale(${f})`;
+    if (f !== 1 || andereStufe) kc.ruhe = setTimeout(() => { if (k.blick) kachelnLegen(k.blick); }, andereStufe ? 160 : 220);
+  }
+  // Nachts andere Bilder (CARTO) bzw. umgefärbte Bilder (basemap.de, OpenStreetMap, per CSS)
+  function kachelnThema() {
+    const kc = kacheln;
+    if (kc.aus || !kc.quellen.length || !kc.quellen[kc.nr].carto) return;
+    kachelnLeeren();
+    if (kartenStatus.blick) kachelnLegen(kartenStatus.blick);
+  }
+  new MutationObserver(kachelnThema).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (window.matchMedia) {
+    const mqK = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mqK.addEventListener) mqK.addEventListener('change', kachelnThema);
+  }
+  window.addEventListener('online', () => {
+    if (!kacheln.aus || !kartenStatus.huelle || VORSCHAU) return;
+    kacheln.quellen = kachelQuellen();
+    kachelQuelleSetzen(0);
+    if (kartenStatus.blick) kachelnLegen(kartenStatus.blick);
+  });
 
   function initKarte() {
     const k = kartenStatus;
@@ -1147,7 +1330,7 @@
     // Stadtgebiet: weiche Fläche um alle Stadtteile, damit Garbsen als eine Stadt erkennbar ist
     const stadtRand = svgEl('g', { class: 'k-stadt-rand' }), stadt = svgEl('g', { class: 'k-stadt' });
     k.formen.forEach((f) => {
-      stadtRand.appendChild(svgEl('path', { d: alsPfad(welle(f.c, f.R * KARTE.stadt + 70, f.phase + 1, 32)) }));
+      stadtRand.appendChild(svgEl('path', { d: alsPfad(welle(f.c, f.R * KARTE.stadt + 70 * DEHNUNG, f.phase + 1, 32)) }));
       stadt.appendChild(svgEl('path', { d: alsPfad(welle(f.c, f.R * KARTE.stadt, f.phase + 1, 32)) }));
     });
     welt.appendChild(stadtRand); welt.appendChild(stadt);
@@ -1157,7 +1340,7 @@
       flaechen.appendChild(p);
       f.el = p;
     });
-    k.bereich = svgEl('circle', { class: 'k-bereich', r: CONFIG.bereichMeter, cx: 0, cy: 0 });
+    k.bereich = svgEl('circle', { class: 'k-bereich', r: Math.round(CONFIG.bereichMeter * DEHNUNG), cx: 0, cy: 0 });
     k.bereich.style.display = 'none';
     welt.appendChild(sockel); welt.appendChild(flaechen); welt.appendChild(k.bereich);
     svg.appendChild(welt);
@@ -1166,9 +1349,14 @@
     const massstab = document.createElement('div');
     massstab.className = 'k-massstab';
     massstab.setAttribute('aria-hidden', 'true');
+    const bilder = document.createElement('div');
+    bilder.className = 'k-kacheln';
+    bilder.setAttribute('aria-hidden', 'true');
     huelle.textContent = '';
-    huelle.appendChild(svg); huelle.appendChild(schicht); huelle.appendChild(massstab);
+    huelle.appendChild(bilder); huelle.appendChild(svg); huelle.appendChild(schicht); huelle.appendChild(massstab);
     Object.assign(k, { svg, welt, schicht, massstab, sockel });
+    kacheln.el = bilder;
+    kachelnStarten();
     kartenBedienung();
     kartenGroesse(true);
     if (window.ResizeObserver) new ResizeObserver(() => kartenGroesse(false)).observe(huelle);
@@ -1196,7 +1384,7 @@
   function blickBegrenzen(b) {
     const k = kartenStatus, g = k.grenzen;
     const alles = blickAufAlles();
-    const s = Math.max(alles.s * 0.85, Math.min(KARTE.groesster, b.s));
+    const s = Math.max(alles.s * 0.85, Math.min(groesster(), b.s));
     // Garbsen darf nicht ganz aus dem Bild rutschen
     const x = Math.min(k.w * 0.6 - g.x0 * s, Math.max(k.w * 0.4 - g.x1 * s, b.x));
     const y = Math.min(k.h * 0.6 - g.y0 * s, Math.max(k.h * 0.4 - g.y1 * s, b.y));
@@ -1225,6 +1413,7 @@
     k.sockel.setAttribute('transform', `translate(0 ${(KARTE.sockel / b.s).toFixed(1)})`);
     // Bei jeder halben Zoomstufe neu sortieren, welche Schilder zusammengefasst werden
     if (zoomStufe(b.s) !== k.stufe) { renderKarte(true); return; }
+    zeichneKacheln(b);
     k.elemente.forEach((e) => {
       const x = Math.round(e.m.x * b.s + b.x), y = Math.round(e.m.y * b.s + b.y);
       // Was weit außerhalb liegt, wird nicht gezeichnet und ist auch mit der Tastatur nicht erreichbar
@@ -1232,10 +1421,11 @@
       if (drin !== e.drin) { e.drin = drin; e.el.style.visibility = drin ? '' : 'hidden'; }
       if (drin) e.el.style.transform = `translate(${x}px, ${y}px)`;
     });
-    // Maßstab: eine runde Strecke zwischen 60 und 130 Bildpunkten
-    const strecken = [50, 100, 200, 500, 1000, 2000, 5000];
-    const m = strecken.find((x) => x * b.s >= 50) || 5000;
-    k.massstab.style.width = Math.round(m * b.s) + 'px';
+    // Maßstab: eine runde Strecke zwischen 50 und 125 Bildpunkten (in echten Metern)
+    const strecken = [20, 50, 100, 200, 500, 1000, 2000, 5000];
+    const pxJeMeter = b.s * DEHNUNG;
+    const m = strecken.find((x) => x * pxJeMeter >= 50) || 5000;
+    k.massstab.style.width = Math.round(m * pxJeMeter) + 'px';
     k.massstab.textContent = m >= 1000 ? `${m / 1000} km` : `${m} m`;
     clearTimeout(k.ruhig);
     k.ruhig = setTimeout(namenAufraeumen, 120);
@@ -1265,7 +1455,7 @@
     const k = kartenStatus, b = k.blick;
     if (!b) return;
     if (px === undefined) { px = k.w / 2; py = k.h / 2; }
-    const s = Math.max(blickAufAlles().s * 0.85, Math.min(KARTE.groesster, b.s * faktor));
+    const s = Math.max(blickAufAlles().s * 0.85, Math.min(groesster(), b.s * faktor));
     k.bewegt = true;
     blickSetzen({ s, x: px - (px - b.x) * s / b.s, y: py - (py - b.y) * s / b.s }, sanft);
   }
@@ -1299,7 +1489,7 @@
       if (start.pinch && finger.size >= 2) {
         const [a, b] = [...finger.values()];
         const abstand = Math.hypot(a.x - b.x, a.y - b.y) || 1, mitte = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-        const s = Math.max(blickAufAlles().s * 0.85, Math.min(KARTE.groesster, start.blick.s * abstand / start.abstand));
+        const s = Math.max(blickAufAlles().s * 0.85, Math.min(groesster(), start.blick.s * abstand / start.abstand));
         const f = s / start.blick.s;
         k.bewegt = true;
         k.blick = blickBegrenzen({ s, x: mitte.x - (start.mitte.x - start.blick.x) * f, y: mitte.y - (start.mitte.y - start.blick.y) * f });
@@ -1426,7 +1616,7 @@
 
     // Schilder, die sich auf dem Bildschirm berühren würden, werden zu einem Sammel-Schild mit der Zahl.
     // Die gewählte Anfrage bleibt immer einzeln sichtbar.
-    const s = k.blick.s, zusammen = s < KARTE.groesster * 0.98;
+    const s = k.blick.s, zusammen = s < groesster() * 0.98;
     const gruppen = [];
     const reihenfolge = sichtbar.slice().sort((a, b) => (b.id === hervor) - (a.id === hervor) || (b.eigen || b.helfer === 'ich') - (a.eigen || a.helfer === 'ich'));
     reihenfolge.forEach((g) => {
@@ -1450,14 +1640,20 @@
       }
       return t;
     };
-    // Namen der Stadtteile zuerst, damit Schilder darüber liegen
-    const anzahl = new Map();
-    sichtbar.forEach((g) => anzahl.set(g.stadtteil, (anzahl.get(g.stadtteil) || 0) + 1));
-    k.formen.forEach((f) => {
-      const istMein = f.name === mein;
-      const rang = (istMein ? 1000 : 0) + (anzahl.get(f.name) || 0) * 10 + f.R / 100;
-      anker(f.c, `<span class="k-name${istMein ? ' k-name-mein' : ''}" data-rang="${rang}" aria-hidden="true">${istMein ? '<b>Du</b>' : ''}${esc(f.name)}</span>`, istMein ? 'k-mein-anker' : '');
-    });
+    if (kacheln.aus) {
+      // Vereinfachte Zeichnung: Namen der Stadtteile zuerst, damit Schilder darüber liegen
+      const anzahl = new Map();
+      sichtbar.forEach((g) => anzahl.set(g.stadtteil, (anzahl.get(g.stadtteil) || 0) + 1));
+      k.formen.forEach((f) => {
+        const istMein = f.name === mein;
+        const rang = (istMein ? 1000 : 0) + (anzahl.get(f.name) || 0) * 10 + f.R / 100;
+        anker(f.c, `<span class="k-name${istMein ? ' k-name-mein' : ''}" data-rang="${rang}" aria-hidden="true">${istMein ? '<b>Du</b>' : ''}${esc(f.name)}</span>`, istMein ? 'k-mein-anker' : '');
+      });
+    } else if (mein) {
+      // Auf der Straßenkarte: blauer Punkt in der Mitte des eigenen Stadtteils (die App fragt keinen Standort ab)
+      const f = k.formen.find((x) => x.name === mein);
+      if (f) anker(f.c, '<span class="k-ich" aria-hidden="true"><i></i><b>Du</b></span>');
+    }
     gruppen.forEach((gr, i) => {
       if (gr.liste.length > 1) {
         const ab = Math.min(...gr.liste.map((g) => g.betrag));
@@ -1486,7 +1682,7 @@
     const k = kartenStatus;
     if (!g || !k.blick) return;
     k.bewegt = true;
-    blickSetzen(blickAuf(inMeter(g.lat, g.lng), Math.max(k.blick.s, 0.22)), false);
+    blickSetzen(blickAuf(inMeter(g.lat, g.lng), Math.max(k.blick.s, massstabFuerZoom(14.6))), false);
   }
 
   document.querySelector('.karte-knoepfe').addEventListener('click', (e) => {
@@ -1507,7 +1703,7 @@
     gr.punkte.forEach((p) => { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); });
     const passend = Math.min((k.w - 140) / Math.max(1, x1 - x0), (k.h - 160) / Math.max(1, y1 - y0));
     k.bewegt = true;
-    blickSetzen(blickAuf({ x: (x0 + x1) / 2, y: (y0 + y1) / 2 }, Math.min(KARTE.groesster, Math.max(k.blick.s * 1.6, Math.min(passend, k.blick.s * 3)))), true);
+    blickSetzen(blickAuf({ x: (x0 + x1) / 2, y: (y0 + y1) / 2 }, Math.min(groesster(), Math.max(k.blick.s * 1.6, Math.min(passend, k.blick.s * 3)))), true);
   });
 
   /* ===== Detail-Ansicht und Konto (Bottom Sheet) ===== */
