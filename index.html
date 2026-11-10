@@ -15,7 +15,7 @@
 <meta property="og:image" content="https://z6dfczy4jt-code.github.io/Nachbarhand/assets/vorschau.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Hand Drauf: Karte von Garbsen mit Anfragen und Beträgen">
+<meta property="og:image:alt" content="Hand Drauf: eine kleine Nachbarschaft als Modell, darüber Preisschilder mit Beträgen">
 <meta name="twitter:card" content="summary_large_image">
 <title>Hand Drauf</title>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -942,7 +942,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .leer p { color: var(--muted); }
 .leer strong { color: var(--ink); font-family: var(--f-display); font-size: 1.25rem; font-weight: 700; }
 .leer-start { box-shadow: var(--schatten-1), inset 0 0 0 2px var(--accent); }
-.leer-klein { color: var(--muted); font-size: 0.9375rem; padding: 16px 18px; border-radius: var(--r-m); background: var(--surface); }
+.leer-klein { display: grid; gap: 12px; justify-items: start; color: var(--muted); font-size: 1rem; padding: 16px 18px; border-radius: var(--r-m); background: var(--surface); }
 .leer-knoepfe { display: flex; flex-wrap: wrap; gap: 10px; justify-self: stretch; }
 .leer-knoepfe .btn { text-decoration: none; }
 .lade { color: var(--muted); padding: 18px 4px; }
@@ -1451,6 +1451,74 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @keyframes hs-klatsch-r { from { transform: translate(130px, -28px) rotate(18deg); } to { transform: none; } }
 @keyframes hs-aufprall { 0% { transform: scale(1); } 30% { transform: scale(1.12) rotate(-3deg); } 60% { transform: scale(.97) rotate(1.5deg); } 100% { transform: none; } }
 
+/* ----- Zähler auf der Startseite ----- */
+.geholfen { justify-self: start; display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding: 4px 12px 4px 9px; border-radius: 999px; background: var(--good-bg); color: var(--hedge); font-weight: 600; font-size: 0.9375rem; }
+
+/* ----- Für wen?, Telefon ----- */
+.unterfeld { display: grid; gap: 8px; margin-top: 14px; }
+.unterfeld > label { font-weight: 600; font-size: 1rem; }
+.unterfeld .feld-hinweis { margin-top: 0; }
+.tel-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--ink); font-weight: 600; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+a.btn { text-decoration: none; }
+
+/* ----- Sicherheits-Code für die Tür: Ziffern wie kleine Ortsschilder ----- */
+.tuercode { display: grid; gap: 10px; padding: 16px 18px; border-radius: var(--r-l); background: var(--tile); }
+.tuercode-kopf { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.tuercode-kopf > span:first-child { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+.tuercode-zahl { display: inline-flex; gap: 6px; }
+.tuercode-zahl span { display: grid; place-items: center; width: 38px; height: 46px; border-radius: 7px; background: var(--accent); color: #11161C; box-shadow: inset 0 0 0 2px #11161C; font-family: var(--f-display); font-weight: 700; font-size: 1.75rem; font-variant-numeric: tabular-nums; line-height: 1; }
+.tuercode p { color: var(--muted); font-size: 1rem; }
+
+/* ----- Chat: fertige Antworten, Hinweis bei Betrugsverdacht ----- */
+.chat-schnell { display: flex; flex-wrap: wrap; gap: 8px; }
+.chat-schnell .chip { min-height: 44px; }
+#chat-warnung:empty { display: none; }
+.chat-warnung { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: var(--r-m); background: var(--warn-bg); color: var(--warn); }
+.chat-warnung p { color: var(--ink); font-size: 1rem; }
+.chat-warnung strong { color: var(--warn); }
+
+/* ----- Benachrichtigungen: Karte im Auftrag, Schalter im Menü ----- */
+.push-karte { display: grid; grid-template-columns: auto 1fr; gap: 14px; padding: 16px 18px; border-radius: var(--r-l); background: var(--tile); }
+.push-karte > .i { width: 26px; height: 26px; padding: 9px; box-sizing: content-box; border-radius: 50%; background: var(--surface); color: var(--ink); }
+.push-karte strong { font-family: var(--f-display); font-size: 1.25rem; font-weight: 700; }
+.push-karte p { margin: 2px 0 12px; color: var(--muted); font-size: 1rem; }
+.push-karte .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.schalter-zeile { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 60px; padding: 10px 14px 10px 18px; border-radius: var(--r-m); background: var(--tile); }
+.schalter-zeile + .schalter-zeile { margin-top: 0; }
+.schalter-text { display: grid; gap: 1px; min-width: 0; }
+.schalter-text strong { font-weight: 600; }
+.schalter-text span { color: var(--muted); font-size: 0.9375rem; }
+.schalter { flex: none; position: relative; width: 56px; height: 34px; padding: 0; border: 0; border-radius: 999px; background: color-mix(in srgb, var(--muted) 45%, var(--tile)); cursor: pointer; transition: background .2s; }
+.schalter span { position: absolute; left: 3px; top: 3px; width: 28px; height: 28px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .2s; }
+.schalter[aria-checked="true"] { background: var(--hedge); }
+.schalter[aria-checked="true"] span { transform: translateX(22px); }
+.schalter:disabled { opacity: .6; cursor: progress; }
+.link-links { justify-self: start; padding-left: 0; }
+
+/* ----- Einladen: QR-Code (immer schwarz auf weiß, damit jede Kamera ihn liest) ----- */
+.qr-karte { display: grid; justify-items: center; gap: 12px; padding: 22px 18px 18px; border-radius: var(--r-l); background: #fff; color: #1C2530; text-align: center; box-shadow: var(--schatten-1); }
+.qr svg { display: block; width: min(210px, 58vw); height: auto; }
+.qr-karte p { color: #586473; font-size: 1rem; }
+.qr-karte strong { display: block; font-family: var(--f-display); font-size: 1.375rem; font-weight: 700; color: #1C2530; }
+
+/* ----- Anmelden: Passwort anzeigen, Code ----- */
+.passwort-feld { position: relative; }
+.passwort-feld input { padding-right: 58px; }
+.passwort-auge { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 9px; background: none; color: var(--muted); cursor: pointer; }
+.passwort-auge[aria-pressed="true"] { background: var(--tile); color: var(--ink); }
+.feld input.code-eingabe { font-family: var(--f-display); font-weight: 700; font-size: 2rem; letter-spacing: .28em; text-align: center; font-variant-numeric: tabular-nums; padding-left: calc(15px + .28em); }
+
+/* ----- Mehr Kontrast, wenn das Gerät darum bittet ----- */
+@media (prefers-contrast: more) {
+  :root { --muted: #36404C; --line: #8B96A4; --glas: #FFFFFF; }
+  :root[data-theme="dark"] { --muted: #D3DAE3; --line: #8D99A8; --glas: #1B2839; }
+  .card, .chip, .feld input, .feld textarea, .feld select, .btn-secondary, .wahl-knopf, .aufgabe, .menue-liste, .schalter-zeile, .tabs-inner { outline: 1.5px solid var(--line); outline-offset: -1.5px; }
+  .pill-muted { color: var(--ink); }
+}
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --muted: #D3DAE3; --line: #8D99A8; --glas: #1B2839; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .intro { display: none; }
@@ -1481,12 +1549,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="i-menue" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="i-schild" viewBox="0 0 24 24"><path d="M12 3.5 5 6v5.5c0 4.3 2.9 7.6 7 9 4.1-1.4 7-4.7 7-9V6l-7-2.5z"/><path d="m9 12 2.2 2.2L15.2 10"/></symbol>
-  <symbol id="i-telefon" viewBox="0 0 24 24"><path d="M6.6 4h3l1.5 4-2 1.5a11 11 0 0 0 5.4 5.4l1.5-2 4 1.5v3a1.6 1.6 0 0 1-1.7 1.6C11.6 18.6 5.400 12.4 5 5.700A1.600 1.600 0 0 1 6.600 4z"/></symbol>
-  <symbol id="i-laut" viewBox="0 0 24 24"><path d="M4 9.500v5h3.500l4.500 3.500V6L7.500 9.500H4z"/><path d="M15.500 9a4 4 0 0 1 0 6M18 6.500a7.500 7.500 0 0 1 0 11"/></symbol>
-  <symbol id="i-glocke" viewBox="0 0 24 24"><path d="M6 16.500V11a6 6 0 0 1 12 0v5.500l1.500 2h-15l1.500-2z"/><path d="M10 20.500a2.200 2.200 0 0 0 4 0"/></symbol>
+  <symbol id="i-telefon" viewBox="0 0 24 24"><path d="M6.6 4h3l1.5 4-2 1.5a11 11 0 0 0 5.4 5.4l1.5-2 4 1.5v3a1.6 1.6 0 0 1-1.7 1.6C11.6 18.6 5.4 12.4 5 5.7A1.6 1.6 0 0 1 6.6 4z"/></symbol>
+  <symbol id="i-laut" viewBox="0 0 24 24"><path d="M4 9.5v5h3.5l4.5 3.5V6L7.5 9.5H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></symbol>
+  <symbol id="i-glocke" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15l1.5-2z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></symbol>
   <symbol id="i-drucken" viewBox="0 0 24 24"><path d="M7 8V4h10v4M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2"/><path d="M7 14h10v6H7z"/></symbol>
-  <symbol id="i-auge" viewBox="0 0 24 24"><path d="M2.500 12S6 5.500 12 5.500 21.500 12 21.500 12 18 18.500 12 18.500 2.500 12 2.500 12z"/><circle cx="12" cy="12" r="2.800"/></symbol>
-  <symbol id="i-wieder" viewBox="0 0 24 24"><path d="M19.500 12a7.500 7.500 0 1 1-2.200-5.300"/><path d="M19.500 4.500v4h-4"/></symbol>
+  <symbol id="i-auge" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></symbol>
+  <symbol id="i-wieder" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4h-4"/></symbol>
+  <symbol id="i-warnung" viewBox="0 0 24 24"><path d="M12 4 3.5 19h17L12 4z"/><path d="M12 10v4.5M12 17v.01"/></symbol>
+  <symbol id="i-herz" viewBox="0 0 24 24"><path d="M12 19.5s-7-4.3-7-9.6A3.9 3.9 0 0 1 12 7.6a3.9 3.9 0 0 1 7 2.3c0 5.3-7 9.6-7 9.6z"/></symbol>
   <path id="hs-form" fill-rule="evenodd" d="M417.88 103.75Q417.94 102.88 417.58 101.62Q417.22 100.38 416.36 99.53Q415.50 98.68 414.88 98.41Q414.25 98.14 413.44 98.01Q412.62 97.88 411.38 98.06Q410.12 98.25 406.12 100.17Q402.12 102.10 379.25 112.38Q356.38 122.65 352.00 124.87Q347.62 127.08 343.38 129.74Q339.12 132.39 335.69 135.38Q332.25 138.38 327.62 143.06Q323.00 147.75 322.50 148.13Q322.00 148.51 321.56 148.62Q321.12 148.74 320.44 148.41Q319.75 148.08 307.19 136.73Q294.62 125.38 288.58 120.06Q282.53 114.75 282.02 114.06Q281.51 113.38 281.55 113.08Q281.58 112.78 281.92 112.59Q282.25 112.40 285.69 112.39Q289.12 112.38 292.19 111.97Q295.25 111.57 300.31 110.16Q305.38 108.75 306.56 108.21Q307.75 107.67 308.44 107.13Q309.12 106.60 309.66 105.92Q310.19 105.25 310.46 104.62Q310.72 104.00 310.80 103.31Q310.88 102.62 310.74 101.81Q310.61 101.00 310.18 100.06Q309.75 99.12 309.00 98.47Q308.25 97.82 307.56 97.53Q306.88 97.24 305.62 97.22Q304.38 97.19 300.50 98.40Q296.62 99.61 292.88 100.18Q289.12 100.75 286.06 100.69Q283.00 100.62 280.69 100.23Q278.38 99.83 275.12 98.82Q271.88 97.81 268.75 96.30Q265.62 94.79 261.69 92.33Q257.75 89.88 252.88 86.35Q248.00 82.83 246.69 82.12Q245.38 81.40 243.88 80.78Q242.38 80.17 240.75 79.74Q239.12 79.32 237.06 79.10Q235.00 78.88 233.12 78.88Q231.25 78.88 229.50 79.05Q227.75 79.22 225.69 79.63Q223.62 80.04 221.25 80.93Q218.88 81.82 215.88 84.00Q212.88 86.18 209.56 89.40Q206.25 92.62 203.06 95.40Q199.88 98.18 197.88 99.56Q195.88 100.93 193.88 101.92Q191.88 102.92 190.31 103.37Q188.75 103.82 187.00 104.10Q185.25 104.38 182.38 104.31Q179.50 104.25 178.19 104.06Q176.88 103.86 175.50 103.40Q174.12 102.94 173.19 102.39Q172.25 101.83 171.79 101.29Q171.33 100.75 171.28 100.12Q171.22 99.50 171.62 98.81Q172.03 98.12 184.12 82.75Q196.21 67.38 197.85 65.62Q199.50 63.88 200.56 62.97Q201.62 62.06 204.50 60.23Q207.38 58.40 214.38 55.74Q221.38 53.08 229.06 50.42Q236.75 47.75 240.12 46.91Q243.50 46.07 247.31 45.60Q251.12 45.12 253.81 45.12Q256.50 45.12 259.12 45.42Q261.75 45.71 269.31 47.26Q276.88 48.81 281.00 49.42Q285.12 50.03 287.94 50.26Q290.75 50.50 294.50 50.50Q298.25 50.50 301.94 50.08Q305.62 49.67 308.31 49.08Q311.00 48.49 316.56 46.57Q322.12 44.65 327.94 42.22Q333.75 39.79 353.12 30.53Q372.50 21.28 373.19 20.76Q373.88 20.25 374.41 19.62Q374.94 19.00 375.28 18.25Q375.62 17.50 375.75 16.50Q375.88 15.50 375.71 14.62Q375.54 13.75 375.16 13.06Q374.78 12.38 374.14 11.83Q373.50 11.29 372.75 10.97Q372.00 10.64 371.06 10.51Q370.12 10.38 368.69 10.72Q367.25 11.06 355.31 16.89Q343.38 22.72 331.25 28.33Q319.12 33.93 314.88 35.45Q310.62 36.97 306.69 37.88Q302.75 38.78 300.19 39.01Q297.62 39.25 293.62 39.19Q289.62 39.12 285.31 38.59Q281.00 38.06 276.12 36.94Q271.25 35.82 267.38 35.15Q263.50 34.47 260.38 34.24Q257.25 34.00 254.31 34.00Q251.38 34.00 248.00 34.29Q244.62 34.58 241.25 35.31Q237.88 36.04 227.25 39.58Q216.62 43.12 215.62 43.31Q214.62 43.50 207.12 41.92Q199.62 40.33 195.62 39.98Q191.62 39.62 188.38 39.62Q185.12 39.62 179.75 40.10Q174.38 40.58 168.00 41.74Q161.62 42.90 156.81 43.39Q152.00 43.88 149.69 43.88Q147.38 43.88 142.44 43.33Q137.50 42.79 134.19 42.12Q130.88 41.46 126.38 40.23Q121.88 39.00 115.00 36.17Q108.12 33.35 99.94 29.60Q91.75 25.85 82.31 21.25Q72.88 16.65 66.75 13.92Q60.62 11.19 59.75 10.94Q58.88 10.69 57.88 10.69Q56.88 10.68 56.19 10.87Q55.50 11.06 54.62 11.56Q53.75 12.06 53.28 12.59Q52.82 13.12 52.54 13.75Q52.26 14.38 52.19 15.56Q52.12 16.75 52.23 17.25Q52.33 17.75 53.05 18.83Q53.76 19.92 55.76 21.22Q57.75 22.53 65.06 25.82Q72.38 29.11 86.44 35.77Q100.50 42.43 108.12 45.54Q115.75 48.65 120.56 50.19Q125.38 51.72 131.31 53.00Q137.25 54.28 139.81 54.58Q142.38 54.88 147.19 55.00Q152.00 55.12 156.12 54.76Q160.25 54.40 167.56 53.18Q174.88 51.96 178.50 51.54Q182.12 51.12 186.12 51.06Q190.12 51.00 191.56 51.10Q193.00 51.21 193.75 51.42Q194.50 51.64 194.72 51.94Q194.94 52.25 194.78 52.62Q194.61 53.00 192.24 55.19Q189.88 57.38 187.97 59.62Q186.07 61.88 173.32 78.31Q160.57 94.75 160.01 95.88Q159.44 97.00 159.13 98.12Q158.82 99.25 158.88 101.06Q158.93 102.88 159.56 104.38Q160.19 105.88 161.41 107.32Q162.62 108.76 163.69 109.63Q164.75 110.50 166.69 111.74Q168.62 112.97 169.88 113.53Q171.12 114.08 173.38 114.69Q175.62 115.31 178.81 115.59Q182.00 115.88 184.62 115.69Q187.25 115.51 189.56 115.11Q191.88 114.71 195.00 113.65Q198.12 112.60 202.06 110.16Q206.00 107.72 209.19 105.11Q212.38 102.50 216.56 98.31Q220.75 94.12 222.38 92.88Q224.00 91.64 224.88 91.26Q225.75 90.89 227.44 90.57Q229.12 90.25 231.94 90.19Q234.75 90.12 235.56 90.28Q236.38 90.44 237.00 90.77Q237.62 91.10 250.19 101.78Q262.75 112.47 290.72 137.17Q318.68 161.88 319.62 163.38Q320.57 164.88 320.85 166.25Q321.12 167.62 320.99 169.25Q320.86 170.88 320.07 172.56Q319.28 174.25 318.14 175.27Q317.00 176.29 315.38 177.01Q313.75 177.74 312.00 177.87Q310.25 178.00 309.12 177.77Q308.00 177.54 306.94 177.07Q305.88 176.60 305.00 176.02Q304.12 175.44 290.31 163.74Q276.50 152.04 268.75 145.28Q261.00 138.51 260.00 137.99Q259.00 137.46 258.06 137.30Q257.12 137.14 256.12 137.35Q255.12 137.56 254.19 138.12Q253.25 138.69 252.62 139.53Q252.00 140.38 251.69 141.62Q251.38 142.88 251.53 143.75Q251.68 144.62 252.18 145.44Q252.68 146.25 253.72 147.34Q254.75 148.43 266.81 158.44Q278.88 168.46 286.12 174.79Q293.36 181.12 294.43 182.44Q295.50 183.75 296.16 184.94Q296.82 186.12 297.03 187.19Q297.25 188.25 297.15 189.56Q297.06 190.88 296.68 192.06Q296.31 193.25 295.85 194.06Q295.39 194.88 294.44 195.85Q293.50 196.83 292.50 197.47Q291.50 198.10 290.19 198.51Q288.88 198.92 287.75 198.96Q286.62 199.00 285.50 198.81Q284.38 198.62 283.56 198.30Q282.75 197.97 281.44 197.15Q280.12 196.32 272.94 190.37Q265.75 184.42 255.69 175.79Q245.62 167.17 243.31 165.03Q241.00 162.89 239.81 162.12Q238.62 161.35 238.00 161.14Q237.38 160.93 236.25 160.94Q235.12 160.94 234.12 161.33Q233.12 161.71 232.43 162.35Q231.74 163.00 231.28 164.06Q230.82 165.12 230.91 166.56Q231.00 168.00 231.47 168.88Q231.93 169.75 233.28 171.09Q234.62 172.43 248.81 184.64Q263.00 196.85 265.31 198.99Q267.62 201.12 268.69 202.50Q269.76 203.88 270.19 205.38Q270.62 206.88 270.59 208.06Q270.56 209.25 270.15 210.50Q269.74 211.75 268.93 212.88Q268.12 214.00 267.12 214.89Q266.12 215.78 265.25 216.22Q264.38 216.67 263.31 216.90Q262.25 217.12 260.88 217.01Q259.50 216.90 258.19 216.60Q256.88 216.29 256.00 215.87Q255.12 215.44 254.06 214.69Q253.00 213.93 236.56 200.28Q220.12 186.64 219.19 186.10Q218.25 185.56 217.62 185.40Q217.00 185.25 215.88 185.34Q214.75 185.43 213.88 185.76Q213.00 186.08 212.22 186.92Q211.43 187.75 211.06 188.75Q210.69 189.75 210.78 191.00Q210.88 192.25 211.40 193.25Q211.93 194.25 218.90 200.27Q225.88 206.29 229.50 209.19Q233.12 212.08 237.00 215.55Q240.88 219.01 241.56 219.94Q242.25 220.88 242.50 221.94Q242.75 223.00 242.66 223.75Q242.57 224.50 242.30 225.31Q242.03 226.12 241.61 226.75Q241.19 227.38 240.60 227.93Q240.00 228.49 238.94 229.10Q237.88 229.72 237.00 230.03Q236.12 230.33 234.88 230.54Q233.62 230.75 232.50 230.71Q231.38 230.67 230.38 230.45Q229.38 230.24 226.75 229.17Q224.12 228.10 220.56 225.78Q217.00 223.47 215.08 221.92Q213.15 220.38 212.87 219.75Q212.58 219.12 212.85 216.38Q213.12 213.62 212.96 211.44Q212.79 209.25 212.24 207.56Q211.68 205.88 210.73 204.06Q209.78 202.25 208.67 200.88Q207.56 199.50 206.03 198.12Q204.50 196.75 202.88 195.83Q201.25 194.90 199.56 194.31Q197.88 193.71 197.35 193.35Q196.83 192.99 196.67 192.49Q196.50 192.00 196.50 189.56Q196.50 187.12 196.31 185.88Q196.11 184.62 195.48 182.81Q194.85 181.00 194.03 179.62Q193.22 178.25 191.86 176.75Q190.50 175.25 188.75 173.86Q187.00 172.47 185.44 171.65Q183.88 170.82 181.19 170.00Q178.50 169.18 178.01 168.84Q177.53 168.50 177.28 168.00Q177.04 167.50 176.58 164.38Q176.11 161.25 175.27 159.38Q174.43 157.50 173.38 156.00Q172.32 154.50 171.28 153.38Q170.25 152.25 168.88 151.08Q167.50 149.92 166.56 149.31Q165.62 148.71 163.69 147.93Q161.75 147.15 158.81 146.83Q155.88 146.50 153.25 146.94Q150.62 147.38 148.75 148.14Q146.88 148.90 145.44 149.69Q144.00 150.49 143.56 150.53Q143.12 150.57 142.73 150.28Q142.33 150.00 140.70 147.50Q139.07 145.00 137.16 143.19Q135.25 141.39 133.06 140.23Q130.88 139.07 128.50 138.53Q126.12 138.00 123.88 138.10Q121.62 138.21 119.12 138.90Q116.62 139.58 114.38 140.86Q112.12 142.14 110.06 143.94Q108.00 145.74 107.38 145.84Q106.75 145.94 106.12 145.53Q105.50 145.12 103.31 142.91Q101.12 140.69 97.81 137.93Q94.50 135.17 91.69 133.19Q88.88 131.22 85.38 129.25Q81.88 127.28 76.62 124.78Q71.38 122.28 48.00 111.94Q24.62 101.60 21.81 100.20Q19.00 98.81 17.31 98.40Q15.62 98.00 14.81 98.08Q14.00 98.15 13.19 98.48Q12.38 98.81 11.78 99.28Q11.19 99.76 10.80 100.38Q10.40 101.00 10.17 101.75Q9.94 102.50 9.91 103.25Q9.88 104.00 10.06 104.75Q10.24 105.50 10.81 106.31Q11.38 107.12 12.31 107.83Q13.25 108.54 15.25 109.69Q17.25 110.85 29.44 116.09Q41.62 121.33 55.75 127.74Q69.88 134.15 74.88 136.67Q79.88 139.19 82.00 140.53Q84.12 141.88 86.56 143.72Q89.00 145.57 91.44 147.85Q93.88 150.12 95.22 151.62Q96.56 153.12 97.24 154.19Q97.92 155.25 97.90 155.81Q97.89 156.38 96.89 159.00Q95.89 161.62 95.51 163.75Q95.12 165.88 95.28 168.44Q95.44 171.00 95.87 172.62Q96.29 174.25 96.85 175.56Q97.40 176.88 98.42 178.44Q99.43 180.00 101.34 181.76Q103.25 183.51 105.31 184.67Q107.38 185.82 109.94 186.48Q112.50 187.14 113.15 187.51Q113.81 187.89 114.06 188.51Q114.31 189.12 114.51 191.31Q114.71 193.50 115.07 194.94Q115.43 196.38 116.33 198.19Q117.22 200.00 118.76 202.00Q120.29 204.00 122.27 205.65Q124.25 207.29 126.62 208.42Q129.00 209.54 130.62 209.91Q132.25 210.28 134.81 210.30Q137.38 210.32 137.88 210.47Q138.38 210.61 138.76 211.06Q139.15 211.50 139.67 213.38Q140.19 215.25 141.14 217.06Q142.08 218.88 143.29 220.38Q144.50 221.88 145.88 223.06Q147.25 224.24 148.62 225.04Q150.00 225.85 152.06 226.59Q154.12 227.33 155.75 227.60Q157.38 227.88 159.56 227.75Q161.75 227.62 162.31 227.74Q162.88 227.85 163.39 228.36Q163.90 228.88 164.59 230.75Q165.28 232.62 165.90 233.69Q166.53 234.75 167.83 236.38Q169.12 238.00 170.12 238.92Q171.12 239.85 172.62 240.78Q174.12 241.72 175.44 242.30Q176.75 242.88 178.31 243.28Q179.88 243.68 181.81 243.78Q183.75 243.88 185.25 243.71Q186.75 243.54 188.12 243.21Q189.50 242.88 192.00 241.71Q194.50 240.54 196.19 239.21Q197.88 237.88 201.25 234.31Q204.62 230.75 205.25 230.39Q205.88 230.03 206.50 230.17Q207.12 230.31 211.94 233.43Q216.75 236.56 220.19 238.43Q223.62 240.31 226.31 241.04Q229.00 241.78 231.75 241.83Q234.50 241.88 235.94 241.71Q237.38 241.54 239.00 241.15Q240.62 240.75 242.00 240.24Q243.38 239.72 244.62 238.98Q245.88 238.24 246.94 237.37Q248.00 236.50 249.37 235.00Q250.74 233.50 251.29 232.56Q251.85 231.62 252.44 230.12Q253.04 228.62 253.52 228.19Q254.00 227.76 254.38 227.70Q254.75 227.64 257.88 228.01Q261.00 228.38 262.88 228.26Q264.75 228.15 266.88 227.60Q269.00 227.04 270.62 226.31Q272.25 225.57 273.69 224.56Q275.12 223.56 276.62 221.97Q278.12 220.38 279.24 218.44Q280.35 216.50 281.14 214.06Q281.93 211.62 282.28 211.10Q282.64 210.58 283.26 210.38Q283.88 210.17 286.50 210.27Q289.12 210.38 290.75 210.09Q292.38 209.81 293.81 209.37Q295.25 208.93 297.00 207.99Q298.75 207.04 300.69 205.46Q302.62 203.88 304.15 201.94Q305.67 200.00 306.60 198.25Q307.54 196.50 308.19 193.81Q308.85 191.12 309.18 190.60Q309.51 190.07 310.13 189.83Q310.75 189.60 313.81 189.15Q316.88 188.71 318.69 188.09Q320.50 187.47 322.56 186.22Q324.62 184.97 326.28 183.42Q327.93 181.88 328.94 180.44Q329.94 179.00 330.50 177.88Q331.06 176.75 331.57 175.06Q332.08 173.38 332.35 171.75Q332.62 170.12 332.69 169.12Q332.75 168.12 332.47 165.88Q332.18 163.62 331.26 160.94Q330.35 158.25 330.38 157.50Q330.40 156.75 330.95 156.00Q331.50 155.25 335.25 151.50Q339.00 147.75 341.44 145.55Q343.88 143.35 347.12 140.97Q350.38 138.58 353.62 136.74Q356.88 134.90 373.19 127.40Q389.50 119.90 398.31 116.09Q407.12 112.28 410.56 110.56Q414.00 108.85 415.06 108.15Q416.12 107.44 416.67 106.85Q417.21 106.25 417.51 105.44Q417.81 104.62 417.88 103.75ZM197.44 205.85Q198.38 206.36 199.06 207.06Q199.74 207.75 200.23 208.62Q200.72 209.50 201.11 211.06Q201.50 212.62 201.50 213.62Q201.50 214.62 201.33 215.44Q201.17 216.25 200.80 217.06Q200.43 217.88 199.74 218.81Q199.06 219.75 195.22 223.90Q191.38 228.06 190.19 229.12Q189.00 230.18 187.75 231.04Q186.50 231.90 185.25 232.20Q184.00 232.50 182.88 232.40Q181.75 232.31 180.62 231.95Q179.50 231.60 178.62 231.02Q177.75 230.44 176.49 228.78Q175.22 227.12 174.80 225.31Q174.38 223.50 174.47 222.62Q174.56 221.75 174.83 220.94Q175.10 220.12 176.28 218.50Q177.47 216.88 182.67 211.78Q187.88 206.69 188.94 205.96Q190.00 205.22 190.81 204.96Q191.62 204.69 193.00 204.69Q194.38 204.69 195.44 205.01Q196.50 205.33 197.44 205.85ZM181.00 182.43Q182.12 183.21 182.81 183.98Q183.50 184.75 183.83 185.38Q184.17 186.00 184.43 186.94Q184.69 187.88 184.73 189.12Q184.76 190.38 184.52 191.38Q184.28 192.38 183.86 193.25Q183.44 194.12 181.97 195.88Q180.50 197.62 174.81 203.62Q169.12 209.62 166.06 212.41Q163.00 215.19 161.62 215.68Q160.25 216.17 158.88 216.17Q157.50 216.18 156.38 215.83Q155.25 215.49 154.19 214.77Q153.12 214.06 152.01 212.59Q150.90 211.12 150.58 210.25Q150.26 209.38 150.13 208.50Q150.00 207.62 150.22 206.25Q150.44 204.88 150.95 203.88Q151.46 202.88 152.10 202.06Q152.75 201.25 160.44 193.38Q168.12 185.50 170.25 183.67Q172.38 181.83 173.69 181.32Q175.00 180.81 176.25 180.81Q177.50 180.82 178.69 181.24Q179.88 181.65 181.00 182.43ZM161.06 159.71Q162.25 160.46 163.15 161.54Q164.06 162.62 164.52 163.69Q164.99 164.75 165.18 166.31Q165.38 167.88 165.08 169.38Q164.79 170.88 163.80 172.50Q162.81 174.12 157.97 179.38Q153.12 184.62 147.88 189.88Q142.62 195.12 141.19 196.37Q139.75 197.61 138.94 198.10Q138.12 198.60 136.94 198.92Q135.75 199.25 134.44 199.12Q133.12 198.99 131.88 198.47Q130.62 197.96 129.50 197.10Q128.38 196.25 127.66 195.31Q126.94 194.38 126.41 193.25Q125.88 192.12 125.69 191.12Q125.50 190.12 125.59 188.94Q125.68 187.75 125.98 186.88Q126.28 186.00 126.83 185.06Q127.39 184.12 129.32 181.88Q131.25 179.62 140.00 170.69Q148.75 161.75 150.31 160.55Q151.88 159.35 153.00 158.87Q154.12 158.39 155.44 158.26Q156.75 158.12 158.31 158.54Q159.88 158.96 161.06 159.71ZM127.25 150.07Q128.00 150.44 128.75 151.03Q129.50 151.62 130.12 152.38Q130.75 153.12 131.28 154.06Q131.82 155.00 132.06 155.81Q132.31 156.62 132.34 157.75Q132.38 158.88 132.18 160.00Q131.99 161.12 131.31 162.44Q130.62 163.75 126.62 168.06Q122.62 172.38 121.00 173.68Q119.38 174.99 118.62 175.30Q117.88 175.61 116.50 175.81Q115.12 176.00 114.00 175.77Q112.88 175.54 111.69 174.95Q110.50 174.36 109.24 173.12Q107.99 171.88 107.52 171.06Q107.06 170.25 106.82 169.38Q106.58 168.50 106.54 167.56Q106.50 166.62 106.65 165.75Q106.79 164.88 107.53 163.31Q108.26 161.75 112.63 157.25Q117.00 152.75 118.62 151.53Q120.25 150.32 121.31 149.87Q122.38 149.42 123.50 149.33Q124.62 149.25 125.56 149.47Q126.50 149.69 127.25 150.07Z"/><clipPath id="hs-clip-l"><polygon points="-60,-40 214,-40 206,42 160,86 150,104 166,118 208,124 214,176 206,205 210,290 -60,290"/></clipPath><clipPath id="hs-clip-r"><polygon points="214,-40 206,42 160,86 150,104 166,118 208,124 214,176 206,205 210,290 480,290 480,-40"/></clipPath>
   <symbol id="i-kalender" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4M8 14h2.5M13.5 14H16M8 17h2.5"/></symbol>
   <symbol id="i-stern" viewBox="0 0 24 24"><path d="m12 4 2.4 5 5.4.6-4 3.7 1.1 5.4L12 16l-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z"/></symbol>
@@ -1514,6 +1584,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
         <p class="datum" id="datum"></p>
         <h1 id="h-entdecken">Hallo Tim</h1>
         <p class="lead" id="anzahl-text">Garbsen</p>
+        <p class="geholfen" id="geholfen" hidden></p>
       </div>
       <div class="mini" id="mini" role="group" aria-label="Deine Nachbarschaft als kleines Modell. Die Schilder über den Dächern sind offene Anfragen.">
         <div class="mini-schilder"></div>
@@ -1540,7 +1611,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
       </div>
       <div class="liste" id="liste"></div>
       <div class="installieren-karte" id="installieren" hidden></div>
-      <button type="button" class="einladen-zeile" data-einladen><svg class="i i-sm" aria-hidden="true"><use href="#i-teilen"/></svg><span>Nachbarn einladen</span><span class="aufgabe-pfeil" aria-hidden="true">›</span></button>
+      <button type="button" class="einladen-zeile" data-panel="einladen"><svg class="i i-sm" aria-hidden="true"><use href="#i-teilen"/></svg><span>Nachbarn einladen</span><span class="aufgabe-pfeil" aria-hidden="true">›</span></button>
     </section>
 
     <!-- ===== Karte ===== -->
@@ -1616,6 +1687,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
             <textarea id="neu-text" name="text" rows="3" maxlength="400" placeholder="z. B. Größe, ob Werkzeug da ist, worauf man achten muss"></textarea>
             <p class="fehler" id="fehler-wort" hidden>Bitte formuliere deine Anfrage ohne beleidigende oder anstößige Wörter.</p>
           </div>
+          <fieldset class="feld">
+            <legend>Für wen ist die Hilfe?</legend>
+            <div class="segment" role="group" aria-label="Für wen ist die Hilfe?" id="neu-fuer-wahl">
+              <button type="button" data-fuer="ich" aria-pressed="true">Für mich</button>
+              <button type="button" data-fuer="andere" aria-pressed="false">Für jemand anderen</button>
+            </div>
+            <div class="unterfeld" id="fuer-feld" hidden>
+              <label for="neu-fuer">Für wen?</label>
+              <input id="neu-fuer" name="fuer" maxlength="40" placeholder="z. B. meine Mutter Inge" autocomplete="off" aria-describedby="fuer-hinweis fehler-fuer">
+              <p class="feld-hinweis" id="fuer-hinweis">Das sehen alle Nachbarn. Adresse und Telefon sieht nur, wer zusagt.</p>
+              <p class="fehler" id="fehler-fuer" hidden>Bitte schreib kurz, für wen die Hilfe ist.</p>
+            </div>
+          </fieldset>
         </div>
 
         <!-- Schritt 2: Wann und wo? -->
@@ -1649,7 +1733,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
             <label for="neu-adresse">Straße und Hausnummer <span class="optional" id="adresse-optional">(freiwillig)</span></label>
             <input id="neu-adresse" name="adresse" maxlength="120" autocomplete="street-address" placeholder="z. B. Weberstraße 5" aria-describedby="adresse-hinweis fehler-adresse">
             <p class="feld-hinweis" id="adresse-hinweis">Sieht nur, wer bei dir zusagt.</p>
-            <p class="fehler" id="fehler-adresse" hidden>Bitte gib deine Straße und Hausnummer an.</p>
+            <p class="fehler" id="fehler-adresse" hidden>Bitte gib Straße und Hausnummer an.</p>
+          </div>
+          <div class="feld">
+            <label for="neu-telefon">Telefon <span class="optional">(freiwillig)</span></label>
+            <input id="neu-telefon" name="telefon" type="tel" inputmode="tel" maxlength="30" autocomplete="tel" placeholder="z. B. 05131 123456" aria-describedby="telefon-hinweis fehler-telefon">
+            <p class="feld-hinweis" id="telefon-hinweis">Für alle, die lieber anrufen als schreiben. Sieht nur, wer zusagt.</p>
+            <p class="fehler" id="fehler-telefon" hidden>Bitte prüfe die Telefonnummer.</p>
           </div>
         </div>
 
@@ -1749,6 +1839,7 @@ const KAT_BILDER = {
   tragen: 'data:image/webp;base64,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',
   winken: 'data:image/webp;base64,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'
 };
+const QR_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 37 37\" shape-rendering=\"crispEdges\"><path fill=\"#fff\" d=\"M0 0h37v37H0z\"/><path fill=\"#11161C\" d=\"M2 2h7v1h-7zM10 2h1v1h-1zM12 2h1v1h-1zM14 2h2v1h-2zM18 2h8v1h-8zM28 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM10 3h1v1h-1zM14 3h2v1h-2zM18 3h1v1h-1zM20 3h1v1h-1zM24 3h3v1h-3zM28 3h1v1h-1zM34 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM12 4h1v1h-1zM19 4h1v1h-1zM22 4h1v1h-1zM24 4h2v1h-2zM28 4h1v1h-1zM30 4h3v1h-3zM34 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h1v1h-1zM14 5h1v1h-1zM16 5h3v1h-3zM21 5h2v1h-2zM26 5h1v1h-1zM28 5h1v1h-1zM30 5h3v1h-3zM34 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM11 6h1v1h-1zM13 6h1v1h-1zM16 6h1v1h-1zM19 6h1v1h-1zM22 6h2v1h-2zM26 6h1v1h-1zM28 6h1v1h-1zM30 6h3v1h-3zM34 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM20 7h5v1h-5zM28 7h1v1h-1zM34 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h7v1h-7zM10 9h2v1h-2zM13 9h1v1h-1zM16 9h1v1h-1zM19 9h1v1h-1zM22 9h1v1h-1zM26 9h1v1h-1zM2 10h1v1h-1zM4 10h2v1h-2zM7 10h3v1h-3zM11 10h2v1h-2zM14 10h1v1h-1zM19 10h3v1h-3zM23 10h1v1h-1zM25 10h1v1h-1zM28 10h1v1h-1zM31 10h1v1h-1zM33 10h2v1h-2zM4 11h2v1h-2zM7 11h1v1h-1zM9 11h1v1h-1zM11 11h1v1h-1zM13 11h1v1h-1zM18 11h1v1h-1zM20 11h3v1h-3zM24 11h2v1h-2zM28 11h2v1h-2zM31 11h2v1h-2zM34 11h1v1h-1zM3 12h1v1h-1zM5 12h1v1h-1zM8 12h1v1h-1zM11 12h2v1h-2zM16 12h1v1h-1zM19 12h1v1h-1zM23 12h3v1h-3zM28 12h4v1h-4zM34 12h1v1h-1zM3 13h1v1h-1zM6 13h1v1h-1zM9 13h3v1h-3zM15 13h2v1h-2zM18 13h1v1h-1zM20 13h1v1h-1zM25 13h5v1h-5zM31 13h1v1h-1zM34 13h1v1h-1zM2 14h1v1h-1zM4 14h1v1h-1zM7 14h2v1h-2zM11 14h1v1h-1zM20 14h1v1h-1zM23 14h1v1h-1zM26 14h2v1h-2zM29 14h3v1h-3zM33 14h2v1h-2zM2 15h3v1h-3zM7 15h1v1h-1zM9 15h1v1h-1zM13 15h2v1h-2zM18 15h3v1h-3zM23 15h1v1h-1zM26 15h1v1h-1zM29 15h1v1h-1zM32 15h2v1h-2zM4 16h3v1h-3zM8 16h5v1h-5zM14 16h5v1h-5zM20 16h1v1h-1zM24 16h1v1h-1zM26 16h1v1h-1zM28 16h1v1h-1zM30 16h3v1h-3zM2 17h2v1h-2zM5 17h2v1h-2zM10 17h1v1h-1zM13 17h2v1h-2zM16 17h1v1h-1zM18 17h1v1h-1zM21 17h4v1h-4zM26 17h7v1h-7zM3 18h2v1h-2zM8 18h1v1h-1zM10 18h1v1h-1zM12 18h3v1h-3zM17 18h1v1h-1zM21 18h3v1h-3zM25 18h1v1h-1zM27 18h2v1h-2zM30 18h2v1h-2zM4 19h2v1h-2zM10 19h3v1h-3zM14 19h1v1h-1zM16 19h2v1h-2zM19 19h1v1h-1zM22 19h2v1h-2zM25 19h2v1h-2zM28 19h1v1h-1zM30 19h2v1h-2zM33 19h2v1h-2zM2 20h1v1h-1zM5 20h4v1h-4zM10 20h2v1h-2zM13 20h1v1h-1zM15 20h1v1h-1zM17 20h1v1h-1zM19 20h1v1h-1zM22 20h1v1h-1zM24 20h1v1h-1zM26 20h1v1h-1zM29 20h2v1h-2zM32 20h2v1h-2zM3 21h4v1h-4zM11 21h1v1h-1zM14 21h3v1h-3zM18 21h1v1h-1zM23 21h1v1h-1zM25 21h4v1h-4zM30 21h1v1h-1zM33 21h2v1h-2zM2 22h1v1h-1zM6 22h1v1h-1zM8 22h2v1h-2zM12 22h1v1h-1zM15 22h2v1h-2zM20 22h1v1h-1zM22 22h1v1h-1zM31 22h4v1h-4zM2 23h4v1h-4zM7 23h1v1h-1zM11 23h5v1h-5zM17 23h1v1h-1zM19 23h2v1h-2zM23 23h1v1h-1zM25 23h1v1h-1zM27 23h2v1h-2zM31 23h1v1h-1zM34 23h1v1h-1zM4 24h2v1h-2zM8 24h4v1h-4zM13 24h1v1h-1zM15 24h2v1h-2zM18 24h1v1h-1zM20 24h1v1h-1zM24 24h2v1h-2zM29 24h6v1h-6zM3 25h1v1h-1zM7 25h1v1h-1zM9 25h2v1h-2zM13 25h2v1h-2zM16 25h1v1h-1zM18 25h1v1h-1zM21 25h1v1h-1zM24 25h1v1h-1zM27 25h2v1h-2zM30 25h2v1h-2zM33 25h2v1h-2zM2 26h1v1h-1zM6 26h5v1h-5zM12 26h2v1h-2zM15 26h5v1h-5zM24 26h7v1h-7zM33 26h2v1h-2zM10 27h1v1h-1zM16 27h4v1h-4zM21 27h2v1h-2zM25 27h2v1h-2zM30 27h2v1h-2zM2 28h7v1h-7zM10 28h1v1h-1zM12 28h4v1h-4zM21 28h1v1h-1zM24 28h3v1h-3zM28 28h1v1h-1zM30 28h1v1h-1zM2 29h1v1h-1zM8 29h1v1h-1zM10 29h1v1h-1zM13 29h1v1h-1zM15 29h1v1h-1zM17 29h1v1h-1zM22 29h5v1h-5zM30 29h3v1h-3zM34 29h1v1h-1zM2 30h1v1h-1zM4 30h3v1h-3zM8 30h1v1h-1zM11 30h1v1h-1zM13 30h1v1h-1zM15 30h3v1h-3zM19 30h1v1h-1zM22 30h1v1h-1zM25 30h6v1h-6zM32 30h2v1h-2zM2 31h1v1h-1zM4 31h3v1h-3zM8 31h1v1h-1zM10 31h1v1h-1zM12 31h2v1h-2zM15 31h2v1h-2zM20 31h4v1h-4zM26 31h2v1h-2zM29 31h1v1h-1zM33 31h2v1h-2zM2 32h1v1h-1zM4 32h3v1h-3zM8 32h1v1h-1zM10 32h2v1h-2zM15 32h1v1h-1zM19 32h1v1h-1zM21 32h1v1h-1zM25 32h5v1h-5zM31 32h2v1h-2zM2 33h1v1h-1zM8 33h1v1h-1zM11 33h1v1h-1zM13 33h1v1h-1zM15 33h1v1h-1zM17 33h5v1h-5zM25 33h2v1h-2zM28 33h3v1h-3zM34 33h1v1h-1zM2 34h7v1h-7zM10 34h2v1h-2zM16 34h5v1h-5zM22 34h2v1h-2zM25 34h1v1h-1zM27 34h2v1h-2zM30 34h1v1h-1zM32 34h1v1h-1z\"/></svg>";
 /* Rechtstexte von Hand Drauf: Impressum, Datenschutz, Nutzungsbedingungen, Regeln.
    Fassung für die Testphase (Weg 1: ohne Bezahlung über die App). Vor dem öffentlichen Start
    von einer Anwältin oder einem Anwalt für IT-Recht prüfen lassen.
@@ -1797,7 +1888,8 @@ function RECHT_TEXTE(b, e) {
         <p>Deinen eigenen Standort fragt die App nicht ab. Sie rechnet Entfernungen von der Mitte deines Stadtteils aus.</p>
 
         <h3>4. Speicher auf deinem Gerät</h3>
-        <p>Die App speichert im Browser deines Geräts (localStorage): deine Ansicht-Einstellungen, welche Nachrichten du gelesen hast, die Beispieldaten der Demo und, wenn du angemeldet bist, deine Anmeldung. Diese Daten bleiben auf deinem Gerät. Sie sind für die Funktionen nötig, die du nutzt (§ 25 Abs. 2 Nr. 2 TDDDG). Cookies für Werbung oder Statistik setzen wir nicht.</p>
+        <p>Die App speichert im Browser deines Geräts (localStorage): deine Ansicht-Einstellungen, welche Nachrichten du gelesen hast, ob Benachrichtigungen auf diesem Gerät eingeschaltet sind, die Beispieldaten der Demo und, wenn du angemeldet bist, deine Anmeldung. Diese Daten bleiben auf deinem Gerät. Sie sind für die Funktionen nötig, die du nutzt (§ 25 Abs. 2 Nr. 2 TDDDG). Cookies für Werbung oder Statistik setzen wir nicht.</p>
+        <p>„Vorlesen“ nutzt die Sprachausgabe deines Geräts. Die App wählt dafür eine Stimme, die auf dem Gerät selbst liegt, wenn es eine gibt.</p>
 
         <h3>5. Wenn du ein Konto hast</h3>
         <p>Für Konten, Anfragen und Nachrichten nutzen wir Supabase (Supabase Pte. Ltd., Singapur). Die Datenbank liegt in einem Rechenzentrum in Frankfurt am Main. Mit Supabase besteht ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO). Soweit Supabase für Betrieb und Support aus Ländern außerhalb der EU zugreift, gelten EU-Standardvertragsklauseln.</p>
@@ -1806,27 +1898,36 @@ function RECHT_TEXTE(b, e) {
           <li>E-Mail-Adresse und Passwort (nur verschlüsselt als Prüfwert)</li>
           <li>Vorname, Anfangsbuchstabe des Nachnamens, Stadtteil und deine Bestätigung, dass du mindestens 18 bist</li>
           <li>deine Anfragen, die Adresse zu einer Anfrage, deine Zusagen und Bewertungen</li>
+          <li>wenn du sie angibst: eine Telefonnummer zur Anfrage und für wen die Hilfe ist</li>
+          <li>den Sicherheits-Code eines laufenden Auftrags</li>
           <li>Nachrichten zu einem Auftrag und Meldungen, die du abschickst</li>
+          <li>wenn du Benachrichtigungen einschaltest: die Adresse, unter der dein Gerät dafür erreichbar ist (siehe 7.)</li>
         </ul>
+        <p>Fragst du für jemand anderen an, zum Beispiel für deine Eltern, speichern wir auch deine Angaben zu dieser Person (Name oder Bezeichnung, Adresse, Telefonnummer). Bitte hol vorher ihr Einverständnis ein.</p>
         <p>Rechtsgrundlage ist der Nutzungsvertrag mit dir (Art. 6 Abs. 1 lit. b DSGVO). Meldungen verarbeiten wir außerdem, um rechtswidrige Inhalte zu entfernen und Nutzer zu schützen (Art. 6 Abs. 1 lit. c und f DSGVO). Die Bestätigungs-E-Mail bei der Registrierung verschickt Supabase für uns.</p>
         <p>Die Programmbibliothek für die Anmeldung lädt die App vom Dienst jsDelivr. Dabei wird deine IP-Adresse an dessen Server übertragen (Art. 6 Abs. 1 lit. f DSGVO).</p>
 
         <h3>6. Wer sieht was?</h3>
         <ul>
-          <li><strong>Alle, auch ohne Konto:</strong> offene Anfragen mit Vorname, Anfangsbuchstabe, Stadtteil, ungefährer Lage (100 bis 400 Meter um die Stadtteilmitte) und Bewertungsschnitt.</li>
-          <li><strong>Nur die Person, die zusagt:</strong> die genaue Adresse.</li>
-          <li><strong>Nur ihr beide:</strong> eure Nachrichten.</li>
+          <li><strong>Alle, auch ohne Konto:</strong> offene Anfragen mit Vorname, Anfangsbuchstabe, Stadtteil, ungefährer Lage (100 bis 400 Meter um die Stadtteilmitte), Bewertungsschnitt und, wenn angegeben, für wen die Hilfe ist.</li>
+          <li><strong>Nur die Person, die zusagt:</strong> die genaue Adresse und die Telefonnummer.</li>
+          <li><strong>Nur ihr beide:</strong> eure Nachrichten und der Sicherheits-Code für die Tür.</li>
           <li><strong>Nur wir:</strong> Meldungen. Die gemeldete Person erfährt nicht, wer gemeldet hat.</li>
         </ul>
 
-        <h3>7. Wie lange?</h3>
-        <p>Dein Konto und deine Daten speichern wir, bis du das Konto löschst. Das geht jederzeit in der App unter „Dein Konto“. Dann löschen wir dein Profil, deine Anfragen, Adressen, Nachrichten und Bewertungen. Meldungen bewahren wir höchstens zwölf Monate nach ihrer Bearbeitung auf, um wiederholte Verstöße erkennen zu können.</p>
+        <h3>7. Benachrichtigungen aufs Handy</h3>
+        <p>Benachrichtigungen bekommst du nur, wenn du sie im Menü oder in einem Auftrag einschaltest. Dein Gerät meldet sich dann beim Benachrichtigungsdienst seines Browsers an: bei Google (Chrome, Android), Apple (Safari, iPhone), Mozilla (Firefox) oder Microsoft (Edge). Dieser Dienst vergibt eine Adresse für dein Gerät. Wir speichern diese Adresse und zwei Schlüssel bei Supabase.</p>
+        <p>Sagt jemand zu, schreibt dir oder ist ein Auftrag fertig, schicken wir über diesen Dienst eine kurze Mitteilung an dein Gerät, zum Beispiel „Tim hilft dir“ mit Titel und Termin der Anfrage. Sie ist so verschlüsselt, dass nur dein Gerät sie lesen kann. Was in euren Nachrichten steht, ist nicht Teil der Mitteilung. Die Dienste sitzen zum Teil in den USA.</p>
+        <p>Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG). Du kannst sie jederzeit widerrufen: Schalte die Benachrichtigungen im Menü aus. Dann löschen wir die Adresse deines Geräts. Beim Abmelden lösen wir das Gerät von deinem Konto.</p>
 
-        <h3>8. Deine Rechte</h3>
+        <h3>8. Wie lange?</h3>
+        <p>Dein Konto und deine Daten speichern wir, bis du das Konto löschst. Das geht jederzeit in der App unter „Dein Konto“. Dann löschen wir dein Profil, deine Anfragen, Adressen, Telefonnummern, Nachrichten, Bewertungen und die Adressen deiner Geräte für Benachrichtigungen. Meldungen bewahren wir höchstens zwölf Monate nach ihrer Bearbeitung auf, um wiederholte Verstöße erkennen zu können.</p>
+
+        <h3>9. Deine Rechte</h3>
         <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Datenübertragbarkeit (Art. 15 bis 20 DSGVO). Verarbeitungen auf Grundlage unseres berechtigten Interesses kannst du widersprechen (Art. 21 DSGVO). Schreib uns dafür an ${mail}.</p>
         <p>Du kannst dich außerdem bei einer Datenschutz-Aufsichtsbehörde beschweren. In Niedersachsen ist das die Landesbeauftragte für den Datenschutz Niedersachsen, Prinzenstraße 5, 30159 Hannover.</p>
 
-        <h3>9. Keine Werbung, kein Profiling</h3>
+        <h3>10. Keine Werbung, kein Profiling</h3>
         <p>Wir verkaufen keine Daten, zeigen keine Werbung und treffen keine automatisierten Entscheidungen über dich.</p>
         ${stand}`
     },
@@ -1866,7 +1967,9 @@ function RECHT_TEXTE(b, e) {
         <h3>6. Umgang miteinander</h3>
         <ul>
           <li>Bleib freundlich und ehrlich, in Anfragen wie in Nachrichten. Halte dich an die ${verweis('regeln', 'Regeln für Nachbarn')}.</li>
-          <li>Die Adresse, die du nach einer Zusage siehst, darfst du nur für diesen Auftrag nutzen.</li>
+          <li>Adresse und Telefonnummer, die du nach einer Zusage siehst, darfst du nur für diesen Auftrag nutzen. Zu deiner Sicherheit darfst du einer Vertrauensperson sagen, wo und wann du hilfst.</li>
+          <li>Fragst du für jemand anderen an, zum Beispiel für deine Eltern, muss diese Person einverstanden sein. Das gilt auch dafür, dass die helfende Person ihre Adresse und Telefonnummer sieht.</li>
+          <li>Bezahlt wird nach der Hilfe. Niemand darf Geld im Voraus, Gutscheinkarten oder Codes verlangen. Der Sicherheits-Code aus der App ist nur für die Begrüßung an der Tür gedacht.</li>
           <li>Keine Werbung, keine Weitergabe von Daten anderer.</li>
         </ul>
 
@@ -1896,11 +1999,11 @@ function RECHT_TEXTE(b, e) {
       html: `<p class="recht-kurz">Damit Hand Drauf für alle angenehm bleibt, ob 18 oder 80.</p>
         <ol class="regel-liste">
           <li><strong>Ehrlich beschreiben.</strong> Was ist zu tun, wie lange dauert es, was ist schon da?</li>
-          <li><strong>Fair bezahlen.</strong> Die Aufwandsentschädigung steht vorher fest und wird nach der Hilfe gezahlt, nicht vorab.</li>
+          <li><strong>Fair bezahlen.</strong> Die Aufwandsentschädigung steht vorher fest und wird nach der Hilfe gezahlt, nicht vorab. Keine Gutscheinkarten, keine Codes.</li>
           <li><strong>Zusagen halten.</strong> Wenn etwas dazwischenkommt, sag so früh wie möglich in den Nachrichten ab.</li>
           <li><strong>Freundlich bleiben.</strong> Keine Beleidigungen, kein Druck, keine Anmache.</li>
-          <li><strong>Sicherheit geht vor.</strong> Lass niemanden auf wackelige Leitern, an Strom oder Gas. Bei Unsicherheit: lieber eine Fachfirma.</li>
-          <li><strong>Privat bleibt privat.</strong> Adresse und Nachrichten nur für den Auftrag nutzen. Keine Bank- oder Passwortdaten teilen.</li>
+          <li><strong>Sicherheit geht vor.</strong> Frag an der Tür nach dem Sicherheits-Code aus der App. Lass niemanden auf wackelige Leitern, an Strom oder Gas. Bei Unsicherheit: lieber eine Fachfirma.</li>
+          <li><strong>Privat bleibt privat.</strong> Adresse, Telefonnummer und Nachrichten nur für den Auftrag nutzen. Keine Bank- oder Passwortdaten teilen.</li>
           <li><strong>Gelegentlich, nicht ständig.</strong> Hand Drauf ist Nachbarschaftshilfe, kein Nebenjob.</li>
           <li><strong>Etwas stimmt nicht?</strong> Nutze „Melden“. Bei Gefahr ruf die Polizei unter 110 an.</li>
         </ol>
@@ -1931,6 +2034,12 @@ function FRAGEN_TEXTE(c) {
       ['Sicherheit', [
         frage('Wer sieht meine Adresse?',
           `<p>Nur die Person, die bei deiner Anfrage zusagt. Auf der Karte erscheint nur ein Punkt ungefähr in deinem Stadtteil, 100 bis 400 Meter neben der echten Lage. Deine E-Mail-Adresse sieht niemand.</p>`),
+        frage('Wozu ist der Sicherheits-Code?',
+          `<p>Sobald jemand zusagt, zeigt die App euch beiden denselben Code aus vier Ziffern. Wer hilft, nennt ihn an der Tür. So weißt du, dass die richtige Person vor dir steht. Stimmt der Code nicht, lass niemanden herein.</p>`),
+        frage('Woran erkenne ich Betrug?',
+          `<p>Bezahlt wird erst nach der Hilfe. Wer Geld im Voraus will, Gutscheinkarten verlangt, nach einer TAN oder einem Code fragt oder dir Links schickt, meint es nicht ehrlich. Antworte nicht darauf und nutze „Melden“.</p>`),
+        frage('Kann ich jemandem Bescheid sagen, wo ich bin?',
+          `<p>Ja. In einem zugesagten Auftrag steht „Bescheid sagen“. Damit schickst du einer Person, der du vertraust, in einer Nachricht, wann und wo du hilfst oder wer zu dir kommt.</p>`),
         frage('Was ist, wenn etwas kaputtgeht?',
           `<p>Dann klärt ihr das untereinander, wie unter Nachbarn sonst auch. Hand Drauf hat keine eigene Versicherung. Ob deine private Haftpflichtversicherung zahlt, hängt vom Vertrag. Viele Tarife decken auch Schäden bei Gefälligkeiten ab. Frag am besten vorher kurz nach.</p>`),
         frage('Was darf man nicht anbieten?',
@@ -1947,6 +2056,12 @@ function FRAGEN_TEXTE(c) {
       ['Anfragen', [
         frage('Wie lange ist meine Anfrage sichtbar?',
           `<p>Bis der letzte gewählte Tag vorbei ist. Termine kannst du bis zu zwei Monate im Voraus wählen. Hat bis dahin niemand zugesagt, verschwindet es von der Karte. Unter „Aufträge“ kannst du dann einen neuen Termin wählen.</p>`),
+        frage('Kann ich für meine Eltern oder Großeltern anfragen?',
+          `<p>Ja. Wähle beim Erstellen „Für jemand anderen“ und schreib dazu, für wen die Hilfe ist. Gib die Adresse an, an der geholfen wird, und am besten eine Telefonnummer. Den Sicherheits-Code gibst du an die Person weiter. Sie sollte mit allem einverstanden sein.</p>`),
+        frage('Muss ich schreiben, oder kann ich auch anrufen?',
+          `<p>Wer eine Telefonnummer angibt, kann nach der Zusage angerufen werden. Die Nummer sieht nur, wer zugesagt hat. Ohne Nummer sprecht ihr euch in den Nachrichten ab, dort gibt es auch fertige Sätze zum Antippen.</p>`),
+        frage('Kann ich eine Anfrage wiederholen?',
+          `<p>Ja. Öffne eine abgeschlossene Anfrage unter „Aufträge“ und tippe auf „Noch mal anfragen“. Du wählst nur noch den Termin. Wer dir schon geholfen hat, erfährt als Erstes davon.</p>`),
         frage('Kann ich meine Anfrage ändern?',
           `<p>Ja, solange noch niemand zugesagt hat: Anfrage öffnen und „Anfrage bearbeiten“ tippen. Danach sprecht ihr Änderungen in den Nachrichten ab.</p>`),
         frage('Was passiert, wenn jemand absagt?',
@@ -1957,12 +2072,18 @@ function FRAGEN_TEXTE(c) {
           `<p>Noch nicht. Du kannst die Seite aber wie eine App auf den Startbildschirm legen:</p>
            <ul><li><strong>iPhone:</strong> In Safari unten auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.</li>
            <li><strong>Android:</strong> In Chrome oben rechts das Menü öffnen, dann „App installieren“ oder „Zum Startbildschirm hinzufügen“.</li></ul>`),
+        frage('Wie bekomme ich Bescheid, wenn jemand zusagt?',
+          `<p>Schalte im Menü „Bescheid aufs Handy“ ein. Dann meldet sich dein Handy, wenn jemand zusagt, dir schreibt oder ein Auftrag fertig ist. Auf dem iPhone geht das, sobald Hand Drauf auf dem Home-Bildschirm liegt.</p>`),
+        frage('Kann ich mir Anfragen vorlesen lassen?',
+          `<p>Ja. In jeder Anfrage steht „Vorlesen“. Dein Gerät liest dann Titel, Termin, Ort, Betrag und Beschreibung vor.</p>`),
+        frage('Wie lade ich Nachbarn ein?',
+          `<p>Im Menü unter „Nachbarn einladen“ findest du einen QR-Code, einen Link zum Verschicken und einen Aushang zum Ausdrucken, mit Zetteln zum Abreißen.</p>`),
         frage('Wie lösche ich mein Konto?',
           `<p>Oben rechts auf dein Kürzel tippen, dann ganz unten „Konto löschen“. Profil, Anfragen, Adressen, Nachrichten und Bewertungen werden sofort gelöscht.</p>`),
         frage('Wie erreiche ich euch?',
           `<p>${c.betreiber.email ? `Per E-Mail an <a href="mailto:${c.betreiber.email}">${c.betreiber.email}</a>.` : 'Die Kontaktdaten stehen im <a href="#impressum">Impressum</a>.'} Geht es um eine bestimmte Person oder Anfrage, nutze am besten „Melden“ direkt dort.</p>`),
         frage('Wie wird die Schrift größer?',
-          `<p>Oben auf „Menü“ tippen. Dort stellst du Schriftgröße, hell oder dunkel und die Startseite ein.</p>`)
+          `<p>Oben auf „Menü“ tippen. Dort stellst du Schriftgröße, hell oder dunkel und die Startseite ein. Stellt dein Gerät mehr Kontrast ein, übernimmt die App das von selbst.</p>`)
       ]]
     ]
   };
@@ -2631,6 +2752,12 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     maxBetrag: 50,             // Obergrenze für Nachbarschaftshilfe
     freigrenze: 255,           // § 22 Nr. 3 EStG: unter 256 € Gewinn im Jahr steuerfrei
     bereichMeter: 250,         // Radius des ungefähren Bereichs um eine Anfrage
+    // Anmelden mit einem Code per E-Mail statt mit Passwort. Erst einschalten, wenn der E-Mail-Versand
+    // eingerichtet ist und die E-Mail-Vorlage den Code enthält (siehe SETUP.md).
+    codeLogin: false,
+    // Öffentlicher Schlüssel für Benachrichtigungen aufs Handy (Web Push). Der private Schlüssel liegt
+    // nur in der Datenbank. Leer = Benachrichtigungen aus.
+    push: 'BAeSkBv6_TrKXn_vTxc3F5qJOLIJ2bIjB3ro4IFlHjX32LlpKFu4quz2Wr5DVsCatqeKFvXfYHgCZRPQr29zAuc',
     ich: { name: 'Tim', initialen: 'TS', stadtteil: 'Garbsen-Mitte', lat: 52.4248, lng: 9.5962 }, // Demo-Person
     // Betreiber für Impressum und Datenschutz. Vor dem öffentlichen Start ausfüllen.
     betreiber: { name: '', anschrift: '', email: '', telefon: '' }
@@ -2703,7 +2830,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       stadtteil: 'Auf der Horst', lat: 52.4170, lng: 9.5970, wann: 'Sonntag, nachmittags', dauer: 'ca. 2 Std.',
       text: 'Schrank aus Einzelteilen, 2 m hoch, soll an der Wand befestigt werden. Werkzeug und Dübel sind da.',
       adresse: 'Nähe Stadtbahn-Endhaltestelle, Auf der Horst', antwort: 'Danke! Zu zweit geht es bestimmt schneller, ich helfe mit.', status: 'offen', erstellt: 9 },
-    { id: 'g6', kat: 'technik', titel: 'Drucker einrichten', wer: 'Gisela R.', initialen: 'GR', sterne: 4.9, bewertungen: 11, betrag: 12,
+    { id: 'g6', kat: 'technik', titel: 'Drucker einrichten', wer: 'Gisela R.', initialen: 'GR', sterne: 4.9, bewertungen: 11, betrag: 12, telefon: '0176 04069012',
       stadtteil: 'Meyenfeld', lat: 52.4423, lng: 9.5698, wann: 'Diese Woche, flexibel', dauer: 'ca. 45 Min.',
       text: 'Der neue Drucker soll mit dem WLAN und meinem Laptop verbunden werden. Mit der Anleitung komme ich nicht klar.',
       adresse: 'Ortsmitte Meyenfeld', antwort: 'Vielen Dank! Das WLAN-Passwort klebt hinten am Router.', status: 'offen', erstellt: 8 },
@@ -2711,14 +2838,14 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       stadtteil: 'Stelingen', lat: 52.4506, lng: 9.6236, wann: 'Samstag, nachmittags', dauer: 'ca. 1 Std.',
       text: 'Etwa 15 Umzugskartons aus dem Flur in den Keller. Einige sind schwer, da sind Bücher drin.',
       adresse: 'Leinestraße, Stelingen', antwort: 'Klasse, danke! Der Keller ist offen.', status: 'offen', erstellt: 7 },
-    { id: 'g8', kat: 'garten', titel: 'Hecke schneiden', wer: 'Ingrid P.', initialen: 'IP', sterne: 4.8, bewertungen: 17, betrag: 22,
+    { id: 'g8', kat: 'garten', titel: 'Hecke schneiden', wer: 'Sandra P.', initialen: 'SP', sterne: 4.8, bewertungen: 17, betrag: 22, fuer: 'meine Mutter Ingrid', telefon: '0171 3920018',
       stadtteil: 'Horst', lat: 52.4420, lng: 9.5374, wann: 'Nächste Woche, vormittags', dauer: 'ca. 2 Std.',
       text: 'Ligusterhecke, etwa 15 m lang und 1,60 m hoch. Die elektrische Heckenschere ist da, der Schnitt kommt in die Biotonne.',
       adresse: 'Nähe Kirche, Horst', antwort: 'Wunderbar, danke! Die Heckenschere liegt in der Garage.', status: 'offen', erstellt: 6 },
     { id: 'g9', kat: 'einkaufen', titel: 'Einkauf aus Garbsen mitbringen', wer: 'Werner T.', initialen: 'WT', sterne: 5.0, bewertungen: 8, betrag: 7,
       stadtteil: 'Frielingen', lat: 52.4610, lng: 9.5361, wann: 'Donnerstag, vormittags', dauer: 'ca. 45 Min.',
       text: 'Ich komme gerade schlecht ins Zentrum. Eine kurze Liste vom Supermarkt, den Einkauf bezahle ich bei der Übergabe.',
-      adresse: 'Schafbrink, Frielingen', antwort: 'Danke! Die Liste schicke ich dir gleich im Chat.', status: 'offen', erstellt: 5 },
+      adresse: 'Schafbrink, Frielingen', antwort: 'Danke! Die Liste schicke ich dir gleich im Chat.', status: 'offen', erstellt: 5, telefon: '0171 3920047' },
     { id: 'g10', kat: 'tiere', titel: 'Katze füttern am Wochenende', wer: 'Sabine L.', initialen: 'SL', sterne: 4.9, bewertungen: 12, betrag: 12,
       stadtteil: 'Osterwald O.E.', lat: 52.4623, lng: 9.5926, wann: 'Samstag und Sonntag, abends', dauer: '2 × 15 Min.',
       text: 'Minka braucht abends Futter und frisches Wasser. Ich bin übers Wochenende bei meiner Schwester.',
@@ -2737,7 +2864,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       adresse: 'Großer Weg, Osterwald U.E.', antwort: 'Danke! Fang einfach an, ich bin im Garten.', status: 'offen', erstellt: 1 }
   ];
 
-  const SPEICHER = 'nachbarhand-prototyp-v2';
+  const SPEICHER = 'nachbarhand-prototyp-v3';
   const VIEWS = ['entdecken', 'karte', 'neu', 'auftraege'];
   const RECHT = RECHT_TEXTE(CONFIG.betreiber, (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
   const FRAGEN = FRAGEN_TEXTE(CONFIG);
@@ -2754,10 +2881,13 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     user: null,
     profil: null,
     geladen: false,
+    geladenUm: 0,
     laedt: false,
     fehler: null,
     bewertungen: new Map(), // gesuch_id -> meine Sterne
     adressen: new Map(),    // gesuch_id -> Adresse (nur für Beteiligte)
+    telefone: new Map(),    // gesuch_id -> Telefon (freiwillig, nur für Beteiligte)
+    statistik: null,        // { woche, gesamt }: wie oft geholfen wurde
     nachrichten: new Map(), // gesuch_id -> Verlauf (null = wird geladen)
     letzte: new Map(),      // gesuch_id -> Zeit der letzten Nachricht der anderen Person
     gemeldet: new Set(),    // in dieser Sitzung gemeldete Anfragen
@@ -2783,7 +2913,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   }
 
   let gesuche = [];
-  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'termin', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false, bearbeiten: null, blockieren: false };
+  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'termin', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', authWeg: 'passwort', authCode: '', vorlesen: false, markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false, bearbeiten: null, blockieren: false };
 
   /* ===== Ansicht: Design, Schriftgröße, Startseite (nur auf diesem Gerät gespeichert) ===== */
   const ANSICHT_SPEICHER = 'handdrauf-ansicht';
@@ -2873,6 +3003,13 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     const m = meterVonMir(g);
     if (m < 1000) return Math.max(100, Math.round(m / 50) * 50) + '\u00a0m';
     return (m / 1000).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '\u00a0km';
+  }
+  // Geschätzter Weg: Luftlinie mal 1,3; zu Fuß 80 m pro Minute, mit dem Rad 250 m
+  function wegText(g) {
+    if (g.eigen) return '';
+    const m = meterVonMir(g) * 1.3;
+    const fuss = Math.max(1, Math.round(m / 80));
+    return fuss <= 20 ? `etwa ${fuss} Min. zu Fuß` : `etwa ${Math.max(1, Math.round(m / 250))} Min. mit dem Rad`;
   }
   /* ===== Termine: „Morgen“ wird beim Speichern zum echten Datum ===== */
   const WOCHENTAGE = ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'];
@@ -3043,6 +3180,9 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     if (/password should be at least|weak password/i.test(m)) return 'Das Passwort ist zu kurz oder zu einfach. Nimm mindestens 8 Zeichen.';
     if (/email address not authorized|email_address_not_authorized/i.test(m)) return 'Die Registrierung ist gerade nur für das Test-Team freigeschaltet. Bitte versuch es bald noch einmal.';
     if (/email rate limit/i.test(m)) return 'Gerade wurden zu viele Bestätigungs-E-Mails verschickt. Bitte versuch es in einer Stunde noch einmal.';
+    if (/signups not allowed for otp|otp_disabled/i.test(m)) return 'Zu dieser E-Mail gibt es noch kein Konto. Tippe oben auf „Neu registrieren“.';
+    if (/token has expired or is invalid|otp_expired|invalid otp/i.test(m)) return 'Der Code stimmt nicht oder ist abgelaufen. Lass dir einen neuen schicken.';
+    if (/for security purposes|only request this after/i.test(m)) return 'Bitte warte eine Minute, bevor du einen neuen Code anforderst.';
     if (/signups? not allowed|signup is disabled/i.test(m)) return 'Neue Registrierungen sind gerade geschlossen.';
     if (/rate limit|too many/i.test(m)) return 'Zu viele Versuche. Warte ein paar Minuten.';
     if (/jwt|permission denied/i.test(m)) return 'Deine Anmeldung ist abgelaufen. Bitte melde dich neu an.';
@@ -3109,6 +3249,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     db.profil = null;
     db.bewertungen.clear();
     db.adressen.clear();
+    db.telefone.clear();
     db.nachrichten.clear();
     db.letzte.clear();
     db.gemeldet.clear();
@@ -3124,6 +3265,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     renderStadtteilAuswahl();
     renderKosten();
     await neuLaden();
+    pushAuffrischen();
   }
 
   // * statt einzelner Spalten: funktioniert mit und ohne die Spalten bis/laeuft_ab (Datenbank-Update vom November 2026)
@@ -3140,6 +3282,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       status: r.status === 'bestaetigt' ? 'bezahlt' : r.status,
       erstellt: Date.parse(r.erstellt) || 0,
       bis: r.bis || null,
+      fuer: r.fuer || '', tuercode: r.tuercode || '',
       laeuftAb: r.laeuft_ab ? Date.parse(r.laeuft_ab) || 0 : 0,
       eigen: !!ich && r.ersteller === ich,
       helfer: ich && r.helfer === ich ? 'ich' : (r.helfer ? 'andere' : null),
@@ -3182,6 +3325,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       gesuche.forEach((g) => { if (g.status === 'offen') db.nachrichten.delete(g.id); });
       db.fehler = null;
       db.geladen = true;
+      db.geladenUm = Date.now();
     } catch (e) {
       db.fehler = fehlerText(e);
     } finally {
@@ -3199,11 +3343,15 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   async function ladeAdresse(id) {
     if (db.adressen.has(id)) return;
     db.adressen.set(id, null); // wird geladen
-    const { data } = await db.client.from('gesuch_adressen').select('adresse').eq('gesuch_id', id).maybeSingle();
+    // * statt einzelner Spalten: funktioniert auch mit einer Datenbank ohne die Spalte telefon
+    const { data } = await db.client.from('gesuch_adressen').select('*').eq('gesuch_id', id).maybeSingle();
     db.adressen.set(id, data ? data.adresse : '');
+    db.telefone.set(id, (data && data.telefon) || '');
     if (ui.offen === id) renderSheet();
   }
   const adresseVon = (g) => istLive() ? db.adressen.get(g.id) : g.adresse;
+  const telefonVon = (g) => (istLive() ? db.telefone.get(g.id) : g.telefon) || '';
+  const telLink = (nr) => 'tel:' + String(nr).replace(/[^0-9+]/g, '');
 
   /* ===== Nachrichten zwischen den Beteiligten ===== */
   const GELESEN_SPEICHER = 'handdrauf-gelesen';
@@ -3290,7 +3438,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     }
     if (!demoBlockiert.includes(name)) demoBlockiert.push(name);
     demoBlockSpeichern();
-    gesuche.forEach((g) => { if (g.wer === name && g.helfer === 'ich' && g.status === 'zugesagt') { g.status = 'offen'; g.helfer = null; g.nachrichten = []; } });
+    gesuche.forEach((g) => { if (g.wer === name && g.helfer === 'ich' && g.status === 'zugesagt') { g.status = 'offen'; g.helfer = null; g.nachrichten = []; g.tuercode = ''; } });
     demoSpeichern();
   }
   async function entsperre(id) {
@@ -3335,8 +3483,8 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       await neuLaden();
       return;
     }
-    if (aktion === 'zusagen') { g.status = 'zugesagt'; g.helfer = 'ich'; g.nachrichten = []; if (g.antwort) demoNachricht(g.id, g.antwort, 1500); }
-    else if (aktion === 'absagen') { g.status = 'offen'; g.helfer = null; g.nachrichten = []; }
+    if (aktion === 'zusagen') { g.status = 'zugesagt'; g.helfer = 'ich'; g.nachrichten = []; g.tuercode = String(Math.floor(Math.random() * 10000)).padStart(4, '0'); if (g.antwort) demoNachricht(g.id, g.antwort, 1500); }
+    else if (aktion === 'absagen') { g.status = 'offen'; g.helfer = null; g.nachrichten = []; g.tuercode = ''; }
     else if (aktion === 'erledigt') g.status = 'erledigt';
     else if (aktion === 'bestaetigen') g.status = 'bezahlt';
     else if (aktion === 'rueckzug') gesuche = gesuche.filter((x) => x.id !== g.id);
@@ -3535,10 +3683,10 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       <span class="summe-hint">Steuerfrei bis ${CONFIG.freigrenze} € im Jahr, noch ${euro(rest)} frei.</span>`;
     $('#zusagen').innerHTML = zusagen.length
       ? zeilen(zusagen.map((g) => karteHTML(g, pills(g))))
-      : `<p class="leer-klein">Noch keine Zusagen.</p>`;
+      : `<div class="leer-klein"><p>Noch keine Zusagen. Schau, wer in deiner Nähe Hilfe sucht.</p><button type="button" class="btn btn-secondary btn-auto" data-go="entdecken">Anfragen ansehen</button></div>`;
     $('#eigene').innerHTML = eigene.length
       ? zeilen(eigene.map((g) => karteHTML(g, pills(g))))
-      : `<p class="leer-klein">Noch keine Anfragen.</p>`;
+      : `<div class="leer-klein"><p>Noch keine Anfragen. Brauchst du selbst Hilfe?</p><button type="button" class="btn btn-secondary btn-auto" data-go="neu">Hilfe suchen</button></div>`;
   }
 
   /* ===== Garbsen als Miniatur (3D, Startseite) ===== */
@@ -3869,17 +4017,26 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     if (!beteiligt) adressZeile = `<span class="fakt-leise">${icon('schloss', 'i-xs')}nach der Zusage</span>`;
     else if (echteAdresse) adressZeile = `${esc(echteAdresse)}<span class="fakt-zusatz">${g.eigen ? 'sieht nur, wer zusagt' : 'nur für dich sichtbar'}</span>`;
     else adressZeile = `<span class="fakt-leise">${adresse === null ? 'wird geladen …' : g.eigen ? 'nur der Stadtteil' : 'nicht verfügbar'}</span>`;
+    // Telefon (freiwillig): wie die Adresse erst nach der Zusage, zum Antippen
+    const telefon = beteiligt ? telefonVon(g) : '';
+    const telefonZeile = !telefon ? '' : `<div class="breit"><dt>Telefon</dt><dd>${g.eigen
+      ? `${esc(telefon)}<span class="fakt-zusatz">sieht nur, wer zusagt</span>`
+      : `<a class="tel-link" href="${esc(telLink(telefon))}">${icon('telefon', 'i-sm')}${esc(telefon)}</a>`}</dd></div>`;
+    const fuerZeile = !g.fuer ? '' : `<div class="breit"><dt>Für wen</dt><dd>${esc(g.fuer)}<span class="fakt-zusatz">${g.eigen ? 'Du fragst für jemand anderen.' : `${esc(vn)} fragt für jemand anderen.`}</span></dd></div>`;
+    const weg = wegText(g);
 
     html += `<div class="betrag">
       <div><div class="betrag-zahl">${euroKurz(g.betrag)}</div><div class="betrag-label">Aufwandsentschädigung</div></div>
       <div class="betrag-detail">${detail}</div>
     </div>
     <dl class="fakten">
+      ${fuerZeile}
       <div><dt>Wann</dt><dd>${esc(wannLang(g))}</dd></div>
       <div><dt>Dauer</dt><dd>${esc(g.dauer)}</dd></div>
       <div><dt>Stadtteil</dt><dd>${esc(g.stadtteil)}</dd></div>
-      <div><dt>Entfernung</dt><dd>${distanz(g)}</dd></div>
+      <div><dt>Entfernung</dt><dd>${distanz(g)}${weg ? `<span class="fakt-zusatz">${weg}</span>` : ''}</dd></div>
       <div class="breit"><dt>Adresse</dt><dd>${adressZeile}</dd></div>
+      ${telefonZeile}
     </dl>`;
     if (g.text) html += `<p class="beschreibung">${esc(g.text)}</p>`;
 
@@ -3892,6 +4049,21 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
         `<li class="${i <= idx ? 'is-done' : ''} ${i === idx ? 'is-current' : ''}"><span class="punkt">${i <= idx ? icon('check', 'i-xs') : ''}</span>${n}</li>`
       ).join('')}</ol>`;
     }
+
+    // Sicherheits-Code für die Tür (Vorbild: PIN bei Uber): kennen nur die beiden Beteiligten.
+    // Wer hilft, sieht ihn vor den Knöpfen; wer Hilfe bekommt, gleich unter „… hilft dir“.
+    let codeHTML = '';
+    if (g.tuercode && beteiligt && (g.status === 'zugesagt' || g.status === 'erledigt')) {
+      const ziffern = String(g.tuercode).split('');
+      codeHTML = `<div class="tuercode">
+        <div class="tuercode-kopf"><span>${icon('schild', 'i-sm')}Sicherheits-Code</span>
+          <span class="tuercode-zahl" role="img" aria-label="${ziffern.join(' ')}">${ziffern.map((z) => `<span aria-hidden="true">${esc(z)}</span>`).join('')}</span></div>
+        <p>${g.eigen
+          ? (g.fuer ? `${esc(hn)} nennt den Code an der Tür. Gib ihn an die Person weiter, bei der geholfen wird.` : `${esc(hn)} nennt dir den Code an der Tür. Stimmt er nicht, lass niemanden herein.`)
+          : `Nenne den Code, wenn du klingelst. So weiß ${esc(g.fuer ? 'die Person an der Tür' : vn)}, dass du es bist.`}</p>
+      </div>`;
+    }
+    if (!g.eigen) html += codeHTML;
 
     const sterneHTML = (b, wen) => `<div class="bewerten"><span><strong>${b ? 'Danke für deine Bewertung.' : `Wie war es mit ${esc(wen)}?`}</strong></span>
       <div class="sterne" role="group" aria-label="Bewertung">${[1, 2, 3, 4, 5].map((n) =>
@@ -3910,17 +4082,19 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
               <button type="button" class="btn btn-secondary" data-aktion="rueckzug-nein">Abbrechen</button></div></div>`
           : `<button type="button" class="link-btn" data-aktion="rueckzug-frage">Anfrage zurückziehen</button>`;
       } else if (g.status === 'zugesagt') {
-        html += `<div class="status-box good">${icon('check')}${esc(g.helferName || 'Jemand')} hilft dir</div>`;
+        html += `<div class="status-box good">${icon('check')}${esc(g.helferName || 'Jemand')} hilft dir</div>${codeHTML}`;
       } else if (g.status === 'erledigt') {
         html += `<div class="status-box warn">${esc(hn)} hat den Job als erledigt gemeldet.</div>
           <button type="button" class="btn btn-primary" data-aktion="bestaetigen" ${dis}>Erledigt bestätigen</button>`;
       } else if (g.status === 'bezahlt') {
         html += `<div class="status-box good">${icon('check')}Abgeschlossen</div>` + (g.helferName ? sterneHTML(g.meineBewertung || 0, hn) : '');
+        html += `<button type="button" class="btn btn-secondary" data-aktion="nochmal">${icon('wieder')}Noch mal anfragen</button>`;
       }
     } else if (g.status === 'offen') {
       html += `<button type="button" class="btn btn-primary" data-aktion="zusagen" ${dis}>Ich helfe</button>`;
     } else if (g.status === 'zugesagt') {
       html += `<button type="button" class="btn btn-primary" data-aktion="erledigt" ${dis}>Job erledigt melden</button>
+        ${telefon ? `<a class="btn btn-secondary" href="${esc(telLink(telefon))}">${icon('telefon')}${esc(g.fuer ? 'Anrufen' : `${vn} anrufen`)}</a>` : ''}
         <button type="button" class="link-btn" data-aktion="absagen" ${dis}>Zusage zurückziehen</button>`;
     } else if (g.status === 'erledigt') {
       html += `<div class="status-box warn">Warte auf Bestätigung von ${esc(vn)}.</div>` +
@@ -3936,7 +4110,10 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
         <button type="button" class="link-inline" data-aktion="karte" aria-label="Auf der Karte zeigen">${icon('karte', 'i-sm')}Karte</button>
         ${teilbar ? `<button type="button" class="link-inline" data-aktion="teilen" aria-label="${g.eigen ? 'Anfrage teilen' : 'Anfrage weitersagen'}">${icon('teilen', 'i-sm')}${g.eigen ? 'Teilen' : 'Weitersagen'}</button>` : ''}
         ${kalenderSinnvoll ? `<button type="button" class="link-inline" data-aktion="kalender" aria-label="In den Kalender eintragen">${icon('kalender', 'i-sm')}Kalender</button>` : ''}
+        ${beteiligt && g.status === 'zugesagt' && (g.helfer === 'ich' || g.helferName) ? `<button type="button" class="link-inline" data-aktion="bescheid" aria-label="Einer Vertrauensperson Bescheid sagen">${icon('herz', 'i-sm')}Bescheid sagen</button>` : ''}
+        ${vorlesenMoeglich() ? `<button type="button" class="link-inline" data-aktion="vorlesen" aria-pressed="${ui.vorlesen}">${icon('laut', 'i-sm')}${ui.vorlesen ? 'Stopp' : 'Vorlesen'}</button>` : ''}
       </div>`;
+    html += pushKarteHTML(g);
     if (imChat(g)) {
       html += chatHTML(g);
       if (live) ladeNachrichten(g.id);
@@ -3953,11 +4130,25 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
         <p>${esc(n.text)}</p><time datetime="${new Date(n.zeit).toISOString()}">${zeitText(n.zeit)}</time>
       </div>`).join('');
   }
+  // Typische Betrugsmaschen aus Kleinanzeigen-Portalen: Vorkasse, Gutscheinkarten, Codes, fremde Links
+  const BETRUG = /vorkasse|im voraus (zahlen|bezahlen|überweisen)|vorab (zahlen|bezahlen|überweisen)|anzahlung|gutschein(karte|code)|geschenkkarte|paysafe|western union|moneygram|freunde und familie|friends (and|&|und) family|bitcoin|krypto|\btan\b|\bpin\b|kreditkarte|(verifizierungs|bestätigungs|whatsapp)-?code|https?:\/\/|www\./i;
+  const betrugsVerdacht = (g) => (nachrichtenVon(g) || []).some((n) => n.von !== 'ich' && BETRUG.test(n.text));
+  function chatWarnungHTML(g) {
+    return betrugsVerdacht(g) ? `<div class="chat-warnung" role="note">${icon('warnung')}<p><strong>Kurz aufpassen.</strong> Bezahlt wird erst nach der Hilfe, direkt und in bar oder per Überweisung. Schick kein Geld im Voraus, keine Gutscheinkarten und keine Codes, und öffne keine Links von Unbekannten.</p></div>` : '';
+  }
+  // Fertige Sätze zum Antippen (landen im Feld, gesendet wird erst mit dem Pfeil)
+  function schnellAntworten(g) {
+    if (g.status === 'zugesagt') return g.eigen ? ['Danke fürs Zusagen!', 'Wann kannst du kommen?', 'Bitte einfach klingeln.'] : ['Wann passt es dir genau?', 'Ich bin unterwegs.', 'Ich bin da.'];
+    if (g.status === 'erledigt') return g.eigen ? ['Vielen Dank!'] : ['Ich bin fertig. Bitte bestätige kurz.'];
+    return ['Danke, gerne wieder!'];
+  }
   function chatHTML(g) {
     const partner = esc((g.eigen ? vorname(g.helferName) : vorname(g.wer)) || 'deinem Nachbarn');
     return `<section class="chat" aria-labelledby="chat-titel">
         <h3 class="chat-titel" id="chat-titel">${icon('sprechblase', 'i-sm')}Nachrichten mit ${partner}</h3>
         <div class="chat-liste" id="chat-liste" role="log" aria-live="polite" tabindex="0">${chatListeHTML(g)}</div>
+        <div id="chat-warnung">${chatWarnungHTML(g)}</div>
+        <div class="chat-schnell" role="group" aria-label="Fertige Antworten">${schnellAntworten(g).map((t) => `<button type="button" class="chip chip-vorschlag" data-schnellantwort="${esc(t)}">${esc(t)}</button>`).join('')}</div>
         <form class="chat-form" id="chat-form" autocomplete="off">
           <label class="sr-only" for="chat-text">Nachricht an ${partner}</label>
           <textarea id="chat-text" rows="1" maxlength="1000" placeholder="Nachricht an ${partner}" enterkeyhint="send"></textarea>
@@ -3989,6 +4180,9 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
 
   function sheetAnmeldenHTML() {
     const reg = ui.authModus === 'registrieren';
+    // Anmelden ohne Passwort: Code per E-Mail (nur, wenn in CONFIG eingeschaltet)
+    const codeWeg = !reg && CONFIG.codeLogin && ui.authWeg === 'code';
+    const busy = ui.busy ? 'disabled aria-busy="true"' : '';
     const kopf = `<div class="sheet-top">
         <span class="eyebrow">Konto</span>
         <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
@@ -3997,6 +4191,17 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       return kopf + `<h2 id="sheet-titel">Fast geschafft</h2>
         <div class="erfolg"><strong>Schau in dein Postfach.</strong><p>Wir haben dir eine E-Mail an ${esc(ui.authFertig)} geschickt. Tippe auf den Link darin, dann bist du angemeldet.</p></div>
         <button type="button" class="btn btn-secondary" data-close>Alles klar</button>`;
+    }
+    if (codeWeg && ui.authCode) {
+      return kopf + `<h2 id="sheet-titel">Code eingeben</h2>
+        <p class="klein">Wir haben dir einen Code mit 6 Ziffern an ${esc(ui.authCode)} geschickt. Schau auch im Spam-Ordner nach.</p>
+        <form class="form" id="code-form" novalidate>
+          <div class="feld"><label for="auth-code">Code aus der E-Mail</label>
+            <input id="auth-code" class="code-eingabe" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" required></div>
+          <p class="fehler" id="auth-fehler" role="alert" hidden></p>
+          <button type="submit" class="btn btn-primary" ${busy}>Anmelden</button>
+        </form>
+        <button type="button" class="link-btn" data-code-zurueck>Andere E-Mail oder neuer Code</button>`;
     }
     return kopf + `<h2 id="sheet-titel">${reg ? 'Konto erstellen' : 'Anmelden'}</h2>
       ${ui.authGrund ? `<p class="klein">${esc(ui.authGrund)}</p>` : ''}
@@ -4010,14 +4215,18 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
           <div class="feld"><label for="auth-initial">Nachname <span class="optional">(nur 1. Buchstabe)</span></label><input id="auth-initial" autocomplete="off" maxlength="1"></div>
         </div>
         <div class="feld"><label for="auth-stadtteil">Dein Stadtteil</label><select id="auth-stadtteil">${stadtteilOptionen(gewaehlterOrt || 'Garbsen-Mitte', false)}</select></div>` : ''}
-        <div class="feld"><label for="auth-email">E-Mail</label><input id="auth-email" type="email" autocomplete="email" required></div>
-        <div class="feld"><label for="auth-passwort">Passwort</label><input id="auth-passwort" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" minlength="8" required>${reg ? '<p class="feld-hinweis" style="margin-top:0">Mindestens 8 Zeichen.</p>' : ''}</div>
+        <div class="feld"><label for="auth-email">E-Mail</label><input id="auth-email" type="email" autocomplete="email" required>${codeWeg ? '<p class="feld-hinweis" style="margin-top:0">Wir schicken dir einen Code. Ein Passwort brauchst du nicht.</p>' : ''}</div>
+        ${codeWeg ? '' : `<div class="feld"><label for="auth-passwort">Passwort</label>
+          <div class="passwort-feld"><input id="auth-passwort" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" minlength="8" required>
+            <button type="button" class="passwort-auge" data-passwort-zeigen aria-pressed="false" aria-label="Passwort anzeigen">${icon('auge')}</button></div>
+          ${reg ? '<p class="feld-hinweis" style="margin-top:0">Mindestens 8 Zeichen.</p>' : ''}</div>`}
         ${reg ? `<label class="check"><input type="checkbox" id="auth-18"><span>Ich bin mindestens 18 Jahre alt.</span></label>
         <label class="check"><input type="checkbox" id="auth-regeln"><span>Ich akzeptiere die Nutzungsbedingungen. Hand Drauf vermittelt nur, die Absprache und Bezahlung läuft direkt zwischen uns Nachbarn, gelegentlich und in kleinem Umfang.</span></label>
         <p class="klein recht-links-form">Lies vorher die <a href="${NATIV ? OEFFENTLICH : ''}#nutzung" target="_blank" rel="noopener">Nutzungsbedingungen</a> und die <a href="${NATIV ? OEFFENTLICH : ''}#datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a> (öffnen ${NATIV ? 'im Browser' : 'in neuem Tab'}).</p>` : ''}
         <p class="fehler" id="auth-fehler" role="alert" hidden></p>
-        <button type="submit" class="btn btn-primary" ${ui.busy ? 'disabled aria-busy="true"' : ''}>${reg ? 'Konto erstellen' : 'Anmelden'}</button>
-      </form>`;
+        <button type="submit" class="btn btn-primary" ${busy}>${reg ? 'Konto erstellen' : codeWeg ? 'Code per E-Mail schicken' : 'Anmelden'}</button>
+      </form>
+      ${!reg && CONFIG.codeLogin ? `<button type="button" class="link-btn" data-auth-weg="${codeWeg ? 'passwort' : 'code'}">${codeWeg ? 'Lieber mit Passwort anmelden' : 'Ohne Passwort anmelden (Code per E-Mail)'}</button>` : ''}`;
   }
 
   function sheetKontoHTML() {
@@ -4124,6 +4333,24 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       <nav class="recht-nav" aria-label="Weitere Rechtstexte">${Object.keys(RECHT).filter((k) => k !== name).map((k) => `<a href="#${k}">${RECHT[k].titel}</a>`).join('')}</nav>`;
   }
 
+  // Einladen: QR-Code zum Scannen, Link zum Verschicken, Aushang fürs Schwarze Brett
+  function sheetEinladenHTML() {
+    const aushang = (NATIV ? OEFFENTLICH : '') + 'assets/aushang.pdf';
+    return `<div class="sheet-top">
+        <span class="eyebrow">Weitersagen</span>
+        <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
+      </div>
+      <h2 id="sheet-titel">Nachbarn einladen</h2>
+      <p class="klein">Je mehr Nachbarn mitmachen, desto schneller findet sich Hilfe.</p>
+      <div class="qr-karte">
+        <div class="qr" role="img" aria-label="QR-Code, der zu Hand Drauf führt">${QR_SVG}</div>
+        <p><strong>Scannen und mitmachen</strong>Einfach die Handy-Kamera darauf halten.</p>
+      </div>
+      <button type="button" class="btn btn-primary" data-teilen-app>${icon('teilen')}Link verschicken</button>
+      ${VORSCHAU ? '' : `<a class="btn btn-secondary" href="${aushang}" target="_blank" rel="noopener">${icon('drucken')}Aushang zum Ausdrucken</a>
+      <p class="klein">Der Aushang hat Zettel zum Abreißen. Er passt ans Schwarze Brett im Supermarkt, in den Hausflur oder ins Vereinsheim. Frag vorher, ob du ihn aufhängen darfst.</p>`}`;
+  }
+
   // Kontakt (App Store 1.2: veröffentlichte Kontaktmöglichkeit). Ohne E-Mail im CONFIG verweist er aufs Impressum.
   const kontaktLink = () => CONFIG.betreiber.email
     ? `<a href="mailto:${esc(CONFIG.betreiber.email)}?subject=${encodeURIComponent('Hand Drauf')}">Kontakt</a>`
@@ -4156,6 +4383,9 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
         ${gruppe('start', 'Start mit')}
         ${gruppe('modell', 'Modell auf der Startseite')}
         ${ohneKonto ? `<div class="menue-zeile"><label class="menue-label" for="ansicht-ort">Stadtteil</label><select id="ansicht-ort">${gewaehlterOrt ? '' : '<option value="">Bitte wählen</option>'}${stadtteilOptionen(gewaehlterOrt || '', false)}</select></div>` : ''}
+      </section>
+      <section class="menue-gruppe" aria-labelledby="m-push"><h3 class="h-klein" id="m-push">Benachrichtigungen</h3>
+        ${pushMenueHTML()}
       </section>
       ${istLive() ? '' : blockListeHTML()}
       <section class="menue-gruppe" aria-labelledby="m-hilfe"><h3 class="h-klein" id="m-hilfe">Hilfe</h3>
@@ -4198,6 +4428,8 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     if (!g || !liste) return;
     const unten = liste.scrollHeight - liste.scrollTop - liste.clientHeight < 60;
     liste.innerHTML = chatListeHTML(g);
+    const warnung = $('#chat-warnung');
+    if (warnung) warnung.innerHTML = chatWarnungHTML(g);
     if (unten) liste.scrollTop = liste.scrollHeight;
     alsGelesen(g);
   }
@@ -4210,6 +4442,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     else if (ui.panel === 'fragen') html = sheetFragenHTML();
     else if (ui.panel === 'profil') html = sheetProfilHTML();
     else if (ui.panel === 'ansicht') html = sheetAnsichtHTML();
+    else if (ui.panel === 'einladen') html = sheetEinladenHTML();
     else if (ui.panel === 'anmelden') html = sheetAnmeldenHTML();
     else if (ui.panel === 'konto') html = sheetKontoHTML();
     else {
@@ -4230,6 +4463,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
 
   function renderAlles() {
     renderKopf();
+    renderGeholfen();
     renderInstallieren();
     renderChips();
     renderListe();
@@ -4276,6 +4510,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     if (c) c.focus({ preventScroll: true });
   }
   function oeffnen(id, ausloeser) {
+    vorlesenStopp();
     ui.offen = id;
     ui.panel = null;
     ui.rueckzug = false;
@@ -4286,6 +4521,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     renderKarte();
   }
   function oeffnePanel(name, grund) {
+    vorlesenStopp();
     if (name === 'konto' && !db.profil) name = 'anmelden';
     ui.zuletzt = document.activeElement;
     ui.offen = null;
@@ -4294,12 +4530,15 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     ui.loeschen = false;
     ui.authGrund = grund || '';
     ui.authFertig = '';
+    ui.authCode = '';
+    ui.authWeg = CONFIG.codeLogin ? 'code' : 'passwort';
     ui.blockieren = false;
     renderSheet();
     sheetZeigen();
     renderKarte();
   }
   function schliessen() {
+    vorlesenStopp();
     const id = ui.offen;
     ui.offen = null;
     ui.panel = null;
@@ -4430,6 +4669,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       try {
         const { error } = await db.client.rpc('konto_loeschen');
         if (error) throw error;
+        await pushTrennen(true);
         await db.client.auth.signOut();
         ui.loeschen = false;
         schliessen();
@@ -4444,16 +4684,79 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     }
     if (t.hasAttribute('data-abmelden')) {
       ui.busy = true; renderSheet();
+      await pushTrennen(false); // dieses Gerät bekommt keine Benachrichtigungen mehr für das Konto
       await db.client.auth.signOut();
       ui.busy = false;
       schliessen();
       meldung('Du bist abgemeldet.');
       return;
     }
+    if (t.hasAttribute('data-passwort-zeigen')) {
+      // Ohne Neuzeichnen, damit das getippte Passwort stehen bleibt
+      const feld = $('#auth-passwort');
+      const zeigen = feld.type === 'password';
+      feld.type = zeigen ? 'text' : 'password';
+      t.setAttribute('aria-pressed', String(zeigen));
+      t.setAttribute('aria-label', zeigen ? 'Passwort verbergen' : 'Passwort anzeigen');
+      return;
+    }
+    if (t.dataset.authWeg || t.hasAttribute('data-code-zurueck')) {
+      if (t.dataset.authWeg) ui.authWeg = t.dataset.authWeg;
+      ui.authCode = '';
+      renderSheet();
+      const f = $('#auth-email');
+      if (f) f.focus();
+      return;
+    }
+    if (t.hasAttribute('data-push-spaeter')) { push.spaeter = Date.now(); pushSpeichern(); renderSheet(); return; }
+    if (t.hasAttribute('data-push-schalter') || t.hasAttribute('data-push-ein') || t.hasAttribute('data-push-neue') || t.hasAttribute('data-push-test')) {
+      if (push.busy) return;
+      const merke = t.hasAttribute('data-push-neue') ? '[data-push-neue]' : t.hasAttribute('data-push-test') ? '[data-push-test]' : '[data-push-schalter]';
+      push.busy = true;
+      try {
+        if (t.hasAttribute('data-push-neue')) {
+          push.neue = !push.neue;
+          try { await pushMelden(await pushAbo(true)); pushSpeichern(); meldung(push.neue ? 'Du erfährst jetzt von neuen Anfragen in deinem Stadtteil.' : 'Keine Hinweise mehr auf neue Anfragen.'); }
+          catch (err) { push.neue = !push.neue; throw err; }
+        } else if (t.hasAttribute('data-push-test')) {
+          await pushMelden(await pushAbo(true));
+          const { error } = await db.client.rpc('push_test');
+          if (error) throw error;
+          meldung('Unterwegs. Die Benachrichtigung sollte gleich erscheinen.');
+        } else if (t.hasAttribute('data-push-ein') || !pushAn()) {
+          // Die Frage des Browsers muss direkt auf den Tipp folgen, deshalb vorher nichts abwarten
+          if (await pushEin()) meldung('Eingeschaltet. Dein Handy meldet sich, wenn sich etwas tut.');
+        } else {
+          await pushTrennen(true);
+          meldung('Benachrichtigungen sind ausgeschaltet.');
+        }
+      } catch (err) {
+        meldung(fehlerText(err));
+      }
+      push.busy = false;
+      if (ui.offen || ui.panel) renderSheet();
+      const f = $('#sheet ' + merke);
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
+    if (t.dataset.schnellantwort) {
+      const f = $('#chat-text');
+      if (f) { f.value = t.dataset.schnellantwort; f.dispatchEvent(new Event('input', { bubbles: true })); f.focus(); }
+      return;
+    }
     const g = gesuche.find((x) => x.id === ui.offen);
     if (!g) return;
     const a = t.dataset.aktion;
 
+    if (a === 'bescheid') { bescheidSagen(g); return; }
+    if (a === 'vorlesen') {
+      vorlesen(g);
+      renderSheet();
+      const f = $('#sheet [data-aktion="vorlesen"]');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
+    if (a === 'nochmal') { bearbeitenStarten(g, 2, true); return; }
     if (a === 'karte') {
       ui.zuletzt = null;
       schliessen();
@@ -4495,6 +4798,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       } else {
         await aendereStatus(g, a);
         if (a === 'bestaetigen') {
+          ladeStatistik();
           feiern('Hand drauf!', feierText(gesuche.find((x) => x.id === g.id) || g));
         } else meldung(ERFOLG[a](g));
         if (a === 'rueckzug') { ui.busy = false; schliessen(); renderAlles(); return; }
@@ -4591,16 +4895,18 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   $('#sheet').addEventListener('submit', async (e) => {
     if (e.target.id === 'chat-form') { e.preventDefault(); chatAbsenden(); return; }
     if (e.target.id === 'melden-form') { e.preventDefault(); meldungAbsenden(); return; }
+    if (e.target.id === 'code-form') { e.preventDefault(); codeAbsenden(e.target); return; }
     if (e.target.id !== 'auth-form') return;
     e.preventDefault();
     const reg = ui.authModus === 'registrieren';
+    const codeWeg = !reg && CONFIG.codeLogin && ui.authWeg === 'code';
     const fehler = $('#auth-fehler');
     const zeigeFehler = (text, feld) => { fehler.textContent = text; fehler.hidden = false; if (feld) feld.focus(); };
     const email = $('#auth-email').value.trim();
-    const passwort = $('#auth-passwort').value;
+    const passwort = codeWeg ? '' : $('#auth-passwort').value;
     if (reg && !$('#auth-vorname').value.trim()) return zeigeFehler('Bitte gib deinen Vornamen ein.', $('#auth-vorname'));
     if (!/^\S+@\S+\.\S+$/.test(email)) return zeigeFehler('Bitte gib eine gültige E-Mail-Adresse ein.', $('#auth-email'));
-    if (passwort.length < (reg ? 8 : 1)) return zeigeFehler(reg ? 'Das Passwort braucht mindestens 8 Zeichen.' : 'Bitte gib dein Passwort ein.', $('#auth-passwort'));
+    if (!codeWeg && passwort.length < (reg ? 8 : 1)) return zeigeFehler(reg ? 'Das Passwort braucht mindestens 8 Zeichen.' : 'Bitte gib dein Passwort ein.', $('#auth-passwort'));
     if (reg && !$('#auth-18').checked) return zeigeFehler('Hand Drauf ist erst ab 18 Jahren.', $('#auth-18'));
     if (reg && !$('#auth-regeln').checked) return zeigeFehler('Bitte bestätige, dass du die Regeln verstanden hast.', $('#auth-regeln'));
 
@@ -4625,6 +4931,14 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
         });
         if (error) throw error;
         if (!data.session) { ui.authFertig = email; renderSheet(); return; }
+      } else if (codeWeg) {
+        // Nur für bestehende Konten: Wer neu ist, registriert sich mit Namen und Stadtteil
+        const { error } = await db.client.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+        if (error) throw error;
+        ui.authCode = email;
+        renderSheet();
+        const f = $('#auth-code');
+        if (f) f.focus();
       } else {
         const { data, error } = await db.client.auth.signInWithPassword({ email, password: passwort });
         if (error) throw error;
@@ -4637,6 +4951,28 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       zeigeFehler(fehlerText(err));
     }
   });
+
+  async function codeAbsenden(formular) {
+    const fehler = $('#auth-fehler');
+    const feld = $('#auth-code');
+    const zeigeFehler = (text) => { fehler.textContent = text; fehler.hidden = false; feld.focus(); };
+    const code = feld.value.replace(/\D/g, '');
+    if (code.length !== 6) { zeigeFehler('Der Code hat 6 Ziffern.'); return; }
+    const knopf = formular.querySelector('button[type="submit"]');
+    knopf.disabled = true;
+    knopf.setAttribute('aria-busy', 'true');
+    fehler.hidden = true;
+    try {
+      const { data, error } = await db.client.auth.verifyOtp({ email: ui.authCode, token: code, type: 'email' });
+      if (error) throw error;
+      await setzeSitzung(data.session, true);
+      if (!db.profil) throw new Error('Zu deinem Konto fehlt das Profil. Bitte registriere dich neu.');
+    } catch (err) {
+      knopf.disabled = false;
+      knopf.removeAttribute('aria-busy');
+      zeigeFehler(fehlerText(err));
+    }
+  }
 
   // Stadtteil im Konto ändern
   $('#sheet').addEventListener('change', async (e) => {
@@ -4672,14 +5008,15 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   async function teilen(text, url) {
     const teilenPlugin = plugin('Share');
     if (teilenPlugin) {
-      try { await teilenPlugin.share({ title: 'Hand Drauf', text, url, dialogTitle: 'Teilen' }); } catch (e) { /* abgebrochen */ }
+      try { await teilenPlugin.share(url ? { title: 'Hand Drauf', text, url, dialogTitle: 'Teilen' } : { title: 'Hand Drauf', text, dialogTitle: 'Teilen' }); } catch (e) { /* abgebrochen */ }
       return;
     }
     if (navigator.share) {
-      try { await navigator.share({ title: 'Hand Drauf', text, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+      // Ohne Link kein url-Feld: Ein leeres würde die Adresse dieser Seite anhängen
+      try { await navigator.share(url ? { title: 'Hand Drauf', text, url } : { title: 'Hand Drauf', text }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
     }
-    try { await navigator.clipboard.writeText(`${text} ${url}`); meldung('Link kopiert. Füge ihn in eine Nachricht ein.'); }
-    catch (e) { meldung(`Link zum Teilen: ${url}`); }
+    try { await navigator.clipboard.writeText(url ? `${text} ${url}` : text); meldung(url ? 'Link kopiert. Füge ihn in eine Nachricht ein.' : 'Text kopiert. Füge ihn in eine Nachricht ein.'); }
+    catch (e) { meldung(url ? `Link zum Teilen: ${url}` : 'Teilen geht auf diesem Gerät gerade nicht.'); }
   }
   const einladen = () => teilen('Hand Drauf: Nachbarn in Garbsen helfen sich bei kleinen Dingen, gegen eine kleine Aufwandsentschädigung. Schau mal rein:', NATIV ? OEFFENTLICH : location.origin + location.pathname);
   function gesuchTeilen(g) {
@@ -4687,12 +5024,74 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     teilen(g.eigen ? `Ich suche Hilfe: ${was}. Kannst du helfen oder kennst du jemanden?` : `${vorname(g.wer)} sucht Hilfe: ${was}. Kannst du helfen?`, gesuchLink(g));
   }
 
+  // Bescheid sagen (Vorbild: „Fahrt teilen“ bei Uber): einer Vertrauensperson schreiben, wann und wo man hilft
+  function bescheidSagen(g) {
+    const adresse = adresseVon(g);
+    const wo = adresse && adresse !== g.stadtteil ? (adresse.includes(g.stadtteil) ? adresse : `${adresse}, ${g.stadtteil}`) : g.stadtteil;
+    teilen(g.eigen
+      ? `Zur Info: ${g.helferName || 'Jemand aus der Nachbarschaft'} kommt über Hand Drauf vorbei und hilft bei „${g.titel}“${g.fuer ? ` (für: ${g.fuer})` : ''}. Termin: ${wannLang(g)}.`
+      : `Zur Info: Ich helfe über Hand Drauf bei ${g.wer} in ${wo} („${g.titel}“). Termin: ${wannLang(g)}. Ich melde mich, wenn ich fertig bin.`, '');
+  }
+
+  /* ===== Vorlesen: für alle, die lieber hören als lesen ===== */
+  const vorlesenMoeglich = () => 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
+  // „Sa. 14. Nov.“ liest die Sprachausgabe sonst als „Sa Punkt“
+  function ausgeschrieben(text) {
+    let t = String(text || '');
+    WOCHENTAGE.forEach((k, i) => { t = t.split(k).join(TAGNAMEN[i]); });
+    MONATE.forEach((k, i) => { if (k.endsWith('.')) t = t.split(k).join(MONATE_LANG[i]); });
+    return t;
+  }
+  function vorlesenText(g) {
+    const m = meterVonMir(g);
+    const weit = m < 1000 ? `${Math.max(100, Math.round(m / 50) * 50)} Meter` : `${(m / 1000).toLocaleString('de-DE', { maximumFractionDigits: 1 })} Kilometer`;
+    return [
+      `${katName(g.kat)}: ${g.titel}.`,
+      g.eigen ? 'Das ist deine Anfrage.' : `${vorname(g.wer)} sucht Hilfe${g.fuer ? `, für: ${g.fuer}` : ''}.`,
+      `Termin: ${ausgeschrieben(wannLang(g))}.`,
+      g.eigen ? `In ${g.stadtteil}.` : `In ${g.stadtteil}, ${weit} von dir.`,
+      `${g.betrag} Euro Aufwandsentschädigung.`,
+      g.text || ''
+    ].filter(Boolean).join(' ');
+  }
+  function vorlesenStopp() {
+    if (!ui.vorlesen) return;
+    ui.vorlesen = false;
+    try { window.speechSynthesis.cancel(); } catch (e) { /* schon still */ }
+  }
+  function vorlesen(g) {
+    if (!vorlesenMoeglich()) return;
+    if (ui.vorlesen) { vorlesenStopp(); return; }
+    const u = new window.SpeechSynthesisUtterance(vorlesenText(g));
+    u.lang = 'de-DE';
+    u.rate = 0.95;
+    // Stimme vom Gerät bevorzugen: Die funktioniert auch ohne Internet und schickt den Text nirgends hin
+    const stimmen = window.speechSynthesis.getVoices().filter((v) => /^de\b/i.test(v.lang));
+    const stimme = stimmen.find((v) => v.localService && /de[-_]DE/i.test(v.lang)) || stimmen.find((v) => v.localService) || stimmen[0];
+    if (stimme) u.voice = stimme;
+    const ende = () => { if (ui.vorlesen) { ui.vorlesen = false; if (ui.offen === g.id) renderSheet(); } };
+    u.onend = ende;
+    u.onerror = ende;
+    try {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+      ui.vorlesen = true;
+    } catch (e) { meldung('Vorlesen geht auf diesem Gerät gerade nicht.'); }
+  }
+
   // Geteilter Link #anfrage-<id> öffnet die Anfrage direkt
   const GESUCH_LINK = /^(?:anfrage|gesuch)-(.+)$/;
   const linkId = (hash) => { const m = hash.match(GESUCH_LINK); return m ? decodeURIComponent(m[1]) : null; };
-  function gesuchAusLink(id) {
+  let linkVersuch = null;
+  async function gesuchAusLink(id) {
     if (gesuche.some((g) => g.id === id)) { oeffnen(id); return; }
     if (istLive() && !db.geladen) return; // wird nach dem Laden erneut versucht
+    // Ganz neue Anfragen (z. B. aus einer Benachrichtigung) kennt die offene App noch nicht: einmal frisch laden
+    if (istLive() && linkVersuch !== id && Date.now() - db.geladenUm > 3000) {
+      linkVersuch = id;
+      await neuLaden();
+      if (gesuche.some((g) => g.id === id)) { if (ui.offen !== id) oeffnen(id); return; }
+    }
     history.replaceState(null, '', '#' + ui.view);
     meldung('Diese Anfrage ist nicht mehr offen. Schau dir die anderen in deiner Nähe an.');
   }
@@ -4806,11 +5205,134 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* ohne Offline-Hülle weiter */ }); });
   }
 
+  /* ===== Benachrichtigungen aufs Handy (Web Push) =====
+     Das Gerät meldet sich beim Dienst seines Browsers an und gibt uns eine Adresse dafür. Die Datenbank
+     schickt darüber Bescheid, wenn jemand zusagt, schreibt oder ein Auftrag fertig ist. */
+  const PUSH_SPEICHER = 'handdrauf-push';
+  const push = { an: false, neue: false, spaeter: 0, busy: false };
+  try {
+    const p = JSON.parse(localStorage.getItem(PUSH_SPEICHER) || '{}') || {};
+    push.an = p.an === true; push.neue = p.neue === true; push.spaeter = Number(p.spaeter) || 0;
+  } catch (e) { /* ohne Speicher: aus */ }
+  const pushSpeichern = () => { try { localStorage.setItem(PUSH_SPEICHER, JSON.stringify({ an: push.an, neue: push.neue, spaeter: push.spaeter })); } catch (e) { /* nur für diese Sitzung */ } };
+  // Nur auf der echten Seite mit Datenbank: In der Demo gibt es niemanden, der Bescheid geben könnte
+  const pushMoeglich = () => !VORSCHAU && !NATIV && istLive() && !!CONFIG.push && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  const pushAn = () => pushMoeglich() && push.an && Notification.permission === 'granted' && !!db.profil;
+  const pushAnbieten = () => !!db.profil && pushMoeglich() && !pushAn() && Notification.permission !== 'denied' && Date.now() - push.spaeter > 14 * TAG_MS;
+  // Warum es hier (noch) nicht geht, in einem Satz
+  function pushGrund() {
+    if (!istLive()) return 'In der Demo ist das ausgeschaltet. Auf der echten Seite meldet sich dein Handy, wenn jemand zusagt oder dir schreibt.';
+    if (NATIV) return 'In der iPhone-App kommen Benachrichtigungen mit einem der nächsten Updates.';
+    if (!CONFIG.push) return 'Benachrichtigungen sind noch nicht eingerichtet.';
+    if (istIOS() && !istInstalliert()) return 'Auf dem iPhone geht das, sobald Hand Drauf auf dem Home-Bildschirm liegt: in Safari auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.';
+    return 'Dieser Browser kann leider keine Benachrichtigungen empfangen.';
+  }
+  const b64zuBytes = (t) => Uint8Array.from(atob(String(t).replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+  const bytesZuB64 = (b) => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  async function pushAbo(anlegen) {
+    // Ohne laufende Offline-Hülle gäbe es hier nie eine Antwort
+    const reg = await Promise.race([navigator.serviceWorker.ready, new Promise((_, nein) => setTimeout(() => nein(new Error('Benachrichtigungen sind gerade nicht verfügbar. Lade die Seite neu und versuch es noch einmal.')), 8000))]);
+    let abo = await reg.pushManager.getSubscription();
+    // Anmeldung mit einem älteren Schlüssel (nach einer neuen Einrichtung): ersetzen
+    if (abo && anlegen && abo.options && abo.options.applicationServerKey && bytesZuB64(abo.options.applicationServerKey) !== CONFIG.push) {
+      await abo.unsubscribe();
+      abo = null;
+    }
+    if (!abo && anlegen) abo = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64zuBytes(CONFIG.push) });
+    return abo;
+  }
+  async function pushMelden(abo) {
+    const j = abo.toJSON();
+    const { error } = await db.client.rpc('push_anmelden', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_neue: !!push.neue });
+    if (error) throw error;
+  }
+  async function pushEin() {
+    if (!pushMoeglich()) { meldung(pushGrund()); return false; }
+    if (!db.profil) { oeffnePanel('anmelden', 'Melde dich an, um Benachrichtigungen einzuschalten.'); return false; }
+    const erlaubt = await Notification.requestPermission();
+    if (erlaubt !== 'granted') {
+      meldung(erlaubt === 'denied' ? 'Benachrichtigungen sind für diese Seite gesperrt. Du kannst sie in den Einstellungen deines Browsers wieder erlauben.' : 'Ohne deine Erlaubnis gibt es keine Benachrichtigungen.');
+      return false;
+    }
+    await pushMelden(await pushAbo(true));
+    push.an = true;
+    pushSpeichern();
+    return true;
+  }
+  // Gerät vom Konto lösen. ganz = auch beim Browser abmelden (Schalter aus), sonst nur beim Abmelden vom Konto
+  async function pushTrennen(ganz) {
+    if (!pushMoeglich()) return;
+    try {
+      const abo = await pushAbo(false);
+      if (abo && db.user) await db.client.rpc('push_abmelden', { p_endpoint: abo.endpoint });
+      if (abo && ganz) await abo.unsubscribe();
+    } catch (e) { /* lokal trotzdem ausschalten */ }
+    if (ganz) { push.an = false; pushSpeichern(); }
+  }
+  // Nach dem Anmelden und bei jedem Start: Gerät still wieder mit dem Konto verbinden (Adressen können sich ändern)
+  async function pushAuffrischen() {
+    if (!pushAn()) return;
+    try { await pushMelden(await pushAbo(true)); } catch (e) { /* beim nächsten Start wieder */ }
+  }
+  function pushKarteHTML(g) {
+    if (!pushAnbieten()) return '';
+    const laeuft = (g.eigen && (g.status === 'zugesagt' || g.status === 'erledigt' || (g.status === 'offen' && !abgelaufen(g)))) || (g.helfer === 'ich' && (g.status === 'zugesagt' || g.status === 'erledigt'));
+    if (!laeuft) return '';
+    const text = g.eigen
+      ? (g.status === 'offen' ? 'Dann meldet sich dein Handy, sobald jemand zusagt.' : `Dann meldet sich dein Handy, wenn ${esc(vorname(g.helferName) || 'dein Helfer')} schreibt oder fertig ist.`)
+      : `Dann meldet sich dein Handy, wenn ${esc(vorname(g.wer))} schreibt oder bestätigt.`;
+    return `<div class="push-karte">${icon('glocke')}
+        <div><strong>Bescheid aufs Handy?</strong><p>${text}</p>
+          <div class="btn-row"><button type="button" class="btn btn-primary btn-auto" data-push-ein>Einschalten</button>
+          <button type="button" class="btn btn-secondary btn-auto" data-push-spaeter>Nicht jetzt</button></div>
+        </div>
+      </div>`;
+  }
+  function pushMenueHTML() {
+    const schalter = (attr, an, titel, text) => `<div class="schalter-zeile"><span class="schalter-text"><strong>${titel}</strong><span>${text}</span></span>
+        <button type="button" class="schalter" role="switch" aria-checked="${an}" aria-label="${titel}" ${attr} ${push.busy ? 'disabled' : ''}><span aria-hidden="true"></span></button></div>`;
+    if (!pushMoeglich()) return `<p class="klein">${pushGrund()}</p>`;
+    if (Notification.permission === 'denied') return '<p class="klein">Benachrichtigungen sind für diese Seite gesperrt. Du kannst sie in den Einstellungen deines Browsers wieder erlauben.</p>';
+    const an = pushAn();
+    const ort = (db.profil && db.profil.stadtteil) || 'meinem Stadtteil';
+    return schalter('data-push-schalter', an, 'Bescheid aufs Handy', 'Wenn jemand zusagt, dir schreibt oder ein Auftrag fertig ist.') +
+      (an ? schalter('data-push-neue', push.neue, `Neue Anfragen in ${esc(ort)}`, 'Höchstens alle 20 Minuten.') +
+        '<button type="button" class="link-btn link-links" data-push-test>Test-Benachrichtigung schicken</button>' : '');
+  }
+  // Tipp auf eine Benachrichtigung, während die App offen ist: Die Offline-Hülle reicht das Ziel weiter
+  if ('serviceWorker' in navigator && !VORSCHAU) {
+    navigator.serviceWorker.addEventListener('message', (e) => {
+      const d = e.data || {};
+      if (d.typ !== 'push-link') return;
+      const id = linkId(String(d.link || ''));
+      if (id) gesuchAusLink(id); else if (istLive()) bald(neuLaden);
+    });
+  }
+
+  /* ===== Zähler auf der Startseite: Wie oft wurde schon geholfen? ===== */
+  async function ladeStatistik() {
+    if (!istLive()) return;
+    try {
+      const { data, error } = await db.client.rpc('statistik');
+      if (!error && data) { db.statistik = data; renderGeholfen(); }
+    } catch (e) { /* ohne Zähler weiter */ }
+  }
+  function renderGeholfen() {
+    const el = $('#geholfen');
+    if (!el) return;
+    const fertig = gesuche.filter((g) => g.status === 'bezahlt').length;
+    const st = istLive() ? db.statistik : { woche: 12 + fertig, gesamt: 148 + fertig };
+    const text = !st ? '' : st.woche > 0 ? `Diese Woche ${st.woche}× geholfen` : st.gesamt > 0 ? `Schon ${st.gesamt}× geholfen in Garbsen` : '';
+    el.hidden = !text;
+    el.innerHTML = text ? `${icon('check', 'i-xs')}<span>${text}</span>` : '';
+  }
+
   /* ===== Klicks auf Listen und Filter ===== */
   document.addEventListener('click', (e) => {
     const go = e.target.closest('[data-go]');
     if (go) { gehe(go.dataset.go); return; }
-    if (e.target.closest('[data-einladen]')) { einladen(); return; }
+    if (e.target.closest('[data-einladen]')) { oeffnePanel('einladen'); return; }
+    if (e.target.closest('[data-teilen-app]')) { einladen(); return; }
     if (e.target.closest('[data-installieren]')) { installieren(); return; }
     if (e.target.closest('[data-installieren-nein]')) {
       try { localStorage.setItem(INSTALL_SPEICHER, 'nein'); } catch (err) { /* nur für diese Sitzung */ }
@@ -4942,6 +5464,30 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   ).join('');
 
   const katWahl = () => form.querySelector('input[name="kat"]:checked').value;
+  // Für wen ist die Hilfe? Viele fragen für Eltern oder Großeltern an (Vorbild: hilver in Heidelberg, „Fahrt für jemand anderen“ bei Uber)
+  let fuerModus = 'ich';
+  function renderFuer(fokus) {
+    $('#neu-fuer-wahl').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.fuer === fuerModus)));
+    $('#fuer-feld').hidden = fuerModus !== 'andere';
+    if (fokus) (fuerModus === 'andere' ? $('#neu-fuer') : $(`#neu-fuer-wahl [data-fuer="${fuerModus}"]`)).focus({ preventScroll: true });
+  }
+  function fuerSetzen(name) {
+    fuerModus = name ? 'andere' : 'ich';
+    $('#neu-fuer').value = name || '';
+    renderFuer();
+  }
+  const fuerWert = () => fuerModus === 'andere' ? $('#neu-fuer').value.trim().slice(0, 40) : '';
+  const telefonWert = () => $('#neu-telefon').value.trim();
+  // Wie in der Datenbank: Ziffern, Leerzeichen und + ( ) / -, mit 6 bis 20 Ziffern
+  const telefonGueltig = (t) => /^[0-9 +()\/-]{6,30}$/.test(t) && t.replace(/\D/g, '').length >= 6 && t.replace(/\D/g, '').length <= 20;
+  $('#neu-fuer-wahl').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-fuer]');
+    if (!b) return;
+    fuerModus = b.dataset.fuer;
+    $('#fehler-fuer').hidden = true;
+    $('#neu-fuer').removeAttribute('aria-invalid');
+    renderFuer(true);
+  });
   const betragWert = () => { const v = parseInt(betragInput.value, 10); return Number.isFinite(v) ? v : NaN; };
   const betragGueltig = (b) => b >= CONFIG.minBetrag && b <= CONFIG.maxBetrag;
 
@@ -4990,8 +5536,10 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     $('#neu-pruefen').innerHTML =
       zeile('Tätigkeit', `${icon(k, 'i-sm')}${esc(katName(k))}: ${esc($('#neu-titel').value.trim())}`, 1) +
       (text ? zeile('Details', esc(text), 1) : '') +
+      (fuerWert() ? zeile('Für wen', esc(fuerWert()), 1) : '') +
       zeile('Wann', esc(wannLang(terminSpeichern())), 2) +
       zeile('Wo', `${esc($('#neu-stadtteil').value)}${adresse ? `<span class="klein">${esc(adresse)}, sieht nur, wer zusagt</span>` : ''}`, 2) +
+      (telefonWert() ? zeile('Telefon', `${esc(telefonWert())}<span class="klein">sieht nur, wer zusagt</span>`, 2) : '') +
       zeile('Aufwandsentschädigung', euro(betragWert()), 3);
   }
   function zeigeSchritt(n, fokus = true) {
@@ -5016,8 +5564,13 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     const fehler = (feld, id) => { feld.setAttribute('aria-invalid', 'true'); $(id).hidden = false; return feld; };
     if (n === 1 && $('#neu-titel').value.trim().length < 3) return fehler($('#neu-titel'), '#fehler-titel');
     if (n === 1 && anstoessig(`${$('#neu-titel').value} ${$('#neu-text').value}`)) return fehler(anstoessig($('#neu-titel').value) ? $('#neu-titel') : $('#neu-text'), '#fehler-wort');
+    if (n === 1 && fuerModus === 'andere' && (fuerWert().length < 2 || anstoessig(fuerWert()))) {
+      $('#fehler-fuer').textContent = anstoessig(fuerWert()) ? 'Bitte ohne beleidigende oder anstößige Wörter.' : 'Bitte schreib kurz, für wen die Hilfe ist.';
+      return fehler($('#neu-fuer'), '#fehler-fuer');
+    }
     if (n === 2 && !terminAuswahl().gueltig) { $('#fehler-tag').hidden = false; return $(termin.modus === 'tag' ? '#termin-tage .kal-tag[tabindex="0"]' : '#termin-woche .wahl-knopf'); }
     if (n === 2 && istLive() && $('#neu-adresse').value.trim().length < 3) return fehler($('#neu-adresse'), '#fehler-adresse');
+    if (n === 2 && telefonWert() && !telefonGueltig(telefonWert())) return fehler($('#neu-telefon'), '#fehler-telefon');
     if (n === 3 && !betragGueltig(betragWert())) return fehler(betragInput, '#fehler-betrag');
     return null;
   }
@@ -5057,6 +5610,10 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   $('#neu-text').addEventListener('input', (e) => { e.target.removeAttribute('aria-invalid'); $('#fehler-wort').hidden = true; });
   $('#neu-adresse').addEventListener('input', (e) => {
     if (e.target.value.trim().length >= 3) { e.target.removeAttribute('aria-invalid'); $('#fehler-adresse').hidden = true; }
+  });
+  $('#neu-fuer').addEventListener('input', (e) => { e.target.removeAttribute('aria-invalid'); $('#fehler-fuer').hidden = true; });
+  $('#neu-telefon').addEventListener('input', (e) => {
+    if (!e.target.value.trim() || telefonGueltig(e.target.value.trim())) { e.target.removeAttribute('aria-invalid'); $('#fehler-telefon').hidden = true; }
   });
   renderVorschlaege();
 
@@ -5250,26 +5807,25 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     $('#neu-senden').textContent = b ? 'Änderungen speichern' : 'Anfrage veröffentlichen';
     $('#neu-abbrechen').hidden = !b;
   }
-  async function bearbeitenStarten(g, schritt) {
-    let adresse = istLive() ? db.adressen.get(g.id) : g.adresse;
-    if (istLive() && typeof adresse !== 'string') {
-      const { data } = await db.client.from('gesuch_adressen').select('adresse').eq('gesuch_id', g.id).maybeSingle();
-      adresse = data ? data.adresse : '';
-      db.adressen.set(g.id, adresse);
-    }
+  // alsVorlage: „Noch mal anfragen“ übernimmt die Angaben einer erledigten Anfrage in eine neue
+  async function bearbeitenStarten(g, schritt, alsVorlage) {
+    if (istLive() && typeof db.adressen.get(g.id) !== 'string') { db.adressen.delete(g.id); await ladeAdresse(g.id); }
+    const adresse = adresseVon(g) || '';
     form.reset();
-    ui.bearbeiten = g.id;
+    ui.bearbeiten = alsVorlage ? null : g.id;
     const kat = $(`#neu-kat-${g.kat}`);
     if (kat) kat.checked = true;
     renderVorschlaege();
     $('#neu-titel').value = g.titel;
     $('#neu-text').value = g.text || '';
+    fuerSetzen(g.fuer || '');
     // Gespeicherten Termin wieder in den Kalender holen. Ist er vorbei, muss ein neuer gewählt werden.
-    terminAusWann(g.wann, abgelaufen(g));
+    if (alsVorlage) terminStart(); else terminAusWann(g.wann, abgelaufen(g));
     renderTermin();
     renderStadtteilAuswahl();
     $('#neu-stadtteil').value = g.stadtteil;
-    $('#neu-adresse').value = istLive() || adresse !== g.stadtteil ? (adresse || '') : '';
+    $('#neu-adresse').value = istLive() || adresse !== g.stadtteil ? adresse : '';
+    $('#neu-telefon').value = telefonVon(g);
     betragInput.value = g.betrag;
     betragGeaendert = true;
     renderKosten();
@@ -5278,10 +5834,12 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     schliessen();
     gehe('neu');
     zeigeSchritt(schritt);
+    if (alsVorlage) meldung('Angaben übernommen. Wähle noch den Termin.');
   }
   function bearbeitenBeenden() {
     ui.bearbeiten = null;
     form.reset();
+    fuerSetzen('');
     betragGeaendert = false;
     form.querySelectorAll('[aria-invalid]').forEach((f) => f.removeAttribute('aria-invalid'));
     form.querySelectorAll('.fehler').forEach((f) => { f.hidden = true; });
@@ -5321,6 +5879,8 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     const stadtteil = $('#neu-stadtteil').value;
     const { wann, bis } = terminSpeichern();
     const text = $('#neu-text').value.trim();
+    const fuer = fuerWert();
+    const telefon = telefonWert();
     const bearbeitet = ui.bearbeiten;
     let neuId = bearbeitet;
 
@@ -5333,17 +5893,22 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
         const felder = { p_kategorie: kat, p_titel: titel, p_beschreibung: text, p_betrag: b, p_wann: wann, p_stadtteil: stadtteil, p_adresse: adresse };
         // Noch nicht aktualisierte Datenbank kennt p_bis und gesuch_bearbeiten nicht (Fehler PGRST202)
         const fehlt = (err) => err && (err.code === 'PGRST202' || /could not find the function/i.test(err.message || ''));
+        // „Für wen“ und Telefon kennt erst die Datenbank mit dem Update vom 10. November 2026
+        const dazu = { p_fuer: fuer, p_telefon: telefon };
         if (bearbeitet) {
-          const { error } = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis });
-          if (fehlt(error)) throw new Error('Bearbeiten ist noch nicht freigeschaltet. Zieh die Anfrage zurück und stelle sie neu.');
-          if (error) throw error;
+          let r = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis, ...dazu });
+          if (fehlt(r.error)) r = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis });
+          if (fehlt(r.error)) throw new Error('Bearbeiten ist noch nicht freigeschaltet. Zieh die Anfrage zurück und stelle sie neu.');
+          if (r.error) throw r.error;
         } else {
-          let r = db.altesSchema ? { error: { code: 'PGRST202' } } : await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis });
+          let r = db.altesSchema ? { error: { code: 'PGRST202' } } : await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis, ...dazu });
+          if (fehlt(r.error) && !db.altesSchema) r = await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis });
           if (fehlt(r.error)) { db.altesSchema = true; r = await db.client.rpc('gesuch_erstellen', felder); }
           if (r.error) throw r.error;
           neuId = r.data;
         }
         db.adressen.set(neuId, adresse);
+        db.telefone.set(neuId, telefon);
         await neuLaden();
       } catch (err) {
         zeigeFehler(fehlerText(err));
@@ -5359,7 +5924,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
         const [nord, ost] = EIGEN_VERSATZ[gesuche.indexOf(g) % EIGEN_VERSATZ.length];
         Object.assign(g, versetze(stadtteil === meinOrt().stadtteil ? meinOrt() : STADTTEILE.find((x) => x.name === stadtteil), nord, ost));
       }
-      Object.assign(g, { kat, titel, text, betrag: b, wann, bis, laeuftAb: demoAblauf(bis), stadtteil, adresse: adresse || stadtteil });
+      Object.assign(g, { kat, titel, text, betrag: b, wann, bis, laeuftAb: demoAblauf(bis), stadtteil, adresse: adresse || stadtteil, fuer, telefon });
       demoSpeichern();
     } else {
       const anzahlEigene = gesuche.filter((g) => g.eigen).length;
@@ -5370,7 +5935,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       gesuche.unshift({
         id: neuId, eigen: true, kat, titel, wer: 'Du', initialen: CONFIG.ich.initialen, betrag: b,
         stadtteil, lat: pos.lat, lng: pos.lng, wann, bis, laeuftAb: demoAblauf(bis), dauer: 'nach Absprache', text,
-        adresse: adresse || stadtteil, status: 'offen', erstellt: Date.now()
+        adresse: adresse || stadtteil, fuer, telefon, status: 'offen', erstellt: Date.now()
       });
       demoSpeichern();
     }
@@ -5413,6 +5978,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     if (!live) { if (linkId(start)) gesuchAusLink(linkId(start)); return; }
     renderStadtteilAuswahl();
     renderKosten();
+    ladeStatistik();
   });
 })();
 </script>

@@ -40,6 +40,12 @@
     maxBetrag: 50,             // Obergrenze für Nachbarschaftshilfe
     freigrenze: 255,           // § 22 Nr. 3 EStG: unter 256 € Gewinn im Jahr steuerfrei
     bereichMeter: 250,         // Radius des ungefähren Bereichs um eine Anfrage
+    // Anmelden mit einem Code per E-Mail statt mit Passwort. Erst einschalten, wenn der E-Mail-Versand
+    // eingerichtet ist und die E-Mail-Vorlage den Code enthält (siehe SETUP.md).
+    codeLogin: false,
+    // Öffentlicher Schlüssel für Benachrichtigungen aufs Handy (Web Push). Der private Schlüssel liegt
+    // nur in der Datenbank. Leer = Benachrichtigungen aus.
+    push: 'BAeSkBv6_TrKXn_vTxc3F5qJOLIJ2bIjB3ro4IFlHjX32LlpKFu4quz2Wr5DVsCatqeKFvXfYHgCZRPQr29zAuc',
     ich: { name: 'Tim', initialen: 'TS', stadtteil: 'Garbsen-Mitte', lat: 52.4248, lng: 9.5962 }, // Demo-Person
     // Betreiber für Impressum und Datenschutz. Vor dem öffentlichen Start ausfüllen.
     betreiber: { name: '', anschrift: '', email: '', telefon: '' }
@@ -112,7 +118,7 @@
       stadtteil: 'Auf der Horst', lat: 52.4170, lng: 9.5970, wann: 'Sonntag, nachmittags', dauer: 'ca. 2 Std.',
       text: 'Schrank aus Einzelteilen, 2 m hoch, soll an der Wand befestigt werden. Werkzeug und Dübel sind da.',
       adresse: 'Nähe Stadtbahn-Endhaltestelle, Auf der Horst', antwort: 'Danke! Zu zweit geht es bestimmt schneller, ich helfe mit.', status: 'offen', erstellt: 9 },
-    { id: 'g6', kat: 'technik', titel: 'Drucker einrichten', wer: 'Gisela R.', initialen: 'GR', sterne: 4.9, bewertungen: 11, betrag: 12,
+    { id: 'g6', kat: 'technik', titel: 'Drucker einrichten', wer: 'Gisela R.', initialen: 'GR', sterne: 4.9, bewertungen: 11, betrag: 12, telefon: '0176 04069012',
       stadtteil: 'Meyenfeld', lat: 52.4423, lng: 9.5698, wann: 'Diese Woche, flexibel', dauer: 'ca. 45 Min.',
       text: 'Der neue Drucker soll mit dem WLAN und meinem Laptop verbunden werden. Mit der Anleitung komme ich nicht klar.',
       adresse: 'Ortsmitte Meyenfeld', antwort: 'Vielen Dank! Das WLAN-Passwort klebt hinten am Router.', status: 'offen', erstellt: 8 },
@@ -120,14 +126,14 @@
       stadtteil: 'Stelingen', lat: 52.4506, lng: 9.6236, wann: 'Samstag, nachmittags', dauer: 'ca. 1 Std.',
       text: 'Etwa 15 Umzugskartons aus dem Flur in den Keller. Einige sind schwer, da sind Bücher drin.',
       adresse: 'Leinestraße, Stelingen', antwort: 'Klasse, danke! Der Keller ist offen.', status: 'offen', erstellt: 7 },
-    { id: 'g8', kat: 'garten', titel: 'Hecke schneiden', wer: 'Ingrid P.', initialen: 'IP', sterne: 4.8, bewertungen: 17, betrag: 22,
+    { id: 'g8', kat: 'garten', titel: 'Hecke schneiden', wer: 'Sandra P.', initialen: 'SP', sterne: 4.8, bewertungen: 17, betrag: 22, fuer: 'meine Mutter Ingrid', telefon: '0171 3920018',
       stadtteil: 'Horst', lat: 52.4420, lng: 9.5374, wann: 'Nächste Woche, vormittags', dauer: 'ca. 2 Std.',
       text: 'Ligusterhecke, etwa 15 m lang und 1,60 m hoch. Die elektrische Heckenschere ist da, der Schnitt kommt in die Biotonne.',
       adresse: 'Nähe Kirche, Horst', antwort: 'Wunderbar, danke! Die Heckenschere liegt in der Garage.', status: 'offen', erstellt: 6 },
     { id: 'g9', kat: 'einkaufen', titel: 'Einkauf aus Garbsen mitbringen', wer: 'Werner T.', initialen: 'WT', sterne: 5.0, bewertungen: 8, betrag: 7,
       stadtteil: 'Frielingen', lat: 52.4610, lng: 9.5361, wann: 'Donnerstag, vormittags', dauer: 'ca. 45 Min.',
       text: 'Ich komme gerade schlecht ins Zentrum. Eine kurze Liste vom Supermarkt, den Einkauf bezahle ich bei der Übergabe.',
-      adresse: 'Schafbrink, Frielingen', antwort: 'Danke! Die Liste schicke ich dir gleich im Chat.', status: 'offen', erstellt: 5 },
+      adresse: 'Schafbrink, Frielingen', antwort: 'Danke! Die Liste schicke ich dir gleich im Chat.', status: 'offen', erstellt: 5, telefon: '0171 3920047' },
     { id: 'g10', kat: 'tiere', titel: 'Katze füttern am Wochenende', wer: 'Sabine L.', initialen: 'SL', sterne: 4.9, bewertungen: 12, betrag: 12,
       stadtteil: 'Osterwald O.E.', lat: 52.4623, lng: 9.5926, wann: 'Samstag und Sonntag, abends', dauer: '2 × 15 Min.',
       text: 'Minka braucht abends Futter und frisches Wasser. Ich bin übers Wochenende bei meiner Schwester.',
@@ -146,7 +152,7 @@
       adresse: 'Großer Weg, Osterwald U.E.', antwort: 'Danke! Fang einfach an, ich bin im Garten.', status: 'offen', erstellt: 1 }
   ];
 
-  const SPEICHER = 'nachbarhand-prototyp-v2';
+  const SPEICHER = 'nachbarhand-prototyp-v3';
   const VIEWS = ['entdecken', 'karte', 'neu', 'auftraege'];
   const RECHT = RECHT_TEXTE(CONFIG.betreiber, (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
   const FRAGEN = FRAGEN_TEXTE(CONFIG);
@@ -163,10 +169,13 @@
     user: null,
     profil: null,
     geladen: false,
+    geladenUm: 0,
     laedt: false,
     fehler: null,
     bewertungen: new Map(), // gesuch_id -> meine Sterne
     adressen: new Map(),    // gesuch_id -> Adresse (nur für Beteiligte)
+    telefone: new Map(),    // gesuch_id -> Telefon (freiwillig, nur für Beteiligte)
+    statistik: null,        // { woche, gesamt }: wie oft geholfen wurde
     nachrichten: new Map(), // gesuch_id -> Verlauf (null = wird geladen)
     letzte: new Map(),      // gesuch_id -> Zeit der letzten Nachricht der anderen Person
     gemeldet: new Set(),    // in dieser Sitzung gemeldete Anfragen
@@ -192,7 +201,7 @@
   }
 
   let gesuche = [];
-  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'termin', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false, bearbeiten: null, blockieren: false };
+  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'termin', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', authWeg: 'passwort', authCode: '', vorlesen: false, markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false, bearbeiten: null, blockieren: false };
 
   /* ===== Ansicht: Design, Schriftgröße, Startseite (nur auf diesem Gerät gespeichert) ===== */
   const ANSICHT_SPEICHER = 'handdrauf-ansicht';
@@ -282,6 +291,13 @@
     const m = meterVonMir(g);
     if (m < 1000) return Math.max(100, Math.round(m / 50) * 50) + '\u00a0m';
     return (m / 1000).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '\u00a0km';
+  }
+  // Geschätzter Weg: Luftlinie mal 1,3; zu Fuß 80 m pro Minute, mit dem Rad 250 m
+  function wegText(g) {
+    if (g.eigen) return '';
+    const m = meterVonMir(g) * 1.3;
+    const fuss = Math.max(1, Math.round(m / 80));
+    return fuss <= 20 ? `etwa ${fuss} Min. zu Fuß` : `etwa ${Math.max(1, Math.round(m / 250))} Min. mit dem Rad`;
   }
   /* ===== Termine: „Morgen“ wird beim Speichern zum echten Datum ===== */
   const WOCHENTAGE = ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'];
@@ -452,6 +468,9 @@
     if (/password should be at least|weak password/i.test(m)) return 'Das Passwort ist zu kurz oder zu einfach. Nimm mindestens 8 Zeichen.';
     if (/email address not authorized|email_address_not_authorized/i.test(m)) return 'Die Registrierung ist gerade nur für das Test-Team freigeschaltet. Bitte versuch es bald noch einmal.';
     if (/email rate limit/i.test(m)) return 'Gerade wurden zu viele Bestätigungs-E-Mails verschickt. Bitte versuch es in einer Stunde noch einmal.';
+    if (/signups not allowed for otp|otp_disabled/i.test(m)) return 'Zu dieser E-Mail gibt es noch kein Konto. Tippe oben auf „Neu registrieren“.';
+    if (/token has expired or is invalid|otp_expired|invalid otp/i.test(m)) return 'Der Code stimmt nicht oder ist abgelaufen. Lass dir einen neuen schicken.';
+    if (/for security purposes|only request this after/i.test(m)) return 'Bitte warte eine Minute, bevor du einen neuen Code anforderst.';
     if (/signups? not allowed|signup is disabled/i.test(m)) return 'Neue Registrierungen sind gerade geschlossen.';
     if (/rate limit|too many/i.test(m)) return 'Zu viele Versuche. Warte ein paar Minuten.';
     if (/jwt|permission denied/i.test(m)) return 'Deine Anmeldung ist abgelaufen. Bitte melde dich neu an.';
@@ -518,6 +537,7 @@
     db.profil = null;
     db.bewertungen.clear();
     db.adressen.clear();
+    db.telefone.clear();
     db.nachrichten.clear();
     db.letzte.clear();
     db.gemeldet.clear();
@@ -533,6 +553,7 @@
     renderStadtteilAuswahl();
     renderKosten();
     await neuLaden();
+    pushAuffrischen();
   }
 
   // * statt einzelner Spalten: funktioniert mit und ohne die Spalten bis/laeuft_ab (Datenbank-Update vom November 2026)
@@ -549,6 +570,7 @@
       status: r.status === 'bestaetigt' ? 'bezahlt' : r.status,
       erstellt: Date.parse(r.erstellt) || 0,
       bis: r.bis || null,
+      fuer: r.fuer || '', tuercode: r.tuercode || '',
       laeuftAb: r.laeuft_ab ? Date.parse(r.laeuft_ab) || 0 : 0,
       eigen: !!ich && r.ersteller === ich,
       helfer: ich && r.helfer === ich ? 'ich' : (r.helfer ? 'andere' : null),
@@ -591,6 +613,7 @@
       gesuche.forEach((g) => { if (g.status === 'offen') db.nachrichten.delete(g.id); });
       db.fehler = null;
       db.geladen = true;
+      db.geladenUm = Date.now();
     } catch (e) {
       db.fehler = fehlerText(e);
     } finally {
@@ -608,11 +631,15 @@
   async function ladeAdresse(id) {
     if (db.adressen.has(id)) return;
     db.adressen.set(id, null); // wird geladen
-    const { data } = await db.client.from('gesuch_adressen').select('adresse').eq('gesuch_id', id).maybeSingle();
+    // * statt einzelner Spalten: funktioniert auch mit einer Datenbank ohne die Spalte telefon
+    const { data } = await db.client.from('gesuch_adressen').select('*').eq('gesuch_id', id).maybeSingle();
     db.adressen.set(id, data ? data.adresse : '');
+    db.telefone.set(id, (data && data.telefon) || '');
     if (ui.offen === id) renderSheet();
   }
   const adresseVon = (g) => istLive() ? db.adressen.get(g.id) : g.adresse;
+  const telefonVon = (g) => (istLive() ? db.telefone.get(g.id) : g.telefon) || '';
+  const telLink = (nr) => 'tel:' + String(nr).replace(/[^0-9+]/g, '');
 
   /* ===== Nachrichten zwischen den Beteiligten ===== */
   const GELESEN_SPEICHER = 'handdrauf-gelesen';
@@ -699,7 +726,7 @@
     }
     if (!demoBlockiert.includes(name)) demoBlockiert.push(name);
     demoBlockSpeichern();
-    gesuche.forEach((g) => { if (g.wer === name && g.helfer === 'ich' && g.status === 'zugesagt') { g.status = 'offen'; g.helfer = null; g.nachrichten = []; } });
+    gesuche.forEach((g) => { if (g.wer === name && g.helfer === 'ich' && g.status === 'zugesagt') { g.status = 'offen'; g.helfer = null; g.nachrichten = []; g.tuercode = ''; } });
     demoSpeichern();
   }
   async function entsperre(id) {
@@ -744,8 +771,8 @@
       await neuLaden();
       return;
     }
-    if (aktion === 'zusagen') { g.status = 'zugesagt'; g.helfer = 'ich'; g.nachrichten = []; if (g.antwort) demoNachricht(g.id, g.antwort, 1500); }
-    else if (aktion === 'absagen') { g.status = 'offen'; g.helfer = null; g.nachrichten = []; }
+    if (aktion === 'zusagen') { g.status = 'zugesagt'; g.helfer = 'ich'; g.nachrichten = []; g.tuercode = String(Math.floor(Math.random() * 10000)).padStart(4, '0'); if (g.antwort) demoNachricht(g.id, g.antwort, 1500); }
+    else if (aktion === 'absagen') { g.status = 'offen'; g.helfer = null; g.nachrichten = []; g.tuercode = ''; }
     else if (aktion === 'erledigt') g.status = 'erledigt';
     else if (aktion === 'bestaetigen') g.status = 'bezahlt';
     else if (aktion === 'rueckzug') gesuche = gesuche.filter((x) => x.id !== g.id);
@@ -944,10 +971,10 @@
       <span class="summe-hint">Steuerfrei bis ${CONFIG.freigrenze} € im Jahr, noch ${euro(rest)} frei.</span>`;
     $('#zusagen').innerHTML = zusagen.length
       ? zeilen(zusagen.map((g) => karteHTML(g, pills(g))))
-      : `<p class="leer-klein">Noch keine Zusagen.</p>`;
+      : `<div class="leer-klein"><p>Noch keine Zusagen. Schau, wer in deiner Nähe Hilfe sucht.</p><button type="button" class="btn btn-secondary btn-auto" data-go="entdecken">Anfragen ansehen</button></div>`;
     $('#eigene').innerHTML = eigene.length
       ? zeilen(eigene.map((g) => karteHTML(g, pills(g))))
-      : `<p class="leer-klein">Noch keine Anfragen.</p>`;
+      : `<div class="leer-klein"><p>Noch keine Anfragen. Brauchst du selbst Hilfe?</p><button type="button" class="btn btn-secondary btn-auto" data-go="neu">Hilfe suchen</button></div>`;
   }
 
   /* ===== Garbsen als Miniatur (3D, Startseite) ===== */
@@ -1278,17 +1305,26 @@
     if (!beteiligt) adressZeile = `<span class="fakt-leise">${icon('schloss', 'i-xs')}nach der Zusage</span>`;
     else if (echteAdresse) adressZeile = `${esc(echteAdresse)}<span class="fakt-zusatz">${g.eigen ? 'sieht nur, wer zusagt' : 'nur für dich sichtbar'}</span>`;
     else adressZeile = `<span class="fakt-leise">${adresse === null ? 'wird geladen …' : g.eigen ? 'nur der Stadtteil' : 'nicht verfügbar'}</span>`;
+    // Telefon (freiwillig): wie die Adresse erst nach der Zusage, zum Antippen
+    const telefon = beteiligt ? telefonVon(g) : '';
+    const telefonZeile = !telefon ? '' : `<div class="breit"><dt>Telefon</dt><dd>${g.eigen
+      ? `${esc(telefon)}<span class="fakt-zusatz">sieht nur, wer zusagt</span>`
+      : `<a class="tel-link" href="${esc(telLink(telefon))}">${icon('telefon', 'i-sm')}${esc(telefon)}</a>`}</dd></div>`;
+    const fuerZeile = !g.fuer ? '' : `<div class="breit"><dt>Für wen</dt><dd>${esc(g.fuer)}<span class="fakt-zusatz">${g.eigen ? 'Du fragst für jemand anderen.' : `${esc(vn)} fragt für jemand anderen.`}</span></dd></div>`;
+    const weg = wegText(g);
 
     html += `<div class="betrag">
       <div><div class="betrag-zahl">${euroKurz(g.betrag)}</div><div class="betrag-label">Aufwandsentschädigung</div></div>
       <div class="betrag-detail">${detail}</div>
     </div>
     <dl class="fakten">
+      ${fuerZeile}
       <div><dt>Wann</dt><dd>${esc(wannLang(g))}</dd></div>
       <div><dt>Dauer</dt><dd>${esc(g.dauer)}</dd></div>
       <div><dt>Stadtteil</dt><dd>${esc(g.stadtteil)}</dd></div>
-      <div><dt>Entfernung</dt><dd>${distanz(g)}</dd></div>
+      <div><dt>Entfernung</dt><dd>${distanz(g)}${weg ? `<span class="fakt-zusatz">${weg}</span>` : ''}</dd></div>
       <div class="breit"><dt>Adresse</dt><dd>${adressZeile}</dd></div>
+      ${telefonZeile}
     </dl>`;
     if (g.text) html += `<p class="beschreibung">${esc(g.text)}</p>`;
 
@@ -1301,6 +1337,21 @@
         `<li class="${i <= idx ? 'is-done' : ''} ${i === idx ? 'is-current' : ''}"><span class="punkt">${i <= idx ? icon('check', 'i-xs') : ''}</span>${n}</li>`
       ).join('')}</ol>`;
     }
+
+    // Sicherheits-Code für die Tür (Vorbild: PIN bei Uber): kennen nur die beiden Beteiligten.
+    // Wer hilft, sieht ihn vor den Knöpfen; wer Hilfe bekommt, gleich unter „… hilft dir“.
+    let codeHTML = '';
+    if (g.tuercode && beteiligt && (g.status === 'zugesagt' || g.status === 'erledigt')) {
+      const ziffern = String(g.tuercode).split('');
+      codeHTML = `<div class="tuercode">
+        <div class="tuercode-kopf"><span>${icon('schild', 'i-sm')}Sicherheits-Code</span>
+          <span class="tuercode-zahl" role="img" aria-label="${ziffern.join(' ')}">${ziffern.map((z) => `<span aria-hidden="true">${esc(z)}</span>`).join('')}</span></div>
+        <p>${g.eigen
+          ? (g.fuer ? `${esc(hn)} nennt den Code an der Tür. Gib ihn an die Person weiter, bei der geholfen wird.` : `${esc(hn)} nennt dir den Code an der Tür. Stimmt er nicht, lass niemanden herein.`)
+          : `Nenne den Code, wenn du klingelst. So weiß ${esc(g.fuer ? 'die Person an der Tür' : vn)}, dass du es bist.`}</p>
+      </div>`;
+    }
+    if (!g.eigen) html += codeHTML;
 
     const sterneHTML = (b, wen) => `<div class="bewerten"><span><strong>${b ? 'Danke für deine Bewertung.' : `Wie war es mit ${esc(wen)}?`}</strong></span>
       <div class="sterne" role="group" aria-label="Bewertung">${[1, 2, 3, 4, 5].map((n) =>
@@ -1319,17 +1370,19 @@
               <button type="button" class="btn btn-secondary" data-aktion="rueckzug-nein">Abbrechen</button></div></div>`
           : `<button type="button" class="link-btn" data-aktion="rueckzug-frage">Anfrage zurückziehen</button>`;
       } else if (g.status === 'zugesagt') {
-        html += `<div class="status-box good">${icon('check')}${esc(g.helferName || 'Jemand')} hilft dir</div>`;
+        html += `<div class="status-box good">${icon('check')}${esc(g.helferName || 'Jemand')} hilft dir</div>${codeHTML}`;
       } else if (g.status === 'erledigt') {
         html += `<div class="status-box warn">${esc(hn)} hat den Job als erledigt gemeldet.</div>
           <button type="button" class="btn btn-primary" data-aktion="bestaetigen" ${dis}>Erledigt bestätigen</button>`;
       } else if (g.status === 'bezahlt') {
         html += `<div class="status-box good">${icon('check')}Abgeschlossen</div>` + (g.helferName ? sterneHTML(g.meineBewertung || 0, hn) : '');
+        html += `<button type="button" class="btn btn-secondary" data-aktion="nochmal">${icon('wieder')}Noch mal anfragen</button>`;
       }
     } else if (g.status === 'offen') {
       html += `<button type="button" class="btn btn-primary" data-aktion="zusagen" ${dis}>Ich helfe</button>`;
     } else if (g.status === 'zugesagt') {
       html += `<button type="button" class="btn btn-primary" data-aktion="erledigt" ${dis}>Job erledigt melden</button>
+        ${telefon ? `<a class="btn btn-secondary" href="${esc(telLink(telefon))}">${icon('telefon')}${esc(g.fuer ? 'Anrufen' : `${vn} anrufen`)}</a>` : ''}
         <button type="button" class="link-btn" data-aktion="absagen" ${dis}>Zusage zurückziehen</button>`;
     } else if (g.status === 'erledigt') {
       html += `<div class="status-box warn">Warte auf Bestätigung von ${esc(vn)}.</div>` +
@@ -1345,7 +1398,10 @@
         <button type="button" class="link-inline" data-aktion="karte" aria-label="Auf der Karte zeigen">${icon('karte', 'i-sm')}Karte</button>
         ${teilbar ? `<button type="button" class="link-inline" data-aktion="teilen" aria-label="${g.eigen ? 'Anfrage teilen' : 'Anfrage weitersagen'}">${icon('teilen', 'i-sm')}${g.eigen ? 'Teilen' : 'Weitersagen'}</button>` : ''}
         ${kalenderSinnvoll ? `<button type="button" class="link-inline" data-aktion="kalender" aria-label="In den Kalender eintragen">${icon('kalender', 'i-sm')}Kalender</button>` : ''}
+        ${beteiligt && g.status === 'zugesagt' && (g.helfer === 'ich' || g.helferName) ? `<button type="button" class="link-inline" data-aktion="bescheid" aria-label="Einer Vertrauensperson Bescheid sagen">${icon('herz', 'i-sm')}Bescheid sagen</button>` : ''}
+        ${vorlesenMoeglich() ? `<button type="button" class="link-inline" data-aktion="vorlesen" aria-pressed="${ui.vorlesen}">${icon('laut', 'i-sm')}${ui.vorlesen ? 'Stopp' : 'Vorlesen'}</button>` : ''}
       </div>`;
+    html += pushKarteHTML(g);
     if (imChat(g)) {
       html += chatHTML(g);
       if (live) ladeNachrichten(g.id);
@@ -1362,11 +1418,25 @@
         <p>${esc(n.text)}</p><time datetime="${new Date(n.zeit).toISOString()}">${zeitText(n.zeit)}</time>
       </div>`).join('');
   }
+  // Typische Betrugsmaschen aus Kleinanzeigen-Portalen: Vorkasse, Gutscheinkarten, Codes, fremde Links
+  const BETRUG = /vorkasse|im voraus (zahlen|bezahlen|überweisen)|vorab (zahlen|bezahlen|überweisen)|anzahlung|gutschein(karte|code)|geschenkkarte|paysafe|western union|moneygram|freunde und familie|friends (and|&|und) family|bitcoin|krypto|\btan\b|\bpin\b|kreditkarte|(verifizierungs|bestätigungs|whatsapp)-?code|https?:\/\/|www\./i;
+  const betrugsVerdacht = (g) => (nachrichtenVon(g) || []).some((n) => n.von !== 'ich' && BETRUG.test(n.text));
+  function chatWarnungHTML(g) {
+    return betrugsVerdacht(g) ? `<div class="chat-warnung" role="note">${icon('warnung')}<p><strong>Kurz aufpassen.</strong> Bezahlt wird erst nach der Hilfe, direkt und in bar oder per Überweisung. Schick kein Geld im Voraus, keine Gutscheinkarten und keine Codes, und öffne keine Links von Unbekannten.</p></div>` : '';
+  }
+  // Fertige Sätze zum Antippen (landen im Feld, gesendet wird erst mit dem Pfeil)
+  function schnellAntworten(g) {
+    if (g.status === 'zugesagt') return g.eigen ? ['Danke fürs Zusagen!', 'Wann kannst du kommen?', 'Bitte einfach klingeln.'] : ['Wann passt es dir genau?', 'Ich bin unterwegs.', 'Ich bin da.'];
+    if (g.status === 'erledigt') return g.eigen ? ['Vielen Dank!'] : ['Ich bin fertig. Bitte bestätige kurz.'];
+    return ['Danke, gerne wieder!'];
+  }
   function chatHTML(g) {
     const partner = esc((g.eigen ? vorname(g.helferName) : vorname(g.wer)) || 'deinem Nachbarn');
     return `<section class="chat" aria-labelledby="chat-titel">
         <h3 class="chat-titel" id="chat-titel">${icon('sprechblase', 'i-sm')}Nachrichten mit ${partner}</h3>
         <div class="chat-liste" id="chat-liste" role="log" aria-live="polite" tabindex="0">${chatListeHTML(g)}</div>
+        <div id="chat-warnung">${chatWarnungHTML(g)}</div>
+        <div class="chat-schnell" role="group" aria-label="Fertige Antworten">${schnellAntworten(g).map((t) => `<button type="button" class="chip chip-vorschlag" data-schnellantwort="${esc(t)}">${esc(t)}</button>`).join('')}</div>
         <form class="chat-form" id="chat-form" autocomplete="off">
           <label class="sr-only" for="chat-text">Nachricht an ${partner}</label>
           <textarea id="chat-text" rows="1" maxlength="1000" placeholder="Nachricht an ${partner}" enterkeyhint="send"></textarea>
@@ -1398,6 +1468,9 @@
 
   function sheetAnmeldenHTML() {
     const reg = ui.authModus === 'registrieren';
+    // Anmelden ohne Passwort: Code per E-Mail (nur, wenn in CONFIG eingeschaltet)
+    const codeWeg = !reg && CONFIG.codeLogin && ui.authWeg === 'code';
+    const busy = ui.busy ? 'disabled aria-busy="true"' : '';
     const kopf = `<div class="sheet-top">
         <span class="eyebrow">Konto</span>
         <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
@@ -1406,6 +1479,17 @@
       return kopf + `<h2 id="sheet-titel">Fast geschafft</h2>
         <div class="erfolg"><strong>Schau in dein Postfach.</strong><p>Wir haben dir eine E-Mail an ${esc(ui.authFertig)} geschickt. Tippe auf den Link darin, dann bist du angemeldet.</p></div>
         <button type="button" class="btn btn-secondary" data-close>Alles klar</button>`;
+    }
+    if (codeWeg && ui.authCode) {
+      return kopf + `<h2 id="sheet-titel">Code eingeben</h2>
+        <p class="klein">Wir haben dir einen Code mit 6 Ziffern an ${esc(ui.authCode)} geschickt. Schau auch im Spam-Ordner nach.</p>
+        <form class="form" id="code-form" novalidate>
+          <div class="feld"><label for="auth-code">Code aus der E-Mail</label>
+            <input id="auth-code" class="code-eingabe" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" required></div>
+          <p class="fehler" id="auth-fehler" role="alert" hidden></p>
+          <button type="submit" class="btn btn-primary" ${busy}>Anmelden</button>
+        </form>
+        <button type="button" class="link-btn" data-code-zurueck>Andere E-Mail oder neuer Code</button>`;
     }
     return kopf + `<h2 id="sheet-titel">${reg ? 'Konto erstellen' : 'Anmelden'}</h2>
       ${ui.authGrund ? `<p class="klein">${esc(ui.authGrund)}</p>` : ''}
@@ -1419,14 +1503,18 @@
           <div class="feld"><label for="auth-initial">Nachname <span class="optional">(nur 1. Buchstabe)</span></label><input id="auth-initial" autocomplete="off" maxlength="1"></div>
         </div>
         <div class="feld"><label for="auth-stadtteil">Dein Stadtteil</label><select id="auth-stadtteil">${stadtteilOptionen(gewaehlterOrt || 'Garbsen-Mitte', false)}</select></div>` : ''}
-        <div class="feld"><label for="auth-email">E-Mail</label><input id="auth-email" type="email" autocomplete="email" required></div>
-        <div class="feld"><label for="auth-passwort">Passwort</label><input id="auth-passwort" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" minlength="8" required>${reg ? '<p class="feld-hinweis" style="margin-top:0">Mindestens 8 Zeichen.</p>' : ''}</div>
+        <div class="feld"><label for="auth-email">E-Mail</label><input id="auth-email" type="email" autocomplete="email" required>${codeWeg ? '<p class="feld-hinweis" style="margin-top:0">Wir schicken dir einen Code. Ein Passwort brauchst du nicht.</p>' : ''}</div>
+        ${codeWeg ? '' : `<div class="feld"><label for="auth-passwort">Passwort</label>
+          <div class="passwort-feld"><input id="auth-passwort" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" minlength="8" required>
+            <button type="button" class="passwort-auge" data-passwort-zeigen aria-pressed="false" aria-label="Passwort anzeigen">${icon('auge')}</button></div>
+          ${reg ? '<p class="feld-hinweis" style="margin-top:0">Mindestens 8 Zeichen.</p>' : ''}</div>`}
         ${reg ? `<label class="check"><input type="checkbox" id="auth-18"><span>Ich bin mindestens 18 Jahre alt.</span></label>
         <label class="check"><input type="checkbox" id="auth-regeln"><span>Ich akzeptiere die Nutzungsbedingungen. Hand Drauf vermittelt nur, die Absprache und Bezahlung läuft direkt zwischen uns Nachbarn, gelegentlich und in kleinem Umfang.</span></label>
         <p class="klein recht-links-form">Lies vorher die <a href="${NATIV ? OEFFENTLICH : ''}#nutzung" target="_blank" rel="noopener">Nutzungsbedingungen</a> und die <a href="${NATIV ? OEFFENTLICH : ''}#datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a> (öffnen ${NATIV ? 'im Browser' : 'in neuem Tab'}).</p>` : ''}
         <p class="fehler" id="auth-fehler" role="alert" hidden></p>
-        <button type="submit" class="btn btn-primary" ${ui.busy ? 'disabled aria-busy="true"' : ''}>${reg ? 'Konto erstellen' : 'Anmelden'}</button>
-      </form>`;
+        <button type="submit" class="btn btn-primary" ${busy}>${reg ? 'Konto erstellen' : codeWeg ? 'Code per E-Mail schicken' : 'Anmelden'}</button>
+      </form>
+      ${!reg && CONFIG.codeLogin ? `<button type="button" class="link-btn" data-auth-weg="${codeWeg ? 'passwort' : 'code'}">${codeWeg ? 'Lieber mit Passwort anmelden' : 'Ohne Passwort anmelden (Code per E-Mail)'}</button>` : ''}`;
   }
 
   function sheetKontoHTML() {
@@ -1533,6 +1621,24 @@
       <nav class="recht-nav" aria-label="Weitere Rechtstexte">${Object.keys(RECHT).filter((k) => k !== name).map((k) => `<a href="#${k}">${RECHT[k].titel}</a>`).join('')}</nav>`;
   }
 
+  // Einladen: QR-Code zum Scannen, Link zum Verschicken, Aushang fürs Schwarze Brett
+  function sheetEinladenHTML() {
+    const aushang = (NATIV ? OEFFENTLICH : '') + 'assets/aushang.pdf';
+    return `<div class="sheet-top">
+        <span class="eyebrow">Weitersagen</span>
+        <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
+      </div>
+      <h2 id="sheet-titel">Nachbarn einladen</h2>
+      <p class="klein">Je mehr Nachbarn mitmachen, desto schneller findet sich Hilfe.</p>
+      <div class="qr-karte">
+        <div class="qr" role="img" aria-label="QR-Code, der zu Hand Drauf führt">${QR_SVG}</div>
+        <p><strong>Scannen und mitmachen</strong>Einfach die Handy-Kamera darauf halten.</p>
+      </div>
+      <button type="button" class="btn btn-primary" data-teilen-app>${icon('teilen')}Link verschicken</button>
+      ${VORSCHAU ? '' : `<a class="btn btn-secondary" href="${aushang}" target="_blank" rel="noopener">${icon('drucken')}Aushang zum Ausdrucken</a>
+      <p class="klein">Der Aushang hat Zettel zum Abreißen. Er passt ans Schwarze Brett im Supermarkt, in den Hausflur oder ins Vereinsheim. Frag vorher, ob du ihn aufhängen darfst.</p>`}`;
+  }
+
   // Kontakt (App Store 1.2: veröffentlichte Kontaktmöglichkeit). Ohne E-Mail im CONFIG verweist er aufs Impressum.
   const kontaktLink = () => CONFIG.betreiber.email
     ? `<a href="mailto:${esc(CONFIG.betreiber.email)}?subject=${encodeURIComponent('Hand Drauf')}">Kontakt</a>`
@@ -1565,6 +1671,9 @@
         ${gruppe('start', 'Start mit')}
         ${gruppe('modell', 'Modell auf der Startseite')}
         ${ohneKonto ? `<div class="menue-zeile"><label class="menue-label" for="ansicht-ort">Stadtteil</label><select id="ansicht-ort">${gewaehlterOrt ? '' : '<option value="">Bitte wählen</option>'}${stadtteilOptionen(gewaehlterOrt || '', false)}</select></div>` : ''}
+      </section>
+      <section class="menue-gruppe" aria-labelledby="m-push"><h3 class="h-klein" id="m-push">Benachrichtigungen</h3>
+        ${pushMenueHTML()}
       </section>
       ${istLive() ? '' : blockListeHTML()}
       <section class="menue-gruppe" aria-labelledby="m-hilfe"><h3 class="h-klein" id="m-hilfe">Hilfe</h3>
@@ -1607,6 +1716,8 @@
     if (!g || !liste) return;
     const unten = liste.scrollHeight - liste.scrollTop - liste.clientHeight < 60;
     liste.innerHTML = chatListeHTML(g);
+    const warnung = $('#chat-warnung');
+    if (warnung) warnung.innerHTML = chatWarnungHTML(g);
     if (unten) liste.scrollTop = liste.scrollHeight;
     alsGelesen(g);
   }
@@ -1619,6 +1730,7 @@
     else if (ui.panel === 'fragen') html = sheetFragenHTML();
     else if (ui.panel === 'profil') html = sheetProfilHTML();
     else if (ui.panel === 'ansicht') html = sheetAnsichtHTML();
+    else if (ui.panel === 'einladen') html = sheetEinladenHTML();
     else if (ui.panel === 'anmelden') html = sheetAnmeldenHTML();
     else if (ui.panel === 'konto') html = sheetKontoHTML();
     else {
@@ -1639,6 +1751,7 @@
 
   function renderAlles() {
     renderKopf();
+    renderGeholfen();
     renderInstallieren();
     renderChips();
     renderListe();
@@ -1685,6 +1798,7 @@
     if (c) c.focus({ preventScroll: true });
   }
   function oeffnen(id, ausloeser) {
+    vorlesenStopp();
     ui.offen = id;
     ui.panel = null;
     ui.rueckzug = false;
@@ -1695,6 +1809,7 @@
     renderKarte();
   }
   function oeffnePanel(name, grund) {
+    vorlesenStopp();
     if (name === 'konto' && !db.profil) name = 'anmelden';
     ui.zuletzt = document.activeElement;
     ui.offen = null;
@@ -1703,12 +1818,15 @@
     ui.loeschen = false;
     ui.authGrund = grund || '';
     ui.authFertig = '';
+    ui.authCode = '';
+    ui.authWeg = CONFIG.codeLogin ? 'code' : 'passwort';
     ui.blockieren = false;
     renderSheet();
     sheetZeigen();
     renderKarte();
   }
   function schliessen() {
+    vorlesenStopp();
     const id = ui.offen;
     ui.offen = null;
     ui.panel = null;
@@ -1839,6 +1957,7 @@
       try {
         const { error } = await db.client.rpc('konto_loeschen');
         if (error) throw error;
+        await pushTrennen(true);
         await db.client.auth.signOut();
         ui.loeschen = false;
         schliessen();
@@ -1853,16 +1972,79 @@
     }
     if (t.hasAttribute('data-abmelden')) {
       ui.busy = true; renderSheet();
+      await pushTrennen(false); // dieses Gerät bekommt keine Benachrichtigungen mehr für das Konto
       await db.client.auth.signOut();
       ui.busy = false;
       schliessen();
       meldung('Du bist abgemeldet.');
       return;
     }
+    if (t.hasAttribute('data-passwort-zeigen')) {
+      // Ohne Neuzeichnen, damit das getippte Passwort stehen bleibt
+      const feld = $('#auth-passwort');
+      const zeigen = feld.type === 'password';
+      feld.type = zeigen ? 'text' : 'password';
+      t.setAttribute('aria-pressed', String(zeigen));
+      t.setAttribute('aria-label', zeigen ? 'Passwort verbergen' : 'Passwort anzeigen');
+      return;
+    }
+    if (t.dataset.authWeg || t.hasAttribute('data-code-zurueck')) {
+      if (t.dataset.authWeg) ui.authWeg = t.dataset.authWeg;
+      ui.authCode = '';
+      renderSheet();
+      const f = $('#auth-email');
+      if (f) f.focus();
+      return;
+    }
+    if (t.hasAttribute('data-push-spaeter')) { push.spaeter = Date.now(); pushSpeichern(); renderSheet(); return; }
+    if (t.hasAttribute('data-push-schalter') || t.hasAttribute('data-push-ein') || t.hasAttribute('data-push-neue') || t.hasAttribute('data-push-test')) {
+      if (push.busy) return;
+      const merke = t.hasAttribute('data-push-neue') ? '[data-push-neue]' : t.hasAttribute('data-push-test') ? '[data-push-test]' : '[data-push-schalter]';
+      push.busy = true;
+      try {
+        if (t.hasAttribute('data-push-neue')) {
+          push.neue = !push.neue;
+          try { await pushMelden(await pushAbo(true)); pushSpeichern(); meldung(push.neue ? 'Du erfährst jetzt von neuen Anfragen in deinem Stadtteil.' : 'Keine Hinweise mehr auf neue Anfragen.'); }
+          catch (err) { push.neue = !push.neue; throw err; }
+        } else if (t.hasAttribute('data-push-test')) {
+          await pushMelden(await pushAbo(true));
+          const { error } = await db.client.rpc('push_test');
+          if (error) throw error;
+          meldung('Unterwegs. Die Benachrichtigung sollte gleich erscheinen.');
+        } else if (t.hasAttribute('data-push-ein') || !pushAn()) {
+          // Die Frage des Browsers muss direkt auf den Tipp folgen, deshalb vorher nichts abwarten
+          if (await pushEin()) meldung('Eingeschaltet. Dein Handy meldet sich, wenn sich etwas tut.');
+        } else {
+          await pushTrennen(true);
+          meldung('Benachrichtigungen sind ausgeschaltet.');
+        }
+      } catch (err) {
+        meldung(fehlerText(err));
+      }
+      push.busy = false;
+      if (ui.offen || ui.panel) renderSheet();
+      const f = $('#sheet ' + merke);
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
+    if (t.dataset.schnellantwort) {
+      const f = $('#chat-text');
+      if (f) { f.value = t.dataset.schnellantwort; f.dispatchEvent(new Event('input', { bubbles: true })); f.focus(); }
+      return;
+    }
     const g = gesuche.find((x) => x.id === ui.offen);
     if (!g) return;
     const a = t.dataset.aktion;
 
+    if (a === 'bescheid') { bescheidSagen(g); return; }
+    if (a === 'vorlesen') {
+      vorlesen(g);
+      renderSheet();
+      const f = $('#sheet [data-aktion="vorlesen"]');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
+    if (a === 'nochmal') { bearbeitenStarten(g, 2, true); return; }
     if (a === 'karte') {
       ui.zuletzt = null;
       schliessen();
@@ -1904,6 +2086,7 @@
       } else {
         await aendereStatus(g, a);
         if (a === 'bestaetigen') {
+          ladeStatistik();
           feiern('Hand drauf!', feierText(gesuche.find((x) => x.id === g.id) || g));
         } else meldung(ERFOLG[a](g));
         if (a === 'rueckzug') { ui.busy = false; schliessen(); renderAlles(); return; }
@@ -2000,16 +2183,18 @@
   $('#sheet').addEventListener('submit', async (e) => {
     if (e.target.id === 'chat-form') { e.preventDefault(); chatAbsenden(); return; }
     if (e.target.id === 'melden-form') { e.preventDefault(); meldungAbsenden(); return; }
+    if (e.target.id === 'code-form') { e.preventDefault(); codeAbsenden(e.target); return; }
     if (e.target.id !== 'auth-form') return;
     e.preventDefault();
     const reg = ui.authModus === 'registrieren';
+    const codeWeg = !reg && CONFIG.codeLogin && ui.authWeg === 'code';
     const fehler = $('#auth-fehler');
     const zeigeFehler = (text, feld) => { fehler.textContent = text; fehler.hidden = false; if (feld) feld.focus(); };
     const email = $('#auth-email').value.trim();
-    const passwort = $('#auth-passwort').value;
+    const passwort = codeWeg ? '' : $('#auth-passwort').value;
     if (reg && !$('#auth-vorname').value.trim()) return zeigeFehler('Bitte gib deinen Vornamen ein.', $('#auth-vorname'));
     if (!/^\S+@\S+\.\S+$/.test(email)) return zeigeFehler('Bitte gib eine gültige E-Mail-Adresse ein.', $('#auth-email'));
-    if (passwort.length < (reg ? 8 : 1)) return zeigeFehler(reg ? 'Das Passwort braucht mindestens 8 Zeichen.' : 'Bitte gib dein Passwort ein.', $('#auth-passwort'));
+    if (!codeWeg && passwort.length < (reg ? 8 : 1)) return zeigeFehler(reg ? 'Das Passwort braucht mindestens 8 Zeichen.' : 'Bitte gib dein Passwort ein.', $('#auth-passwort'));
     if (reg && !$('#auth-18').checked) return zeigeFehler('Hand Drauf ist erst ab 18 Jahren.', $('#auth-18'));
     if (reg && !$('#auth-regeln').checked) return zeigeFehler('Bitte bestätige, dass du die Regeln verstanden hast.', $('#auth-regeln'));
 
@@ -2034,6 +2219,14 @@
         });
         if (error) throw error;
         if (!data.session) { ui.authFertig = email; renderSheet(); return; }
+      } else if (codeWeg) {
+        // Nur für bestehende Konten: Wer neu ist, registriert sich mit Namen und Stadtteil
+        const { error } = await db.client.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+        if (error) throw error;
+        ui.authCode = email;
+        renderSheet();
+        const f = $('#auth-code');
+        if (f) f.focus();
       } else {
         const { data, error } = await db.client.auth.signInWithPassword({ email, password: passwort });
         if (error) throw error;
@@ -2046,6 +2239,28 @@
       zeigeFehler(fehlerText(err));
     }
   });
+
+  async function codeAbsenden(formular) {
+    const fehler = $('#auth-fehler');
+    const feld = $('#auth-code');
+    const zeigeFehler = (text) => { fehler.textContent = text; fehler.hidden = false; feld.focus(); };
+    const code = feld.value.replace(/\D/g, '');
+    if (code.length !== 6) { zeigeFehler('Der Code hat 6 Ziffern.'); return; }
+    const knopf = formular.querySelector('button[type="submit"]');
+    knopf.disabled = true;
+    knopf.setAttribute('aria-busy', 'true');
+    fehler.hidden = true;
+    try {
+      const { data, error } = await db.client.auth.verifyOtp({ email: ui.authCode, token: code, type: 'email' });
+      if (error) throw error;
+      await setzeSitzung(data.session, true);
+      if (!db.profil) throw new Error('Zu deinem Konto fehlt das Profil. Bitte registriere dich neu.');
+    } catch (err) {
+      knopf.disabled = false;
+      knopf.removeAttribute('aria-busy');
+      zeigeFehler(fehlerText(err));
+    }
+  }
 
   // Stadtteil im Konto ändern
   $('#sheet').addEventListener('change', async (e) => {
@@ -2081,14 +2296,15 @@
   async function teilen(text, url) {
     const teilenPlugin = plugin('Share');
     if (teilenPlugin) {
-      try { await teilenPlugin.share({ title: 'Hand Drauf', text, url, dialogTitle: 'Teilen' }); } catch (e) { /* abgebrochen */ }
+      try { await teilenPlugin.share(url ? { title: 'Hand Drauf', text, url, dialogTitle: 'Teilen' } : { title: 'Hand Drauf', text, dialogTitle: 'Teilen' }); } catch (e) { /* abgebrochen */ }
       return;
     }
     if (navigator.share) {
-      try { await navigator.share({ title: 'Hand Drauf', text, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+      // Ohne Link kein url-Feld: Ein leeres würde die Adresse dieser Seite anhängen
+      try { await navigator.share(url ? { title: 'Hand Drauf', text, url } : { title: 'Hand Drauf', text }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
     }
-    try { await navigator.clipboard.writeText(`${text} ${url}`); meldung('Link kopiert. Füge ihn in eine Nachricht ein.'); }
-    catch (e) { meldung(`Link zum Teilen: ${url}`); }
+    try { await navigator.clipboard.writeText(url ? `${text} ${url}` : text); meldung(url ? 'Link kopiert. Füge ihn in eine Nachricht ein.' : 'Text kopiert. Füge ihn in eine Nachricht ein.'); }
+    catch (e) { meldung(url ? `Link zum Teilen: ${url}` : 'Teilen geht auf diesem Gerät gerade nicht.'); }
   }
   const einladen = () => teilen('Hand Drauf: Nachbarn in Garbsen helfen sich bei kleinen Dingen, gegen eine kleine Aufwandsentschädigung. Schau mal rein:', NATIV ? OEFFENTLICH : location.origin + location.pathname);
   function gesuchTeilen(g) {
@@ -2096,12 +2312,74 @@
     teilen(g.eigen ? `Ich suche Hilfe: ${was}. Kannst du helfen oder kennst du jemanden?` : `${vorname(g.wer)} sucht Hilfe: ${was}. Kannst du helfen?`, gesuchLink(g));
   }
 
+  // Bescheid sagen (Vorbild: „Fahrt teilen“ bei Uber): einer Vertrauensperson schreiben, wann und wo man hilft
+  function bescheidSagen(g) {
+    const adresse = adresseVon(g);
+    const wo = adresse && adresse !== g.stadtteil ? (adresse.includes(g.stadtteil) ? adresse : `${adresse}, ${g.stadtteil}`) : g.stadtteil;
+    teilen(g.eigen
+      ? `Zur Info: ${g.helferName || 'Jemand aus der Nachbarschaft'} kommt über Hand Drauf vorbei und hilft bei „${g.titel}“${g.fuer ? ` (für: ${g.fuer})` : ''}. Termin: ${wannLang(g)}.`
+      : `Zur Info: Ich helfe über Hand Drauf bei ${g.wer} in ${wo} („${g.titel}“). Termin: ${wannLang(g)}. Ich melde mich, wenn ich fertig bin.`, '');
+  }
+
+  /* ===== Vorlesen: für alle, die lieber hören als lesen ===== */
+  const vorlesenMoeglich = () => 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
+  // „Sa. 14. Nov.“ liest die Sprachausgabe sonst als „Sa Punkt“
+  function ausgeschrieben(text) {
+    let t = String(text || '');
+    WOCHENTAGE.forEach((k, i) => { t = t.split(k).join(TAGNAMEN[i]); });
+    MONATE.forEach((k, i) => { if (k.endsWith('.')) t = t.split(k).join(MONATE_LANG[i]); });
+    return t;
+  }
+  function vorlesenText(g) {
+    const m = meterVonMir(g);
+    const weit = m < 1000 ? `${Math.max(100, Math.round(m / 50) * 50)} Meter` : `${(m / 1000).toLocaleString('de-DE', { maximumFractionDigits: 1 })} Kilometer`;
+    return [
+      `${katName(g.kat)}: ${g.titel}.`,
+      g.eigen ? 'Das ist deine Anfrage.' : `${vorname(g.wer)} sucht Hilfe${g.fuer ? `, für: ${g.fuer}` : ''}.`,
+      `Termin: ${ausgeschrieben(wannLang(g))}.`,
+      g.eigen ? `In ${g.stadtteil}.` : `In ${g.stadtteil}, ${weit} von dir.`,
+      `${g.betrag} Euro Aufwandsentschädigung.`,
+      g.text || ''
+    ].filter(Boolean).join(' ');
+  }
+  function vorlesenStopp() {
+    if (!ui.vorlesen) return;
+    ui.vorlesen = false;
+    try { window.speechSynthesis.cancel(); } catch (e) { /* schon still */ }
+  }
+  function vorlesen(g) {
+    if (!vorlesenMoeglich()) return;
+    if (ui.vorlesen) { vorlesenStopp(); return; }
+    const u = new window.SpeechSynthesisUtterance(vorlesenText(g));
+    u.lang = 'de-DE';
+    u.rate = 0.95;
+    // Stimme vom Gerät bevorzugen: Die funktioniert auch ohne Internet und schickt den Text nirgends hin
+    const stimmen = window.speechSynthesis.getVoices().filter((v) => /^de\b/i.test(v.lang));
+    const stimme = stimmen.find((v) => v.localService && /de[-_]DE/i.test(v.lang)) || stimmen.find((v) => v.localService) || stimmen[0];
+    if (stimme) u.voice = stimme;
+    const ende = () => { if (ui.vorlesen) { ui.vorlesen = false; if (ui.offen === g.id) renderSheet(); } };
+    u.onend = ende;
+    u.onerror = ende;
+    try {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+      ui.vorlesen = true;
+    } catch (e) { meldung('Vorlesen geht auf diesem Gerät gerade nicht.'); }
+  }
+
   // Geteilter Link #anfrage-<id> öffnet die Anfrage direkt
   const GESUCH_LINK = /^(?:anfrage|gesuch)-(.+)$/;
   const linkId = (hash) => { const m = hash.match(GESUCH_LINK); return m ? decodeURIComponent(m[1]) : null; };
-  function gesuchAusLink(id) {
+  let linkVersuch = null;
+  async function gesuchAusLink(id) {
     if (gesuche.some((g) => g.id === id)) { oeffnen(id); return; }
     if (istLive() && !db.geladen) return; // wird nach dem Laden erneut versucht
+    // Ganz neue Anfragen (z. B. aus einer Benachrichtigung) kennt die offene App noch nicht: einmal frisch laden
+    if (istLive() && linkVersuch !== id && Date.now() - db.geladenUm > 3000) {
+      linkVersuch = id;
+      await neuLaden();
+      if (gesuche.some((g) => g.id === id)) { if (ui.offen !== id) oeffnen(id); return; }
+    }
     history.replaceState(null, '', '#' + ui.view);
     meldung('Diese Anfrage ist nicht mehr offen. Schau dir die anderen in deiner Nähe an.');
   }
@@ -2215,11 +2493,134 @@
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* ohne Offline-Hülle weiter */ }); });
   }
 
+  /* ===== Benachrichtigungen aufs Handy (Web Push) =====
+     Das Gerät meldet sich beim Dienst seines Browsers an und gibt uns eine Adresse dafür. Die Datenbank
+     schickt darüber Bescheid, wenn jemand zusagt, schreibt oder ein Auftrag fertig ist. */
+  const PUSH_SPEICHER = 'handdrauf-push';
+  const push = { an: false, neue: false, spaeter: 0, busy: false };
+  try {
+    const p = JSON.parse(localStorage.getItem(PUSH_SPEICHER) || '{}') || {};
+    push.an = p.an === true; push.neue = p.neue === true; push.spaeter = Number(p.spaeter) || 0;
+  } catch (e) { /* ohne Speicher: aus */ }
+  const pushSpeichern = () => { try { localStorage.setItem(PUSH_SPEICHER, JSON.stringify({ an: push.an, neue: push.neue, spaeter: push.spaeter })); } catch (e) { /* nur für diese Sitzung */ } };
+  // Nur auf der echten Seite mit Datenbank: In der Demo gibt es niemanden, der Bescheid geben könnte
+  const pushMoeglich = () => !VORSCHAU && !NATIV && istLive() && !!CONFIG.push && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  const pushAn = () => pushMoeglich() && push.an && Notification.permission === 'granted' && !!db.profil;
+  const pushAnbieten = () => !!db.profil && pushMoeglich() && !pushAn() && Notification.permission !== 'denied' && Date.now() - push.spaeter > 14 * TAG_MS;
+  // Warum es hier (noch) nicht geht, in einem Satz
+  function pushGrund() {
+    if (!istLive()) return 'In der Demo ist das ausgeschaltet. Auf der echten Seite meldet sich dein Handy, wenn jemand zusagt oder dir schreibt.';
+    if (NATIV) return 'In der iPhone-App kommen Benachrichtigungen mit einem der nächsten Updates.';
+    if (!CONFIG.push) return 'Benachrichtigungen sind noch nicht eingerichtet.';
+    if (istIOS() && !istInstalliert()) return 'Auf dem iPhone geht das, sobald Hand Drauf auf dem Home-Bildschirm liegt: in Safari auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.';
+    return 'Dieser Browser kann leider keine Benachrichtigungen empfangen.';
+  }
+  const b64zuBytes = (t) => Uint8Array.from(atob(String(t).replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+  const bytesZuB64 = (b) => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  async function pushAbo(anlegen) {
+    // Ohne laufende Offline-Hülle gäbe es hier nie eine Antwort
+    const reg = await Promise.race([navigator.serviceWorker.ready, new Promise((_, nein) => setTimeout(() => nein(new Error('Benachrichtigungen sind gerade nicht verfügbar. Lade die Seite neu und versuch es noch einmal.')), 8000))]);
+    let abo = await reg.pushManager.getSubscription();
+    // Anmeldung mit einem älteren Schlüssel (nach einer neuen Einrichtung): ersetzen
+    if (abo && anlegen && abo.options && abo.options.applicationServerKey && bytesZuB64(abo.options.applicationServerKey) !== CONFIG.push) {
+      await abo.unsubscribe();
+      abo = null;
+    }
+    if (!abo && anlegen) abo = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64zuBytes(CONFIG.push) });
+    return abo;
+  }
+  async function pushMelden(abo) {
+    const j = abo.toJSON();
+    const { error } = await db.client.rpc('push_anmelden', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_neue: !!push.neue });
+    if (error) throw error;
+  }
+  async function pushEin() {
+    if (!pushMoeglich()) { meldung(pushGrund()); return false; }
+    if (!db.profil) { oeffnePanel('anmelden', 'Melde dich an, um Benachrichtigungen einzuschalten.'); return false; }
+    const erlaubt = await Notification.requestPermission();
+    if (erlaubt !== 'granted') {
+      meldung(erlaubt === 'denied' ? 'Benachrichtigungen sind für diese Seite gesperrt. Du kannst sie in den Einstellungen deines Browsers wieder erlauben.' : 'Ohne deine Erlaubnis gibt es keine Benachrichtigungen.');
+      return false;
+    }
+    await pushMelden(await pushAbo(true));
+    push.an = true;
+    pushSpeichern();
+    return true;
+  }
+  // Gerät vom Konto lösen. ganz = auch beim Browser abmelden (Schalter aus), sonst nur beim Abmelden vom Konto
+  async function pushTrennen(ganz) {
+    if (!pushMoeglich()) return;
+    try {
+      const abo = await pushAbo(false);
+      if (abo && db.user) await db.client.rpc('push_abmelden', { p_endpoint: abo.endpoint });
+      if (abo && ganz) await abo.unsubscribe();
+    } catch (e) { /* lokal trotzdem ausschalten */ }
+    if (ganz) { push.an = false; pushSpeichern(); }
+  }
+  // Nach dem Anmelden und bei jedem Start: Gerät still wieder mit dem Konto verbinden (Adressen können sich ändern)
+  async function pushAuffrischen() {
+    if (!pushAn()) return;
+    try { await pushMelden(await pushAbo(true)); } catch (e) { /* beim nächsten Start wieder */ }
+  }
+  function pushKarteHTML(g) {
+    if (!pushAnbieten()) return '';
+    const laeuft = (g.eigen && (g.status === 'zugesagt' || g.status === 'erledigt' || (g.status === 'offen' && !abgelaufen(g)))) || (g.helfer === 'ich' && (g.status === 'zugesagt' || g.status === 'erledigt'));
+    if (!laeuft) return '';
+    const text = g.eigen
+      ? (g.status === 'offen' ? 'Dann meldet sich dein Handy, sobald jemand zusagt.' : `Dann meldet sich dein Handy, wenn ${esc(vorname(g.helferName) || 'dein Helfer')} schreibt oder fertig ist.`)
+      : `Dann meldet sich dein Handy, wenn ${esc(vorname(g.wer))} schreibt oder bestätigt.`;
+    return `<div class="push-karte">${icon('glocke')}
+        <div><strong>Bescheid aufs Handy?</strong><p>${text}</p>
+          <div class="btn-row"><button type="button" class="btn btn-primary btn-auto" data-push-ein>Einschalten</button>
+          <button type="button" class="btn btn-secondary btn-auto" data-push-spaeter>Nicht jetzt</button></div>
+        </div>
+      </div>`;
+  }
+  function pushMenueHTML() {
+    const schalter = (attr, an, titel, text) => `<div class="schalter-zeile"><span class="schalter-text"><strong>${titel}</strong><span>${text}</span></span>
+        <button type="button" class="schalter" role="switch" aria-checked="${an}" aria-label="${titel}" ${attr} ${push.busy ? 'disabled' : ''}><span aria-hidden="true"></span></button></div>`;
+    if (!pushMoeglich()) return `<p class="klein">${pushGrund()}</p>`;
+    if (Notification.permission === 'denied') return '<p class="klein">Benachrichtigungen sind für diese Seite gesperrt. Du kannst sie in den Einstellungen deines Browsers wieder erlauben.</p>';
+    const an = pushAn();
+    const ort = (db.profil && db.profil.stadtteil) || 'meinem Stadtteil';
+    return schalter('data-push-schalter', an, 'Bescheid aufs Handy', 'Wenn jemand zusagt, dir schreibt oder ein Auftrag fertig ist.') +
+      (an ? schalter('data-push-neue', push.neue, `Neue Anfragen in ${esc(ort)}`, 'Höchstens alle 20 Minuten.') +
+        '<button type="button" class="link-btn link-links" data-push-test>Test-Benachrichtigung schicken</button>' : '');
+  }
+  // Tipp auf eine Benachrichtigung, während die App offen ist: Die Offline-Hülle reicht das Ziel weiter
+  if ('serviceWorker' in navigator && !VORSCHAU) {
+    navigator.serviceWorker.addEventListener('message', (e) => {
+      const d = e.data || {};
+      if (d.typ !== 'push-link') return;
+      const id = linkId(String(d.link || ''));
+      if (id) gesuchAusLink(id); else if (istLive()) bald(neuLaden);
+    });
+  }
+
+  /* ===== Zähler auf der Startseite: Wie oft wurde schon geholfen? ===== */
+  async function ladeStatistik() {
+    if (!istLive()) return;
+    try {
+      const { data, error } = await db.client.rpc('statistik');
+      if (!error && data) { db.statistik = data; renderGeholfen(); }
+    } catch (e) { /* ohne Zähler weiter */ }
+  }
+  function renderGeholfen() {
+    const el = $('#geholfen');
+    if (!el) return;
+    const fertig = gesuche.filter((g) => g.status === 'bezahlt').length;
+    const st = istLive() ? db.statistik : { woche: 12 + fertig, gesamt: 148 + fertig };
+    const text = !st ? '' : st.woche > 0 ? `Diese Woche ${st.woche}× geholfen` : st.gesamt > 0 ? `Schon ${st.gesamt}× geholfen in Garbsen` : '';
+    el.hidden = !text;
+    el.innerHTML = text ? `${icon('check', 'i-xs')}<span>${text}</span>` : '';
+  }
+
   /* ===== Klicks auf Listen und Filter ===== */
   document.addEventListener('click', (e) => {
     const go = e.target.closest('[data-go]');
     if (go) { gehe(go.dataset.go); return; }
-    if (e.target.closest('[data-einladen]')) { einladen(); return; }
+    if (e.target.closest('[data-einladen]')) { oeffnePanel('einladen'); return; }
+    if (e.target.closest('[data-teilen-app]')) { einladen(); return; }
     if (e.target.closest('[data-installieren]')) { installieren(); return; }
     if (e.target.closest('[data-installieren-nein]')) {
       try { localStorage.setItem(INSTALL_SPEICHER, 'nein'); } catch (err) { /* nur für diese Sitzung */ }
@@ -2351,6 +2752,30 @@
   ).join('');
 
   const katWahl = () => form.querySelector('input[name="kat"]:checked').value;
+  // Für wen ist die Hilfe? Viele fragen für Eltern oder Großeltern an (Vorbild: hilver in Heidelberg, „Fahrt für jemand anderen“ bei Uber)
+  let fuerModus = 'ich';
+  function renderFuer(fokus) {
+    $('#neu-fuer-wahl').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.fuer === fuerModus)));
+    $('#fuer-feld').hidden = fuerModus !== 'andere';
+    if (fokus) (fuerModus === 'andere' ? $('#neu-fuer') : $(`#neu-fuer-wahl [data-fuer="${fuerModus}"]`)).focus({ preventScroll: true });
+  }
+  function fuerSetzen(name) {
+    fuerModus = name ? 'andere' : 'ich';
+    $('#neu-fuer').value = name || '';
+    renderFuer();
+  }
+  const fuerWert = () => fuerModus === 'andere' ? $('#neu-fuer').value.trim().slice(0, 40) : '';
+  const telefonWert = () => $('#neu-telefon').value.trim();
+  // Wie in der Datenbank: Ziffern, Leerzeichen und + ( ) / -, mit 6 bis 20 Ziffern
+  const telefonGueltig = (t) => /^[0-9 +()\/-]{6,30}$/.test(t) && t.replace(/\D/g, '').length >= 6 && t.replace(/\D/g, '').length <= 20;
+  $('#neu-fuer-wahl').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-fuer]');
+    if (!b) return;
+    fuerModus = b.dataset.fuer;
+    $('#fehler-fuer').hidden = true;
+    $('#neu-fuer').removeAttribute('aria-invalid');
+    renderFuer(true);
+  });
   const betragWert = () => { const v = parseInt(betragInput.value, 10); return Number.isFinite(v) ? v : NaN; };
   const betragGueltig = (b) => b >= CONFIG.minBetrag && b <= CONFIG.maxBetrag;
 
@@ -2399,8 +2824,10 @@
     $('#neu-pruefen').innerHTML =
       zeile('Tätigkeit', `${icon(k, 'i-sm')}${esc(katName(k))}: ${esc($('#neu-titel').value.trim())}`, 1) +
       (text ? zeile('Details', esc(text), 1) : '') +
+      (fuerWert() ? zeile('Für wen', esc(fuerWert()), 1) : '') +
       zeile('Wann', esc(wannLang(terminSpeichern())), 2) +
       zeile('Wo', `${esc($('#neu-stadtteil').value)}${adresse ? `<span class="klein">${esc(adresse)}, sieht nur, wer zusagt</span>` : ''}`, 2) +
+      (telefonWert() ? zeile('Telefon', `${esc(telefonWert())}<span class="klein">sieht nur, wer zusagt</span>`, 2) : '') +
       zeile('Aufwandsentschädigung', euro(betragWert()), 3);
   }
   function zeigeSchritt(n, fokus = true) {
@@ -2425,8 +2852,13 @@
     const fehler = (feld, id) => { feld.setAttribute('aria-invalid', 'true'); $(id).hidden = false; return feld; };
     if (n === 1 && $('#neu-titel').value.trim().length < 3) return fehler($('#neu-titel'), '#fehler-titel');
     if (n === 1 && anstoessig(`${$('#neu-titel').value} ${$('#neu-text').value}`)) return fehler(anstoessig($('#neu-titel').value) ? $('#neu-titel') : $('#neu-text'), '#fehler-wort');
+    if (n === 1 && fuerModus === 'andere' && (fuerWert().length < 2 || anstoessig(fuerWert()))) {
+      $('#fehler-fuer').textContent = anstoessig(fuerWert()) ? 'Bitte ohne beleidigende oder anstößige Wörter.' : 'Bitte schreib kurz, für wen die Hilfe ist.';
+      return fehler($('#neu-fuer'), '#fehler-fuer');
+    }
     if (n === 2 && !terminAuswahl().gueltig) { $('#fehler-tag').hidden = false; return $(termin.modus === 'tag' ? '#termin-tage .kal-tag[tabindex="0"]' : '#termin-woche .wahl-knopf'); }
     if (n === 2 && istLive() && $('#neu-adresse').value.trim().length < 3) return fehler($('#neu-adresse'), '#fehler-adresse');
+    if (n === 2 && telefonWert() && !telefonGueltig(telefonWert())) return fehler($('#neu-telefon'), '#fehler-telefon');
     if (n === 3 && !betragGueltig(betragWert())) return fehler(betragInput, '#fehler-betrag');
     return null;
   }
@@ -2466,6 +2898,10 @@
   $('#neu-text').addEventListener('input', (e) => { e.target.removeAttribute('aria-invalid'); $('#fehler-wort').hidden = true; });
   $('#neu-adresse').addEventListener('input', (e) => {
     if (e.target.value.trim().length >= 3) { e.target.removeAttribute('aria-invalid'); $('#fehler-adresse').hidden = true; }
+  });
+  $('#neu-fuer').addEventListener('input', (e) => { e.target.removeAttribute('aria-invalid'); $('#fehler-fuer').hidden = true; });
+  $('#neu-telefon').addEventListener('input', (e) => {
+    if (!e.target.value.trim() || telefonGueltig(e.target.value.trim())) { e.target.removeAttribute('aria-invalid'); $('#fehler-telefon').hidden = true; }
   });
   renderVorschlaege();
 
@@ -2659,26 +3095,25 @@
     $('#neu-senden').textContent = b ? 'Änderungen speichern' : 'Anfrage veröffentlichen';
     $('#neu-abbrechen').hidden = !b;
   }
-  async function bearbeitenStarten(g, schritt) {
-    let adresse = istLive() ? db.adressen.get(g.id) : g.adresse;
-    if (istLive() && typeof adresse !== 'string') {
-      const { data } = await db.client.from('gesuch_adressen').select('adresse').eq('gesuch_id', g.id).maybeSingle();
-      adresse = data ? data.adresse : '';
-      db.adressen.set(g.id, adresse);
-    }
+  // alsVorlage: „Noch mal anfragen“ übernimmt die Angaben einer erledigten Anfrage in eine neue
+  async function bearbeitenStarten(g, schritt, alsVorlage) {
+    if (istLive() && typeof db.adressen.get(g.id) !== 'string') { db.adressen.delete(g.id); await ladeAdresse(g.id); }
+    const adresse = adresseVon(g) || '';
     form.reset();
-    ui.bearbeiten = g.id;
+    ui.bearbeiten = alsVorlage ? null : g.id;
     const kat = $(`#neu-kat-${g.kat}`);
     if (kat) kat.checked = true;
     renderVorschlaege();
     $('#neu-titel').value = g.titel;
     $('#neu-text').value = g.text || '';
+    fuerSetzen(g.fuer || '');
     // Gespeicherten Termin wieder in den Kalender holen. Ist er vorbei, muss ein neuer gewählt werden.
-    terminAusWann(g.wann, abgelaufen(g));
+    if (alsVorlage) terminStart(); else terminAusWann(g.wann, abgelaufen(g));
     renderTermin();
     renderStadtteilAuswahl();
     $('#neu-stadtteil').value = g.stadtteil;
-    $('#neu-adresse').value = istLive() || adresse !== g.stadtteil ? (adresse || '') : '';
+    $('#neu-adresse').value = istLive() || adresse !== g.stadtteil ? adresse : '';
+    $('#neu-telefon').value = telefonVon(g);
     betragInput.value = g.betrag;
     betragGeaendert = true;
     renderKosten();
@@ -2687,10 +3122,12 @@
     schliessen();
     gehe('neu');
     zeigeSchritt(schritt);
+    if (alsVorlage) meldung('Angaben übernommen. Wähle noch den Termin.');
   }
   function bearbeitenBeenden() {
     ui.bearbeiten = null;
     form.reset();
+    fuerSetzen('');
     betragGeaendert = false;
     form.querySelectorAll('[aria-invalid]').forEach((f) => f.removeAttribute('aria-invalid'));
     form.querySelectorAll('.fehler').forEach((f) => { f.hidden = true; });
@@ -2730,6 +3167,8 @@
     const stadtteil = $('#neu-stadtteil').value;
     const { wann, bis } = terminSpeichern();
     const text = $('#neu-text').value.trim();
+    const fuer = fuerWert();
+    const telefon = telefonWert();
     const bearbeitet = ui.bearbeiten;
     let neuId = bearbeitet;
 
@@ -2742,17 +3181,22 @@
         const felder = { p_kategorie: kat, p_titel: titel, p_beschreibung: text, p_betrag: b, p_wann: wann, p_stadtteil: stadtteil, p_adresse: adresse };
         // Noch nicht aktualisierte Datenbank kennt p_bis und gesuch_bearbeiten nicht (Fehler PGRST202)
         const fehlt = (err) => err && (err.code === 'PGRST202' || /could not find the function/i.test(err.message || ''));
+        // „Für wen“ und Telefon kennt erst die Datenbank mit dem Update vom 10. November 2026
+        const dazu = { p_fuer: fuer, p_telefon: telefon };
         if (bearbeitet) {
-          const { error } = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis });
-          if (fehlt(error)) throw new Error('Bearbeiten ist noch nicht freigeschaltet. Zieh die Anfrage zurück und stelle sie neu.');
-          if (error) throw error;
+          let r = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis, ...dazu });
+          if (fehlt(r.error)) r = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis });
+          if (fehlt(r.error)) throw new Error('Bearbeiten ist noch nicht freigeschaltet. Zieh die Anfrage zurück und stelle sie neu.');
+          if (r.error) throw r.error;
         } else {
-          let r = db.altesSchema ? { error: { code: 'PGRST202' } } : await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis });
+          let r = db.altesSchema ? { error: { code: 'PGRST202' } } : await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis, ...dazu });
+          if (fehlt(r.error) && !db.altesSchema) r = await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis });
           if (fehlt(r.error)) { db.altesSchema = true; r = await db.client.rpc('gesuch_erstellen', felder); }
           if (r.error) throw r.error;
           neuId = r.data;
         }
         db.adressen.set(neuId, adresse);
+        db.telefone.set(neuId, telefon);
         await neuLaden();
       } catch (err) {
         zeigeFehler(fehlerText(err));
@@ -2768,7 +3212,7 @@
         const [nord, ost] = EIGEN_VERSATZ[gesuche.indexOf(g) % EIGEN_VERSATZ.length];
         Object.assign(g, versetze(stadtteil === meinOrt().stadtteil ? meinOrt() : STADTTEILE.find((x) => x.name === stadtteil), nord, ost));
       }
-      Object.assign(g, { kat, titel, text, betrag: b, wann, bis, laeuftAb: demoAblauf(bis), stadtteil, adresse: adresse || stadtteil });
+      Object.assign(g, { kat, titel, text, betrag: b, wann, bis, laeuftAb: demoAblauf(bis), stadtteil, adresse: adresse || stadtteil, fuer, telefon });
       demoSpeichern();
     } else {
       const anzahlEigene = gesuche.filter((g) => g.eigen).length;
@@ -2779,7 +3223,7 @@
       gesuche.unshift({
         id: neuId, eigen: true, kat, titel, wer: 'Du', initialen: CONFIG.ich.initialen, betrag: b,
         stadtteil, lat: pos.lat, lng: pos.lng, wann, bis, laeuftAb: demoAblauf(bis), dauer: 'nach Absprache', text,
-        adresse: adresse || stadtteil, status: 'offen', erstellt: Date.now()
+        adresse: adresse || stadtteil, fuer, telefon, status: 'offen', erstellt: Date.now()
       });
       demoSpeichern();
     }
@@ -2822,5 +3266,6 @@
     if (!live) { if (linkId(start)) gesuchAusLink(linkId(start)); return; }
     renderStadtteilAuswahl();
     renderKosten();
+    ladeStatistik();
   });
 })();

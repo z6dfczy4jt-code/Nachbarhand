@@ -262,7 +262,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .leer p { color: var(--muted); }
 .leer strong { color: var(--ink); font-family: var(--f-display); font-size: 1.25rem; font-weight: 700; }
 .leer-start { box-shadow: var(--schatten-1), inset 0 0 0 2px var(--accent); }
-.leer-klein { color: var(--muted); font-size: 0.9375rem; padding: 16px 18px; border-radius: var(--r-m); background: var(--surface); }
+.leer-klein { display: grid; gap: 12px; justify-items: start; color: var(--muted); font-size: 1rem; padding: 16px 18px; border-radius: var(--r-m); background: var(--surface); }
 .leer-knoepfe { display: flex; flex-wrap: wrap; gap: 10px; justify-self: stretch; }
 .leer-knoepfe .btn { text-decoration: none; }
 .lade { color: var(--muted); padding: 18px 4px; }
@@ -770,6 +770,74 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @keyframes hs-klatsch-l { from { transform: translate(-130px, 28px) rotate(-18deg); } to { transform: none; } }
 @keyframes hs-klatsch-r { from { transform: translate(130px, -28px) rotate(18deg); } to { transform: none; } }
 @keyframes hs-aufprall { 0% { transform: scale(1); } 30% { transform: scale(1.12) rotate(-3deg); } 60% { transform: scale(.97) rotate(1.5deg); } 100% { transform: none; } }
+
+/* ----- Zähler auf der Startseite ----- */
+.geholfen { justify-self: start; display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding: 4px 12px 4px 9px; border-radius: 999px; background: var(--good-bg); color: var(--hedge); font-weight: 600; font-size: 0.9375rem; }
+
+/* ----- Für wen?, Telefon ----- */
+.unterfeld { display: grid; gap: 8px; margin-top: 14px; }
+.unterfeld > label { font-weight: 600; font-size: 1rem; }
+.unterfeld .feld-hinweis { margin-top: 0; }
+.tel-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--ink); font-weight: 600; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+a.btn { text-decoration: none; }
+
+/* ----- Sicherheits-Code für die Tür: Ziffern wie kleine Ortsschilder ----- */
+.tuercode { display: grid; gap: 10px; padding: 16px 18px; border-radius: var(--r-l); background: var(--tile); }
+.tuercode-kopf { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.tuercode-kopf > span:first-child { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+.tuercode-zahl { display: inline-flex; gap: 6px; }
+.tuercode-zahl span { display: grid; place-items: center; width: 38px; height: 46px; border-radius: 7px; background: var(--accent); color: #11161C; box-shadow: inset 0 0 0 2px #11161C; font-family: var(--f-display); font-weight: 700; font-size: 1.75rem; font-variant-numeric: tabular-nums; line-height: 1; }
+.tuercode p { color: var(--muted); font-size: 1rem; }
+
+/* ----- Chat: fertige Antworten, Hinweis bei Betrugsverdacht ----- */
+.chat-schnell { display: flex; flex-wrap: wrap; gap: 8px; }
+.chat-schnell .chip { min-height: 44px; }
+#chat-warnung:empty { display: none; }
+.chat-warnung { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: var(--r-m); background: var(--warn-bg); color: var(--warn); }
+.chat-warnung p { color: var(--ink); font-size: 1rem; }
+.chat-warnung strong { color: var(--warn); }
+
+/* ----- Benachrichtigungen: Karte im Auftrag, Schalter im Menü ----- */
+.push-karte { display: grid; grid-template-columns: auto 1fr; gap: 14px; padding: 16px 18px; border-radius: var(--r-l); background: var(--tile); }
+.push-karte > .i { width: 26px; height: 26px; padding: 9px; box-sizing: content-box; border-radius: 50%; background: var(--surface); color: var(--ink); }
+.push-karte strong { font-family: var(--f-display); font-size: 1.25rem; font-weight: 700; }
+.push-karte p { margin: 2px 0 12px; color: var(--muted); font-size: 1rem; }
+.push-karte .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.schalter-zeile { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 60px; padding: 10px 14px 10px 18px; border-radius: var(--r-m); background: var(--tile); }
+.schalter-zeile + .schalter-zeile { margin-top: 0; }
+.schalter-text { display: grid; gap: 1px; min-width: 0; }
+.schalter-text strong { font-weight: 600; }
+.schalter-text span { color: var(--muted); font-size: 0.9375rem; }
+.schalter { flex: none; position: relative; width: 56px; height: 34px; padding: 0; border: 0; border-radius: 999px; background: color-mix(in srgb, var(--muted) 45%, var(--tile)); cursor: pointer; transition: background .2s; }
+.schalter span { position: absolute; left: 3px; top: 3px; width: 28px; height: 28px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .2s; }
+.schalter[aria-checked="true"] { background: var(--hedge); }
+.schalter[aria-checked="true"] span { transform: translateX(22px); }
+.schalter:disabled { opacity: .6; cursor: progress; }
+.link-links { justify-self: start; padding-left: 0; }
+
+/* ----- Einladen: QR-Code (immer schwarz auf weiß, damit jede Kamera ihn liest) ----- */
+.qr-karte { display: grid; justify-items: center; gap: 12px; padding: 22px 18px 18px; border-radius: var(--r-l); background: #fff; color: #1C2530; text-align: center; box-shadow: var(--schatten-1); }
+.qr svg { display: block; width: min(210px, 58vw); height: auto; }
+.qr-karte p { color: #586473; font-size: 1rem; }
+.qr-karte strong { display: block; font-family: var(--f-display); font-size: 1.375rem; font-weight: 700; color: #1C2530; }
+
+/* ----- Anmelden: Passwort anzeigen, Code ----- */
+.passwort-feld { position: relative; }
+.passwort-feld input { padding-right: 58px; }
+.passwort-auge { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 9px; background: none; color: var(--muted); cursor: pointer; }
+.passwort-auge[aria-pressed="true"] { background: var(--tile); color: var(--ink); }
+.feld input.code-eingabe { font-family: var(--f-display); font-weight: 700; font-size: 2rem; letter-spacing: .28em; text-align: center; font-variant-numeric: tabular-nums; padding-left: calc(15px + .28em); }
+
+/* ----- Mehr Kontrast, wenn das Gerät darum bittet ----- */
+@media (prefers-contrast: more) {
+  :root { --muted: #36404C; --line: #8B96A4; --glas: #FFFFFF; }
+  :root[data-theme="dark"] { --muted: #D3DAE3; --line: #8D99A8; --glas: #1B2839; }
+  .card, .chip, .feld input, .feld textarea, .feld select, .btn-secondary, .wahl-knopf, .aufgabe, .menue-liste, .schalter-zeile, .tabs-inner { outline: 1.5px solid var(--line); outline-offset: -1.5px; }
+  .pill-muted { color: var(--ink); }
+}
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --muted: #D3DAE3; --line: #8D99A8; --glas: #1B2839; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

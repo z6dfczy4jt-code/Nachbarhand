@@ -9,6 +9,10 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 - **Beispiele:** https://z6dfczy4jt-code.github.io/Nachbarhand/?beispiele zeigt die erfundenen Beispiele auch dann, wenn die Datenbank läuft, mit einem Hinweisband. Gut zum Vorführen, solange noch wenige echte Anfragen da sind.
 - **iPhone-App:** vorbereitet mit Capacitor, gebaut wird sie an einem Mac. Anleitung, Apple-Regeln und Texte für den App Store: [APP-STORE.md](APP-STORE.md)
 - **Als Web-App:** Auf dem Handy lässt sich die Seite auf den Startbildschirm legen und startet dann ohne Browserleiste. Die App-Hülle (Seite, Bilder, Karte) lädt auch bei schlechtem Netz.
+- **Für alle Altersgruppen:** Schriftgröße gleich bei der Begrüßung wählbar, „Vorlesen“ in jeder Anfrage, Anrufen statt Schreiben, für Eltern oder Großeltern anfragen, fertige Sätze im Chat, mehr Kontrast, wenn das Gerät darum bittet.
+- **Sicherheit:** Sicherheits-Code für die Tür (wie die PIN bei Uber), „Bescheid sagen“ an eine Vertrauensperson, Warnung bei typischen Betrugsmaschen im Chat.
+- **Benachrichtigungen aufs Handy:** Web Push über die eigene Edge Function `supabase/functions/push` (ohne fremde Dienste wie Firebase). Einrichtung und Test: [SETUP.md](SETUP.md)
+- **Einladen:** QR-Code in der App und ein Aushang fürs Schwarze Brett mit Zetteln zum Abreißen: [assets/aushang.pdf](assets/aushang.pdf)
 
 ## Aufbau
 
@@ -25,7 +29,8 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 | `src/vendor/leaflet-1.9.4.css` | Stile der Kartenbibliothek Leaflet |
 | `supabase/schema.sql` | Tabellen, Zugriffsregeln und Funktionen für Supabase |
 | `supabase/updates/` | Einzelne Datenbank-Updates zum Einfügen im SQL Editor |
-| `sw.js` | Offline-Hülle: Seite zuerst aus dem Netz, feste Dateien aus dem Speicher, Anfragen und Karte nie zwischengespeichert |
+| `supabase/functions/push/` | Edge Function für Benachrichtigungen: Verschlüsselung (RFC 8291) und Absender-Nachweis (VAPID) mit Bordmitteln |
+| `sw.js` | Offline-Hülle: Seite zuerst aus dem Netz, feste Dateien aus dem Speicher, Anfragen und Karte nie zwischengespeichert. Zeigt Benachrichtigungen an |
 | `tools/build.py` | Baut aus `src/` die fertige `index.html` |
 | `assets/` | App-Icons, Leaflet, Three.js, Schriften (Barlow) und das Standbild der Miniatur für Geräte ohne 3D |
 | `manifest.webmanifest` | Angaben für „Zum Home-Bildschirm“ |
@@ -34,6 +39,7 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 | `package.json`, `capacitor.config.json` | iPhone-App mit Capacitor (siehe APP-STORE.md) |
 | `app/resources/` | App-Symbol und Startbildschirme für die iPhone-App, erzeugt mit `design/app-bilder.py` |
 | `assets/vorschau.png` | Vorschaubild für geteilte Links, erzeugt mit `design/vorschau.py` |
+| `assets/aushang.pdf`, `assets/qr.svg`, `assets/badge-96.png` | Aushang, QR-Code und Zeichen für Benachrichtigungen, erzeugt mit `design/aushang.py` (QR-Code aus `design/qr.py`, ohne fremde Bibliothek) |
 | `index.html` | Fertige App, wird von GitHub Pages ausgeliefert. Nicht von Hand ändern, sondern mit `python3 tools/build.py` neu bauen |
 
 ## Daten und Quellen
@@ -41,7 +47,7 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 - Kartenbibliothek: [Leaflet](https://leafletjs.com) 1.9.4 (BSD-2-Clause), liegt unter `assets/vendor/`
 - Kartenkacheln: © [OpenStreetMap](https://www.openstreetmap.org/copyright)-Mitwirkende, Ersatz: © [CARTO](https://carto.com/attributions)
 - 3D: [Three.js](https://threejs.org) r170 (MIT), liegt unter `assets/vendor/`. Das Modell selbst (Häuser, Hecken, Kanal) ist im Code gebaut, ohne fremde Modelldateien
-- Schrift: Barlow und Barlow Semi Condensed (SIL Open Font License), nach den deutschen Straßenschildern. Montserrat in der Wortmarke, Bricolage Grotesque und Atkinson Hyperlegible nur im Vorschaubild für geteilte Links (alle SIL Open Font License)
+- Schrift: Barlow und Barlow Semi Condensed (SIL Open Font License), nach den deutschen Straßenschildern. Montserrat in der Wortmarke (SIL Open Font License)
 - Tätigkeits-Bilder: Microsoft Fluent Emoji 3D (MIT-Lizenz), siehe `src/kategorien/LIZENZ-fluent-emoji.txt`
 - Lage der Stadtteile: OpenStreetMap (Haltestellen) und GeoNames
 - Im Demo-Modus sind alle Personen und Anfragen erfunden. Es fließt kein Geld.

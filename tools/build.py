@@ -64,6 +64,12 @@ def bilder():
     return '/* Tätigkeits-Bilder: Microsoft Fluent Emoji 3D (MIT), siehe src/kategorien/LIZENZ-fluent-emoji.txt */\nconst KAT_BILDER = {\n' + ',\n'.join(eintraege) + '\n};'
 
 
+def qr():
+    """QR-Code zur App für das Blatt „Nachbarn einladen“ (erzeugt von design/aushang.py)."""
+    import json
+    return 'const QR_SVG = ' + json.dumps((WURZEL / 'assets/qr.svg').read_text().strip()) + ';'
+
+
 def teile(vorschau):
     leaflet_css = (SRC / 'vendor' / 'leaflet-1.9.4.css').read_text()
     styles = (SRC / 'styles.css').read_text()
@@ -82,7 +88,7 @@ def teile(vorschau):
     body = (SRC / 'body.html').read_text().replace('<!--KOPFZEICHEN-->', (SRC / 'kopfzeichen.svg').read_text().strip())
     defs, intro, feier = handschlag()
     body = body.replace('<!--HANDSCHLAG-DEFS-->', defs).replace('<!--INTRO-SVG-->', intro).replace('<!--FEIER-SVG-->', feier)
-    app = '\n'.join([bilder()] + [(SRC / n).read_text() for n in ('recht.js', 'fragen.js', 'garbsen3d.js', 'app.js')])
+    app = '\n'.join([bilder(), qr()] + [(SRC / n).read_text() for n in ('recht.js', 'fragen.js', 'garbsen3d.js', 'app.js')])
     if vorschau:
         alt = 'const VORSCHAU = false;'
         assert alt in app
@@ -120,7 +126,7 @@ def standalone():
             f'<meta property="og:image" content="{ADRESSE}assets/vorschau.png">\n'
             '<meta property="og:image:width" content="1200">\n'
             '<meta property="og:image:height" content="630">\n'
-            '<meta property="og:image:alt" content="Hand Drauf: Karte von Garbsen mit Anfragen und Beträgen">\n'
+            '<meta property="og:image:alt" content="Hand Drauf: eine kleine Nachbarschaft als Modell, darüber Preisschilder mit Beträgen">\n'
             '<meta name="twitter:card" content="summary_large_image">\n'
             '<title>Hand Drauf</title>\n'
             '<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">\n'

@@ -2,9 +2,10 @@
  * - Die Seite selbst: immer zuerst aus dem Netz (damit Updates sofort ankommen), ohne Netz aus dem Speicher.
  * - Bilder, Leaflet und supabase-js: einmal laden, dann aus dem Speicher (die Dateien ändern sich nicht).
  * - Anfragen, Nachrichten und Kartenkacheln: nie zwischenspeichern, die kommen immer frisch aus dem Netz.
+ * - Benachrichtigungen: zeigt an, was die Datenbank schickt, und öffnet beim Antippen die passende Anfrage.
  * Nach Änderungen an Dateien in assets/ die Versionsnummer erhöhen.
  */
-const VERSION = 'handdrauf-2026-11-6';
+const VERSION = 'handdrauf-2026-11-7';
 const HUELLE = [
   './',
   'manifest.webmanifest',
@@ -12,6 +13,7 @@ const HUELLE = [
   'assets/icon-192.png',
   'assets/icon-512.png',
   'assets/apple-touch-icon.png',
+  'assets/badge-96.png',
   'assets/garbsen-miniatur.webp',
   'assets/garbsen-miniatur-nacht.webp',
   'assets/vendor/leaflet-1.9.4.js',
@@ -46,7 +48,8 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(r.url);
 
   // Seite: Netz zuerst, nach 6 Sekunden oder ohne Netz die gespeicherte Fassung
-  if (r.mode === 'navigate' && url.origin === self.location.origin) {
+  // (nicht für Dateien wie den Aushang, die in einem eigenen Tab geöffnet werden)
+  if (r.mode === 'navigate' && url.origin === self.location.origin && !/\/assets\//.test(url.pathname)) {
     e.respondWith((async () => {
       const cache = await caches.open(VERSION);
       const netz = fetch(r).then((n) => {
@@ -77,4 +80,36 @@ self.addEventListener('fetch', (e) => {
     })());
   }
   // Alles andere (Datenbank, Kartenkacheln): normal übers Netz
+});
+
+// Benachrichtigung anzeigen. Die Datenbank schickt: t = Titel, b = Text, l = Ziel in der App, g = Marke
+// (eine neue Benachrichtigung mit derselben Marke ersetzt die ältere, statt sich zu stapeln).
+self.addEventListener('push', (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (err) { d = {}; }
+  const optionen = {
+    body: String(d.b || ''),
+    icon: 'assets/icon-192.png',
+    badge: 'assets/badge-96.png',
+    lang: 'de',
+    data: { link: String(d.l || '') }
+  };
+  if (d.g) { optionen.tag = String(d.g); optionen.renotify = true; }
+  e.waitUntil(self.registration.showNotification(String(d.t || 'Hand Drauf'), optionen));
+});
+
+// Antippen: offene App nach vorn holen und die Anfrage zeigen, sonst die App mit der Anfrage öffnen
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const link = (e.notification.data && e.notification.data.link) || '';
+  e.waitUntil((async () => {
+    const fenster = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const offen = fenster.find((f) => f.url.startsWith(self.registration.scope));
+    if (offen) {
+      try { await offen.focus(); } catch (err) { /* nicht jeder Browser erlaubt das */ }
+      offen.postMessage({ typ: 'push-link', link });
+      return;
+    }
+    await self.clients.openWindow(self.registration.scope + (link ? '#' + link : ''));
+  })());
 });
