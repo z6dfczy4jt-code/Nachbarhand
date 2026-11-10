@@ -706,6 +706,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
   --warn: #8A4B00;
   --warn-bg: #FFF0D3;
   --crit: #C2281D;
+  --crit-flaeche: #C2281D;   /* Rot als Fläche mit weißer Schrift */
+  --klinker-text: #A3392B;   /* Klinkerrot als Schriftfarbe */
   --focus: #0B63CE;
   --you: #0B63CE;
   --sky-oben: #B9D8EE;
@@ -734,7 +736,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     --paper: #0C131D; --surface: #152030; --raised: #1B2839; --ink: #EDF1F5; --muted: #9AA6B5; --line: #263446; --tile: #1D2A3B;
     --klinker: #C4503D; --klinker-tief: #A9412F; --on-klinker: #FFFFFF;
     --accent: #F4B400; --accent-tief: #D99E00; --on-accent: #1F1A0A; --hedge: #4CC27A; --on-hedge: #062312; --good-bg: #10301E;
-    --warn: #FFB44D; --warn-bg: #36270D; --crit: #FF7466; --focus: #5AA2FF; --you: #5AA2FF;
+    --warn: #FFB44D; --warn-bg: #36270D; --crit: #FF7466; --crit-flaeche: #B3261E; --klinker-text: #F0907E; --focus: #5AA2FF; --you: #5AA2FF;
     --sky-oben: #08111F; --sky-unten: #1A2D4D;
     --map-land: #152030; --map-area: #1D2A3B; --map-edge: #2E3D51; --map-label: #9AA6B5;
     --schatten-1: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 10px rgba(0, 0, 0, .3);
@@ -748,7 +750,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   --paper: #0C131D; --surface: #152030; --raised: #1B2839; --ink: #EDF1F5; --muted: #9AA6B5; --line: #263446; --tile: #1D2A3B;
   --klinker: #C4503D; --klinker-tief: #A9412F; --on-klinker: #FFFFFF;
   --accent: #F4B400; --accent-tief: #D99E00; --on-accent: #1F1A0A; --hedge: #4CC27A; --on-hedge: #062312; --good-bg: #10301E;
-  --warn: #FFB44D; --warn-bg: #36270D; --crit: #FF7466; --focus: #5AA2FF; --you: #5AA2FF;
+  --warn: #FFB44D; --warn-bg: #36270D; --crit: #FF7466; --crit-flaeche: #B3261E; --klinker-text: #F0907E; --focus: #5AA2FF; --you: #5AA2FF;
   --sky-oben: #08111F; --sky-unten: #1A2D4D;
   --map-land: #152030; --map-area: #1D2A3B; --map-edge: #2E3D51; --map-label: #9AA6B5;
   --schatten-1: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 10px rgba(0, 0, 0, .3);
@@ -804,13 +806,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ----- Kopf ----- */
 .kopf { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.marke { display: flex; align-items: center; min-height: 44px; color: var(--ink); text-decoration: none; }
-.marke-logo { display: block; height: 34px; width: auto; }
+.marke { display: flex; align-items: center; flex: 0 1 auto; min-width: 0; min-height: 44px; color: var(--ink); text-decoration: none; }
+.marke-logo { display: block; height: 34px; width: auto; max-width: 100%; }
+.kopf-rechts { flex: none; }
 .kopf-rechts, .kopf-konto { display: flex; align-items: center; gap: 6px; }
 .ansicht-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--surface); box-shadow: var(--schatten-1); color: var(--ink); font-weight: 600; font-size: 0.9375rem; cursor: pointer; }
 .ansicht-btn:hover { background: var(--raised); }
 @media (max-width: 430px) { .ansicht-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .ansicht-btn { width: 44px; padding: 0; justify-content: center; } }
-@media (max-width: 350px) { .marke-logo { height: 30px; } }
+@media (max-width: 350px) { .marke-logo { height: auto; width: 128px; } .kopf .btn-klein { padding-inline: 12px; } }
+/* Schmale Handys: Bild in der Anfrage etwas kleiner, damit mehr Platz für den Text bleibt */
+@media (max-width: 360px) { .card { gap: 10px; padding-inline: 12px 12px; } .card .ico { width: 44px; height: 44px; } .card .ico .bild { width: 32px; height: 32px; } }
 .avatar-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--ink); color: var(--surface); font-family: var(--f-display); font-weight: 700; font-size: 0.9375rem; cursor: pointer; display: grid; place-items: center; }
 .btn-klein { width: auto; min-height: 44px; padding: 8px 16px; font-size: 0.9375rem; border-radius: 999px; }
 
@@ -912,15 +917,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .filter { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .filter label { display: inline-flex; }
 .filter select {
-  min-height: 40px; padding: 6px 30px 6px 14px; border: 0; border-radius: 999px; background-color: var(--tile); color: var(--ink);
+  min-height: 44px; padding: 8px 30px 8px 14px; border: 0; border-radius: 999px; background-color: var(--tile); color: var(--ink);
   font-weight: 600; font-size: 0.9375rem; cursor: pointer; max-width: 100%; -webkit-appearance: none; appearance: none;
   background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
   background-position: calc(100% - 17px) 52%, calc(100% - 12px) 52%; background-size: 5px 5px; background-repeat: no-repeat;
 }
-.liste { display: grid; gap: 10px; }
+.liste { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
 .liste-gruppe { margin: 18px 0 2px; font-family: var(--f-display); font-size: 1.5rem; font-weight: 700; line-height: 1.1; color: var(--ink); }
 .liste-gruppe:first-child { margin-top: 0; }
-.zeilen { display: grid; background: var(--surface); border-radius: var(--r-l); box-shadow: var(--schatten-1); overflow: hidden; }
+.zeilen { display: grid; grid-template-columns: minmax(0, 1fr); background: var(--surface); border-radius: var(--r-l); box-shadow: var(--schatten-1); overflow: hidden; }
 .card { position: relative; display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 14px 16px 14px 14px; background: var(--surface); border: 0; border-radius: var(--r-l); color: var(--ink); cursor: pointer; }
 .zeilen .card { border-radius: 0; background: transparent; }
 .zeilen .card + .card::before { content: ""; position: absolute; top: 0; left: 84px; right: 16px; height: 1px; background: var(--line); }
@@ -934,7 +939,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .card-meta { color: var(--muted); font-size: 0.9375rem; line-height: 1.3; }
 .card-wann { color: var(--ink); font-weight: 500; }
 .card-wann::after { content: " ·"; color: var(--muted); }
-.card-ort { display: inline-flex; align-items: center; gap: 8px; margin-top: 3px; color: var(--muted); font-size: 0.875rem; font-weight: 500; }
+.card-ort { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 3px; color: var(--muted); font-size: 0.875rem; font-weight: 500; }
 .card-ort .i { display: none; }
 .card-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
 
@@ -956,7 +961,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn-secondary { background: var(--tile); color: var(--ink); }
 .btn-secondary:hover { background: color-mix(in srgb, var(--tile) 82%, var(--ink) 8%); }
 .btn-danger { color: var(--crit); }
-.btn-danger-solid { background: var(--crit); color: #fff; }
+.btn-danger-solid { background: var(--crit-flaeche); color: #fff; }
 .btn[disabled], .btn[aria-busy="true"] { opacity: .55; cursor: progress; }
 .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .link-btn { min-height: 44px; background: none; border: 0; color: var(--muted); font-size: 0.9375rem; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 8px; justify-self: center; }
@@ -969,7 +974,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .pill-good { background: var(--good-bg); color: var(--hedge); }
 .pill-warn { background: var(--warn-bg); color: var(--warn); }
 .pill-info { box-shadow: inset 0 0 0 1.5px var(--ink); color: var(--ink); }
-.pill-neu { background: var(--crit); color: #fff; }
+.pill-neu { background: var(--crit-flaeche); color: #fff; }
 
 /* ----- Karte ----- */
 .karte-kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
@@ -1168,7 +1173,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .kachel-radio input:checked + .kachel-karte .bild { transform: translateY(-3px) scale(1.08) rotate(-5deg); }
 .kachel-radio input:focus-visible + .kachel-karte { outline: 3px solid var(--focus); outline-offset: 2px; }
 .vorschlaege { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip-vorschlag { min-height: 40px; box-shadow: none; background: var(--tile); }
+.chip-vorschlag { min-height: 44px; box-shadow: none; background: var(--tile); }
 .wahl-raster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .wahl-raster ~ .feld-hinweis, .wahl-raster ~ .fehler { margin-top: 8px; }
 .wahl { position: relative; display: block; }
@@ -1189,10 +1194,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .richtwert strong { color: var(--ink); }
 .richtwert span { color: var(--muted); font-size: 1rem; }
 .pruefen { display: grid; gap: 0; margin: 0; border-radius: var(--r-l); background: var(--surface); box-shadow: var(--schatten-1); overflow: hidden; }
-.pruefen div { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 14px 16px; border-top: 1px solid var(--line); }
+.pruefen div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 14px 16px; border-top: 1px solid var(--line); }
 .pruefen div:first-child { border-top: 0; }
 .pruefen dt { grid-column: 1; font-size: 0.875rem; font-weight: 500; color: var(--muted); }
-.pruefen dd { grid-column: 1; margin: 0; font-weight: 600; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; }
+.pruefen dd { grid-column: 1; margin: 0; overflow-wrap: anywhere; font-weight: 600; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; }
 .pruefen dd .klein { flex-basis: 100%; font-weight: 400; color: var(--muted); }
 .pruefen .aendern { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-size: 0.9375rem; }
 .wizard-knoepfe { display: grid; grid-template-columns: auto 1fr; gap: 10px; }
@@ -1211,7 +1216,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .kal-wt { padding: 4px 0 6px; font-size: 0.875rem; font-weight: 600; color: var(--muted); }
 .kal-tag { position: relative; width: 44px; height: 44px; max-width: 100%; border: 0; border-radius: 50%; background: transparent; color: var(--ink); font-size: 1.125rem; font-weight: 500; font-variant-numeric: tabular-nums; cursor: pointer; transition: background .15s, color .15s, transform .2s cubic-bezier(.3, 1.6, .5, 1); }
 .kal-tag:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--tile); }
-.kal-tag.ist-heute { color: var(--klinker); font-weight: 700; }
+.kal-tag.ist-heute { color: var(--klinker-text); font-weight: 700; }
 .kal-tag.ist-heute::after { content: ""; position: absolute; left: 50%; bottom: 6px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: currentColor; }
 .kal-tag[aria-pressed="true"] { background: var(--klinker); color: var(--on-klinker); font-weight: 700; transform: scale(1.04); }
 .kal-tag:disabled { color: var(--muted); opacity: .4; cursor: default; }
@@ -1272,7 +1277,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .toast.zeigen { opacity: 1; transform: translateX(-50%) translateY(-6px); }
 
 /* ----- Nachrichten ----- */
-.chat { display: grid; gap: 12px; padding-top: 16px; border-top: 1px solid var(--line); }
+.chat { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding-top: 16px; border-top: 1px solid var(--line); }
 .chat-titel { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--f-display); font-size: 1.375rem; }
 .chat-liste { display: flex; flex-direction: column; gap: 8px; max-height: min(46vh, 340px); overflow-y: auto; overscroll-behavior: contain; padding: 4px 2px; }
 .chat-liste:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 12px; }
@@ -1453,6 +1458,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ----- Zähler auf der Startseite ----- */
 .geholfen { justify-self: start; display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding: 4px 12px 4px 9px; border-radius: 999px; background: var(--good-bg); color: var(--hedge); font-weight: 600; font-size: 0.9375rem; }
+
+/* ----- Eigene Bilanz unter „Aufträge“, Herkunft des Richtwerts ----- */
+.bilanz { display: flex; align-items: center; gap: 8px; margin-top: -8px; color: var(--muted); font-weight: 500; }
+.bilanz .i { color: var(--klinker-text); }
+.richtwert-quelle { color: var(--muted); font-size: 0.9375rem; }
+.hilft-gern { display: grid; gap: 8px; padding: 4px 2px 6px; }
+.hilft-gern .wahl-titel { margin: 0; }
+.hilft-gern .chip .bild { width: 24px; height: 24px; }
+.hilft-gern .chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
 
 /* ----- Für wen?, Telefon ----- */
 .unterfeld { display: grid; gap: 8px; margin-top: 14px; }
@@ -1781,6 +1795,7 @@ a.btn { text-decoration: none; }
     <!-- ===== Meine Aufträge ===== -->
     <section id="view-auftraege" class="view" aria-labelledby="h-auftraege" hidden>
       <h1 id="h-auftraege">Aufträge</h1>
+      <p class="bilanz" id="bilanz" hidden></p>
       <div id="naechstes"></div>
       <div class="abschnitt">
         <h2 class="h-klein">Deine Zusagen</h2>
@@ -1917,7 +1932,7 @@ function RECHT_TEXTE(b, e) {
 
         <h3>7. Benachrichtigungen aufs Handy</h3>
         <p>Benachrichtigungen bekommst du nur, wenn du sie im Menü oder in einem Auftrag einschaltest. Dein Gerät meldet sich dann beim Benachrichtigungsdienst seines Browsers an: bei Google (Chrome, Android), Apple (Safari, iPhone), Mozilla (Firefox) oder Microsoft (Edge). Dieser Dienst vergibt eine Adresse für dein Gerät. Wir speichern diese Adresse und zwei Schlüssel bei Supabase.</p>
-        <p>Sagt jemand zu, schreibt dir oder ist ein Auftrag fertig, schicken wir über diesen Dienst eine kurze Mitteilung an dein Gerät, zum Beispiel „Tim hilft dir“ mit Titel und Termin der Anfrage. Sie ist so verschlüsselt, dass nur dein Gerät sie lesen kann. Was in euren Nachrichten steht, ist nicht Teil der Mitteilung. Die Dienste sitzen zum Teil in den USA.</p>
+        <p>Sagt jemand zu, schreibt dir oder ist ein Auftrag fertig, schicken wir über diesen Dienst eine kurze Mitteilung an dein Gerät, zum Beispiel „Tim hilft dir“ mit Titel und Termin der Anfrage. Außerdem erinnern wir am Abend vor dem Termin und am Tag danach, falls der Auftrag noch nicht abgeschlossen ist. Hast du „Neue Anfragen“ eingeschaltet, speichern wir auch, bei welchen Tätigkeiten du gern hilfst. Sie ist so verschlüsselt, dass nur dein Gerät sie lesen kann. Was in euren Nachrichten steht, ist nicht Teil der Mitteilung. Die Dienste sitzen zum Teil in den USA.</p>
         <p>Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG). Du kannst sie jederzeit widerrufen: Schalte die Benachrichtigungen im Menü aus. Dann löschen wir die Adresse deines Geräts. Beim Abmelden lösen wir das Gerät von deinem Konto.</p>
 
         <h3>8. Wie lange?</h3>
@@ -2026,7 +2041,7 @@ function FRAGEN_TEXTE(c) {
         frage('Wie wird bezahlt?',
           `<p>Direkt untereinander, nach der Hilfe: bar, per Überweisung oder wie ihr es abmacht. Zahl nie im Voraus, und teile keine Bank- oder Passwortdaten in den Nachrichten.</p>`),
         frage('Wie viel sollte ich geben?',
-          `<p>Beim Erstellen schlagen wir dir einen Betrag je Tätigkeit vor. Du entscheidest selbst, zwischen ${c.minBetrag} und ${c.maxBetrag}&nbsp;€. Mehr geht nicht, weil Hand Drauf für kleine Hilfen da ist.</p>`),
+          `<p>Beim Erstellen siehst du, wie viel Nachbarn in Garbsen für dieselbe Tätigkeit geben. Solange es dafür noch zu wenige Anfragen gibt, steht dort unser Vorschlag. Du entscheidest selbst, zwischen ${c.minBetrag} und ${c.maxBetrag}&nbsp;€. Mehr geht nicht, weil Hand Drauf für kleine Hilfen da ist.</p>`),
         frage('Muss ich das versteuern?',
           `<p>Einnahmen aus gelegentlichen Hilfen bleiben steuerfrei, solange dein Gewinn im Jahr unter 256&nbsp;€ liegt (§&nbsp;22 Nr.&nbsp;3 EStG). Ab 256&nbsp;€ ist der ganze Betrag steuerpflichtig. Unter „Aufträge“ siehst du, wie viel du schon bekommen hast.</p>
            <p>Wer Bürgergeld oder andere Leistungen bekommt, muss Einnahmen dem Amt melden. Das ist keine Steuerberatung.</p>`)
@@ -2073,7 +2088,8 @@ function FRAGEN_TEXTE(c) {
            <ul><li><strong>iPhone:</strong> In Safari unten auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.</li>
            <li><strong>Android:</strong> In Chrome oben rechts das Menü öffnen, dann „App installieren“ oder „Zum Startbildschirm hinzufügen“.</li></ul>`),
         frage('Wie bekomme ich Bescheid, wenn jemand zusagt?',
-          `<p>Schalte im Menü „Bescheid aufs Handy“ ein. Dann meldet sich dein Handy, wenn jemand zusagt, dir schreibt oder ein Auftrag fertig ist. Auf dem iPhone geht das, sobald Hand Drauf auf dem Home-Bildschirm liegt.</p>`),
+          `<p>Schalte im Menü „Bescheid aufs Handy“ ein. Dann meldet sich dein Handy, wenn jemand zusagt, dir schreibt oder ein Auftrag fertig ist, und am Abend vor dem Termin. Auf dem iPhone geht das, sobald Hand Drauf auf dem Home-Bildschirm liegt.</p>
+           <p>Wenn du helfen möchtest: Schalte „Neue Anfragen“ ein und wähle, wobei du gern hilfst, zum Beispiel nur Garten und Tragen.</p>`),
         frage('Kann ich mir Anfragen vorlesen lassen?',
           `<p>Ja. In jeder Anfrage steht „Vorlesen“. Dein Gerät liest dann Titel, Termin, Ort, Betrag und Beschreibung vor.</p>`),
         frage('Wie lade ich Nachbarn ein?',
@@ -2888,6 +2904,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     adressen: new Map(),    // gesuch_id -> Adresse (nur für Beteiligte)
     telefone: new Map(),    // gesuch_id -> Telefon (freiwillig, nur für Beteiligte)
     statistik: null,        // { woche, gesamt }: wie oft geholfen wurde
+    richtwerte: {},         // kategorie -> { von, bis, anzahl }: übliche Beträge aus echten Anfragen
     nachrichten: new Map(), // gesuch_id -> Verlauf (null = wird geladen)
     letzte: new Map(),      // gesuch_id -> Zeit der letzten Nachricht der anderen Person
     gemeldet: new Set(),    // in dieser Sitzung gemeldete Anfragen
@@ -3168,7 +3185,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     }
     if (g.status === 'zugesagt') return `<span class="pill pill-info">Zugesagt</span>`;
     if (g.status === 'erledigt') return `<span class="pill pill-warn">Wartet auf Bestätigung</span>`;
-    if (g.status === 'bezahlt') return `<span class="pill pill-good">${icon('check', 'i-xs')} ${istLive() ? 'Bestätigt' : 'Ausgezahlt'}</span>`;
+    if (g.status === 'bezahlt') return `<span class="pill pill-good">${icon('check', 'i-xs')} ${CONFIG.gebuehren && !istLive() ? 'Ausgezahlt' : 'Bestätigt'}</span>`;
     return '';
   }
   function fehlerText(e) {
@@ -3303,6 +3320,10 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
         .neq('status', 'zurueckgezogen').order('erstellt', { ascending: false }).limit(300);
       if (error) throw error;
       if (db.user) {
+        if (db.profil) {
+          const pr = await db.client.from('profile').select('hilfen_anzahl, gesuche_anzahl, sterne_summe, sterne_anzahl').eq('id', db.user.id).maybeSingle();
+          if (!pr.error && pr.data) Object.assign(db.profil, pr.data);
+        }
         const bl = await db.client.from('blockiert').select('wen, profil:profile!blockiert_wen_fkey(vorname, nachname_initial)').eq('von', db.user.id);
         if (!bl.error && bl.data) { db.blockiert.clear(); bl.data.forEach((x) => db.blockiert.set(x.wen, anzeigename(x.profil))); }
         const b = await db.client.from('bewertungen').select('gesuch_id, sterne').eq('von', db.user.id);
@@ -3615,7 +3636,12 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       let a = null;
       if (g.eigen && g.status === 'erledigt') a = { prio: 1, titel: 'Bitte bestätigen', text: `${wer} hat „${g.titel}“ als erledigt gemeldet.` };
       else if (ungelesen(g)) a = { prio: 2, titel: 'Neue Nachricht', text: `${wer} hat dir zu „${g.titel}“ geschrieben.` };
-      else if (g.helfer === 'ich' && g.status === 'zugesagt') a = { prio: 3, titel: 'Du hilfst', text: `„${g.titel}“ bei ${wer}, ${wannText(g)}. Danach als erledigt melden.` };
+      else if (g.helfer === 'ich' && g.status === 'zugesagt') {
+        const tag = relativerTag(g);
+        a = { prio: 3, titel: tag ? `${tag} hilfst du` : 'Du hilfst', text: `„${g.titel}“ bei ${wer}, ${wannText(g)}. Danach als erledigt melden.` };
+      }
+      // Wer Hilfe bekommt, sieht am Tag vorher und am Tag selbst, wer kommt
+      else if (g.eigen && g.status === 'zugesagt' && relativerTag(g)) a = { prio: 3, titel: `${relativerTag(g)} kommt ${wer}`, text: `„${g.titel}“, ${wannText(g)}. Frag an der Tür nach dem Sicherheits-Code.` };
       else if (g.status === 'bezahlt' && !g.meineBewertung && (g.helfer === 'ich' || (g.eigen && g.helferName))) a = { prio: 4, titel: 'Bewerten', text: `Wie war es mit ${wer}?` };
       else if (g.eigen && abgelaufen(g)) a = { prio: 5, titel: 'Abgelaufen', text: `„${g.titel}“ sieht gerade niemand. Wähle einen neuen Termin.` };
       if (a) liste.push({ ...a, g });
@@ -3661,6 +3687,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     const pills = (g) => `<span class="card-pills">${statusPill(g)}${ungelesen(g) ? '<span class="pill pill-neu">Neue Nachricht</span>' : ''}</span>`;
     const abschnitte = document.querySelectorAll('#view-auftraege .abschnitt');
     if (istLive() && !db.profil) {
+      $('#bilanz').hidden = true;
       $('#summe').hidden = false;
       $('#summe').innerHTML = `<span class="h-klein">Deine Aufträge</span>
         <p>Melde dich an, um deine Anfragen und Zusagen zu sehen.</p>
@@ -3671,6 +3698,12 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     abschnitte.forEach((a) => { a.hidden = false; });
     const zusagen = gesuche.filter((g) => g.helfer === 'ich');
     const eigene = gesuche.filter((g) => g.eigen);
+    // Eigene Bilanz: wie oft geholfen und Hilfe bekommen (bestätigte Aufträge)
+    const geholfen = istLive() ? ((db.profil && db.profil.hilfen_anzahl) || 0) : zusagen.filter((g) => g.status === 'bezahlt').length;
+    const bekommen = istLive() ? ((db.profil && db.profil.gesuche_anzahl) || 0) : eigene.filter((g) => g.status === 'bezahlt').length;
+    const bilanz = $('#bilanz');
+    bilanz.hidden = !geholfen && !bekommen;
+    bilanz.innerHTML = bilanz.hidden ? '' : `${icon('herz', 'i-sm')}<span>${[geholfen ? `Du hast ${geholfen}× geholfen` : '', bekommen ? `${geholfen ? '' : 'Du hast '}${bekommen}× Hilfe bekommen` : ''].filter(Boolean).join(' und ')}. Danke!</span>`;
     const verdient = zusagen.filter((g) => g.status === 'bezahlt').reduce((s, g) => s + auszahlung(g), 0);
     const anteil = Math.min(100, verdient / CONFIG.freigrenze * 100);
     const rest = Math.max(0, CONFIG.freigrenze - verdient);
@@ -4709,6 +4742,20 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       return;
     }
     if (t.hasAttribute('data-push-spaeter')) { push.spaeter = Date.now(); pushSpeichern(); renderSheet(); return; }
+    if (t.dataset.pushKat) {
+      if (push.busy) return;
+      const k = t.dataset.pushKat;
+      const vorher = push.kategorien.slice();
+      push.kategorien = vorher.includes(k) ? vorher.filter((x) => x !== k) : KATEGORIEN.map((x) => x.id).filter((x) => x === k || vorher.includes(x));
+      push.busy = true;
+      try { await pushMelden(await pushAbo(true)); pushSpeichern(); }
+      catch (err) { push.kategorien = vorher; meldung(fehlerText(err)); }
+      push.busy = false;
+      renderSheet();
+      const f = $(`#sheet [data-push-kat="${k}"]`);
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
     if (t.hasAttribute('data-push-schalter') || t.hasAttribute('data-push-ein') || t.hasAttribute('data-push-neue') || t.hasAttribute('data-push-test')) {
       if (push.busy) return;
       const merke = t.hasAttribute('data-push-neue') ? '[data-push-neue]' : t.hasAttribute('data-push-test') ? '[data-push-test]' : '[data-push-schalter]';
@@ -5209,12 +5256,14 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
      Das Gerät meldet sich beim Dienst seines Browsers an und gibt uns eine Adresse dafür. Die Datenbank
      schickt darüber Bescheid, wenn jemand zusagt, schreibt oder ein Auftrag fertig ist. */
   const PUSH_SPEICHER = 'handdrauf-push';
-  const push = { an: false, neue: false, spaeter: 0, busy: false };
+  // kategorien: „Ich helfe gern bei …“, leer = bei allen Tätigkeiten Bescheid geben
+  const push = { an: false, neue: false, spaeter: 0, kategorien: [], busy: false };
   try {
     const p = JSON.parse(localStorage.getItem(PUSH_SPEICHER) || '{}') || {};
     push.an = p.an === true; push.neue = p.neue === true; push.spaeter = Number(p.spaeter) || 0;
+    if (Array.isArray(p.kategorien)) push.kategorien = p.kategorien.filter((k) => KATEGORIEN.some((x) => x.id === k));
   } catch (e) { /* ohne Speicher: aus */ }
-  const pushSpeichern = () => { try { localStorage.setItem(PUSH_SPEICHER, JSON.stringify({ an: push.an, neue: push.neue, spaeter: push.spaeter })); } catch (e) { /* nur für diese Sitzung */ } };
+  const pushSpeichern = () => { try { localStorage.setItem(PUSH_SPEICHER, JSON.stringify({ an: push.an, neue: push.neue, spaeter: push.spaeter, kategorien: push.kategorien })); } catch (e) { /* nur für diese Sitzung */ } };
   // Nur auf der echten Seite mit Datenbank: In der Demo gibt es niemanden, der Bescheid geben könnte
   const pushMoeglich = () => !VORSCHAU && !NATIV && istLive() && !!CONFIG.push && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
   const pushAn = () => pushMoeglich() && push.an && Notification.permission === 'granted' && !!db.profil;
@@ -5243,7 +5292,10 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   }
   async function pushMelden(abo) {
     const j = abo.toJSON();
-    const { error } = await db.client.rpc('push_anmelden', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_neue: !!push.neue });
+    const felder = { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_neue: !!push.neue };
+    let { error } = await db.client.rpc('push_anmelden', { ...felder, p_kategorien: push.kategorien });
+    // Datenbank ohne das Update vom 10. November (Teil 5) kennt die Auswahl noch nicht
+    if (error && (error.code === 'PGRST202' || /could not find the function/i.test(error.message || ''))) ({ error } = await db.client.rpc('push_anmelden', felder));
     if (error) throw error;
   }
   async function pushEin() {
@@ -5295,8 +5347,14 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     if (Notification.permission === 'denied') return '<p class="klein">Benachrichtigungen sind für diese Seite gesperrt. Du kannst sie in den Einstellungen deines Browsers wieder erlauben.</p>';
     const an = pushAn();
     const ort = (db.profil && db.profil.stadtteil) || 'meinem Stadtteil';
-    return schalter('data-push-schalter', an, 'Bescheid aufs Handy', 'Wenn jemand zusagt, dir schreibt oder ein Auftrag fertig ist.') +
-      (an ? schalter('data-push-neue', push.neue, `Neue Anfragen in ${esc(ort)}`, 'Höchstens alle 20 Minuten.') +
+    // „Ich helfe gern bei …“: nur über passende neue Anfragen Bescheid geben
+    const wahl = push.neue ? `<div class="hilft-gern" role="group" aria-labelledby="hilft-gern-titel">
+        <span class="wahl-titel" id="hilft-gern-titel">Ich helfe gern bei</span>
+        <div class="vorschlaege">${KATEGORIEN.map((k) => `<button type="button" class="chip chip-vorschlag" data-push-kat="${k.id}" aria-pressed="${push.kategorien.includes(k.id)}" ${push.busy ? 'disabled' : ''}>${icon(k.id)}<span>${k.name}</span></button>`).join('')}</div>
+        <p class="klein">${push.kategorien.length ? `Nur bei ${push.kategorien.map((k) => katName(k)).join(', ')}.` : 'Keine Auswahl: Du erfährst von allen neuen Anfragen.'}</p>
+      </div>` : '';
+    return schalter('data-push-schalter', an, 'Bescheid aufs Handy', 'Wenn jemand zusagt, dir schreibt, ein Auftrag fertig ist, und am Abend vor dem Termin.') +
+      (an ? schalter('data-push-neue', push.neue, `Neue Anfragen in ${esc(ort)}`, 'Höchstens alle 20 Minuten.') + wahl +
         '<button type="button" class="link-btn link-links" data-push-test>Test-Benachrichtigung schicken</button>' : '');
   }
   // Tipp auf eine Benachrichtigung, während die App offen ist: Die Offline-Hülle reicht das Ziel weiter
@@ -5316,6 +5374,11 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       const { data, error } = await db.client.rpc('statistik');
       if (!error && data) { db.statistik = data; renderGeholfen(); }
     } catch (e) { /* ohne Zähler weiter */ }
+    // Übliche Beträge aus echten Anfragen (erst ab 5 je Tätigkeit)
+    try {
+      const { data, error } = await db.client.rpc('richtwerte');
+      if (!error && data) { db.richtwerte = data; if (wizSchritt === 3) renderRichtwert(); }
+    } catch (e) { /* dann unser Vorschlag */ }
   }
   function renderGeholfen() {
     const el = $('#geholfen');
@@ -5497,8 +5560,13 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   }
   function renderRichtwert() {
     const k = katWahl();
-    const [lo, hi] = RICHTWERTE[k] || [10, 20];
-    $('#neu-richtwert').innerHTML = `${icon('info', 'i-sm')}<span>Üblich für ${esc(katName(k))}: <strong>${lo} bis ${hi} €</strong></span>`;
+    // Aus echten Anfragen in Garbsen, sobald es genug gibt, sonst unser Vorschlag
+    const echt = istLive() && db.richtwerte && db.richtwerte[k];
+    const [lo, hi] = echt ? [echt.von, Math.max(echt.von, echt.bis)] : (RICHTWERTE[k] || [10, 20]);
+    const spanne = lo === hi ? `${lo} €` : `${lo} bis ${hi} €`;
+    $('#neu-richtwert').innerHTML = echt
+      ? `${icon('info', 'i-sm')}<span>So viel geben Nachbarn in Garbsen für ${esc(katName(k))}: <strong>${spanne}</strong> <span class="richtwert-quelle">(aus ${echt.anzahl} Anfragen)</span></span>`
+      : `${icon('info', 'i-sm')}<span>Unser Vorschlag für ${esc(katName(k))}: <strong>${spanne}</strong></span>`;
     if (!betragGeaendert) setzeBetrag(Math.round((lo + hi) / 2 / 5) * 5, true);
   }
   function renderKosten() {

@@ -1,6 +1,6 @@
 # Datenbank (Supabase)
 
-**Stand (10. November 2026):** Alle Updates sind eingespielt, zuletzt „Für jemand anderen“, Telefon, Sicherheits-Code, Zähler und Benachrichtigungen (`supabase/updates/2026-11-fuer-wen-code-benachrichtigungen.sql`). Die Edge Function `push` ist eingerichtet. Das Supabase-Projekt **hand-drauf** läuft in Frankfurt (Projekt-ID `hgfwbjesolgneyapehta`, kostenloser Plan). Tabellen, Zugriffsregeln und Funktionen aus [`supabase/schema.sql`](supabase/schema.sql) sind eingespielt und getestet. Die App ist verbunden (`LIVE` in `src/app.js`) und läuft auf GitHub Pages mit echten Konten.
+**Stand (10. November 2026):** Alle Updates sind eingespielt, zuletzt „Für jemand anderen“, Telefon, Sicherheits-Code, Zähler und Benachrichtigungen (`supabase/updates/2026-11-fuer-wen-code-benachrichtigungen.sql`). Die Edge Function `push` ist eingerichtet. **Noch offen:** Teil 5 (`supabase/updates/2026-11-erinnerungen-richtwerte.sql`: Erinnerungen, Preisvorschläge aus echten Anfragen, „Ich helfe gern bei …“). Die App läuft auch ohne ihn, nutzt die neuen Funktionen aber erst danach. Das Supabase-Projekt **hand-drauf** läuft in Frankfurt (Projekt-ID `hgfwbjesolgneyapehta`, kostenloser Plan). Tabellen, Zugriffsregeln und Funktionen aus [`supabase/schema.sql`](supabase/schema.sql) sind eingespielt und getestet. Die App ist verbunden (`LIVE` in `src/app.js`) und läuft auf GitHub Pages mit echten Konten.
 
 In `src/app.js` stehen nur die **Project URL** und der **Publishable key**. Beide sind öffentlich. Den **Secret key** bzw. **service_role** Key niemals weitergeben oder in die App schreiben.
 
@@ -49,6 +49,8 @@ Eingerichtet am 10. November 2026, nichts mehr zu tun. So funktioniert es:
 - Geräte, die es nicht mehr gibt, löscht die Datenbank beim nächsten Senden von selbst.
 - Auf dem iPhone gehen Benachrichtigungen nur, wenn Hand Drauf auf dem Home-Bildschirm liegt (ab iOS 16.4).
 
+**Erinnerungen:** Stündlich (Minute 7) prüft `privat.erinnern()` über pg_cron, wer erinnert werden sollte: am Abend vor dem Termin (ab 17 Uhr), am Tag danach „erledigt melden?“ (ab 10 Uhr) und einen Tag nach „erledigt“ „bitte bestätigen“. Jede Erinnerung nur einmal, nie zwischen 21 und 9 Uhr. Die Läufe stehen im Dashboard unter **Integrations** → **Cron**.
+
 **Testen:** Im Menü „Test-Benachrichtigung schicken“ tippen.
 
 **Neuer Schlüssel** (nur nötig, wenn der private Schlüssel jemals nach außen gelangt): In `index.ts` `ERLAUBT = ''` setzen und die Funktion neu veröffentlichen, dann im SQL Editor `select net.http_post(url := (select wert from privat.einstellungen where name = 'push_url'), body := '{"neu": true}'::jsonb, headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || (select wert from privat.einstellungen where name = 'push_jwt')));` ausführen, die Antwort aus `net._http_response` wie in `supabase/updates/2026-11-fuer-wen-code-benachrichtigungen.sql` beschrieben in `privat.einstellungen` speichern und den neuen öffentlichen Schlüssel in `index.ts` und `src/app.js` eintragen. Alle müssen Benachrichtigungen danach einmal neu einschalten.
@@ -81,6 +83,7 @@ Wenn sich `supabase/schema.sql` geändert hat, das Skript im **SQL Editor** noch
 | Für jemand anderen | Spalte `fuer` (höchstens 40 Zeichen, mit Wortfilter), öffentlich sichtbar, damit Helfer wissen, wen sie an der Tür treffen |
 | Benachrichtigungen | Nur Adressen von Google, Apple, Mozilla und Microsoft, höchstens 5 Geräte pro Person, neue Anfragen höchstens alle 20 Minuten, Test höchstens alle 20 Sekunden. Fehler beim Senden halten nie einen Auftrag auf |
 | Zähler | `statistik()` gibt nur zwei Summen heraus (diese Woche, insgesamt), keine Namen |
+| Preisvorschläge | `richtwerte()` gibt je Tätigkeit nur die übliche Spanne heraus, und erst ab 5 Anfragen |
 | Alte Anfragen verschwinden | Offene Anfragen sieht man nur bis Mitternacht nach dem letzten gewünschten Tag (Termine höchstens 60 Tage im Voraus, ohne Termin 21 Tage). Danach kann niemand mehr zusagen. Wer die Anfrage erstellt hat, sieht es weiter und kann einen neuen Termin wählen |
 | Bearbeiten nur vor der Zusage | Eigene Anfragen lassen sich ändern, solange niemand zugesagt hat. Neuer Stadtteil = neue ungefähre Lage |
 | Blockieren | Wer jemanden blockiert, sieht dessen Anfragen nicht mehr und umgekehrt. Zusagen und Nachrichten zwischen beiden sind gesperrt, laufende Zusagen enden. Die Hilfsfunktionen liegen im Schema `privat`, das Supabase nicht über die API anbietet |

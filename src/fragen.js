@@ -12,7 +12,7 @@ function FRAGEN_TEXTE(c) {
         frage('Wie wird bezahlt?',
           `<p>Direkt untereinander, nach der Hilfe: bar, per Überweisung oder wie ihr es abmacht. Zahl nie im Voraus, und teile keine Bank- oder Passwortdaten in den Nachrichten.</p>`),
         frage('Wie viel sollte ich geben?',
-          `<p>Beim Erstellen schlagen wir dir einen Betrag je Tätigkeit vor. Du entscheidest selbst, zwischen ${c.minBetrag} und ${c.maxBetrag}&nbsp;€. Mehr geht nicht, weil Hand Drauf für kleine Hilfen da ist.</p>`),
+          `<p>Beim Erstellen siehst du, wie viel Nachbarn in Garbsen für dieselbe Tätigkeit geben. Solange es dafür noch zu wenige Anfragen gibt, steht dort unser Vorschlag. Du entscheidest selbst, zwischen ${c.minBetrag} und ${c.maxBetrag}&nbsp;€. Mehr geht nicht, weil Hand Drauf für kleine Hilfen da ist.</p>`),
         frage('Muss ich das versteuern?',
           `<p>Einnahmen aus gelegentlichen Hilfen bleiben steuerfrei, solange dein Gewinn im Jahr unter 256&nbsp;€ liegt (§&nbsp;22 Nr.&nbsp;3 EStG). Ab 256&nbsp;€ ist der ganze Betrag steuerpflichtig. Unter „Aufträge“ siehst du, wie viel du schon bekommen hast.</p>
            <p>Wer Bürgergeld oder andere Leistungen bekommt, muss Einnahmen dem Amt melden. Das ist keine Steuerberatung.</p>`)
@@ -59,7 +59,8 @@ function FRAGEN_TEXTE(c) {
            <ul><li><strong>iPhone:</strong> In Safari unten auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.</li>
            <li><strong>Android:</strong> In Chrome oben rechts das Menü öffnen, dann „App installieren“ oder „Zum Startbildschirm hinzufügen“.</li></ul>`),
         frage('Wie bekomme ich Bescheid, wenn jemand zusagt?',
-          `<p>Schalte im Menü „Bescheid aufs Handy“ ein. Dann meldet sich dein Handy, wenn jemand zusagt, dir schreibt oder ein Auftrag fertig ist. Auf dem iPhone geht das, sobald Hand Drauf auf dem Home-Bildschirm liegt.</p>`),
+          `<p>Schalte im Menü „Bescheid aufs Handy“ ein. Dann meldet sich dein Handy, wenn jemand zusagt, dir schreibt oder ein Auftrag fertig ist, und am Abend vor dem Termin. Auf dem iPhone geht das, sobald Hand Drauf auf dem Home-Bildschirm liegt.</p>
+           <p>Wenn du helfen möchtest: Schalte „Neue Anfragen“ ein und wähle, wobei du gern hilfst, zum Beispiel nur Garten und Tragen.</p>`),
         frage('Kann ich mir Anfragen vorlesen lassen?',
           `<p>Ja. In jeder Anfrage steht „Vorlesen“. Dein Gerät liest dann Titel, Termin, Ort, Betrag und Beschreibung vor.</p>`),
         frage('Wie lade ich Nachbarn ein?',

@@ -176,6 +176,7 @@
     adressen: new Map(),    // gesuch_id -> Adresse (nur für Beteiligte)
     telefone: new Map(),    // gesuch_id -> Telefon (freiwillig, nur für Beteiligte)
     statistik: null,        // { woche, gesamt }: wie oft geholfen wurde
+    richtwerte: {},         // kategorie -> { von, bis, anzahl }: übliche Beträge aus echten Anfragen
     nachrichten: new Map(), // gesuch_id -> Verlauf (null = wird geladen)
     letzte: new Map(),      // gesuch_id -> Zeit der letzten Nachricht der anderen Person
     gemeldet: new Set(),    // in dieser Sitzung gemeldete Anfragen
@@ -456,7 +457,7 @@
     }
     if (g.status === 'zugesagt') return `<span class="pill pill-info">Zugesagt</span>`;
     if (g.status === 'erledigt') return `<span class="pill pill-warn">Wartet auf Bestätigung</span>`;
-    if (g.status === 'bezahlt') return `<span class="pill pill-good">${icon('check', 'i-xs')} ${istLive() ? 'Bestätigt' : 'Ausgezahlt'}</span>`;
+    if (g.status === 'bezahlt') return `<span class="pill pill-good">${icon('check', 'i-xs')} ${CONFIG.gebuehren && !istLive() ? 'Ausgezahlt' : 'Bestätigt'}</span>`;
     return '';
   }
   function fehlerText(e) {
@@ -591,6 +592,10 @@
         .neq('status', 'zurueckgezogen').order('erstellt', { ascending: false }).limit(300);
       if (error) throw error;
       if (db.user) {
+        if (db.profil) {
+          const pr = await db.client.from('profile').select('hilfen_anzahl, gesuche_anzahl, sterne_summe, sterne_anzahl').eq('id', db.user.id).maybeSingle();
+          if (!pr.error && pr.data) Object.assign(db.profil, pr.data);
+        }
         const bl = await db.client.from('blockiert').select('wen, profil:profile!blockiert_wen_fkey(vorname, nachname_initial)').eq('von', db.user.id);
         if (!bl.error && bl.data) { db.blockiert.clear(); bl.data.forEach((x) => db.blockiert.set(x.wen, anzeigename(x.profil))); }
         const b = await db.client.from('bewertungen').select('gesuch_id, sterne').eq('von', db.user.id);
@@ -903,7 +908,12 @@
       let a = null;
       if (g.eigen && g.status === 'erledigt') a = { prio: 1, titel: 'Bitte bestätigen', text: `${wer} hat „${g.titel}“ als erledigt gemeldet.` };
       else if (ungelesen(g)) a = { prio: 2, titel: 'Neue Nachricht', text: `${wer} hat dir zu „${g.titel}“ geschrieben.` };
-      else if (g.helfer === 'ich' && g.status === 'zugesagt') a = { prio: 3, titel: 'Du hilfst', text: `„${g.titel}“ bei ${wer}, ${wannText(g)}. Danach als erledigt melden.` };
+      else if (g.helfer === 'ich' && g.status === 'zugesagt') {
+        const tag = relativerTag(g);
+        a = { prio: 3, titel: tag ? `${tag} hilfst du` : 'Du hilfst', text: `„${g.titel}“ bei ${wer}, ${wannText(g)}. Danach als erledigt melden.` };
+      }
+      // Wer Hilfe bekommt, sieht am Tag vorher und am Tag selbst, wer kommt
+      else if (g.eigen && g.status === 'zugesagt' && relativerTag(g)) a = { prio: 3, titel: `${relativerTag(g)} kommt ${wer}`, text: `„${g.titel}“, ${wannText(g)}. Frag an der Tür nach dem Sicherheits-Code.` };
       else if (g.status === 'bezahlt' && !g.meineBewertung && (g.helfer === 'ich' || (g.eigen && g.helferName))) a = { prio: 4, titel: 'Bewerten', text: `Wie war es mit ${wer}?` };
       else if (g.eigen && abgelaufen(g)) a = { prio: 5, titel: 'Abgelaufen', text: `„${g.titel}“ sieht gerade niemand. Wähle einen neuen Termin.` };
       if (a) liste.push({ ...a, g });
@@ -949,6 +959,7 @@
     const pills = (g) => `<span class="card-pills">${statusPill(g)}${ungelesen(g) ? '<span class="pill pill-neu">Neue Nachricht</span>' : ''}</span>`;
     const abschnitte = document.querySelectorAll('#view-auftraege .abschnitt');
     if (istLive() && !db.profil) {
+      $('#bilanz').hidden = true;
       $('#summe').hidden = false;
       $('#summe').innerHTML = `<span class="h-klein">Deine Aufträge</span>
         <p>Melde dich an, um deine Anfragen und Zusagen zu sehen.</p>
@@ -959,6 +970,12 @@
     abschnitte.forEach((a) => { a.hidden = false; });
     const zusagen = gesuche.filter((g) => g.helfer === 'ich');
     const eigene = gesuche.filter((g) => g.eigen);
+    // Eigene Bilanz: wie oft geholfen und Hilfe bekommen (bestätigte Aufträge)
+    const geholfen = istLive() ? ((db.profil && db.profil.hilfen_anzahl) || 0) : zusagen.filter((g) => g.status === 'bezahlt').length;
+    const bekommen = istLive() ? ((db.profil && db.profil.gesuche_anzahl) || 0) : eigene.filter((g) => g.status === 'bezahlt').length;
+    const bilanz = $('#bilanz');
+    bilanz.hidden = !geholfen && !bekommen;
+    bilanz.innerHTML = bilanz.hidden ? '' : `${icon('herz', 'i-sm')}<span>${[geholfen ? `Du hast ${geholfen}× geholfen` : '', bekommen ? `${geholfen ? '' : 'Du hast '}${bekommen}× Hilfe bekommen` : ''].filter(Boolean).join(' und ')}. Danke!</span>`;
     const verdient = zusagen.filter((g) => g.status === 'bezahlt').reduce((s, g) => s + auszahlung(g), 0);
     const anteil = Math.min(100, verdient / CONFIG.freigrenze * 100);
     const rest = Math.max(0, CONFIG.freigrenze - verdient);
@@ -1997,6 +2014,20 @@
       return;
     }
     if (t.hasAttribute('data-push-spaeter')) { push.spaeter = Date.now(); pushSpeichern(); renderSheet(); return; }
+    if (t.dataset.pushKat) {
+      if (push.busy) return;
+      const k = t.dataset.pushKat;
+      const vorher = push.kategorien.slice();
+      push.kategorien = vorher.includes(k) ? vorher.filter((x) => x !== k) : KATEGORIEN.map((x) => x.id).filter((x) => x === k || vorher.includes(x));
+      push.busy = true;
+      try { await pushMelden(await pushAbo(true)); pushSpeichern(); }
+      catch (err) { push.kategorien = vorher; meldung(fehlerText(err)); }
+      push.busy = false;
+      renderSheet();
+      const f = $(`#sheet [data-push-kat="${k}"]`);
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
     if (t.hasAttribute('data-push-schalter') || t.hasAttribute('data-push-ein') || t.hasAttribute('data-push-neue') || t.hasAttribute('data-push-test')) {
       if (push.busy) return;
       const merke = t.hasAttribute('data-push-neue') ? '[data-push-neue]' : t.hasAttribute('data-push-test') ? '[data-push-test]' : '[data-push-schalter]';
@@ -2497,12 +2528,14 @@
      Das Gerät meldet sich beim Dienst seines Browsers an und gibt uns eine Adresse dafür. Die Datenbank
      schickt darüber Bescheid, wenn jemand zusagt, schreibt oder ein Auftrag fertig ist. */
   const PUSH_SPEICHER = 'handdrauf-push';
-  const push = { an: false, neue: false, spaeter: 0, busy: false };
+  // kategorien: „Ich helfe gern bei …“, leer = bei allen Tätigkeiten Bescheid geben
+  const push = { an: false, neue: false, spaeter: 0, kategorien: [], busy: false };
   try {
     const p = JSON.parse(localStorage.getItem(PUSH_SPEICHER) || '{}') || {};
     push.an = p.an === true; push.neue = p.neue === true; push.spaeter = Number(p.spaeter) || 0;
+    if (Array.isArray(p.kategorien)) push.kategorien = p.kategorien.filter((k) => KATEGORIEN.some((x) => x.id === k));
   } catch (e) { /* ohne Speicher: aus */ }
-  const pushSpeichern = () => { try { localStorage.setItem(PUSH_SPEICHER, JSON.stringify({ an: push.an, neue: push.neue, spaeter: push.spaeter })); } catch (e) { /* nur für diese Sitzung */ } };
+  const pushSpeichern = () => { try { localStorage.setItem(PUSH_SPEICHER, JSON.stringify({ an: push.an, neue: push.neue, spaeter: push.spaeter, kategorien: push.kategorien })); } catch (e) { /* nur für diese Sitzung */ } };
   // Nur auf der echten Seite mit Datenbank: In der Demo gibt es niemanden, der Bescheid geben könnte
   const pushMoeglich = () => !VORSCHAU && !NATIV && istLive() && !!CONFIG.push && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
   const pushAn = () => pushMoeglich() && push.an && Notification.permission === 'granted' && !!db.profil;
@@ -2531,7 +2564,10 @@
   }
   async function pushMelden(abo) {
     const j = abo.toJSON();
-    const { error } = await db.client.rpc('push_anmelden', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_neue: !!push.neue });
+    const felder = { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_neue: !!push.neue };
+    let { error } = await db.client.rpc('push_anmelden', { ...felder, p_kategorien: push.kategorien });
+    // Datenbank ohne das Update vom 10. November (Teil 5) kennt die Auswahl noch nicht
+    if (error && (error.code === 'PGRST202' || /could not find the function/i.test(error.message || ''))) ({ error } = await db.client.rpc('push_anmelden', felder));
     if (error) throw error;
   }
   async function pushEin() {
@@ -2583,8 +2619,14 @@
     if (Notification.permission === 'denied') return '<p class="klein">Benachrichtigungen sind für diese Seite gesperrt. Du kannst sie in den Einstellungen deines Browsers wieder erlauben.</p>';
     const an = pushAn();
     const ort = (db.profil && db.profil.stadtteil) || 'meinem Stadtteil';
-    return schalter('data-push-schalter', an, 'Bescheid aufs Handy', 'Wenn jemand zusagt, dir schreibt oder ein Auftrag fertig ist.') +
-      (an ? schalter('data-push-neue', push.neue, `Neue Anfragen in ${esc(ort)}`, 'Höchstens alle 20 Minuten.') +
+    // „Ich helfe gern bei …“: nur über passende neue Anfragen Bescheid geben
+    const wahl = push.neue ? `<div class="hilft-gern" role="group" aria-labelledby="hilft-gern-titel">
+        <span class="wahl-titel" id="hilft-gern-titel">Ich helfe gern bei</span>
+        <div class="vorschlaege">${KATEGORIEN.map((k) => `<button type="button" class="chip chip-vorschlag" data-push-kat="${k.id}" aria-pressed="${push.kategorien.includes(k.id)}" ${push.busy ? 'disabled' : ''}>${icon(k.id)}<span>${k.name}</span></button>`).join('')}</div>
+        <p class="klein">${push.kategorien.length ? `Nur bei ${push.kategorien.map((k) => katName(k)).join(', ')}.` : 'Keine Auswahl: Du erfährst von allen neuen Anfragen.'}</p>
+      </div>` : '';
+    return schalter('data-push-schalter', an, 'Bescheid aufs Handy', 'Wenn jemand zusagt, dir schreibt, ein Auftrag fertig ist, und am Abend vor dem Termin.') +
+      (an ? schalter('data-push-neue', push.neue, `Neue Anfragen in ${esc(ort)}`, 'Höchstens alle 20 Minuten.') + wahl +
         '<button type="button" class="link-btn link-links" data-push-test>Test-Benachrichtigung schicken</button>' : '');
   }
   // Tipp auf eine Benachrichtigung, während die App offen ist: Die Offline-Hülle reicht das Ziel weiter
@@ -2604,6 +2646,11 @@
       const { data, error } = await db.client.rpc('statistik');
       if (!error && data) { db.statistik = data; renderGeholfen(); }
     } catch (e) { /* ohne Zähler weiter */ }
+    // Übliche Beträge aus echten Anfragen (erst ab 5 je Tätigkeit)
+    try {
+      const { data, error } = await db.client.rpc('richtwerte');
+      if (!error && data) { db.richtwerte = data; if (wizSchritt === 3) renderRichtwert(); }
+    } catch (e) { /* dann unser Vorschlag */ }
   }
   function renderGeholfen() {
     const el = $('#geholfen');
@@ -2785,8 +2832,13 @@
   }
   function renderRichtwert() {
     const k = katWahl();
-    const [lo, hi] = RICHTWERTE[k] || [10, 20];
-    $('#neu-richtwert').innerHTML = `${icon('info', 'i-sm')}<span>Üblich für ${esc(katName(k))}: <strong>${lo} bis ${hi} €</strong></span>`;
+    // Aus echten Anfragen in Garbsen, sobald es genug gibt, sonst unser Vorschlag
+    const echt = istLive() && db.richtwerte && db.richtwerte[k];
+    const [lo, hi] = echt ? [echt.von, Math.max(echt.von, echt.bis)] : (RICHTWERTE[k] || [10, 20]);
+    const spanne = lo === hi ? `${lo} €` : `${lo} bis ${hi} €`;
+    $('#neu-richtwert').innerHTML = echt
+      ? `${icon('info', 'i-sm')}<span>So viel geben Nachbarn in Garbsen für ${esc(katName(k))}: <strong>${spanne}</strong> <span class="richtwert-quelle">(aus ${echt.anzahl} Anfragen)</span></span>`
+      : `${icon('info', 'i-sm')}<span>Unser Vorschlag für ${esc(katName(k))}: <strong>${spanne}</strong></span>`;
     if (!betragGeaendert) setzeBetrag(Math.round((lo + hi) / 2 / 5) * 5, true);
   }
   function renderKosten() {

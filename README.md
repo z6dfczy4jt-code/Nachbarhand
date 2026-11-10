@@ -11,7 +11,8 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 - **Als Web-App:** Auf dem Handy lässt sich die Seite auf den Startbildschirm legen und startet dann ohne Browserleiste. Die App-Hülle (Seite, Bilder, Karte) lädt auch bei schlechtem Netz.
 - **Für alle Altersgruppen:** Schriftgröße gleich bei der Begrüßung wählbar, „Vorlesen“ in jeder Anfrage, Anrufen statt Schreiben, für Eltern oder Großeltern anfragen, fertige Sätze im Chat, mehr Kontrast, wenn das Gerät darum bittet.
 - **Sicherheit:** Sicherheits-Code für die Tür (wie die PIN bei Uber), „Bescheid sagen“ an eine Vertrauensperson, Warnung bei typischen Betrugsmaschen im Chat.
-- **Benachrichtigungen aufs Handy:** Web Push über die eigene Edge Function `supabase/functions/push` (ohne fremde Dienste wie Firebase). Einrichtung und Test: [SETUP.md](SETUP.md)
+- **Benachrichtigungen aufs Handy:** Web Push über die eigene Edge Function `supabase/functions/push` (ohne fremde Dienste wie Firebase), mit Erinnerungen vor und nach dem Termin und „Ich helfe gern bei …“. Einrichtung und Test: [SETUP.md](SETUP.md)
+- **Preisvorschläge** aus echten Anfragen in Garbsen, sobald es je Tätigkeit genug gibt
 - **Einladen:** QR-Code in der App und ein Aushang fürs Schwarze Brett mit Zetteln zum Abreißen: [assets/aushang.pdf](assets/aushang.pdf)
 
 ## Aufbau

@@ -352,11 +352,13 @@ create table if not exists public.push_abos (
   p256dh text not null check (char_length(p256dh) between 80 and 100),
   auth text not null check (char_length(auth) between 16 and 40),
   neue_anfragen boolean not null default false,  -- auch bei neuen Anfragen im eigenen Stadtteil
+  kategorien text[] not null default '{}',       -- nur diese Tätigkeiten (leer = alle)
   zuletzt_neu timestamptz,                       -- letzte Benachrichtigung über eine neue Anfrage (höchstens alle 20 Minuten)
   getestet timestamptz,
   erstellt timestamptz not null default now()
 );
 create index if not exists push_abos_profil_idx on public.push_abos (profil);
+alter table public.push_abos add column if not exists kategorien text[] not null default '{}';
 alter table public.push_abos enable row level security;
 revoke all on public.push_abos from anon, authenticated;
 
@@ -919,6 +921,28 @@ as $$
   );
 $$;
 
+-- Übliche Beträge je Tätigkeit aus echten Anfragen der letzten 120 Tage (mittlere Hälfte, auf ganze Euro).
+-- Erst ab 5 Anfragen je Tätigkeit, vorher nimmt die App ihren eigenen Vorschlag. Keine Namen, nur Zahlen.
+create or replace function public.richtwerte()
+returns json
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(json_object_agg(kategorie, json_build_object('von', von, 'bis', bis, 'anzahl', anzahl)), '{}'::json)
+  from (
+    select kategorie,
+      round(percentile_cont(0.25) within group (order by betrag))::int as von,
+      round(percentile_cont(0.75) within group (order by betrag))::int as bis,
+      count(*)::int as anzahl
+    from public.gesuche
+    where status in ('offen', 'zugesagt', 'erledigt', 'bestaetigt') and erstellt > now() - interval '120 days'
+    group by kategorie
+    having count(*) >= 5
+  ) x;
+$$;
+
 -- ---------------------------------------------------------------------
 -- Benachrichtigungen: senden, an- und abmelden, Auslöser
 -- ---------------------------------------------------------------------
@@ -959,13 +983,16 @@ $$;
 -- p_art: '' = immer (Zusage, Nachricht, erledigt …), 'stamm' = neue Anfrage von jemandem, dem man
 -- schon geholfen hat, 'neu' = neue Anfrage im Stadtteil (nur Geräte, die das eingeschaltet haben).
 -- Über neue Anfragen gibt es je Gerät höchstens alle 20 Minuten eine Benachrichtigung.
+-- p_kategorie: Bei 'neu' nur an Geräte, die diese Tätigkeit gewählt haben (oder keine Auswahl getroffen haben).
+drop function if exists privat.push_senden(uuid[], text, text, text, text, text);
 create or replace function privat.push_senden(
   p_empfaenger uuid[],
   p_titel text,
   p_text text,
   p_link text,
   p_tag text,
-  p_art text default ''
+  p_art text default '',
+  p_kategorie text default null
 )
 returns void
 language plpgsql
@@ -996,7 +1023,7 @@ begin
   from (
     select endpoint, p256dh, auth from public.push_abos
     where profil = any (p_empfaenger)
-      and (p_art <> 'neu' or neue_anfragen)
+      and (p_art <> 'neu' or (neue_anfragen and (p_kategorie is null or cardinality(kategorien) = 0 or p_kategorie = any (kategorien))))
       and (p_art = '' or zuletzt_neu is null or zuletzt_neu < now() - interval '20 minutes')
     order by erstellt desc
     limit 300
@@ -1007,7 +1034,7 @@ begin
   if p_art <> '' then
     update public.push_abos set zuletzt_neu = now()
     where profil = any (p_empfaenger)
-      and (p_art <> 'neu' or neue_anfragen)
+      and (p_art <> 'neu' or (neue_anfragen and (p_kategorie is null or cardinality(kategorien) = 0 or p_kategorie = any (kategorien))))
       and (zuletzt_neu is null or zuletzt_neu < now() - interval '20 minutes');
   end if;
 
@@ -1029,7 +1056,9 @@ $$;
 
 -- Gerät für Benachrichtigungen anmelden (oder Einstellungen ändern). Erlaubt sind nur die
 -- Adressen der bekannten Dienste von Google, Mozilla, Apple und Microsoft.
-create or replace function public.push_anmelden(p_endpoint text, p_p256dh text, p_auth text, p_neue boolean default false)
+drop function if exists public.push_anmelden(text, text, text, boolean);
+-- p_kategorien: Tätigkeiten für neue Anfragen (leer = alle, null = bisherige Auswahl behalten)
+create or replace function public.push_anmelden(p_endpoint text, p_p256dh text, p_auth text, p_neue boolean default false, p_kategorien text[] default null)
 returns void
 language plpgsql
 security definer
@@ -1044,10 +1073,14 @@ begin
   if p_endpoint is null or p_endpoint !~ '^https://((([a-z0-9-]+\.)*google\.com)|(([a-z0-9-]+\.)*googleapis\.com)|(updates\.push\.services\.mozilla\.com)|([a-z0-9-]+\.push\.apple\.com)|(([a-z0-9-]+\.)+notify\.windows\.com))/' then
     raise exception 'Dieser Browser wird für Benachrichtigungen noch nicht unterstützt.';
   end if;
-  insert into public.push_abos (endpoint, profil, p256dh, auth, neue_anfragen)
-  values (p_endpoint, ich, p_p256dh, p_auth, coalesce(p_neue, false))
+  if p_kategorien is not null and not (p_kategorien <@ array['garten', 'einkaufen', 'tiere', 'haushalt', 'tragen', 'technik']) then
+    raise exception 'Diese Tätigkeit gibt es nicht.';
+  end if;
+  insert into public.push_abos (endpoint, profil, p256dh, auth, neue_anfragen, kategorien)
+  values (p_endpoint, ich, p_p256dh, p_auth, coalesce(p_neue, false), coalesce(p_kategorien, '{}'))
   on conflict (endpoint) do update
-    set profil = excluded.profil, p256dh = excluded.p256dh, auth = excluded.auth, neue_anfragen = excluded.neue_anfragen;
+    set profil = excluded.profil, p256dh = excluded.p256dh, auth = excluded.auth, neue_anfragen = excluded.neue_anfragen,
+        kategorien = case when p_kategorien is null and public.push_abos.profil = excluded.profil then public.push_abos.kategorien else excluded.kategorien end;
   -- höchstens 5 Geräte pro Person, die ältesten fallen weg
   delete from public.push_abos
   where profil = ich
@@ -1125,8 +1158,9 @@ begin
       where p.stadtteil = new.stadtteil and p.id <> new.ersteller
         and not (p.id = any (coalesce(stamm, '{}')))
         and not privat.ist_blockiert(p.id, new.ersteller)
-        and exists (select 1 from public.push_abos a where a.profil = p.id and a.neue_anfragen);
-      perform privat.push_senden(nachbarn, 'Neu in ' || new.stadtteil, kurz, link, 'neu-' || new.id, 'neu');
+        and exists (select 1 from public.push_abos a where a.profil = p.id and a.neue_anfragen
+                    and (cardinality(a.kategorien) = 0 or new.kategorie = any (a.kategorien)));
+      perform privat.push_senden(nachbarn, 'Neu in ' || new.stadtteil, kurz, link, 'neu-' || new.id, 'neu', new.kategorie);
     end if;
     return new;
   end if;
@@ -1197,6 +1231,117 @@ create trigger push_bei_nachricht
   after insert on public.nachrichten
   for each row execute function privat.push_nachricht();
 
+-- ---------------------------------------------------------------------
+-- Erinnerungen (stündlich über pg_cron, siehe unten). Jede nur einmal je Auftrag und Person, nie nachts.
+--   vorher:     am Abend vor dem Termin an beide (bei mehreren möglichen Tagen: vor dem letzten Tag an die helfende Person)
+--   nachher:    am Tag nach dem Termin an die helfende Person: „Hat alles geklappt? Melde es als erledigt.“
+--   bestaetigen: einen Tag nach „erledigt“ an die suchende Person, wenn sie noch nicht bestätigt hat
+-- ---------------------------------------------------------------------
+create table if not exists privat.erinnerungen (
+  gesuch_id uuid not null references public.gesuche (id) on delete cascade,
+  art text not null,
+  an uuid not null,
+  gesendet timestamptz not null default now(),
+  primary key (gesuch_id, art, an)
+);
+alter table privat.erinnerungen enable row level security;
+revoke all on privat.erinnerungen from public, anon, authenticated;
+
+create or replace function privat.erinnern(p_jetzt timestamptz default now())
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  ortszeit timestamp := p_jetzt at time zone 'Europe/Berlin';
+  heute date := (p_jetzt at time zone 'Europe/Berlin')::date;
+  stunde integer := extract(hour from p_jetzt at time zone 'Europe/Berlin');
+  g record;
+  ein_tag boolean;
+  anzahl integer := 0;
+begin
+  if stunde < 9 or stunde >= 21 then
+    return 0;   -- nachts nie
+  end if;
+
+  -- Am Abend vor dem Termin (ab 17 Uhr)
+  if stunde >= 17 then
+    for g in
+      select x.*, e.vorname as wer, h.vorname as hilft
+      from public.gesuche x
+      join public.profile e on e.id = x.ersteller
+      join public.profile h on h.id = x.helfer
+      where x.status = 'zugesagt' and x.bis = heute + 1
+    loop
+      -- Ein einzelner Tag („Mi. 11. Nov., nachmittags“) oder mehrere zur Wahl („Mo. 16. oder Mi. 18. Nov.“, „Woche …“)?
+      ein_tag := g.wann ~ '^(Mo|Di|Mi|Do|Fr|Sa|So)\. [0-9]{1,2}\. [^,]+(,|$)' and position(' oder ' in g.wann) = 0;
+      if not exists (select 1 from privat.erinnerungen where gesuch_id = g.id and art = 'vorher' and an = g.helfer) then
+        insert into privat.erinnerungen (gesuch_id, art, an) values (g.id, 'vorher', g.helfer);
+        anzahl := anzahl + 1;
+        if ein_tag then
+          perform privat.push_senden(array[g.helfer], 'Morgen bei ' || g.wer || ': „' || g.titel || '“',
+            g.wann || '. Tippe für Adresse und Sicherheits-Code.', 'anfrage-' || g.id, 'erinnerung-' || g.id);
+        else
+          perform privat.push_senden(array[g.helfer], 'Morgen ist der letzte Tag: „' || g.titel || '“',
+            'Habt ihr schon einen Tag ausgemacht? Tippe, um ' || g.wer || ' zu schreiben.', 'anfrage-' || g.id, 'erinnerung-' || g.id);
+        end if;
+      end if;
+      if ein_tag and not exists (select 1 from privat.erinnerungen where gesuch_id = g.id and art = 'vorher' and an = g.ersteller) then
+        insert into privat.erinnerungen (gesuch_id, art, an) values (g.id, 'vorher', g.ersteller);
+        anzahl := anzahl + 1;
+        perform privat.push_senden(array[g.ersteller], 'Morgen kommt ' || g.hilft,
+          '„' || g.titel || '“ · ' || g.wann || '. Frag an der Tür nach dem Sicherheits-Code.', 'anfrage-' || g.id, 'erinnerung-' || g.id);
+      end if;
+    end loop;
+  end if;
+
+  -- Am Tag nach dem Termin (ab 10 Uhr): erledigt melden?
+  if stunde >= 10 then
+    for g in
+      select x.*, e.vorname as wer
+      from public.gesuche x join public.profile e on e.id = x.ersteller
+      where x.status = 'zugesagt' and x.bis is not null and x.bis < heute and x.bis >= heute - 14
+        and not exists (select 1 from privat.erinnerungen r where r.gesuch_id = x.id and r.art = 'nachher' and r.an = x.helfer)
+    loop
+      insert into privat.erinnerungen (gesuch_id, art, an) values (g.id, 'nachher', g.helfer);
+      anzahl := anzahl + 1;
+      perform privat.push_senden(array[g.helfer], 'Hat alles geklappt?',
+        '„' || g.titel || '“ bei ' || g.wer || ': Melde den Auftrag als erledigt, dann kann ' || g.wer || ' bestätigen.', 'anfrage-' || g.id, 'erinnerung-' || g.id);
+    end loop;
+
+    -- Einen Tag nach „erledigt“: bitte bestätigen
+    for g in
+      select x.*, h.vorname as hilft
+      from public.gesuche x join public.profile h on h.id = x.helfer
+      where x.status = 'erledigt' and x.geaendert < p_jetzt - interval '1 day' and x.geaendert > p_jetzt - interval '14 days'
+        and not exists (select 1 from privat.erinnerungen r where r.gesuch_id = x.id and r.art = 'bestaetigen' and r.an = x.ersteller)
+    loop
+      insert into privat.erinnerungen (gesuch_id, art, an) values (g.id, 'bestaetigen', g.ersteller);
+      anzahl := anzahl + 1;
+      perform privat.push_senden(array[g.ersteller], 'Bitte kurz bestätigen',
+        g.hilft || ' hat „' || g.titel || '“ als erledigt gemeldet. Ein Tipp genügt.', 'anfrage-' || g.id, 'erinnerung-' || g.id);
+    end loop;
+  end if;
+
+  delete from privat.erinnerungen where gesendet < p_jetzt - interval '60 days';
+  return anzahl;
+exception when others then
+  raise warning 'Erinnerungen nicht verschickt: %', sqlerrm;
+  return anzahl;
+end;
+$$;
+
+-- Stündlich (Minute 7) die Erinnerungen prüfen. pg_cron gibt es bei Supabase, lokal fehlt es: dann nichts tun.
+do $$
+begin
+  if exists (select 1 from pg_available_extensions where name = 'pg_cron') then
+    create extension if not exists pg_cron with schema pg_catalog;
+    perform cron.schedule('hand-drauf-erinnerungen', '7 * * * *', 'select privat.erinnern()');
+  end if;
+end;
+$$;
+
 revoke execute on all functions in schema privat from public, anon, authenticated;
 grant execute on function privat.ist_blockiert(uuid, uuid) to anon, authenticated;
 
@@ -1214,7 +1359,7 @@ revoke execute on function public.melden(uuid, text, text) from public, anon;
 revoke execute on function public.konto_loeschen() from public, anon;
 revoke execute on function public.blockieren(uuid) from public, anon;
 revoke execute on function public.entblocken(uuid) from public, anon;
-revoke execute on function public.push_anmelden(text, text, text, boolean) from public, anon;
+revoke execute on function public.push_anmelden(text, text, text, boolean, text[]) from public, anon;
 revoke execute on function public.push_abmelden(text) from public, anon;
 revoke execute on function public.push_test() from public, anon;
 revoke execute on function public.neues_profil() from public, anon, authenticated;
@@ -1236,12 +1381,14 @@ grant execute on function public.melden(uuid, text, text) to authenticated;
 grant execute on function public.konto_loeschen() to authenticated;
 grant execute on function public.blockieren(uuid) to authenticated;
 grant execute on function public.entblocken(uuid) to authenticated;
-grant execute on function public.push_anmelden(text, text, text, boolean) to authenticated;
+grant execute on function public.push_anmelden(text, text, text, boolean, text[]) to authenticated;
 grant execute on function public.push_abmelden(text) to authenticated;
 grant execute on function public.push_test() to authenticated;
 -- Die Summen für die Startseite darf jeder lesen
 revoke execute on function public.statistik() from public;
 grant execute on function public.statistik() to anon, authenticated;
+revoke execute on function public.richtwerte() from public;
+grant execute on function public.richtwerte() to anon, authenticated;
 
 -- ---------------------------------------------------------------------
 -- Live-Aktualisierung: Änderungen an Gesuchen und neue Nachrichten sofort an die Geräte senden

@@ -75,7 +75,7 @@ function RECHT_TEXTE(b, e) {
 
         <h3>7. Benachrichtigungen aufs Handy</h3>
         <p>Benachrichtigungen bekommst du nur, wenn du sie im Menü oder in einem Auftrag einschaltest. Dein Gerät meldet sich dann beim Benachrichtigungsdienst seines Browsers an: bei Google (Chrome, Android), Apple (Safari, iPhone), Mozilla (Firefox) oder Microsoft (Edge). Dieser Dienst vergibt eine Adresse für dein Gerät. Wir speichern diese Adresse und zwei Schlüssel bei Supabase.</p>
-        <p>Sagt jemand zu, schreibt dir oder ist ein Auftrag fertig, schicken wir über diesen Dienst eine kurze Mitteilung an dein Gerät, zum Beispiel „Tim hilft dir“ mit Titel und Termin der Anfrage. Sie ist so verschlüsselt, dass nur dein Gerät sie lesen kann. Was in euren Nachrichten steht, ist nicht Teil der Mitteilung. Die Dienste sitzen zum Teil in den USA.</p>
+        <p>Sagt jemand zu, schreibt dir oder ist ein Auftrag fertig, schicken wir über diesen Dienst eine kurze Mitteilung an dein Gerät, zum Beispiel „Tim hilft dir“ mit Titel und Termin der Anfrage. Außerdem erinnern wir am Abend vor dem Termin und am Tag danach, falls der Auftrag noch nicht abgeschlossen ist. Hast du „Neue Anfragen“ eingeschaltet, speichern wir auch, bei welchen Tätigkeiten du gern hilfst. Sie ist so verschlüsselt, dass nur dein Gerät sie lesen kann. Was in euren Nachrichten steht, ist nicht Teil der Mitteilung. Die Dienste sitzen zum Teil in den USA.</p>
         <p>Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG). Du kannst sie jederzeit widerrufen: Schalte die Benachrichtigungen im Menü aus. Dann löschen wir die Adresse deines Geräts. Beim Abmelden lösen wir das Gerät von deinem Konto.</p>
 
         <h3>8. Wie lange?</h3>
