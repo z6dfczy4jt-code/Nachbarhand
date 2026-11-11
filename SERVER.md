@@ -123,6 +123,10 @@ Die Sicherungen liegen in `server/sicherungen/` (nur für den Server-Administrat
 
 Die Kopfzeilen erzeugt `python3 tools/build.py --dist` nach `server/erzeugt/` (für Caddy) und `dist/.htaccess` (für Apache). Nicht von Hand ändern, sie hängen vom Inhalt der App ab.
 
+## Ortssuche
+
+Die App sucht Orte und Adressen über Photon (`"geocoder"` in `einstellungen.json`, Standard: der öffentliche Dienst von komoot in Berlin). Der ist kostenlos, aber ohne Zusage für viele Nutzer. Wenn Hand Drauf wächst, läuft Photon auch auf dem eigenen Server (Docker-Abbild `komoot/photon`, Daten für Deutschland etwa 20 GB, mindestens 4 GB RAM). Dann bei `"geocoder"` die eigene Adresse eintragen, die Datenschutzerklärung nennt komoot danach nicht mehr. Ohne Internet oder bei leerem `"geocoder"` nutzt die App eine eingebaute Liste (Stadtteile von Garbsen und größere Städte).
+
 ## Später: eigene Datenbank statt Supabase
 
 Möglich, aber deutlich mehr Arbeit: Supabase lässt sich mit Docker selbst betreiben (Postgres, Anmeldung, Edge Functions). `supabase/schema.sql` enthält alles für die Datenbank, die Sicherung oben die Daten. Erst sinnvoll, wenn der kostenlose Plan nicht mehr reicht.

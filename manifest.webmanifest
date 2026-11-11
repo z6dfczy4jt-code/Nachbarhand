@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Hand Drauf",
   "short_name": "Hand Drauf",
-  "description": "Nachbarschaftshilfe in Garbsen: kleine Jobs in deiner Nähe finden oder Hilfe suchen.",
+  "description": "Nachbarschaftshilfe: kleine Hilfen in deiner Nähe finden oder anbieten.",
   "lang": "de",
   "dir": "ltr",
   "start_url": "./",

@@ -1,6 +1,6 @@
 # Hand Drauf
 
-Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte, eine kleine Aufwandsentschädigung, Nachrichten zwischen den Beteiligten und der Ablauf von der Zusage bis zur Bewertung.
+App für Nachbarschaftshilfe in ganz Deutschland (gestartet in Garbsen): Anfragen auf einer Karte, eine kleine Aufwandsentschädigung, Nachrichten zwischen den Beteiligten und der Ablauf von der Zusage bis zur Bewertung.
 
 - **Live:** https://z6dfczy4jt-code.github.io/Nachbarhand/ (das Repository heißt noch Nachbarhand, die App „Hand Drauf“)
 - **Live** läuft die App mit der Supabase-Datenbank: echte Konten, gemeinsame Anfragen, Nachrichten. Stand und offene Schritte: [SETUP.md](SETUP.md)
@@ -14,7 +14,8 @@ Prototyp einer App für Nachbarschaftshilfe in Garbsen: Anfragen auf einer Karte
 - **Für alle Altersgruppen:** Schriftgröße gleich bei der Begrüßung wählbar, „Vorlesen“ in jeder Anfrage, Anrufen statt Schreiben, für Eltern oder Großeltern anfragen, fertige Sätze im Chat, mehr Kontrast, wenn das Gerät darum bittet.
 - **Sicherheit:** Sicherheits-Code für die Tür (wie die PIN bei Uber), „Bescheid sagen“ an eine Vertrauensperson, Warnung bei typischen Betrugsmaschen im Chat.
 - **Benachrichtigungen aufs Handy:** Web Push über die eigene Edge Function `supabase/functions/push` (ohne fremde Dienste wie Firebase), mit Erinnerungen vor und nach dem Termin und „Ich helfe gern bei …“. Einrichtung und Test: [SETUP.md](SETUP.md)
-- **Preisvorschläge** aus echten Anfragen in Garbsen, sobald es je Tätigkeit genug gibt
+- **Preisvorschläge** aus echten Anfragen, sobald es je Tätigkeit genug gibt
+- **Ganz Deutschland:** Ort per Suche (Photon/OpenStreetMap), Umkreis 2 bis 50 km, Karte am eigenen Ort; gespeichert wird nur die Mitte eines Rasterfelds von etwa 1 km (Datenbank-Update Teil 7)
 - **Einladen:** QR-Code in der App und ein Aushang fürs Schwarze Brett mit Zetteln zum Abreißen: [assets/aushang.pdf](assets/aushang.pdf)
 
 ## Aufbau

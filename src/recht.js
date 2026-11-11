@@ -46,9 +46,10 @@ function RECHT_TEXTE(b, h, e) {
 
         <h3>3. Karte</h3>
         <p>Die Kartenbilder (Straßen, Namen, Parks) lädt dein Gerät von basemap.de, der amtlichen Webkarte von Bund und Ländern. Die Server betreibt das Bundesamt für Kartographie und Geodäsie (BKG), Richard-Strauss-Allee 11, 60598 Frankfurt am Main. Dabei werden deine IP-Adresse und der gezeigte Kartenausschnitt übertragen. Sind diese Server nicht erreichbar, lädt die App die Kartenbilder von OpenStreetMap (OpenStreetMap Foundation, Großbritannien; für Großbritannien gilt ein Angemessenheitsbeschluss der EU-Kommission) oder von openstreetmap.de (FOSSGIS e.V., Deutschland). Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO: Ohne Karte kann die App nicht zeigen, wo Hilfe gesucht wird.</p>
-        <p>Kartenbilder: © GeoBasis-DE / BKG, CC BY 4.0, bzw. © OpenStreetMap-Mitwirkende, ODbL. Sind keine Kartenbilder erreichbar, zeichnet die App die Stadtteile vereinfacht selbst; deren Lage beruht auf Daten von OpenStreetMap und GeoNames (CC BY 4.0).</p>
-        <p>Anfragen erscheinen auf der Karte nur ungefähr: als Punkt 100 bis 400 Meter neben der echten Adresse oder, weiter herausgezoomt, als Zahl im Stadtteil.</p>
-        <p>Deinen eigenen Standort fragt die App nicht ab. Sie rechnet Entfernungen von der Mitte deines Stadtteils aus.</p>
+        <p>Kartenbilder: © GeoBasis-DE / BKG, CC BY 4.0, bzw. © OpenStreetMap-Mitwirkende, ODbL. Sind keine Kartenbilder erreichbar, zeigt die App nur die Anfragen, in Garbsen dazu die Stadtteile vereinfacht (Lage nach Daten von OpenStreetMap und GeoNames, CC BY 4.0).</p>
+        <p><strong>Ortssuche:</strong> Wenn du einen Ort oder eine Adresse eintippst, ${!h || !h.geocoder ? 'sucht die App in einer eingebauten Liste, ohne etwas zu übertragen.' : /komoot\.io/.test(h.geocoder) ? 'schickt dein Gerät den eingetippten Text an den Suchdienst Photon (komoot GmbH, Berlin), der Vorschläge aus den Daten von OpenStreetMap liefert. Dabei wird auch deine IP-Adresse übertragen.' : 'schickt dein Gerät den eingetippten Text an unseren eigenen Suchdienst (Photon, Daten von OpenStreetMap). Er speichert die Anfragen nicht.'} Hand Drauf speichert nur den gewählten Ortsnamen und die Mitte eines Rasterfelds von etwa einem Kilometer, nie die genaue Lage deiner Adresse. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der App) und unser berechtigtes Interesse an einer einfachen Ortsauswahl (Art. 6 Abs. 1 lit. f DSGVO).</p>
+        <p>Anfragen erscheinen auf der Karte nur ungefähr: als Punkt 100 bis 400 Meter um die Mitte eines Rasterfelds von etwa einem Kilometer, in dem die Adresse liegt, oder, weiter herausgezoomt, als Zahl.</p>
+        <p>Deinen eigenen Standort fragt die App nicht ab. Sie rechnet Entfernungen von deinem gewählten Ort aus. Ist er im Konto gespeichert, nutzt die Datenbank ihn auch, um dir auf Wunsch neue Anfragen in deinem Umkreis zu melden; andere sehen davon nur den Namen des Orts.</p>
 
         <h3>4. Speicher auf deinem Gerät</h3>
         <p>Die App speichert im Browser deines Geräts (localStorage): deine Ansicht-Einstellungen, welche Nachrichten du gelesen hast, ob Benachrichtigungen auf diesem Gerät eingeschaltet sind, die Beispieldaten der Demo und, wenn du angemeldet bist, deine Anmeldung. Diese Daten bleiben auf deinem Gerät. Sie sind für die Funktionen nötig, die du nutzt (§ 25 Abs. 2 Nr. 2 TDDDG). Cookies für Werbung oder Statistik setzen wir nicht.</p>
@@ -59,7 +60,7 @@ function RECHT_TEXTE(b, h, e) {
         <p>Gespeichert werden:</p>
         <ul>
           <li>E-Mail-Adresse und Passwort (nur verschlüsselt als Prüfwert)</li>
-          <li>Vorname, Anfangsbuchstabe des Nachnamens, Stadtteil und deine Bestätigung, dass du mindestens 18 bist</li>
+          <li>Vorname, Anfangsbuchstabe des Nachnamens, Ort (Name sowie Mitte eines Rasterfelds von etwa 1 km) und deine Bestätigung, dass du mindestens 18 bist</li>
           <li>deine Anfragen, die Adresse zu einer Anfrage, deine Zusagen und Bewertungen</li>
           <li>wenn du sie angibst: eine Telefonnummer zur Anfrage und für wen die Hilfe ist</li>
           <li>den Sicherheits-Code eines laufenden Auftrags</li>
@@ -72,7 +73,7 @@ function RECHT_TEXTE(b, h, e) {
 
         <h3>6. Wer sieht was?</h3>
         <ul>
-          <li><strong>Alle, auch ohne Konto:</strong> offene Anfragen mit Vorname, Anfangsbuchstabe, Stadtteil, ungefährer Lage (100 bis 400 Meter um die Stadtteilmitte), Bewertungsschnitt und, wenn angegeben, für wen die Hilfe ist.</li>
+          <li><strong>Alle, auch ohne Konto:</strong> offene Anfragen mit Vorname, Anfangsbuchstabe, Ort, ungefährer Lage (100 bis 400 Meter um die Mitte eines Rasterfelds von etwa 1 km), Bewertungsschnitt und, wenn angegeben, für wen die Hilfe ist.</li>
           <li><strong>Nur die Person, die zusagt:</strong> die genaue Adresse und die Telefonnummer.</li>
           <li><strong>Nur ihr beide:</strong> eure Nachrichten und der Sicherheits-Code für die Tür.</li>
           <li><strong>Nur wir:</strong> Meldungen. Die gemeldete Person erfährt nicht, wer gemeldet hat.</li>
@@ -98,10 +99,10 @@ function RECHT_TEXTE(b, h, e) {
     nutzung: {
       titel: 'Nutzungsbedingungen',
       html: `${offen}
-        <p class="recht-kurz">Fassung für die Testphase in Garbsen. In dieser Phase ist Hand Drauf kostenlos und vermittelt nur.</p>
+        <p class="recht-kurz">Fassung für die Testphase. In dieser Phase ist Hand Drauf kostenlos und vermittelt nur.</p>
 
         <h3>1. Was Hand Drauf ist</h3>
-        <p>Hand Drauf ist eine Plattform, auf der sich Nachbarn in Garbsen bei kleinen Dingen helfen: Wer Hilfe braucht, stellt eine Anfrage, wer helfen möchte, sagt zu. Betreiber ist ${name} (siehe ${verweis('impressum', 'Impressum')}).</p>
+        <p>Hand Drauf ist eine Plattform, auf der sich Nachbarn bei kleinen Dingen helfen: Wer Hilfe braucht, stellt eine Anfrage, wer helfen möchte, sagt zu. Betreiber ist ${name} (siehe ${verweis('impressum', 'Impressum')}).</p>
         <p>Die Absprache über eine Hilfe kommt nur zwischen euch Nutzern zustande. Hand Drauf ist nicht Vertragspartner, nicht Arbeitgeber und nicht Auftraggeber.</p>
 
         <h3>2. Kosten</h3>

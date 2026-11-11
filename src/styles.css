@@ -920,3 +920,26 @@ a.btn { text-decoration: none; }
   .feier .hs-funken { opacity: 0; }
 }
 #banner-naechstes:empty { display: none; }
+
+/* ===== Ort wählen (ganz Deutschland): Eingabe mit Vorschlägen ===== */
+.ort-feld { position: relative; }
+.ort-eingabe { width: 100%; box-sizing: border-box; }
+.ort-liste { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 60; margin: 0; padding: 6px; list-style: none;
+  max-height: 300px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r-m); box-shadow: var(--schatten-2); }
+.ort-liste li { display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; -webkit-justify-content: center; justify-content: center;
+  min-height: 44px; padding: 8px 12px; border-radius: var(--r-s); cursor: pointer; }
+.ort-liste li[aria-selected="true"], .ort-liste li:hover { background: var(--tile); }
+.ort-liste .ort-leer { color: var(--muted); cursor: default; }
+.ort-liste .ort-leer:hover { background: none; }
+.ort-titel { font-weight: 600; line-height: 1.3; }
+.ort-unter { color: var(--muted); font-size: 0.9375rem; line-height: 1.3; }
+.ort-knopf { display: -webkit-inline-flex; display: inline-flex; -webkit-align-items: center; align-items: center; min-height: 44px; max-width: 100%; padding: 0 14px; min-width: 0;
+  border: 0; border-radius: 999px; background: var(--tile); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+.ort-knopf .i { margin-right: 6px; -webkit-flex: none; flex: none; }
+.ort-knopf span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.konto-ort { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: space-between; justify-content: space-between;
+  padding: 12px 14px; border-radius: var(--r-m); background: var(--tile); }
+.konto-ort > span { display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; min-width: 0; margin-right: 12px; }
+.konto-ort strong { overflow-wrap: anywhere; }
+.start-ort { text-align: left; margin-top: 8px; }

@@ -58,6 +58,9 @@ def einstellungen_laden():
     for feld in ('name', 'anschrift', 'email', 'telefon'):
         e['betreiber'].setdefault(feld, '')
     e.setdefault('karte', {}).setdefault('carto', '')
+    e.setdefault('geocoder', '')
+    if e['geocoder'] and not re.match(r'^https://[^/\s]+(/[^\s]*)?$', e['geocoder']):
+        fehler('"geocoder" muss mit https:// beginnen, zum Beispiel https://photon.komoot.io (leer = nur eingebaute Ortsliste)')
     # supabase-js: liegt die Datei in assets/vendor, kommt sie vom eigenen Server
     lokal = WURZEL / f'assets/vendor/supabase-js-{SUPABASE_VERSION}.js'
     e['supabaseJs'] = f'./assets/vendor/{lokal.name}' if lokal.exists() else SUPABASE_CDN
@@ -176,7 +179,7 @@ def teile(vorschau):
     defs, intro, feier = handschlag()
     body = body.replace('<!--HANDSCHLAG-DEFS-->', defs).replace('<!--INTRO-SVG-->', intro).replace('<!--FEIER-SVG-->', feier)
     import hashlib
-    oeffentlich = {k: EINSTELLUNGEN[k] for k in ('adresse', 'supabase', 'push', 'betreiber', 'hosting', 'karte', 'codeLogin', 'gebuehren', 'supabaseJs') if k in EINSTELLUNGEN}
+    oeffentlich = {k: EINSTELLUNGEN[k] for k in ('adresse', 'supabase', 'push', 'betreiber', 'hosting', 'karte', 'geocoder', 'codeLogin', 'gebuehren', 'supabaseJs') if k in EINSTELLUNGEN}
     programm = '\n'.join([bilder(), qr()] + [(SRC / n).read_text() for n in ('recht.js', 'fragen.js', 'garbsen3d.js', 'app.js')])
     # Fassung: Fingerabdruck von Programm, Aussehen und Einstellungen. Ändert sich bei jeder neuen Version.
     fassung = hashlib.sha256((programm + styles + body + json.dumps(oeffentlich, sort_keys=True)).encode()).hexdigest()[:10]
@@ -211,12 +214,12 @@ def standalone():
             '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#EDF1F5" media="(prefers-color-scheme: light)">\n'
             '<meta name="theme-color" content="#0C131D" media="(prefers-color-scheme: dark)">\n'
-            '<meta name="description" content="Nachbarschaftshilfe in Garbsen: kleine Hilfen in deiner Nähe finden oder selbst anfragen.">\n'
+            '<meta name="description" content="Nachbarschaftshilfe in ganz Deutschland: kleine Hilfen in deiner Nähe finden oder selbst anfragen.">\n'
             # Link-Vorschau in WhatsApp, Signal, Facebook, Mail (Bild aus design/vorschau.py)
             '<meta property="og:type" content="website">\n'
             '<meta property="og:site_name" content="Hand Drauf">\n'
             '<meta property="og:locale" content="de_DE">\n'
-            '<meta property="og:title" content="Hand Drauf: Nachbarn helfen Nachbarn in Garbsen">\n'
+            '<meta property="og:title" content="Hand Drauf: Nachbarn helfen Nachbarn">\n'
             '<meta property="og:description" content="Rasen mähen, Einkauf hochtragen, Drucker einrichten: kleine Hilfen in deiner Nähe, gegen eine kleine Aufwandsentschädigung.">\n'
             f'<meta property="og:url" content="{ADRESSE}">\n'
             f'<meta property="og:image" content="{ADRESSE}assets/vorschau.png">\n'
@@ -255,7 +258,8 @@ def inhaltsrichtlinie(html, einst=None, genau_zwei=True):
         "style-src 'self' 'unsafe-inline'",
         "img-src 'self' data: blob: " + ' '.join(karten),
         "font-src 'self'",
-        "connect-src 'self'" + (f' https://{db} wss://{db}' if db else '') + (' https://cdn.jsdelivr.net' if cdn else ''),
+        "connect-src 'self'" + (f' https://{db} wss://{db}' if db else '') + (' https://cdn.jsdelivr.net' if cdn else '')
+        + (' ' + einst['geocoder'].rstrip('/') if einst.get('geocoder', '').startswith('https://') else ''),
         "worker-src 'self'",
         "manifest-src 'self'",
         "media-src 'self'",

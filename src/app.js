@@ -142,7 +142,7 @@
 
   const SPEICHER = 'nachbarhand-prototyp-v3';
   const VIEWS = ['entdecken', 'karte', 'neu', 'auftraege'];
-  const RECHT = RECHT_TEXTE(CONFIG.betreiber, Object.assign({ supabaseCdn: /^https?:/.test(SUPABASE_JS) }, CONFIG.hosting), (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+  const RECHT = RECHT_TEXTE(CONFIG.betreiber, Object.assign({ supabaseCdn: /^https?:/.test(SUPABASE_JS), geocoder: String(EINSTELLUNGEN.geocoder || '') }, CONFIG.hosting), (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
   const FRAGEN = FRAGEN_TEXTE(CONFIG);
   const istSeite = (n) => !!RECHT[n] || n === 'fragen'; // Seiten mit eigener Adresse (#impressum, #fragen …)
   const EIGEN_VERSATZ = [[180, -150], [-160, 170], [220, 160], [-210, -190]]; // Demo: Meter Nord/Ost ab deinem Standort
@@ -190,7 +190,7 @@
   }
 
   let gesuche = [];
-  const ui = { view: 'entdecken', kat: 'alle', stadtteil: 'alle', suche: '', sort: 'termin', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', authWeg: 'passwort', authCode: '', vorlesen: false, markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false, bearbeiten: null, blockieren: false };
+  const ui = { view: 'entdecken', kat: 'alle', umkreis: 10, suche: '', sort: 'termin', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', authWeg: 'passwort', authCode: '', vorlesen: false, markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false, bearbeiten: null, blockieren: false };
 
   /* ===== Ansicht: Design, Schriftgröße, Startseite (nur auf diesem Gerät gespeichert) ===== */
   const ANSICHT_SPEICHER = 'handdrauf-ansicht';
@@ -229,17 +229,38 @@
   }
   ansichtAnwenden();
 
-  // Stadtteil aus der Begrüßung (nur auf diesem Gerät). Angemeldet zählt der Stadtteil im Profil.
+  // Ort aus der Begrüßung oder dem Menü: { name, lat, lng }, nur auf diesem Gerät. Angemeldet zählt der Ort im Konto.
   const START_SPEICHER = 'handdrauf-start-gesehen';
   const START_FASSUNG = '2'; // erhöhen, wenn alle die Begrüßung noch einmal sehen sollen
-  const ORT_SPEICHER = 'handdrauf-stadtteil';
+  const ORT_SPEICHER = 'handdrauf-ort';
+  const UMKREIS_SPEICHER = 'handdrauf-umkreis';
+  const UMKREISE = [2, 5, 10, 25, 50];
   let gewaehlterOrt = null;
-  try { const o = localStorage.getItem(ORT_SPEICHER); if (STADTTEILE.some((x) => x.name === o)) gewaehlterOrt = o; } catch (e) { /* ohne Speicher */ }
-  function ortWaehlen(name) {
-    if (!STADTTEILE.some((x) => x.name === name)) return;
-    gewaehlterOrt = name;
-    try { localStorage.setItem(ORT_SPEICHER, name); } catch (e) { /* nur für diese Sitzung */ }
+  function inDeutschland(lat, lng) {
+    return typeof lat === 'number' && typeof lng === 'number' && lat >= 47.2 && lat <= 55.1 && lng >= 5.8 && lng <= 15.1;
   }
+  // Ein Ort aus Speicher, Liste oder Suche. Ein bloßer Name ist ein Stadtteil von Garbsen (ältere Fassungen).
+  function ortPruefen(o) {
+    if (typeof o === 'string') {
+      const s = STADTTEILE.find((x) => x.name === o);
+      return s ? { name: s.name, lat: s.lat, lng: s.lng } : null;
+    }
+    return o && typeof o.name === 'string' && o.name.trim().length >= 2 && inDeutschland(o.lat, o.lng)
+      ? { name: o.name.trim().slice(0, 60), lat: o.lat, lng: o.lng } : null;
+  }
+  try {
+    const roh = localStorage.getItem(ORT_SPEICHER);
+    gewaehlterOrt = roh ? ortPruefen(JSON.parse(roh)) : ortPruefen(localStorage.getItem('handdrauf-stadtteil') || '');
+  } catch (e) { /* ohne Speicher */ }
+  function ortWaehlen(o) {
+    const ort = ortPruefen(o);
+    if (!ort) return false;
+    gewaehlterOrt = ort;
+    try { localStorage.setItem(ORT_SPEICHER, JSON.stringify(ort)); } catch (e) { /* nur für diese Sitzung */ }
+    return true;
+  }
+  // Mitte eines Rasterfelds von etwa 1 × 1 km (wie in der Datenbank). Genauer verlässt keine Lage das Gerät.
+  const rasterpunkt = (o) => ({ lat: (Math.floor(o.lat * 100) + 0.5) / 100, lng: (Math.floor(o.lng * 66) + 0.5) / 66 });
 
   /* ===== Hilfsfunktionen ===== */
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -264,16 +285,205 @@
   function versetze(p, nordM, ostM) {
     return { lat: p.lat + nordM / 111320, lng: p.lng + ostM / (111320 * Math.cos(p.lat * Math.PI / 180)) };
   }
-  // Wo bin ich? Demo: Tim in Garbsen-Mitte. Live: Mitte des Stadtteils aus dem Profil.
+  // Wo bin ich? Demo: der gewählte Ort oder Tim in Garbsen-Mitte. Live: der Ort aus dem Konto (Rasterpunkt),
+  // sonst der auf diesem Gerät gewählte Ort. Die App fragt nie den Standort des Geräts ab.
   function ortVon(name) {
     const s = STADTTEILE.find((x) => x.name === name) || STADTTEILE[0];
     return { lat: s.lat, lng: s.lng, stadtteil: s.name };
   }
   function meinOrt() {
-    if (!istLive()) return gewaehlterOrt && gewaehlterOrt !== CONFIG.ich.stadtteil ? ortVon(gewaehlterOrt) : CONFIG.ich;
-    return ortVon((db.profil && db.profil.stadtteil) || gewaehlterOrt || 'Garbsen-Mitte');
+    if (!istLive()) {
+      return gewaehlterOrt && gewaehlterOrt.name !== CONFIG.ich.stadtteil ? { lat: gewaehlterOrt.lat, lng: gewaehlterOrt.lng, stadtteil: gewaehlterOrt.name } : CONFIG.ich;
+    }
+    if (db.profil) {
+      if (db.wohnort) return { lat: db.wohnort.lat, lng: db.wohnort.lng, stadtteil: db.profil.stadtteil };
+      if (STADTTEILE.some((x) => x.name === db.profil.stadtteil)) return ortVon(db.profil.stadtteil);
+      if (gewaehlterOrt) return { lat: gewaehlterOrt.lat, lng: gewaehlterOrt.lng, stadtteil: db.profil.stadtteil };
+    }
+    return gewaehlterOrt ? { lat: gewaehlterOrt.lat, lng: gewaehlterOrt.lng, stadtteil: gewaehlterOrt.name } : ortVon('Garbsen-Mitte');
   }
   const zeigeIch = () => !istLive() || !!db.profil || !!gewaehlterOrt;
+
+  /* ===== Orte in ganz Deutschland =====
+     Suche über Photon (OpenStreetMap-Daten, betrieben von komoot in Berlin, Adresse in einstellungen.json).
+     Ohne Netz oder in der Vorschau: die Stadtteile von Garbsen und die größeren Städte aus der Liste unten. */
+  const GEOCODER = VORSCHAU ? '' : String(EINSTELLUNGEN.geocoder || '').replace(/\/$/, '');
+  const STAEDTE = [
+    ['Berlin', 52.5200, 13.4050], ['Hamburg', 53.5511, 9.9937], ['München', 48.1372, 11.5755], ['Köln', 50.9375, 6.9603],
+    ['Frankfurt am Main', 50.1109, 8.6821], ['Stuttgart', 48.7758, 9.1829], ['Düsseldorf', 51.2277, 6.7735], ['Leipzig', 51.3397, 12.3731],
+    ['Dortmund', 51.5136, 7.4653], ['Essen', 51.4556, 7.0116], ['Bremen', 53.0793, 8.8017], ['Dresden', 51.0504, 13.7373],
+    ['Hannover', 52.3759, 9.7320], ['Nürnberg', 49.4521, 11.0767], ['Duisburg', 51.4344, 6.7623], ['Bochum', 51.4818, 7.2162],
+    ['Wuppertal', 51.2562, 7.1508], ['Bielefeld', 52.0302, 8.5325], ['Bonn', 50.7374, 7.0982], ['Münster', 51.9607, 7.6261],
+    ['Mannheim', 49.4875, 8.4660], ['Karlsruhe', 49.0069, 8.4037], ['Augsburg', 48.3705, 10.8978], ['Wiesbaden', 50.0782, 8.2398],
+    ['Aachen', 50.7753, 6.0839], ['Braunschweig', 52.2689, 10.5268], ['Kiel', 54.3233, 10.1228], ['Chemnitz', 50.8278, 12.9214],
+    ['Halle (Saale)', 51.4969, 11.9688], ['Magdeburg', 52.1205, 11.6276], ['Freiburg im Breisgau', 47.9990, 7.8421], ['Mainz', 49.9929, 8.2473],
+    ['Lübeck', 53.8655, 10.6866], ['Erfurt', 50.9848, 11.0299], ['Oldenburg', 53.1435, 8.2146], ['Rostock', 54.0924, 12.0991],
+    ['Kassel', 51.3127, 9.4797], ['Osnabrück', 52.2799, 8.0472], ['Potsdam', 52.3906, 13.0645], ['Saarbrücken', 49.2402, 6.9969],
+    ['Regensburg', 49.0134, 12.1016], ['Würzburg', 49.7913, 9.9534], ['Göttingen', 51.5413, 9.9158], ['Hildesheim', 52.1508, 9.9511],
+    ['Wolfsburg', 52.4227, 10.7865], ['Langenhagen', 52.4394, 9.7397], ['Wunstorf', 52.4239, 9.4364], ['Seelze', 52.3961, 9.5981],
+    ['Laatzen', 52.3094, 9.7966], ['Neustadt am Rübenberge', 52.5052, 9.4636]
+  ];
+  const vergleich = (t) => String(t).toLowerCase().replace(/ä/g, 'a').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ß/g, 'ss').replace(/[^a-z0-9]+/g, ' ').trim();
+  function lokaleOrte(q) {
+    const v = vergleich(q);
+    if (!v) return [];
+    const alle = STADTTEILE.map((x) => ({ name: x.name, lat: x.lat, lng: x.lng, titel: x.name, unter: 'Garbsen' }))
+      .concat(STAEDTE.map(([name, lat, lng]) => ({ name, lat, lng, titel: name, unter: '' })));
+    const treffer = alle.filter((o) => (' ' + vergleich(o.name + ' ' + o.unter)).indexOf(' ' + v) >= 0);
+    return treffer.slice(0, 7);
+  }
+  // Ergebnis von Photon in einen Ort umwandeln. Öffentlich sichtbar ist nur der Ortsname (Stadtteil, Stadt).
+  function photonZuOrt(f) {
+    const p = f.properties || {}, c = (f.geometry || {}).coordinates || [];
+    const lat = c[1], lng = c[0];
+    if ((p.countrycode && p.countrycode !== 'DE') || !inDeutschland(lat, lng)) return null;
+    const istStadt = ['city', 'town', 'village', 'municipality', 'hamlet'].indexOf(p.osm_value) >= 0 || p.type === 'city';
+    const istTeil = ['suburb', 'quarter', 'neighbourhood', 'borough', 'city_district', 'district'].indexOf(p.osm_value) >= 0 || p.type === 'district' || p.type === 'locality';
+    const stadt = p.city || (istStadt ? p.name : '') || p.county || '';
+    const teil = p.district || p.locality || (istTeil ? p.name : '');
+    const garbsen = stadt === 'Garbsen' && STADTTEILE.some((x) => x.name === teil);
+    const ort = garbsen ? teil : teil && stadt && teil.indexOf(stadt) < 0 && stadt.indexOf(teil) < 0 ? `${teil}, ${stadt}` : (teil || stadt || p.name || '');
+    if (ort.length < 2) return null;
+    const strasse = p.street ? `${p.street}${p.housenumber ? ' ' + p.housenumber : ''}` : (p.osm_key === 'highway' ? p.name : '');
+    const titel = strasse || p.name || ort;
+    return { name: ort.slice(0, 60), lat, lng, titel, unter: [p.postcode, ort !== titel ? ort : ''].filter(Boolean).join(' '), strasse };
+  }
+  const ortCache = new Map();
+  // art: 'ort' (Wohnort, Stadtteil, Postleitzahl) oder 'adresse' (Straße und Hausnummer)
+  async function ortSuchen(q, art, nahe) {
+    q = String(q || '').trim();
+    if (q.length < 2) return [];
+    if (!GEOCODER || !window.fetch) return lokaleOrte(q);
+    const bei = nahe || meinOrt();
+    const schluessel = art + '|' + q + '|' + Math.round(bei.lat * 10) + ',' + Math.round(bei.lng * 10);
+    if (ortCache.has(schluessel)) return ortCache.get(schluessel);
+    try {
+      const url = `${GEOCODER}/api/?q=${encodeURIComponent(q)}&lang=de&limit=8&bbox=5.8,47.2,15.1,55.1&lat=${bei.lat.toFixed(3)}&lon=${bei.lng.toFixed(3)}`;
+      const antwort = await fetch(url, { headers: { Accept: 'application/json' } });
+      if (!antwort.ok) throw new Error('Ortssuche ' + antwort.status);
+      const daten = await antwort.json();
+      const gesehen = {};
+      const liste = (daten.features || []).map(photonZuOrt).filter((o) => {
+        if (!o) return false;
+        const k = (art === 'adresse' ? o.titel + '|' : '') + o.name;
+        if (gesehen[k]) return false;
+        gesehen[k] = 1;
+        return true;
+      }).slice(0, 7);
+      ortCache.set(schluessel, liste);
+      return liste;
+    } catch (e) {
+      return lokaleOrte(q);
+    }
+  }
+
+  // Ort-Feld: Eingabe mit Vorschlägen (Combobox). Der gewählte Ort steht in data-name/-lat/-lng.
+  function ortFeldHTML(id, ort, platzhalter, art) {
+    const o = ort && ortPruefen(ort);
+    return `<div class="ort-feld"><input id="${id}" class="ort-eingabe" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="${id}-liste"
+      autocomplete="off" autocapitalize="words" spellcheck="false" maxlength="80" data-art="${art || 'ort'}" placeholder="${esc(platzhalter || 'Ort, Stadtteil oder Postleitzahl')}"
+      value="${o ? esc(o.name) : ''}" ${o ? `data-name="${esc(o.name)}" data-lat="${o.lat}" data-lng="${o.lng}"` : ''}>
+      <ul class="ort-liste" id="${id}-liste" role="listbox" aria-label="Vorschläge" hidden></ul></div>`;
+  }
+  function ortSetzenIn(input, o) {
+    if (!input) return;
+    const ort = o && ortPruefen(o);
+    input.value = ort ? ort.name : '';
+    if (ort) { input.dataset.name = ort.name; input.dataset.lat = ort.lat; input.dataset.lng = ort.lng; }
+    else { delete input.dataset.name; delete input.dataset.lat; delete input.dataset.lng; }
+  }
+  // Gewählter Ort, solange der Text nicht verändert wurde
+  function ortAusFeld(input) {
+    if (!input || !input.dataset.lat || input.value.trim() !== input.dataset.name) return null;
+    return ortPruefen({ name: input.dataset.name, lat: Number(input.dataset.lat), lng: Number(input.dataset.lng) });
+  }
+  // Wie ortAusFeld, aber wer nur getippt hat, bekommt den ersten Vorschlag
+  async function ortAufloesen(input) {
+    const o = ortAusFeld(input);
+    if (o || !input || input.value.trim().length < 2) return o;
+    const liste = await ortSuchen(input.value, input.dataset.art || 'ort');
+    if (!liste.length) return null;
+    ortSetzenIn(input, liste[0]);
+    return ortAusFeld(input);
+  }
+  const ortFelder = new WeakMap();
+  function ortListeZu(input) {
+    const liste = document.getElementById(input.getAttribute('aria-controls'));
+    if (liste) { liste.hidden = true; liste.innerHTML = ''; }
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+  }
+  function ortListeZeigen(input, treffer) {
+    const liste = document.getElementById(input.getAttribute('aria-controls'));
+    if (!liste) return;
+    ortFelder.set(input, treffer);
+    if (!treffer.length) {
+      liste.innerHTML = `<li class="ort-leer" role="option" aria-disabled="true">${GEOCODER ? 'Nichts gefunden. Probier die Postleitzahl.' : 'Nichts gefunden.'}</li>`;
+    } else {
+      liste.innerHTML = treffer.map((o, i) => `<li role="option" id="${input.id}-v${i}" data-ort-i="${i}" aria-selected="false">
+        <span class="ort-titel">${esc(o.titel || o.name)}</span>${o.unter ? `<span class="ort-unter">${esc(o.unter)}</span>` : ''}</li>`).join('');
+    }
+    liste.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+  }
+  function ortNehmen(input, i) {
+    const o = (ortFelder.get(input) || [])[i];
+    if (!o) return;
+    ortSetzenIn(input, o);
+    if (input.dataset.art === 'adresse' && o.titel) input.value = o.titel, input.dataset.name = o.titel, input.dataset.ort = o.name;
+    ortListeZu(input);
+    input.dispatchEvent(new CustomEvent('ortgewaehlt', { bubbles: true, detail: o }));
+  }
+  let ortSuchTimer = 0;
+  document.addEventListener('input', (e) => {
+    const input = e.target;
+    if (!input.classList || !input.classList.contains('ort-eingabe')) return;
+    clearTimeout(ortSuchTimer);
+    const text = input.value;
+    if (text.trim().length < 2) { ortListeZu(input); return; }
+    ortSuchTimer = setTimeout(async () => {
+      const treffer = await ortSuchen(text, input.dataset.art || 'ort');
+      if (input.value === text && document.activeElement === input) ortListeZeigen(input, treffer);
+    }, GEOCODER ? 280 : 60);
+  });
+  document.addEventListener('keydown', (e) => {
+    const input = e.target;
+    if (!input.classList || !input.classList.contains('ort-eingabe')) return;
+    const liste = document.getElementById(input.getAttribute('aria-controls'));
+    const optionen = liste && !liste.hidden ? [...liste.querySelectorAll('[data-ort-i]')] : [];
+    const aktiv = optionen.findIndex((o) => o.getAttribute('aria-selected') === 'true');
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && optionen.length) {
+      e.preventDefault();
+      const neu = e.key === 'ArrowDown' ? Math.min(optionen.length - 1, aktiv + 1) : Math.max(0, aktiv - 1);
+      optionen.forEach((o, i) => o.setAttribute('aria-selected', String(i === neu)));
+      input.setAttribute('aria-activedescendant', optionen[neu].id);
+    } else if (e.key === 'Enter' && optionen.length) {
+      e.preventDefault();
+      ortNehmen(input, Number(optionen[Math.max(0, aktiv)].dataset.ortI));
+    } else if (e.key === 'Escape' && optionen.length) {
+      e.preventDefault();
+      e.stopPropagation();
+      ortListeZu(input);
+    }
+  }, true);
+  // mousedown statt click: sonst schließt das Verlassen des Feldes die Liste vor der Auswahl
+  document.addEventListener('mousedown', (e) => {
+    const li = e.target.closest && e.target.closest('.ort-liste [data-ort-i]');
+    if (!li) return;
+    e.preventDefault();
+    const input = document.querySelector(`[aria-controls="${li.parentNode.id}"]`);
+    if (input) ortNehmen(input, Number(li.dataset.ortI));
+  });
+  document.addEventListener('click', (e) => {
+    const li = e.target.closest && e.target.closest('.ort-liste [data-ort-i]');
+    if (!li) return;
+    const input = document.querySelector(`[aria-controls="${li.parentNode.id}"]`);
+    if (input && input.getAttribute('aria-expanded') === 'true') ortNehmen(input, Number(li.dataset.ortI));
+  });
+  document.addEventListener('focusout', (e) => {
+    const input = e.target;
+    if (input.classList && input.classList.contains('ort-eingabe')) setTimeout(() => { if (document.activeElement !== input) ortListeZu(input); }, 150);
+  });
   const meterVonMir = (g) => abstand(meinOrt(), g);
   function distanz(g) {
     if (g.eigen) return 'bei dir';
@@ -536,6 +746,13 @@
     if (uid) {
       const { data } = await db.client.from('profile').select('*').eq('id', uid).maybeSingle();
       db.profil = data || null;
+      // Rasterpunkt des eigenen Orts (erst mit Update Teil 7; davor zählt der Stadtteil von Garbsen)
+      db.wohnort = null;
+      if (db.profil) {
+        const w = await db.client.rpc('mein_ort');
+        const z = !w.error && w.data && (Array.isArray(w.data) ? w.data[0] : w.data);
+        if (z && typeof z.lat === 'number' && typeof z.lng === 'number') db.wohnort = { lat: z.lat, lng: z.lng, umkreis: z.umkreis_km || 5 };
+      }
     }
     if (ui.panel === 'anmelden' && db.profil) {
       schliessen();
@@ -578,9 +795,21 @@
     if (!istLive()) return;
     db.laedt = true;
     try {
-      const { data, error } = await db.client.from('gesuche').select(GESUCH_FELDER)
-        .neq('status', 'zurueckgezogen').order('erstellt', { ascending: false }).limit(300);
-      if (error) throw error;
+      // Anfragen bis etwa 50 km um den eigenen Ort, dazu alle eigenen und zugesagten
+      const o = meinOrt();
+      const nah = await db.client.from('gesuche').select(GESUCH_FELDER).neq('status', 'zurueckgezogen')
+        .gte('lat', o.lat - 0.45).lte('lat', o.lat + 0.45).gte('lng', o.lng - 0.75).lte('lng', o.lng + 0.75)
+        .order('erstellt', { ascending: false }).limit(400);
+      if (nah.error) throw nah.error;
+      let data = nah.data || [];
+      if (db.user) {
+        const eigene = await db.client.from('gesuche').select(GESUCH_FELDER).neq('status', 'zurueckgezogen')
+          .or(`ersteller.eq.${db.user.id},helfer.eq.${db.user.id}`).order('erstellt', { ascending: false }).limit(100);
+        if (!eigene.error && eigene.data) {
+          const da = new Set(data.map((r) => r.id));
+          data = data.concat(eigene.data.filter((r) => !da.has(r.id)));
+        }
+      }
       if (db.user) {
         if (db.profil) {
           const pr = await db.client.from('profile').select('hilfen_anzahl, gesuche_anzahl, sterne_summe, sterne_anzahl').eq('id', db.user.id).maybeSingle();
@@ -818,22 +1047,56 @@
     $('#chips-karte').innerHTML = chipsHTML();
   }
 
-  function stadtteilOptionen(auswahl, mitAlle) {
-    return (mitAlle ? `<option value="alle">Ganz Garbsen</option>` : '') +
-      STADTTEIL_NAMEN.map((n) => `<option value="${esc(n)}" ${auswahl === n ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  try { const u = Number(localStorage.getItem(UMKREIS_SPEICHER)); if (UMKREISE.indexOf(u) >= 0) ui.umkreis = u; } catch (e) { /* Standard: 10 km */ }
+  // Ort und Umkreis oben in der Liste, dazu der Ort im Formular „Hilfe suchen“ (solange dort niemand etwas geändert hat)
+  function renderOrtAuswahl() {
+    $('#umkreis').innerHTML = UMKREISE.map((km) => `<option value="${km}" ${ui.umkreis === km ? 'selected' : ''}>bis ${km} km</option>`).join('');
+    const ort = meinOrt();
+    $('#ort-knopf-name').textContent = zeigeIch() ? ort.stadtteil : 'Ort wählen';
+    const feld = $('#neu-stadtteil');
+    if (feld && !ui.bearbeiten && document.activeElement !== feld && (!feld.value || feld.dataset.auto === '1')) {
+      ortSetzenIn(feld, { name: ort.stadtteil, lat: ort.lat, lng: ort.lng });
+      feld.dataset.auto = '1';
+    }
   }
-  function renderStadtteilAuswahl() {
-    $('#stadtteil').innerHTML = stadtteilOptionen(ui.stadtteil, true);
-    $('#neu-stadtteil').innerHTML = stadtteilOptionen(meinOrt().stadtteil, false);
+  const renderStadtteilAuswahl = renderOrtAuswahl;
+  // Neuer Ort: speichern (im Konto oder auf dem Gerät), Anfragen in der Nähe laden, Karte darauf ausrichten
+  async function ortUebernehmen(o) {
+    const ort = ortPruefen(o);
+    if (!ort) return false;
+    if (istLive() && db.profil) {
+      const punkt = rasterpunkt(ort);
+      const r = await db.client.rpc('ort_setzen', { p_name: ort.name, p_lat: punkt.lat, p_lng: punkt.lng });
+      if (r.error) {
+        const fehlt = r.error.code === 'PGRST202' || /could not find the function/i.test(r.error.message || '');
+        if (!fehlt) { meldung(fehlerText(r.error)); return false; }
+        // Datenbank ohne Update Teil 7: nur die Stadtteile von Garbsen
+        if (!STADTTEILE.some((x) => x.name === ort.name)) { meldung('Orte außerhalb von Garbsen gehen erst nach dem nächsten Datenbank-Update.'); return false; }
+        const { error } = await db.client.from('profile').update({ stadtteil: ort.name }).eq('id', db.profil.id);
+        if (error) { meldung(fehlerText(error)); return false; }
+      } else {
+        db.wohnort = { lat: punkt.lat, lng: punkt.lng, umkreis: db.wohnort ? db.wohnort.umkreis : 5 };
+      }
+      db.profil.stadtteil = ort.name;
+    }
+    ortWaehlen(ort);
+    const feld = $('#neu-stadtteil');
+    if (feld) feld.dataset.auto = '1', feld.value = '';
+    renderOrtAuswahl();
+    if (istLive()) await neuLaden();
+    kartenStatus.bewegt = false;
+    if (kartenStatus.blick) blickSetzen(blickAufAlles(), false);
+    renderAlles();
+    return true;
   }
 
   function renderListe() {
     const offene = gesuche.filter((g) => !g.eigen && g.status === 'offen' && !abgelaufen(g) && !versteckt(g));
     const ort = meinOrt();
-    $('#h-entdecken').textContent = istLive() ? (db.profil ? `Hallo ${db.profil.vorname}` : 'Hilfe in Garbsen') : 'Hallo Tim';
+    $('#h-entdecken').textContent = istLive() ? (db.profil ? `Hallo ${db.profil.vorname}` : 'Hilfe in deiner Nähe') : 'Hallo Tim';
     $('#datum').textContent = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
-    const anzahl = `${offene.length} ${offene.length === 1 ? 'Nachbar sucht' : 'Nachbarn suchen'} gerade Hilfe`;
-    $('#anzahl-text').textContent = zeigeIch() ? `${anzahl} · ${ort.stadtteil}` : `${anzahl} in Garbsen`;
+    const nah = offene.filter((g) => meterVonMir(g) <= ui.umkreis * 1000);
+    $('#anzahl-text').textContent = `${nah.length} ${nah.length === 1 ? 'Nachbar sucht' : 'Nachbarn suchen'} gerade Hilfe, bis ${ui.umkreis} km um ${ort.stadtteil}`;
 
     if (istLive() && !db.geladen) {
       ui.miniListe = [];
@@ -843,17 +1106,17 @@
         : `<p class="lade">Anfragen werden geladen …</p>`;
       return;
     }
-    const treffer = sortiere(offene.filter((g) => passt(g) && (ui.stadtteil === 'alle' || g.stadtteil === ui.stadtteil)));
+    const treffer = sortiere(offene.filter((g) => passt(g) && meterVonMir(g) <= ui.umkreis * 1000));
     ui.miniListe = ui.sort === 'termin' ? [...treffer].sort((a, b) => (terminWert(a) - terminWert(b)) || (meterVonMir(a) - meterVonMir(b))) : treffer;
     miniSchilder();
     if (!treffer.length) {
       const q = ui.suche.trim();
-      const wo = ui.stadtteil === 'alle' ? '' : ` in ${esc(ui.stadtteil)}`;
+      const wo = ` im Umkreis von ${ui.umkreis} km`;
       if (istLive() && !offene.length) {
         // Neue Plattform, noch leer: erklären, Anfang machen lassen, Beispiele zeigen (statt einer leeren Seite)
         const eigenesOffen = gesuche.some((g) => g.eigen && g.status === 'offen' && !abgelaufen(g));
         $('#liste').innerHTML = `<div class="leer leer-start">
-          <p><strong>${eigenesOffen ? 'Deine Anfrage ist online.' : 'Hand Drauf startet gerade in Garbsen.'}</strong></p>
+          <p><strong>${eigenesOffen ? 'Deine Anfrage ist online.' : 'Hand Drauf startet gerade in deiner Gegend.'}</strong></p>
           <p>${eigenesOffen ? 'Außer dir sucht gerade niemand Hilfe. Je mehr Nachbarn mitmachen, desto schneller sagt jemand zu.' : 'Noch sucht niemand Hilfe. Mach den Anfang mit einer eigenen Anfrage oder schau dir an, wie es aussieht, wenn Nachbarn mitmachen.'}</p>
           <div class="leer-knoepfe">
             ${eigenesOffen ? '<button type="button" class="btn btn-primary btn-auto" data-einladen>Nachbarn einladen</button>' : '<button type="button" class="btn btn-primary btn-auto" data-go="neu">Anfrage erstellen</button>'}
@@ -864,7 +1127,7 @@
       }
       $('#liste').innerHTML = `<div class="leer">
         <p><strong>Nichts gefunden${q ? ` für „${esc(q)}“` : ''}${wo}.</strong></p>
-        <p>Probier eine andere Tätigkeit, Kategorie oder einen anderen Stadtteil. Oder such selbst Hilfe.</p>
+        <p>Probier eine andere Tätigkeit, einen größeren Umkreis oder einen anderen Ort. Oder such selbst Hilfe.</p>
         <button type="button" class="btn btn-secondary btn-auto" data-go="neu">Anfrage erstellen</button>
       </div>`;
       return;
@@ -1067,8 +1330,13 @@
   const ERDE = 6378137, WELT = 2 * Math.PI * ERDE;
   const mercator = (lat, lng) => ({ x: ERDE * lng * Math.PI / 180, y: -ERDE * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) });
   const NULLPUNKT = mercator(KARTE.mitte.lat, KARTE.mitte.lng);
-  const DEHNUNG = 1 / Math.cos(KARTE.mitte.lat * Math.PI / 180); // Mercator-Meter je echtem Meter in Garbsen
+  const DEHNUNG = 1 / Math.cos(KARTE.mitte.lat * Math.PI / 180); // Mercator-Meter je echtem Meter in Garbsen (vereinfachte Zeichnung)
+  const dehnung = (lat) => 1 / Math.cos(lat * Math.PI / 180);        // Mercator-Meter je echtem Meter an diesem Breitengrad
+  // Breitengrad zu einem Punkt der Karte (Mercator-Meter)
+  const breiteVon = (y) => (2 * Math.atan(Math.exp(-(y + NULLPUNKT.y) / ERDE)) - Math.PI / 2) * 180 / Math.PI;
   const inMeter = (lat, lng) => { const p = mercator(lat, lng); return { x: p.x - NULLPUNKT.x, y: p.y - NULLPUNKT.y }; };
+  // So weit lässt sich die Karte verschieben: Deutschland mit etwas Rand
+  const DE_A = inMeter(55.3, 5.4), DE_B = inMeter(47.0, 15.5);
   const massstabFuerZoom = (z) => 256 * Math.pow(2, z) / WELT;
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const kartenStatus = { svg: null, welt: null, schicht: null, huelle: null, w: 0, h: 0, blick: null, ruhig: null,
@@ -1197,8 +1465,8 @@
     // Hinweis direkt auf der Karte, damit niemand die vereinfachte Zeichnung für die echte Karte hält
     const hinweis = $('#karte-hinweis');
     hinweis.innerHTML = VORSCHAU
-      ? `<p><strong>Die echte Straßenkarte gibt es nur in der App.</strong> Hier im Chat darf die Vorschau keine Kartenbilder laden, deshalb siehst du Garbsen nur vereinfacht.</p><a class="btn btn-primary btn-auto" href="${OEFFENTLICH}#karte" target="_blank" rel="noopener">Karte in der App öffnen</a>`
-      : '<p><strong>Straßenkarte gerade nicht erreichbar.</strong> Du siehst Garbsen vereinfacht. Sobald das Internet wieder da ist, kommt sie zurück.</p>';
+      ? `<p><strong>Die echte Straßenkarte gibt es nur in der App.</strong> Hier im Chat darf die Vorschau keine Kartenbilder laden, deshalb siehst du nur die Anfragen und (in Garbsen) die Stadtteile vereinfacht.</p><a class="btn btn-primary btn-auto" href="${OEFFENTLICH}#karte" target="_blank" rel="noopener">Karte in der App öffnen</a>`
+      : '<p><strong>Straßenkarte gerade nicht erreichbar.</strong> Du siehst nur die Anfragen. Sobald das Internet wieder da ist, kommt sie zurück.</p>';
     hinweis.hidden = false;
     // Ohne Kartenbilder lässt sich nicht so nah heranzoomen
     if (kartenStatus.blick && kartenStatus.w) kartenStatus.blick = blickBegrenzen(kartenStatus.blick);
@@ -1365,9 +1633,12 @@
     return true;
   }
 
-  // Ausschnitt, der ganz Garbsen zeigt. Ist die Karte hoch genug, liegt die Stadt unterhalb der Knöpfe, sonst links daneben.
+  // Ausschnitt, der den Umkreis um den eigenen Ort zeigt (Liste „bis … km“). Ist die Karte hoch genug,
+  // liegt er unterhalb der Knöpfe, sonst links daneben.
   function blickAufAlles() {
-    const k = kartenStatus, g = k.grenzen;
+    const k = kartenStatus, o = meinOrt();
+    const c = inMeter(o.lat, o.lng), rad = ui.umkreis * 1000 * dehnung(o.lat);
+    const g = { x0: c.x - rad, x1: c.x + rad, y0: c.y - rad, y1: c.y + rad };
     const knoepfe = document.querySelector('.karte-knoepfe');
     const unter = knoepfe ? knoepfe.offsetTop + knoepfe.offsetHeight + 10 : 70;
     const neben = knoepfe ? k.w - knoepfe.offsetLeft + 10 : 70;
@@ -1383,10 +1654,9 @@
     return { s, x: k.w / 2 - m.x * s, y: k.h / 2 - m.y * s };
   }
   function blickBegrenzen(b) {
-    const k = kartenStatus, g = k.grenzen;
-    const alles = blickAufAlles();
-    const s = Math.max(alles.s * 0.85, Math.min(groesster(), b.s));
-    // Garbsen darf nicht ganz aus dem Bild rutschen
+    const k = kartenStatus, g = { x0: DE_A.x, y0: DE_A.y, x1: DE_B.x, y1: DE_B.y };
+    const s = Math.max(massstabFuerZoom(6), Math.min(groesster(), b.s));
+    // Deutschland darf nicht ganz aus dem Bild rutschen
     const x = Math.min(k.w * 0.6 - g.x0 * s, Math.max(k.w * 0.4 - g.x1 * s, b.x));
     const y = Math.min(k.h * 0.6 - g.y0 * s, Math.max(k.h * 0.4 - g.y1 * s, b.y));
     return { s, x, y };
@@ -1400,7 +1670,7 @@
     const mitte = k.blick && k.w ? { x: (k.w / 2 - k.blick.x) / k.blick.s, y: (k.h / 2 - k.blick.y) / k.blick.s } : null;
     k.w = w; k.h = h;
     k.svg.setAttribute('width', w); k.svg.setAttribute('height', h);
-    // Ohne eigene Bewegung bleibt ganz Garbsen im Bild, sonst bleibt die Mitte stehen
+    // Ohne eigene Bewegung bleibt der Umkreis im Bild, sonst bleibt die Mitte stehen
     if (!k.blick || !k.bewegt || !mitte) k.blick = blickAufAlles();
     else k.blick = blickBegrenzen(blickAuf(mitte, k.blick.s));
     zeichneBlick();
@@ -1424,7 +1694,7 @@
     });
     // Maßstab: eine runde Strecke zwischen 50 und 125 Bildpunkten (in echten Metern)
     const strecken = [20, 50, 100, 200, 500, 1000, 2000, 5000];
-    const pxJeMeter = b.s * DEHNUNG;
+    const pxJeMeter = b.s * dehnung(breiteVon((k.h / 2 - b.y) / b.s));
     const m = strecken.find((x) => x * pxJeMeter >= 50) || 5000;
     k.massstab.style.width = Math.round(m * pxJeMeter) + 'px';
     k.massstab.textContent = m >= 1000 ? `${m / 1000} km` : `${m} m`;
@@ -1468,6 +1738,12 @@
     blickSetzen(blickAuf({ x: f.c.x, y: f.c.y + 60 }, Math.min(k.w, k.h) * 0.8 / (2 * f.R)), true);
   }
   function zeigeGanzGarbsen() { kartenStatus.bewegt = false; blickSetzen(blickAufAlles(), true); }
+  // Eigener Ort, etwa 3 km im Bild
+  function zeigeOrt() {
+    const k = kartenStatus, o = meinOrt();
+    k.bewegt = true;
+    blickSetzen(blickAuf(inMeter(o.lat, o.lng), Math.min(k.w, k.h) / (3000 * dehnung(o.lat))), true);
+  }
 
   // Ziehen, Zwei-Finger-Zoom, Doppeltippen, Mausrad und Tasten
   function kartenBedienung() {
@@ -1609,6 +1885,7 @@
     if (aktiv && !aktiv.eigen && sichtbar.includes(aktiv)) {
       const m = inMeter(aktiv.lat, aktiv.lng);
       k.bereich.setAttribute('cx', Math.round(m.x)); k.bereich.setAttribute('cy', Math.round(m.y));
+      k.bereich.setAttribute('r', Math.round(CONFIG.bereichMeter * dehnung(aktiv.lat)));
       k.bereich.style.display = '';
     } else k.bereich.style.display = 'none';
     // Eigener Stadtteil hervorgehoben
@@ -1651,9 +1928,9 @@
         anker(f.c, `<span class="k-name${istMein ? ' k-name-mein' : ''}" data-rang="${rang}" aria-hidden="true">${istMein ? '<b>Du</b>' : ''}${esc(f.name)}</span>`, istMein ? 'k-mein-anker' : '');
       });
     } else if (mein) {
-      // Auf der Straßenkarte: blauer Punkt in der Mitte des eigenen Stadtteils (die App fragt keinen Standort ab)
-      const f = k.formen.find((x) => x.name === mein);
-      if (f) anker(f.c, '<span class="k-ich" aria-hidden="true"><i></i><b>Du</b></span>');
+      // Auf der Straßenkarte: blauer Punkt am eigenen Ort (ungefähr; die App fragt keinen Standort ab)
+      const o = meinOrt();
+      anker(inMeter(o.lat, o.lng), '<span class="k-ich" aria-hidden="true"><i></i><b>Du</b></span>');
     }
     gruppen.forEach((gr, i) => {
       if (gr.liste.length > 1) {
@@ -1692,7 +1969,7 @@
     const was = b.dataset.karte;
     if (was === 'rein') zoomen(1.8, undefined, undefined, true);
     else if (was === 'raus') zoomen(1 / 1.8, undefined, undefined, true);
-    else if (was === 'ich') zeigeStadtteil(meinOrt().stadtteil);
+    else if (was === 'ich') zeigeOrt();
     else if (was === 'alles') zeigeGanzGarbsen();
   });
   // Sammel-Schild antippen: so weit hineinzoomen, dass die Anfragen auseinanderrücken
@@ -1755,7 +2032,7 @@
     let adressZeile;
     if (!beteiligt) adressZeile = `<span class="fakt-leise">${icon('schloss', 'i-xs')}nach der Zusage</span>`;
     else if (echteAdresse) adressZeile = `${esc(echteAdresse)}<span class="fakt-zusatz">${g.eigen ? 'sieht nur, wer zusagt' : 'nur für dich sichtbar'}</span>`;
-    else adressZeile = `<span class="fakt-leise">${adresse === null ? 'wird geladen …' : g.eigen ? 'nur der Stadtteil' : 'nicht verfügbar'}</span>`;
+    else adressZeile = `<span class="fakt-leise">${adresse === null ? 'wird geladen …' : g.eigen ? 'nur der Ort' : 'nicht verfügbar'}</span>`;
     // Telefon (freiwillig): wie die Adresse erst nach der Zusage, zum Antippen
     const telefon = beteiligt ? telefonVon(g) : '';
     const telefonZeile = !telefon ? '' : `<div class="breit"><dt>Telefon</dt><dd>${g.eigen
@@ -1772,7 +2049,7 @@
       ${fuerZeile}
       <div><dt>Wann</dt><dd>${esc(wannLang(g))}</dd></div>
       <div><dt>Dauer</dt><dd>${esc(g.dauer)}</dd></div>
-      <div><dt>Stadtteil</dt><dd>${esc(g.stadtteil)}</dd></div>
+      <div><dt>Ort</dt><dd>${esc(g.stadtteil)}</dd></div>
       <div><dt>Entfernung</dt><dd>${distanz(g)}${weg ? `<span class="fakt-zusatz">${weg}</span>` : ''}</dd></div>
       <div class="breit"><dt>Adresse</dt><dd>${adressZeile}</dd></div>
       ${telefonZeile}
@@ -1953,7 +2230,7 @@
           <div class="feld"><label for="auth-vorname">Vorname</label><input id="auth-vorname" autocomplete="given-name" maxlength="40" required></div>
           <div class="feld"><label for="auth-initial">Nachname <span class="optional">(nur 1. Buchstabe)</span></label><input id="auth-initial" autocomplete="off" maxlength="1"></div>
         </div>
-        <div class="feld"><label for="auth-stadtteil">Dein Stadtteil</label><select id="auth-stadtteil">${stadtteilOptionen(gewaehlterOrt || 'Garbsen-Mitte', false)}</select></div>` : ''}
+        <div class="feld"><label for="auth-stadtteil">Dein Ort <span class="optional">(Stadtteil, Stadt)</span></label>${ortFeldHTML('auth-stadtteil', gewaehlterOrt, 'Ort, Stadtteil oder Postleitzahl')}<p class="feld-hinweis">Andere sehen nur diesen Ort.</p></div>` : ''}
         <div class="feld"><label for="auth-email">E-Mail</label><input id="auth-email" type="email" autocomplete="email" required>${codeWeg ? '<p class="feld-hinweis" style="margin-top:0">Wir schicken dir einen Code. Ein Passwort brauchst du nicht.</p>' : ''}</div>
         ${codeWeg ? '' : `<div class="feld"><label for="auth-passwort">Passwort</label>
           <div class="passwort-feld"><input id="auth-passwort" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" minlength="8" required>
@@ -1985,8 +2262,8 @@
           <div class="person-meta">${bewertung}</div>
         </div>
       </div>
-      <p class="klein">Angemeldet als ${esc(db.user && db.user.email)}. Andere sehen nur deinen Vornamen, den Anfangsbuchstaben und deinen Stadtteil.</p>
-      <div class="feld"><label for="konto-stadtteil">Dein Stadtteil</label><select id="konto-stadtteil">${stadtteilOptionen(p.stadtteil, false)}</select></div>
+      <p class="klein">Angemeldet als ${esc(db.user && db.user.email)}. Andere sehen nur deinen Vornamen, den Anfangsbuchstaben und deinen Ort.</p>
+      <div class="konto-ort"><span><span class="klein">Dein Ort</span><strong id="konto-ort">${esc(p.stadtteil)}</strong></span><button type="button" class="btn btn-secondary btn-auto" data-ort-aendern>Ändern</button></div>
       <button type="button" class="btn btn-secondary" data-einladen>${icon('teilen')}Nachbarn einladen</button>
       <button type="button" class="btn btn-secondary" data-abmelden ${ui.busy ? 'disabled' : ''}>Abmelden</button>
       ${blockListeHTML()}
@@ -2057,7 +2334,7 @@
         <li>${icon('check', 'i-sm')}Konto mit E-Mail-Adresse</li>
         <li>${icon('check', 'i-sm')}Hat den Regeln für Nachbarn zugestimmt</li>
       </ul>
-      <p class="klein">Andere sehen nur Vorname, Anfangsbuchstabe und Stadtteil. Adresse und E-Mail sieht niemand.</p>
+      <p class="klein">Andere sehen nur Vorname, Anfangsbuchstabe und Ort. Adresse und E-Mail sieht niemand.</p>
       ${blockierenHTML(g)}`;
   }
 
@@ -2073,6 +2350,19 @@
   }
 
   // Einladen: QR-Code zum Scannen, Link zum Verschicken, Aushang fürs Schwarze Brett
+  function sheetOrtHTML() {
+    const ort = meinOrt();
+    const live = istLive() && db.profil;
+    return `<div class="sheet-top">
+        <span class="eyebrow">Dein Ort</span>
+        <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
+      </div>
+      <h2 id="sheet-titel">Wo wohnst du?</h2>
+      <p class="klein">Dann zeigt die App zuerst, was in deiner Nähe los ist. ${live ? 'Andere sehen nur den Namen des Orts.' : 'Der Ort bleibt auf diesem Gerät.'} Deine Adresse brauchen wir dafür nicht.</p>
+      <div class="feld"><label for="ort-wahl">Ort, Stadtteil oder Postleitzahl</label>${ortFeldHTML('ort-wahl', zeigeIch() ? { name: ort.stadtteil, lat: ort.lat, lng: ort.lng } : null, 'z. B. Berenbostel, 30827 oder Linden')}</div>
+      <p class="fehler" id="ort-fehler" hidden>Bitte wähle einen Ort aus der Liste.</p>
+      <button type="button" class="btn btn-primary" data-ort-speichern>Ort übernehmen</button>`;
+  }
   function sheetEinladenHTML() {
     const aushang = (NATIV ? OEFFENTLICH : '') + 'assets/aushang.pdf';
     return `<div class="sheet-top">
@@ -2121,7 +2411,7 @@
         ${gruppe('schrift', 'Schrift')}
         ${gruppe('start', 'Start mit')}
         ${gruppe('modell', 'Modell auf der Startseite')}
-        ${ohneKonto ? `<div class="menue-zeile"><label class="menue-label" for="ansicht-ort">Stadtteil</label><select id="ansicht-ort">${gewaehlterOrt ? '' : '<option value="">Bitte wählen</option>'}${stadtteilOptionen(gewaehlterOrt || '', false)}</select></div>` : ''}
+        ${ohneKonto ? `<div class="menue-zeile"><span class="menue-label">Ort</span><button type="button" class="btn btn-secondary btn-auto" data-ort-aendern>${zeigeIch() ? esc(meinOrt().stadtteil) : 'Ort wählen'}</button></div>` : ''}
       </section>
       <section class="menue-gruppe" aria-labelledby="m-push"><h3 class="h-klein" id="m-push">Benachrichtigungen</h3>
         ${pushMenueHTML()}
@@ -2182,6 +2472,7 @@
     else if (ui.panel === 'profil') html = sheetProfilHTML();
     else if (ui.panel === 'ansicht') html = sheetAnsichtHTML();
     else if (ui.panel === 'einladen') html = sheetEinladenHTML();
+    else if (ui.panel === 'ort') html = sheetOrtHTML();
     else if (ui.panel === 'anmelden') html = sheetAnmeldenHTML();
     else if (ui.panel === 'konto') html = sheetKontoHTML();
     else {
@@ -2200,7 +2491,21 @@
     }
   }
 
+  // Demo: Die Beispiel-Anfragen liegen in Garbsen. Wer einen Ort weiter weg wählt, sieht sie um diesen Ort herum.
+  function demoAnOrt() {
+    if (istLive()) return;
+    const ort = meinOrt(), heimat = CONFIG.ich;
+    const weit = abstand(ort, heimat) > 30000;
+    gesuche.forEach((g) => {
+      const b = BEISPIELE.find((x) => x.id === g.id);
+      if (!b) return;
+      g.lat = weit ? b.lat + (ort.lat - heimat.lat) : b.lat;
+      g.lng = weit ? b.lng + (ort.lng - heimat.lng) : b.lng;
+      g.stadtteil = weit ? ort.stadtteil : b.stadtteil;
+    });
+  }
   function renderAlles() {
+    demoAnOrt();
     renderKopf();
     renderGeholfen();
     renderInstallieren();
@@ -2289,6 +2594,11 @@
     renderKarte();
     let ziel = (ui.zuletzt && ui.zuletzt.isConnected) ? ui.zuletzt : (id ? $(`#view-${ui.view} .card[data-id="${id}"]`) : null);
     if (!ziel && id && ui.view === 'karte' && kartenStatus.marker.has(id)) ziel = kartenStatus.marker.get(id);
+    // Steckt die Anfrage nach dem Schließen in einem Sammel-Schild, bekommt dieses den Fokus
+    if (!ziel && id && ui.view === 'karte') {
+      const i = kartenStatus.gruppen.findIndex((gr) => gr.liste.some((g) => g.id === id));
+      if (i >= 0) ziel = document.querySelector(`#map [data-sammel="${i}"]`);
+    }
     if (ziel && ziel.focus) ziel.focus({ preventScroll: true });
   }
 
@@ -2468,7 +2778,7 @@
       try {
         if (t.hasAttribute('data-push-neue')) {
           push.neue = !push.neue;
-          try { await pushMelden(await pushAbo(true)); pushSpeichern(); meldung(push.neue ? 'Du erfährst jetzt von neuen Anfragen in deinem Stadtteil.' : 'Keine Hinweise mehr auf neue Anfragen.'); }
+          try { await pushMelden(await pushAbo(true)); pushSpeichern(); meldung(push.neue ? 'Du erfährst jetzt von neuen Anfragen in deiner Nähe.' : 'Keine Hinweise mehr auf neue Anfragen.'); }
           catch (err) { push.neue = !push.neue; throw err; }
         } else if (t.hasAttribute('data-push-test')) {
           await pushMelden(await pushAbo(true));
@@ -2668,6 +2978,10 @@
     fehler.hidden = true;
     try {
       if (reg) {
+        const ort = await ortAufloesen($('#auth-stadtteil'));
+        if (!ort) throw new Error('Bitte wähle deinen Ort aus der Liste.');
+        const punkt = rasterpunkt(ort);
+        ortWaehlen(ort);
         const { data, error } = await db.client.auth.signUp({
           email,
           password: passwort,
@@ -2676,7 +2990,9 @@
             data: {
               vorname: $('#auth-vorname').value.trim().slice(0, 40),
               nachname_initial: $('#auth-initial').value.trim().slice(0, 1).toUpperCase(),
-              stadtteil: $('#auth-stadtteil').value,
+              stadtteil: ort.name,
+              lat: punkt.lat,
+              lng: punkt.lng,
               volljaehrig: 'true'
             }
           }
@@ -2729,22 +3045,27 @@
   // Stadtteil im Konto ändern
   $('#sheet').addEventListener('change', async (e) => {
     if (e.target.name === 'grund') { const f = $('#melden-fehler'); if (f) f.hidden = true; return; }
-    if (e.target.id === 'ansicht-ort') {
-      ortWaehlen(e.target.value);
-      renderStadtteilAuswahl();
-      renderAlles();
-      renderKarte();
-      meldung(`Stadtteil: ${e.target.value}`);
-      return;
-    }
-    if (e.target.id !== 'konto-stadtteil' || !db.profil) return;
-    const neu = e.target.value;
-    const { error } = await db.client.from('profile').update({ stadtteil: neu }).eq('id', db.profil.id);
-    if (error) { meldung(fehlerText(error)); e.target.value = db.profil.stadtteil; return; }
-    db.profil.stadtteil = neu;
-    meldung(`Stadtteil geändert: ${neu}`);
-    renderStadtteilAuswahl();
-    renderAlles();
+  });
+  // Ort ändern (Menü, Konto, Liste) und übernehmen
+  $('#sheet').addEventListener('click', async (e) => {
+    if (e.target.closest('[data-ort-aendern]')) { const zurueck = ui.panel; oeffnePanel('ort'); ui.ortZurueck = zurueck; return; }
+    const knopf = e.target.closest('[data-ort-speichern]');
+    if (!knopf) return;
+    knopf.disabled = true;
+    try {
+      const ort = await ortAufloesen($('#ort-wahl'));
+      if (!ort) { $('#ort-fehler').hidden = false; $('#ort-wahl').focus(); return; }
+      if (await ortUebernehmen(ort)) {
+        // Aus Konto oder Menü gekommen: dorthin zurück
+        const zurueck = ui.ortZurueck;
+        ui.ortZurueck = null;
+        if (zurueck && zurueck !== 'ort') oeffnePanel(zurueck); else schliessen();
+        meldung(`Ort: ${ort.name}`);
+      }
+    } finally { knopf.disabled = false; }
+  });
+  $('#sheet').addEventListener('ortgewaehlt', (e) => {
+    if (e.target.id === 'ort-wahl') { const f = $('#ort-fehler'); if (f) f.hidden = true; }
   });
 
   $('#backdrop').addEventListener('click', schliessen);
@@ -2770,7 +3091,7 @@
     try { await navigator.clipboard.writeText(url ? `${text} ${url}` : text); meldung(url ? 'Link kopiert. Füge ihn in eine Nachricht ein.' : 'Text kopiert. Füge ihn in eine Nachricht ein.'); }
     catch (e) { meldung(url ? `Link zum Teilen: ${url}` : 'Teilen geht auf diesem Gerät gerade nicht.'); }
   }
-  const einladen = () => teilen('Hand Drauf: Nachbarn in Garbsen helfen sich bei kleinen Dingen, gegen eine kleine Aufwandsentschädigung. Schau mal rein:', NATIV ? OEFFENTLICH : location.origin + location.pathname);
+  const einladen = () => teilen('Hand Drauf: Nachbarn helfen sich bei kleinen Dingen, gegen eine kleine Aufwandsentschädigung. Schau mal rein:', NATIV ? OEFFENTLICH : location.origin + location.pathname);
   function gesuchTeilen(g) {
     const was = `„${g.titel}“ in ${g.stadtteil}, ${g.wann}, ${euroKurz(g.betrag)} Aufwandsentschädigung`;
     teilen(g.eigen ? `Ich suche Hilfe: ${was}. Kannst du helfen oder kennst du jemanden?` : `${vorname(g.wer)} sucht Hilfe: ${was}. Kannst du helfen?`, gesuchLink(g));
@@ -2862,8 +3183,9 @@
     const mit = g.eigen ? (g.helferName ? ` mit ${vorname(g.helferName)}` : '') : ` bei ${g.wer}`;
     const beteiligt = g.eigen || g.helfer === 'ich';
     const adresse = beteiligt ? adresseVon(g) : '';
-    const ort = adresse ? `${adresse}${adresse.includes(g.stadtteil) ? '' : ', ' + g.stadtteil}, Garbsen` : `${g.stadtteil}, Garbsen`;
-    const zeilen = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Hand Drauf//Nachbarschaftshilfe Garbsen//DE', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    const stadt = STADTTEILE.some((x) => x.name === g.stadtteil) ? ', Garbsen' : '';
+    const ort = adresse ? `${adresse}${adresse.includes(g.stadtteil) ? '' : ', ' + g.stadtteil}${stadt}` : `${g.stadtteil}${stadt}`;
+    const zeilen = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Hand Drauf//Nachbarschaftshilfe//DE', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
       'BEGIN:VEVENT', `UID:${g.id}@hand-drauf`, `DTSTAMP:${stempel}`,
       ...(mitUhrzeit ? [`DTSTART:${um(t.von, t.start)}`, `DTEND:${um(t.von, t.ende)}`]
         : [`DTSTART;VALUE=DATE:${tag(t.von)}`, `DTEND;VALUE=DATE:${tag(plusTage(t.bis, 1))}`]),
@@ -3084,7 +3406,7 @@
     if (!pushMoeglich()) return `<p class="klein">${pushGrund()}</p>`;
     if (Notification.permission === 'denied') return '<p class="klein">Benachrichtigungen sind für diese Seite gesperrt. Du kannst sie in den Einstellungen deines Browsers wieder erlauben.</p>';
     const an = pushAn();
-    const ort = (db.profil && db.profil.stadtteil) || 'meinem Stadtteil';
+    const ort = (db.profil && db.profil.stadtteil) || 'meiner Nähe';
     // „Ich helfe gern bei …“: nur über passende neue Anfragen Bescheid geben
     const wahl = push.neue ? `<div class="hilft-gern" role="group" aria-labelledby="hilft-gern-titel">
         <span class="wahl-titel" id="hilft-gern-titel">Ich helfe gern bei</span>
@@ -3092,7 +3414,7 @@
         <p class="klein">${push.kategorien.length ? `Nur bei ${push.kategorien.map((k) => katName(k)).join(', ')}.` : 'Keine Auswahl: Du erfährst von allen neuen Anfragen.'}</p>
       </div>` : '';
     return schalter('data-push-schalter', an, 'Bescheid aufs Handy', 'Wenn jemand zusagt, dir schreibt, ein Auftrag fertig ist, und am Abend vor dem Termin.') +
-      (an ? schalter('data-push-neue', push.neue, `Neue Anfragen in ${esc(ort)}`, 'Höchstens alle 20 Minuten.') + wahl +
+      (an ? schalter('data-push-neue', push.neue, `Neue Anfragen bis ${db.wohnort ? db.wohnort.umkreis : 5} km um ${esc(ort)}`, 'Höchstens alle 20 Minuten.') + wahl +
         '<button type="button" class="link-btn link-links" data-push-test>Test-Benachrichtigung schicken</button>' : '');
   }
   // Tipp auf eine Benachrichtigung, während die App offen ist: Die Offline-Hülle reicht das Ziel weiter
@@ -3123,7 +3445,7 @@
     if (!el) return;
     const fertig = gesuche.filter((g) => g.status === 'bezahlt').length;
     const st = istLive() ? db.statistik : { woche: 12 + fertig, gesamt: 148 + fertig };
-    const text = !st ? '' : st.woche > 0 ? `Diese Woche ${st.woche}× geholfen` : st.gesamt > 0 ? `Schon ${st.gesamt}× geholfen in Garbsen` : '';
+    const text = !st ? '' : st.woche > 0 ? `Diese Woche ${st.woche}× geholfen` : st.gesamt > 0 ? `Schon ${st.gesamt}× geholfen` : '';
     el.hidden = !text;
     el.innerHTML = text ? `${icon('check', 'i-xs')}<span>${text}</span>` : '';
   }
@@ -3168,7 +3490,15 @@
   });
   $('#suche').addEventListener('input', (e) => { ui.suche = e.target.value; renderListe(); renderKarte(); });
   $('#sort').addEventListener('change', (e) => { ui.sort = e.target.value; renderListe(); });
-  $('#stadtteil').addEventListener('change', (e) => { ui.stadtteil = e.target.value; renderListe(); });
+  $('#umkreis').addEventListener('change', (e) => {
+    ui.umkreis = Number(e.target.value) || 10;
+    try { localStorage.setItem(UMKREIS_SPEICHER, String(ui.umkreis)); } catch (err) { /* nur für diese Sitzung */ }
+    kartenStatus.bewegt = false;
+    if (kartenStatus.blick) blickSetzen(blickAufAlles(), true);
+    renderListe();
+    renderKarte();
+  });
+  $('#ort-knopf').addEventListener('click', () => oeffnePanel('ort'));
 
   /* ===== Begrüßung beim ersten Start (Vorbild: Too Good To Go, BlaBlaCar) ===== */
   let startSeite = 0;
@@ -3180,7 +3510,7 @@
     if (startSeite === 0) return `${ueber}
       <div class="start-bild" role="img" aria-label="Eine kleine Nachbarschaft als Modell: Häuser, Gärten, eine Straße"></div>
       <h1 id="start-titel" tabindex="-1">Nachbarn helfen Nachbarn</h1>
-      <p class="start-text">Rasen mähen, Einkauf hochtragen, Drucker einrichten: kleine Hilfen in Garbsen, gegen eine kleine Aufwandsentschädigung.</p>
+      <p class="start-text">Rasen mähen, Einkauf hochtragen, Drucker einrichten: kleine Hilfen in deiner Nachbarschaft, gegen eine kleine Aufwandsentschädigung.</p>
       <ul class="start-liste">
         <li>${icon('winken')}<span><strong>Hilfe suchen</strong>Für dich oder für jemanden aus der Familie, in vier kurzen Schritten.</span></li>
         <li>${icon('stecknadel')}<span><strong>Helfen</strong>Sehen, wo in deiner Nähe Hilfe gebraucht wird.</span></li>
@@ -3196,13 +3526,13 @@
     if (startSeite === 2) return `${ueber}
       <h1 id="start-titel" tabindex="-1">Wo wohnst du?</h1>
       <p class="start-text">Dann zeigen wir dir zuerst, was in deiner Nähe los ist. Deine Adresse brauchen wir dafür nicht.</p>
-      <div class="start-orte" role="group" aria-label="Stadtteil wählen">${STADTTEIL_NAMEN.map((n) =>
-        `<button type="button" class="wahl-knopf" data-start-ort="${esc(n)}" aria-pressed="${gewaehlterOrt === n}">${esc(n)}</button>`).join('')}</div>
-      ${fuss(2, gewaehlterOrt ? 'Weiter' : 'Ohne Stadtteil weiter', 'weiter')}`;
+      <div class="feld start-ort"><label for="start-ort">Ort, Stadtteil oder Postleitzahl</label>${ortFeldHTML('start-ort', gewaehlterOrt, 'z. B. Berenbostel, 30827 oder Linden')}
+        <p class="feld-hinweis" id="start-ort-text">${gewaehlterOrt ? `Gewählt: ${esc(gewaehlterOrt.name)}` : 'Tippe die ersten Buchstaben und wähle aus der Liste.'}</p></div>
+      ${fuss(2, gewaehlterOrt ? 'Weiter' : 'Ohne Ort weiter', 'weiter')}`;
     return `${ueber}
       <h1 id="start-titel" tabindex="-1">So bleibt es sicher</h1>
       <ul class="start-liste">
-        <li>${icon('schloss')}<span><strong>Adresse erst nach der Zusage</strong>Auf der Karte erscheint nur ein Punkt im Stadtteil.</span></li>
+        <li>${icon('schloss')}<span><strong>Adresse erst nach der Zusage</strong>Auf der Karte erscheint nur ein Punkt in der Nähe.</span></li>
         <li>${icon('schild')}<span><strong>Ein Code an der Tür</strong>Wer hilft, nennt einen Code, den nur ihr beide kennt.</span></li>
         <li>${icon('stern')}<span><strong>Bewertungen und Melden</strong>Helfen kann man ab 18. Nach jedem Auftrag bewertet ihr euch, und wir prüfen jede Meldung.</span></li>
       </ul>
@@ -3219,6 +3549,12 @@
     document.body.classList.add('sheet-offen');
     renderStart();
   }
+  $('#start').addEventListener('ortgewaehlt', (e) => {
+    if (e.target.id !== 'start-ort' || !ortWaehlen(e.detail)) return;
+    $('#start-ort-text').textContent = `Gewählt: ${gewaehlterOrt.name}`;
+    const weiter = $('#start [data-start="weiter"]');
+    if (weiter) weiter.textContent = 'Weiter';
+  });
   function startBeenden() {
     $('#start').hidden = true;
     document.body.classList.remove('sheet-offen');
@@ -3229,13 +3565,16 @@
     if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
   }
   $('#start').addEventListener('click', (e) => {
-    const ort = e.target.closest('[data-start-ort]');
-    if (ort) { ortWaehlen(ort.dataset.startOrt); renderStart(`[data-start-ort="${CSS.escape(ort.dataset.startOrt)}"]`); return; }
     const schrift = e.target.closest('[data-start-schrift]');
     if (schrift) { ansichtSetzen('schrift', schrift.dataset.startSchrift); renderStart(`[data-start-schrift="${schrift.dataset.startSchrift}"]`); return; }
     const a = e.target.closest('[data-start]');
     if (!a) return;
-    if (a.dataset.start === 'weiter') { startSeite += 1; renderStart(); }
+    if (a.dataset.start === 'weiter') {
+      // Getippt, aber nicht aus der Liste gewählt: den ersten Vorschlag nehmen
+      const feld = $('#start-ort');
+      if (feld && feld.value.trim() && !ortAusFeld(feld)) { ortAufloesen(feld).then((o) => { if (o) ortWaehlen(o); startSeite += 1; renderStart(); }); return; }
+      startSeite += 1; renderStart();
+    }
     else startBeenden();
   });
   $('#start').addEventListener('keydown', (e) => { if (e.key === 'Escape') startBeenden(); });
@@ -3303,7 +3642,7 @@
     const [lo, hi] = echt ? [echt.von, Math.max(echt.von, echt.bis)] : (RICHTWERTE[k] || [10, 20]);
     const spanne = lo === hi ? `${lo} €` : `${lo} bis ${hi} €`;
     $('#neu-richtwert').innerHTML = echt
-      ? `${icon('info', 'i-sm')}<span>So viel geben Nachbarn in Garbsen für ${esc(katName(k))}: <strong>${spanne}</strong> <span class="richtwert-quelle">(aus ${echt.anzahl} Anfragen)</span></span>`
+      ? `${icon('info', 'i-sm')}<span>So viel geben Nachbarn auf Hand Drauf für ${esc(katName(k))}: <strong>${spanne}</strong> <span class="richtwert-quelle">(aus ${echt.anzahl} Anfragen)</span></span>`
       : `${icon('info', 'i-sm')}<span>Unser Vorschlag für ${esc(katName(k))}: <strong>${spanne}</strong></span>`;
     if (!betragGeaendert) setzeBetrag(Math.round((lo + hi) / 2 / 5) * 5, true);
   }
@@ -3375,6 +3714,7 @@
       return fehler($('#neu-fuer'), '#fehler-fuer');
     }
     if (n === 2 && !terminAuswahl().gueltig) { $('#fehler-tag').hidden = false; return $(termin.modus === 'tag' ? '#termin-tage .kal-tag[tabindex="0"]' : '#termin-woche .wahl-knopf'); }
+    if (n === 2 && $('#neu-stadtteil').value.trim().length < 2) return fehler($('#neu-stadtteil'), '#fehler-ort');
     if (n === 2 && istLive() && $('#neu-adresse').value.trim().length < 3) return fehler($('#neu-adresse'), '#fehler-adresse');
     if (n === 2 && telefonWert() && !telefonGueltig(telefonWert())) return fehler($('#neu-telefon'), '#fehler-telefon');
     if (n === 3 && !betragGueltig(betragWert())) return fehler(betragInput, '#fehler-betrag');
@@ -3629,7 +3969,8 @@
     if (alsVorlage) terminStart(); else terminAusWann(g.wann, abgelaufen(g));
     renderTermin();
     renderStadtteilAuswahl();
-    $('#neu-stadtteil').value = g.stadtteil;
+    ortSetzenIn($('#neu-stadtteil'), { name: g.stadtteil, lat: g.lat, lng: g.lng });
+    $('#neu-stadtteil').dataset.auto = '0';
     $('#neu-adresse').value = istLive() || adresse !== g.stadtteil ? adresse : '';
     $('#neu-telefon').value = telefonVon(g);
     betragInput.value = g.betrag;
@@ -3664,6 +4005,10 @@
     if (gesuche.some((g) => g.id === id)) oeffnen(id);
   });
 
+  $('#neu-stadtteil').addEventListener('input', (e) => {
+    e.target.dataset.auto = '0';
+    if (e.target.value.trim().length >= 2) { e.target.removeAttribute('aria-invalid'); $('#fehler-ort').hidden = true; }
+  });
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     // Enter in einem Feld führt zum nächsten Schritt, veröffentlicht wird erst im letzten
@@ -3682,7 +4027,18 @@
     const titel = $('#neu-titel').value.trim();
     const adresse = $('#neu-adresse').value.trim();
     const b = betragWert();
-    const stadtteil = $('#neu-stadtteil').value;
+    // Ort der Hilfe (öffentlich nur der Name) und, wenn möglich, die Lage der Adresse auf etwa 1 km genau
+    const ortFeld = $('#neu-stadtteil');
+    const ort = await ortAufloesen(ortFeld);
+    if (!ort) { zeigeSchritt(2, false); $('#fehler-ort').hidden = false; ortFeld.setAttribute('aria-invalid', 'true'); ortFeld.focus(); return; }
+    $('#fehler-ort').hidden = true; ortFeld.removeAttribute('aria-invalid');
+    const stadtteil = ort.name;
+    let punkt = ort;
+    if (adresse && GEOCODER) {
+      const genau = (await ortSuchen(`${adresse}, ${ort.name}`, 'adresse', ort))[0];
+      if (genau && abstand(genau, ort) < 15000) punkt = genau;
+    }
+    const lage = rasterpunkt(punkt);
     const { wann, bis } = terminSpeichern();
     const text = $('#neu-text').value.trim();
     const fuer = fuerWert();
@@ -3701,13 +4057,20 @@
         const fehlt = (err) => err && (err.code === 'PGRST202' || /could not find the function/i.test(err.message || ''));
         // „Für wen“ und Telefon kennt erst die Datenbank mit dem Update vom 10. November 2026
         const dazu = { p_fuer: fuer, p_telefon: telefon };
+        // Koordinaten (Rasterpunkt) kennt erst die Datenbank mit Update Teil 7; davor gehen nur Stadtteile von Garbsen
+        const nurGarbsen = STADTTEILE.some((x) => x.name === stadtteil);
+        const ohneOrt = () => { if (!nurGarbsen) throw new Error('Orte außerhalb von Garbsen gehen erst nach dem nächsten Datenbank-Update.'); };
+        const mitLage = { p_lat: lage.lat, p_lng: lage.lng };
         if (bearbeitet) {
-          let r = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis, ...dazu });
+          let r = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis, ...dazu, ...mitLage });
+          if (fehlt(r.error)) { ohneOrt(); r = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis, ...dazu }); }
           if (fehlt(r.error)) r = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis });
           if (fehlt(r.error)) throw new Error('Bearbeiten ist noch nicht freigeschaltet. Zieh die Anfrage zurück und stelle sie neu.');
           if (r.error) throw r.error;
         } else {
-          let r = db.altesSchema ? { error: { code: 'PGRST202' } } : await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis, ...dazu });
+          let r = db.altesSchema ? { error: { code: 'PGRST202' } } : await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis, ...dazu, ...mitLage });
+          if (fehlt(r.error)) ohneOrt();
+          if (fehlt(r.error) && !db.altesSchema) r = await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis, ...dazu });
           if (fehlt(r.error) && !db.altesSchema) r = await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis });
           if (fehlt(r.error)) { db.altesSchema = true; r = await db.client.rpc('gesuch_erstellen', felder); }
           if (r.error) throw r.error;
@@ -3726,16 +4089,16 @@
     } else if (bearbeitet) {
       const g = gesuche.find((x) => x.id === bearbeitet);
       if (!g || g.status !== 'offen') { zeigeFehler('Bearbeiten geht nur, solange noch niemand zugesagt hat.'); return; }
-      if (stadtteil !== g.stadtteil) {
+      if (stadtteil !== g.stadtteil || punkt !== ort) {
         const [nord, ost] = EIGEN_VERSATZ[gesuche.indexOf(g) % EIGEN_VERSATZ.length];
-        Object.assign(g, versetze(stadtteil === meinOrt().stadtteil ? meinOrt() : STADTTEILE.find((x) => x.name === stadtteil), nord, ost));
+        Object.assign(g, versetze(stadtteil === meinOrt().stadtteil && punkt === ort ? meinOrt() : punkt, nord, ost));
       }
       Object.assign(g, { kat, titel, text, betrag: b, wann, bis, laeuftAb: demoAblauf(bis), stadtteil, adresse: adresse || stadtteil, fuer, telefon });
       demoSpeichern();
     } else {
       const anzahlEigene = gesuche.filter((g) => g.eigen).length;
       const [nord, ost] = EIGEN_VERSATZ[anzahlEigene % EIGEN_VERSATZ.length];
-      const basis = stadtteil === meinOrt().stadtteil ? meinOrt() : STADTTEILE.find((x) => x.name === stadtteil);
+      const basis = stadtteil === meinOrt().stadtteil && punkt === ort ? meinOrt() : punkt;
       const pos = versetze(basis, nord, ost);
       neuId = 'e' + Date.now();
       gesuche.unshift({

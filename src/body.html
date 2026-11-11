@@ -53,7 +53,7 @@
       <div class="hallo">
         <p class="datum" id="datum"></p>
         <h1 id="h-entdecken">Hallo Tim</h1>
-        <p class="lead" id="anzahl-text">Garbsen</p>
+        <p class="lead" id="anzahl-text">Hilfe in deiner Nähe</p>
         <p class="geholfen" id="geholfen" hidden></p>
       </div>
       <div class="mini" id="mini" role="group" aria-label="Deine Nachbarschaft als kleines Modell. Die Schilder über den Dächern sind offene Anfragen.">
@@ -68,7 +68,8 @@
       <div class="chips kat-leiste" id="chips-liste" role="group" aria-label="Kategorie filtern"></div>
       <div class="liste-kopf">
         <div class="filter">
-          <label><span class="sr">Stadtteil</span><select id="stadtteil"></select></label>
+          <button type="button" class="ort-knopf" id="ort-knopf" aria-label="Ort ändern"><svg class="i i-xs" aria-hidden="true"><use href="#i-ort"/></svg><span id="ort-knopf-name">Ort wählen</span></button>
+          <label><span class="sr">Umkreis</span><select id="umkreis"></select></label>
           <label><span class="sr">Sortieren</span>
             <select id="sort">
               <option value="termin">Nach Termin</option>
@@ -92,7 +93,7 @@
       </div>
       <div class="chips kat-leiste" id="chips-karte" role="group" aria-label="Kategorie filtern"></div>
       <div class="karte">
-        <div id="map" role="region" tabindex="0" aria-label="Karte von Garbsen mit Anfragen. Verschieben mit den Pfeiltasten, zoomen mit Plus und Minus."></div>
+        <div id="map" role="region" tabindex="0" aria-label="Karte mit Anfragen in deiner Nähe. Verschieben mit den Pfeiltasten, zoomen mit Plus und Minus."></div>
         <p class="k-quelle">© OpenStreetMap-Mitwirkende</p>
         <div class="karte-knoepfe">
           <div class="knopf-gruppe">
@@ -101,7 +102,7 @@
           </div>
           <div class="knopf-gruppe">
             <button type="button" class="karte-knopf" data-karte="ich" aria-label="Auf meinen Standort zentrieren"><svg class="i" aria-hidden="true"><use href="#i-ziel"/></svg></button>
-            <button type="button" class="karte-knopf" data-karte="alles" aria-label="Ganz Garbsen zeigen"><svg class="i" aria-hidden="true"><use href="#i-alles"/></svg></button>
+            <button type="button" class="karte-knopf" data-karte="alles" aria-label="Umkreis zeigen"><svg class="i" aria-hidden="true"><use href="#i-alles"/></svg></button>
           </div>
         </div>
         <div class="karte-leer" id="karte-leer" hidden>
@@ -121,7 +122,7 @@
         <span><i class="sw sw-eigen"></i>Deine Anfrage</span>
         <span><i class="sw sw-zugesagt"></i>Deine Zusage</span>
         <span><i class="sw sw-sammel" aria-hidden="true">3</i>Mehrere Anfragen</span>
-        <span><i class="sw sw-ich"></i>Du (Mitte deines Stadtteils)</span>
+        <span><i class="sw sw-ich"></i>Du (ungefähr, dein Ort)</span>
       </div>
       <p class="karte-unterzeile">Anfragen stehen nur ungefähr auf der Karte, 100 bis 400&nbsp;m neben der Adresse.</p>
     </section>
@@ -196,8 +197,11 @@
           </fieldset>
           <p class="termin-text" id="termin-text" aria-live="polite"></p>
           <div class="feld">
-            <label for="neu-stadtteil">Stadtteil</label>
-            <select id="neu-stadtteil" name="stadtteil"></select>
+            <label for="neu-stadtteil">Ort <span class="optional">(Stadtteil, Stadt)</span></label>
+            <div class="ort-feld"><input id="neu-stadtteil" class="ort-eingabe" name="stadtteil" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="neu-stadtteil-liste" autocomplete="off" spellcheck="false" maxlength="80" data-art="ort" placeholder="Ort, Stadtteil oder Postleitzahl" aria-describedby="ort-hinweis fehler-ort">
+              <ul class="ort-liste" id="neu-stadtteil-liste" role="listbox" aria-label="Vorschläge" hidden></ul></div>
+            <p class="feld-hinweis" id="ort-hinweis">Andere sehen nur diesen Ort, nie die Adresse.</p>
+            <p class="fehler" id="fehler-ort" hidden>Bitte wähle den Ort aus der Liste.</p>
           </div>
           <div class="feld">
             <label for="neu-adresse">Straße und Hausnummer <span class="optional" id="adresse-optional">(freiwillig)</span></label>

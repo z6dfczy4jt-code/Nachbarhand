@@ -12,14 +12,14 @@ function FRAGEN_TEXTE(c) {
         frage('Wie wird bezahlt?',
           `<p>Direkt untereinander, nach der Hilfe: bar, per Überweisung oder wie ihr es abmacht. Zahl nie im Voraus, und teile keine Bank- oder Passwortdaten in den Nachrichten.</p>`),
         frage('Wie viel sollte ich geben?',
-          `<p>Beim Erstellen siehst du, wie viel Nachbarn in Garbsen für dieselbe Tätigkeit geben. Solange es dafür noch zu wenige Anfragen gibt, steht dort unser Vorschlag. Du entscheidest selbst, zwischen ${c.minBetrag} und ${c.maxBetrag}&nbsp;€. Mehr geht nicht, weil Hand Drauf für kleine Hilfen da ist.</p>`),
+          `<p>Beim Erstellen siehst du, wie viel Nachbarn auf Hand Drauf für dieselbe Tätigkeit geben. Solange es dafür noch zu wenige Anfragen gibt, steht dort unser Vorschlag. Du entscheidest selbst, zwischen ${c.minBetrag} und ${c.maxBetrag}&nbsp;€. Mehr geht nicht, weil Hand Drauf für kleine Hilfen da ist.</p>`),
         frage('Muss ich das versteuern?',
           `<p>Einnahmen aus gelegentlichen Hilfen bleiben steuerfrei, solange dein Gewinn im Jahr unter 256&nbsp;€ liegt (§&nbsp;22 Nr.&nbsp;3 EStG). Ab 256&nbsp;€ ist der ganze Betrag steuerpflichtig. Unter „Aufträge“ siehst du, wie viel du schon bekommen hast.</p>
            <p>Wer Bürgergeld oder andere Leistungen bekommt, muss Einnahmen dem Amt melden. Das ist keine Steuerberatung.</p>`)
       ]],
       ['Sicherheit', [
         frage('Wer sieht meine Adresse?',
-          `<p>Nur die Person, die bei deiner Anfrage zusagt. Auf der Karte erscheint nur ein Punkt ungefähr in deinem Stadtteil, 100 bis 400 Meter neben der echten Lage. Deine E-Mail-Adresse sieht niemand.</p>`),
+          `<p>Nur die Person, die bei deiner Anfrage zusagt. Auf der Karte erscheint nur ein ungefährer Punkt, auf etwa einen Kilometer genau. Andere sehen nur den Namen deines Orts. Deine E-Mail-Adresse sieht niemand.</p>`),
         frage('Wozu ist der Sicherheits-Code?',
           `<p>Sobald jemand zusagt, zeigt die App euch beiden denselben Code aus vier Ziffern. Wer hilft, nennt ihn an der Tür. So weißt du, dass die richtige Person vor dir steht. Stimmt der Code nicht, lass niemanden herein.</p>`),
         frage('Woran erkenne ich Betrug?',
@@ -40,6 +40,9 @@ function FRAGEN_TEXTE(c) {
           `<p>Ab 18 Jahren. Das bestätigst du bei der Anmeldung.</p>`)
       ]],
       ['Anfragen', [
+        frage('Gibt es Hand Drauf auch in meinem Ort?',
+          `<p>Ja, in ganz Deutschland. Tippe oben auf den Ort und such deinen Stadtteil, deine Stadt oder deine Postleitzahl. Mit „bis … km“ stellst du ein, wie weit die Anfragen entfernt sein dürfen.</p>
+           <p>An vielen Orten sind noch wenige Nachbarn dabei. Am schnellsten ändert sich das, wenn du welche einlädst.</p>`),
         frage('Wie lange ist meine Anfrage sichtbar?',
           `<p>Bis der letzte gewählte Tag vorbei ist. Termine kannst du bis zu zwei Monate im Voraus wählen. Hat bis dahin niemand zugesagt, verschwindet es von der Karte. Unter „Aufträge“ kannst du dann einen neuen Termin wählen.</p>`),
         frage('Kann ich für meine Eltern oder Großeltern anfragen?',

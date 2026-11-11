@@ -20,6 +20,7 @@
     "anbieter": "",
     "standort": ""
   },
+  "geocoder": "https://photon.komoot.io",
   "karte": {
     "_hinweis": "carto: optionaler Schlüssel von carto.com für den Kartenstil Voyager. Leer = basemap.de.",
     "carto": ""
