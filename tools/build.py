@@ -228,8 +228,9 @@ def standalone():
             '<meta property="og:image:alt" content="Hand Drauf: eine kleine Nachbarschaft als Modell, darüber Preisschilder mit Beträgen">\n'
             '<meta name="twitter:card" content="summary_large_image">\n'
             '<title>Hand Drauf</title>\n'
-            '<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">\n'
-            '<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">\n'
+            f'<link rel="icon" href="assets/favicon-32.png?v={kennung("favicon-32.png")}" sizes="32x32" type="image/png">\n'
+            f'<link rel="icon" href="assets/favicon.svg?v={kennung("favicon.svg")}" type="image/svg+xml">\n'
+            f'<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v={kennung("apple-touch-icon.png")}">\n'
             '<link rel="manifest" href="manifest.webmanifest">\n'
             f'{kopf}\n</head>\n<body>\n{rumpf}</body>\n</html>\n')
 
@@ -284,6 +285,12 @@ def kopfzeilen(csp):
         ('Cross-Origin-Opener-Policy', 'same-origin'),
         ('Content-Security-Policy', csp),
     ]
+
+
+def kennung(datei):
+    """Kurzer Fingerabdruck einer Datei in assets/: Ändert sich das Symbol, holen Browser es neu (statt aus dem Zwischenspeicher)."""
+    import hashlib
+    return hashlib.sha256((WURZEL / 'assets' / datei).read_bytes()).hexdigest()[:8]
 
 
 SEITE_404 = """<!doctype html>

@@ -25,7 +25,7 @@ def seite(inhalt, groesse, hintergrund, farbe='#172029'):
 async def main():
     ZIEL.mkdir(parents=True, exist_ok=True)
     bilder = [
-        ('icon-only.png', 1024, seite(ICON.replace('<svg ', '<svg width="1024" height="1024" ', 1), 1024, '#F4B400')),
+        ('icon-only.png', 1024, seite(ICON.replace('<svg ', '<svg width="1024" height="1024" ', 1), 1024, '#F3F5F1')),
         ('splash.png', 2732, seite(LOGO.replace('<svg ', '<svg width="900" ', 1), 2732, '#F3F5F1')),
         ('splash-dark.png', 2732, seite(LOGO_DUNKEL.replace('<svg ', '<svg width="900" ', 1), 2732, '#10151A', '#E8EDF1')),
     ]

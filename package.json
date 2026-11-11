@@ -6,7 +6,7 @@
   "scripts": {
     "web": "python3 tools/build.py",
     "app:bauen": "python3 tools/build.py --app && npx cap sync ios",
-    "app:icons": "npx @capacitor/assets generate --ios --assetPath app/resources --iconBackgroundColor '#F4B400' --splashBackgroundColor '#F3F5F1' --splashBackgroundColorDark '#10151A'",
+    "app:icons": "npx @capacitor/assets generate --ios --assetPath app/resources --iconBackgroundColor '#F3F5F1' --splashBackgroundColor '#F3F5F1' --splashBackgroundColorDark '#10151A'",
     "app:oeffnen": "npx cap open ios"
   },
   "dependencies": {

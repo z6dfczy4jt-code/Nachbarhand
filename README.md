@@ -41,9 +41,9 @@ App für Nachbarschaftshilfe in ganz Deutschland (gestartet in Garbsen): Anfrage
 | `assets/` | App-Icons, Three.js, Schriften (Barlow) und das Standbild der Miniatur für Geräte ohne 3D |
 | `manifest.webmanifest` | Angaben für „Zum Home-Bildschirm“ |
 | `design/logo/` | Logo „Hand Drauf“ als SVG (gestapelt, quer, hell, dunkel, App-Icon) und die Vorlage |
-| `design/` | Skripte: `trace.py` zeichnet den Handschlag aus der Vorlage nach, `marke.py` setzt Logo und Icons |
+| `design/` | Skripte: `trace.py` zeichnet den Handschlag aus der Vorlage nach, `marke.py` setzt das Logo, `icons.py` die App-Symbole (Browser-Tab, Startbildschirm, iPhone-App) |
 | `package.json`, `capacitor.config.json` | iPhone-App mit Capacitor (siehe APP-STORE.md) |
-| `app/resources/` | App-Symbol und Startbildschirme für die iPhone-App, erzeugt mit `design/app-bilder.py` |
+| `app/resources/` | App-Symbol und Startbildschirme für die iPhone-App, erzeugt mit `design/icons.py` (Symbol) und `design/app-bilder.py` (Startbildschirme) |
 | `assets/vorschau.png` | Vorschaubild für geteilte Links, erzeugt mit `design/vorschau.py` |
 | `assets/aushang.pdf`, `assets/qr.svg`, `assets/badge-96.png` | Aushang, QR-Code und Zeichen für Benachrichtigungen, erzeugt mit `design/aushang.py` (QR-Code aus `design/qr.py`, ohne fremde Bibliothek) |
 | `index.html` | Fertige App, wird von GitHub Pages ausgeliefert. Nicht von Hand ändern, sondern mit `python3 tools/build.py` neu bauen |

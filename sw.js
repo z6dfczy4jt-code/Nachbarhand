@@ -6,11 +6,12 @@
  * - Benachrichtigungen: zeigt an, was die Datenbank schickt, und öffnet beim Antippen die passende Anfrage.
  * Nach Änderungen an Dateien in assets/ die Versionsnummer erhöhen.
  */
-const VERSION = 'handdrauf-2026-11-11';
+const VERSION = 'handdrauf-2026-11-11b';
 const HUELLE = [
   './',
   'manifest.webmanifest',
   'assets/favicon.svg',
+  'assets/favicon-32.png',
   'assets/icon-192.png',
   'assets/icon-512.png',
   'assets/apple-touch-icon.png',
