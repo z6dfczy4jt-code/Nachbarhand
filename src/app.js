@@ -791,6 +791,35 @@
     };
   }
 
+  // Anfragen im sichtbaren Ausschnitt der Karte nachladen (wer herauszoomt oder woandershin schiebt).
+  // Schon geladene Bereiche werden nicht noch einmal abgefragt.
+  let ausschnittLaeuft = false;
+  async function ausschnittLaden() {
+    const k = kartenStatus, b = k.blick;
+    if (!istLive() || !db.client || !b || !k.w || ausschnittLaeuft || ui.view !== 'karte') return;
+    const lngVon = (x) => (x + NULLPUNKT.x) / ERDE * 180 / Math.PI;
+    const rand = 0.2;
+    const x0 = -b.x / b.s, x1 = (k.w - b.x) / b.s, y0 = -b.y / b.s, y1 = (k.h - b.y) / b.s;
+    const box = {
+      latMin: Math.max(47, breiteVon(y1 + (y1 - y0) * rand)), latMax: Math.min(55.2, breiteVon(y0 - (y1 - y0) * rand)),
+      lngMin: Math.max(5.5, lngVon(x0 - (x1 - x0) * rand)), lngMax: Math.min(15.5, lngVon(x1 + (x1 - x0) * rand))
+    };
+    if (box.latMin >= box.latMax || box.lngMin >= box.lngMax) return;
+    const drin = (a) => a.latMin <= box.latMin && a.latMax >= box.latMax && a.lngMin <= box.lngMin && a.lngMax >= box.lngMax;
+    if ((db.geladeneBereiche || []).some(drin)) return;
+    ausschnittLaeuft = true;
+    try {
+      const { data, error } = await db.client.from('gesuche').select(GESUCH_FELDER).eq('status', 'offen')
+        .gte('lat', box.latMin).lte('lat', box.latMax).gte('lng', box.lngMin).lte('lng', box.lngMax)
+        .order('erstellt', { ascending: false }).limit(500);
+      if (error || !data) return;
+      (db.geladeneBereiche = db.geladeneBereiche || []).push(box);
+      const da = new Set(gesuche.map((g) => g.id));
+      const neu = data.filter((r) => !da.has(r.id)).map(ausDb);
+      if (neu.length) { gesuche = gesuche.concat(neu); renderKarte(); }
+    } catch (e) { /* ohne Netz: beim nächsten Verschieben noch einmal */ } finally { ausschnittLaeuft = false; }
+  }
+
   async function neuLaden() {
     if (!istLive()) return;
     db.laedt = true;
@@ -802,6 +831,7 @@
         .order('erstellt', { ascending: false }).limit(400);
       if (nah.error) throw nah.error;
       let data = nah.data || [];
+      db.geladeneBereiche = [{ latMin: o.lat - 0.45, latMax: o.lat + 0.45, lngMin: o.lng - 0.75, lngMax: o.lng + 0.75 }];
       if (db.user) {
         const eigene = await db.client.from('gesuche').select(GESUCH_FELDER).neq('status', 'zurueckgezogen')
           .or(`ersteller.eq.${db.user.id},helfer.eq.${db.user.id}`).order('erstellt', { ascending: false }).limit(100);
@@ -1319,6 +1349,7 @@
      Nur 2D-Verschiebungen und einfache Bilder, damit es auch auf älteren Handys flüssig läuft. */
   const KARTE = {
     mitte: { lat: 52.44, lng: 9.575 },
+    zoomMin: 5,        // so weit lässt sich herauszoomen (ganz Deutschland)
     zoomMax: 18,       // so nah lässt sich mit Kartenbildern heranzoomen (einzelne Häuser)
     zoomMaxOhne: 15.4, // so nah ohne Kartenbilder (dann gibt es nichts weiter zu sehen)
     flaeche: 1.7,      // vereinfachte Zeichnung: Fläche eines Stadtteils, so viel größer als der Radius in STADTTEILE
@@ -1342,6 +1373,8 @@
   const kartenStatus = { svg: null, welt: null, schicht: null, huelle: null, w: 0, h: 0, blick: null, ruhig: null,
     formen: [], grenzen: null, bewegt: false, gezogen: 0, marker: new Map(), elemente: [], gruppen: [], stufe: null, animation: 0 };
   const groesster = () => massstabFuerZoom(kacheln.aus ? KARTE.zoomMaxOhne : KARTE.zoomMax);
+  // So weit lässt sich herauszoomen: ganz Deutschland mit Rand (Zoomstufe 5)
+  const kleinster = () => massstabFuerZoom(KARTE.zoomMin);
 
   function dunklesThema() {
     const t = document.documentElement.getAttribute('data-theme');
@@ -1418,7 +1451,7 @@
     const carto = CONFIG.karte && CONFIG.karte.carto;
     if (carto) q.push({ url: 'https://basemaps.cartocdn.com/rastertiles/{stil}/{z}/{x}/{y}{r}.png?key=' + encodeURIComponent(carto), max: 20, retina: true, carto: true,
       quelle: OSM_QUELLE + ' © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>' });
-    q.push({ url: 'https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_farbe/default/GLOBAL_WEBMERCATOR/{z}/{y}/{x}.png', max: 18,
+    q.push({ url: 'https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_farbe/default/GLOBAL_WEBMERCATOR/{z}/{y}/{x}.png', min: 5, max: 18,
       quelle: `© <a href="https://www.bkg.bund.de" target="_blank" rel="noopener">GeoBasis-DE / BKG</a> (${new Date().getFullYear()}) <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a><span class="k-veraendert">, Farben angepasst</span>` });
     q.push({ url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', max: 19, quelle: OSM_QUELLE + '<span class="k-veraendert">, Farben angepasst</span>' });
     q.push({ url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png', max: 18, quelle: OSM_QUELLE + ', openstreetmap.de<span class="k-veraendert">, Farben angepasst</span>' });
@@ -1483,7 +1516,7 @@
   // damit Straßennamen gut lesbar bleiben.
   function kachelZoom(s) {
     const q = kacheln.quellen[kacheln.nr];
-    return Math.max(9, Math.min(q.max, Math.floor(Math.log(s * WELT / 256) / Math.LN2 + 0.3)));
+    return Math.max(q.min || 0, Math.min(q.max, Math.floor(Math.log(s * WELT / 256) / Math.LN2 + 0.3)));
   }
   function kachelBereich(b, z) {
     const k = kartenStatus, n = Math.pow(2, z), T = WELT / n;
@@ -1655,7 +1688,7 @@
   }
   function blickBegrenzen(b) {
     const k = kartenStatus, g = { x0: DE_A.x, y0: DE_A.y, x1: DE_B.x, y1: DE_B.y };
-    const s = Math.max(massstabFuerZoom(6), Math.min(groesster(), b.s));
+    const s = Math.max(kleinster(), Math.min(groesster(), b.s));
     // Deutschland darf nicht ganz aus dem Bild rutschen
     const x = Math.min(k.w * 0.6 - g.x0 * s, Math.max(k.w * 0.4 - g.x1 * s, b.x));
     const y = Math.min(k.h * 0.6 - g.y0 * s, Math.max(k.h * 0.4 - g.y1 * s, b.y));
@@ -1693,13 +1726,15 @@
       if (drin) e.el.style.transform = `translate(${x}px, ${y}px)`;
     });
     // Maßstab: eine runde Strecke zwischen 50 und 125 Bildpunkten (in echten Metern)
-    const strecken = [20, 50, 100, 200, 500, 1000, 2000, 5000];
+    const strecken = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000];
     const pxJeMeter = b.s * dehnung(breiteVon((k.h / 2 - b.y) / b.s));
-    const m = strecken.find((x) => x * pxJeMeter >= 50) || 5000;
+    const m = strecken.find((x) => x * pxJeMeter >= 50) || 200000;
     k.massstab.style.width = Math.round(m * pxJeMeter) + 'px';
     k.massstab.textContent = m >= 1000 ? `${m / 1000} km` : `${m} m`;
     clearTimeout(k.ruhig);
     k.ruhig = setTimeout(namenAufraeumen, 120);
+    clearTimeout(k.nachladen);
+    if (istLive() && db.client) k.nachladen = setTimeout(ausschnittLaden, 700);
   }
 
   const zoomStufe = (s) => Math.round(Math.log(s) / Math.LN2 * 2);
@@ -1709,7 +1744,9 @@
     ziel = blickBegrenzen(ziel);
     cancelAnimationFrame(k.animation);
     const weniger = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    k.ziel = null;
     if (!sanft || weniger || !k.blick) { k.blick = ziel; zeichneBlick(); return; }
+    k.ziel = ziel;
     const von = k.blick, start = performance.now(), dauer = 320;
     const schritt = (t) => {
       const f = Math.min(1, (t - start) / dauer), e = 1 - Math.pow(1 - f, 3);
@@ -1718,15 +1755,16 @@
       const mv = { x: (k.w / 2 - von.x) / von.s, y: (k.h / 2 - von.y) / von.s }, mz = { x: (k.w / 2 - ziel.x) / ziel.s, y: (k.h / 2 - ziel.y) / ziel.s };
       k.blick = blickAuf({ x: mv.x + (mz.x - mv.x) * e, y: mv.y + (mz.y - mv.y) * e }, s);
       zeichneBlick();
-      if (f < 1) k.animation = requestAnimationFrame(schritt);
+      if (f < 1) k.animation = requestAnimationFrame(schritt); else k.ziel = null;
     };
     k.animation = requestAnimationFrame(schritt);
   }
   function zoomen(faktor, px, py, sanft) {
-    const k = kartenStatus, b = k.blick;
+    // Mehrmals schnell hintereinander: vom Ziel der laufenden Bewegung aus weiterzoomen
+    const k = kartenStatus, b = (sanft && k.ziel) || k.blick;
     if (!b) return;
     if (px === undefined) { px = k.w / 2; py = k.h / 2; }
-    const s = Math.max(blickAufAlles().s * 0.85, Math.min(groesster(), b.s * faktor));
+    const s = Math.max(kleinster(), Math.min(groesster(), b.s * faktor));
     k.bewegt = true;
     blickSetzen({ s, x: px - (px - b.x) * s / b.s, y: py - (py - b.y) * s / b.s }, sanft);
   }
@@ -1752,7 +1790,7 @@
     let start = null, letzterTipp = 0, letzterOrt = null;
     const ort = (e) => { const r = h.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
     const runter = (id, p, ziel) => {
-      cancelAnimationFrame(k.animation);
+      cancelAnimationFrame(k.animation); k.ziel = null;
       finger.set(id, p);
       if (finger.size === 1) start = { p, blick: k.blick, ziel, weg: 0 };
       else if (finger.size === 2) {
@@ -1766,7 +1804,7 @@
       if (start.pinch && finger.size >= 2) {
         const [a, b] = [...finger.values()];
         const abstand = Math.hypot(a.x - b.x, a.y - b.y) || 1, mitte = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-        const s = Math.max(blickAufAlles().s * 0.85, Math.min(groesster(), start.blick.s * abstand / start.abstand));
+        const s = Math.max(kleinster(), Math.min(groesster(), start.blick.s * abstand / start.abstand));
         const f = s / start.blick.s;
         k.bewegt = true;
         k.blick = blickBegrenzen({ s, x: mitte.x - (start.mitte.x - start.blick.x) * f, y: mitte.y - (start.mitte.y - start.blick.y) * f });
