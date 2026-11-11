@@ -1,8 +1,7 @@
-/* ===== Hand Drauf: Garbsen in Miniatur =====
-   Die Startseite zeigt die Nachbarschaft als kleines 3D-Modell (Klinker, Schiefer, Hecken, Kanal, Raps).
-   Der Rest der App ist ruhig und nimmt zwei Dinge aus diesem Modell mit:
-   - das gelbe Preisschild (Beträge, Pins auf der Karte, Schilder über den Dächern)
-   - das gelbe Ortsschild für Stadtteile, in der Schrift deutscher Straßenschilder (Barlow, nach DIN 1451)
+/* ===== Hand Drauf =====
+   Ruhig und klar, mit zwei Erkennungszeichen:
+   - das gelbe Preisschild (Beträge, Schilder auf den Karten)
+   - das gelbe Ortsschild für Orte, in der Schrift deutscher Straßenschilder (Barlow, nach DIN 1451)
    Farben: Schiefer für Text, Klinkerrot für die wichtigste Handlung, Rapsgelb für Geld, Heckengrün für Erledigtes.
    Ecken: groß außen, kleiner innen (32 → 20 → 14 → 10). */
 /*SCHRIFTEN*/
@@ -54,9 +53,6 @@
   --r-l: 22px;
   --r-m: 16px;
   --r-s: 11px;
-  --mini-bild-tag: url("assets/garbsen-miniatur.webp");
-  --mini-bild-nacht: url("assets/garbsen-miniatur-nacht.webp");
-  --mini-bild: var(--mini-bild-tag);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -69,7 +65,6 @@
     --schatten-1: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 10px rgba(0, 0, 0, .3);
     --schatten-2: 0 2px 6px rgba(0, 0, 0, .4), 0 14px 36px rgba(0, 0, 0, .5);
     --glas: rgba(27, 40, 57, .72); --glas-rand: rgba(255, 255, 255, .08);
-    --mini-bild: var(--mini-bild-nacht);
     color-scheme: dark;
   }
 }
@@ -83,7 +78,6 @@
   --schatten-1: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 10px rgba(0, 0, 0, .3);
   --schatten-2: 0 2px 6px rgba(0, 0, 0, .4), 0 14px 36px rgba(0, 0, 0, .5);
   --glas: rgba(27, 40, 57, .72); --glas-rand: rgba(255, 255, 255, .08);
-  --mini-bild: var(--mini-bild-nacht);
   color-scheme: dark;
 }
 
@@ -166,49 +160,31 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .price::before { content: ""; position: absolute; left: 8px; top: 50%; width: 6px; height: 6px; margin-top: -3px; border-radius: 50%; background: var(--loch); }
 
-/* ----- Die Miniatur auf der Startseite ----- */
-.mini {
-  position: relative; height: 340px; height: clamp(300px, 88vw, 380px); margin-left: -6px; margin-right: -6px;
-  border-radius: var(--r-xl); overflow: hidden; isolation: isolate;
-  background: linear-gradient(180deg, var(--sky-oben) 0%, var(--sky-unten) 72%);
-  background: radial-gradient(120% 70% at 50% 108%, color-mix(in srgb, var(--sky-unten) 70%, var(--paper)) 0%, transparent 60%), linear-gradient(180deg, var(--sky-oben) 0%, var(--sky-unten) 72%);
-  touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab;
-}
-.mini.ist-gezogen { cursor: grabbing; }
-.mini::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--glas-rand); pointer-events: none; }
-/* Nachts: Sterne */
-:root[data-theme="dark"] .mini { --stiel-farbe: rgba(255, 255, 255, .55); }
-:root[data-theme="dark"] .mini::before { content: ""; position: absolute; inset: 0 0 45% 0; z-index: -1; opacity: .8;
-  background-image: radial-gradient(1.2px 1.2px at 12% 18%, #fff, transparent), radial-gradient(1px 1px at 28% 8%, #fff, transparent), radial-gradient(1.4px 1.4px at 46% 22%, #fff, transparent), radial-gradient(1px 1px at 63% 10%, #fff, transparent), radial-gradient(1.2px 1.2px at 81% 26%, #fff, transparent), radial-gradient(1px 1px at 91% 7%, #fff, transparent), radial-gradient(1px 1px at 5% 36%, #fff, transparent), radial-gradient(1px 1px at 72% 40%, #fff, transparent); }
+/* ----- Umgebung: kleine Karte auf der Startseite ----- */
+.umgebung { position: relative; height: 220px; height: clamp(190px, 56vw, 260px); border-radius: var(--r-xl); overflow: hidden; isolation: isolate;
+  background: var(--map-kachel-grund); box-shadow: var(--schatten-1); cursor: pointer; font-family: var(--f-body);
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+.umgebung::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 5; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--line); pointer-events: none; }
+.u-kacheln { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+:root[data-theme="dark"] .umgebung.k-filter .u-kacheln { -webkit-filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); }
+:root[data-theme="dark"] .umgebung.k-filter .k-veraendert { display: inline; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .mini { --stiel-farbe: rgba(255, 255, 255, .55); }
-  :root:not([data-theme="light"]) .mini::before { content: ""; position: absolute; inset: 0 0 45% 0; z-index: -1; opacity: .8;
-    background-image: radial-gradient(1.2px 1.2px at 12% 18%, #fff, transparent), radial-gradient(1px 1px at 28% 8%, #fff, transparent), radial-gradient(1.4px 1.4px at 46% 22%, #fff, transparent), radial-gradient(1px 1px at 63% 10%, #fff, transparent), radial-gradient(1.2px 1.2px at 81% 26%, #fff, transparent), radial-gradient(1px 1px at 91% 7%, #fff, transparent), radial-gradient(1px 1px at 5% 36%, #fff, transparent), radial-gradient(1px 1px at 72% 40%, #fff, transparent); }
+  :root:not([data-theme="light"]) .umgebung.k-filter .u-kacheln { -webkit-filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); }
+  :root:not([data-theme="light"]) .umgebung.k-filter .k-veraendert { display: inline; }
 }
-.mini-leinwand { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.mini.ohne-3d, .start-bild { background-image: var(--mini-bild), linear-gradient(180deg, var(--sky-oben) 0%, var(--sky-unten) 72%); background-size: contain, cover; background-repeat: no-repeat; background-position: center 60%, center; }
-.mini.ohne-3d { cursor: default; touch-action: auto; height: 260px; height: clamp(230px, 64vw, 300px); }
-.mini.ohne-3d .mini-anker { display: none; }
-.mini-schilder { position: absolute; inset: 0; pointer-events: none; }
-/* Anker am Dach: Stiel und Nagel, darüber das Schild als Knopf */
-.mini-anker { --stiel: 14px; position: absolute; left: 0; top: 0; width: 0; height: 0; opacity: 0; transition: opacity .3s ease calc(var(--i) * 70ms); }
-.mini.ist-bereit .mini-anker { opacity: 1; }
-.mini-anker::before { content: ""; position: absolute; left: -1px; bottom: 0; width: 2px; height: var(--stiel); background: var(--stiel-farbe, rgba(17, 22, 28, .55)); }
-.mini-anker::after { content: ""; position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 50%; background: #11161C; box-shadow: 0 0 0 2px var(--accent); }
-.mini-schild {
-  position: absolute; left: 0; bottom: var(--stiel); transform: translateX(-50%) scale(.6); transform-origin: 50% 100%;
-  display: inline-flex; align-items: center; gap: 3px; min-height: 30px; padding: 3px 9px 3px 5px; border: 0; border-radius: 9px;
-  background: var(--accent); color: var(--on-accent); white-space: nowrap; pointer-events: auto; cursor: pointer;
-  font-family: var(--f-display); font-weight: 700; font-size: 0.9375rem; line-height: 1.2; font-variant-numeric: tabular-nums;
-  box-shadow: 0 1px 0 var(--accent-tief), 0 6px 14px rgba(17, 22, 28, .28);
-  transition: transform .45s cubic-bezier(.3, 1.6, .5, 1) calc(var(--i) * 70ms);
-}
-.mini.ist-bereit .mini-schild { transform: translateX(-50%) scale(1); animation: schweben 4.2s ease-in-out calc(var(--i) * -.6s) infinite; }
-.mini-schild .bild { width: 19px; height: 19px; }
-.mini-schild:hover, .mini-schild:focus-visible { transform: translateX(-50%) scale(1.1); animation: none; }
-.mini-schild:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-.mini-anker-zugesagt .mini-schild { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink), 0 6px 14px rgba(17, 22, 28, .28); }
-@keyframes schweben { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-4px); } }
+.u-schicht { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 2; }
+.umgebung.u-ohne { background: var(--map-umland); }
+.u-kreis { position: absolute; box-sizing: border-box; border-radius: 50%; border: 1.5px dashed var(--muted); opacity: .55; pointer-events: none; }
+.u-kreis span { position: absolute; left: -1px; top: 50%; -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%); padding: 0 5px; border-radius: 6px; background: var(--map-umland); color: var(--ink); font-size: 0.875rem; line-height: 1.4; white-space: nowrap; }
+.u-oeffnen { position: absolute; top: 10px; right: 10px; z-index: 4; display: -webkit-inline-flex; display: inline-flex; -webkit-align-items: center; align-items: center; gap: 6px;
+  min-height: 44px; padding: 0 16px 0 13px; border: 0; border-radius: 999px; background: var(--glas); color: var(--ink); cursor: pointer;
+  font-family: var(--f-body); font-weight: 600; font-size: 0.9375rem; box-shadow: var(--schatten-1), inset 0 0 0 1px var(--glas-rand);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.u-oeffnen:focus { outline: none; }
+.u-oeffnen:focus-visible { box-shadow: 0 0 0 3px var(--focus); }
+@media (hover: hover) { .u-oeffnen:hover { background: var(--surface); } }
+.u-quelle { position: absolute; right: 0; bottom: 0; z-index: 4; max-width: 100%; box-sizing: border-box; margin: 0; padding: 2px 10px; border-radius: 10px 0 0 0; background: var(--glas); color: var(--muted); font-size: 0.875rem; line-height: 1.35; text-align: right; }
+.u-quelle a { color: inherit; }
 
 /* ----- Suche ----- */
 .suche { position: relative; }
@@ -757,7 +733,8 @@ html.ist-offline body { padding-top: 34px; }
 .start { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; background: var(--paper); padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); overflow-y: auto; }
 .start[hidden] { display: none; }
 .start-inhalt { position: relative; width: 100%; max-width: 440px; display: grid; gap: 18px; padding-top: 44px; }
-.start-bild { height: 190px; height: clamp(150px, 26vh, 230px); border-radius: var(--r-xl); }
+.start-zeichen { display: block; width: 62%; max-width: 250px; height: auto; margin: 10px auto 2px; color: var(--ink); }
+.start-zeichen use { fill: currentColor; stroke: none; }
 .start-schrift { display: grid; gap: 10px; }
 .start-schrift .wahl-knopf { min-height: 64px; flex-direction: row; justify-content: space-between; padding: 10px 18px; text-align: left; }
 .start-schrift .wahl-knopf span:last-child { color: var(--muted); font-weight: 400; }
@@ -779,7 +756,7 @@ html.ist-offline body { padding-top: 34px; }
 .start-punkte { display: flex; justify-content: center; gap: 8px; }
 .start-punkte span { width: 8px; height: 8px; border-radius: 50%; background: var(--line); transition: width .25s; }
 .start-punkte span.an { width: 26px; border-radius: 4px; background: var(--klinker); }
-@media (max-height: 700px) { .start-bild { height: 120px; } .start-liste li { padding: 12px 16px; } }
+@media (max-height: 700px) { .start-zeichen { width: 44%; margin-top: 0; } .start-liste li { padding: 12px 16px; } }
 
 /* ----- Hinweise ----- */
 .beispiel-band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 14px; margin: -2px 0 4px; padding: 10px 16px; border-radius: var(--r-m); background: var(--warn-bg); color: var(--ink); font-size: 1rem; }

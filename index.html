@@ -22,14 +22,13 @@
 <link rel="icon" href="assets/favicon.svg?v=fbd0c798" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=c54958ad">
 <link rel="manifest" href="manifest.webmanifest">
-<script>try{var a=JSON.parse(localStorage.getItem("handdrauf-ansicht")||"{}"),r=document.documentElement;if(a.thema==="dunkel"||a.thema==="hell")r.setAttribute("data-theme",a.thema==="dunkel"?"dark":"light");if(a.schrift==="gross"||a.schrift==="sehr-gross")r.setAttribute("data-schrift",a.schrift)}catch(e){}(function(){var U="https://hgfwbjesolgneyapehta.supabase.co",K="sb_publishable_aHSISOj3lPHJwpWqa64gnA_iLcJV1w3",F="55a4728297",n=0,g={};if(!U||!window.addEventListener)return;function m(t,s){try{t=String(t||"");s=String(s||"");if(!t||n>=5||/ResizeObserver loop|^Script error/i.test(t)||g[t])return;g[t]=1;n++;var x=new XMLHttpRequest();x.open("POST",U+"/rest/v1/rpc/fehler_melden");x.setRequestHeader("Content-Type","application/json");x.setRequestHeader("apikey",K);x.onload=function(){if(x.status===404)n=99};x.send(JSON.stringify({p_nachricht:t.slice(0,300),p_stelle:s.slice(0,200),p_geraet:String(navigator.userAgent).slice(0,200),p_fassung:F}))}catch(e){}}window.addEventListener("error",function(e){if(!e||!e.message)return;var f=String(e.filename||"");if(f&&f.indexOf(location.protocol+"//"+location.host)!==0)return;m(e.message,f.replace(/[?#].*$/,"").split("/").pop()+":"+(e.lineno||0)+":"+(e.colno||0))});window.addEventListener("unhandledrejection",function(e){var r=e&&e.reason,t=r&&(r.message||String(r))||"";if(/fetch|load failed|network|abort|timeout|JWT|auth/i.test(t))return;m("Promise: "+t,"")});window.hdFehler=m})();</script>
+<script>try{var a=JSON.parse(localStorage.getItem("handdrauf-ansicht")||"{}"),r=document.documentElement;if(a.thema==="dunkel"||a.thema==="hell")r.setAttribute("data-theme",a.thema==="dunkel"?"dark":"light");if(a.schrift==="gross"||a.schrift==="sehr-gross")r.setAttribute("data-schrift",a.schrift)}catch(e){}(function(){var U="https://hgfwbjesolgneyapehta.supabase.co",K="sb_publishable_aHSISOj3lPHJwpWqa64gnA_iLcJV1w3",F="73ff4fd1b6",n=0,g={};if(!U||!window.addEventListener)return;function m(t,s){try{t=String(t||"");s=String(s||"");if(!t||n>=5||/ResizeObserver loop|^Script error/i.test(t)||g[t])return;g[t]=1;n++;var x=new XMLHttpRequest();x.open("POST",U+"/rest/v1/rpc/fehler_melden");x.setRequestHeader("Content-Type","application/json");x.setRequestHeader("apikey",K);x.onload=function(){if(x.status===404)n=99};x.send(JSON.stringify({p_nachricht:t.slice(0,300),p_stelle:s.slice(0,200),p_geraet:String(navigator.userAgent).slice(0,200),p_fassung:F}))}catch(e){}}window.addEventListener("error",function(e){if(!e||!e.message)return;var f=String(e.filename||"");if(f&&f.indexOf(location.protocol+"//"+location.host)!==0)return;m(e.message,f.replace(/[?#].*$/,"").split("/").pop()+":"+(e.lineno||0)+":"+(e.colno||0))});window.addEventListener("unhandledrejection",function(e){var r=e&&e.reason,t=r&&(r.message||String(r))||"";if(/fetch|load failed|network|abort|timeout|JWT|auth/i.test(t))return;m("Promise: "+t,"")});window.hdFehler=m})();</script>
 <link rel="preload" href="assets/fonts/barlow-regular.woff" as="font" type="font/woff" crossorigin><link rel="preload" href="assets/fonts/barlowsemicondensed-bold.woff" as="font" type="font/woff" crossorigin>
 <style>
-/* ===== Hand Drauf: Garbsen in Miniatur =====
-   Die Startseite zeigt die Nachbarschaft als kleines 3D-Modell (Klinker, Schiefer, Hecken, Kanal, Raps).
-   Der Rest der App ist ruhig und nimmt zwei Dinge aus diesem Modell mit:
-   - das gelbe Preisschild (Beträge, Pins auf der Karte, Schilder über den Dächern)
-   - das gelbe Ortsschild für Stadtteile, in der Schrift deutscher Straßenschilder (Barlow, nach DIN 1451)
+/* ===== Hand Drauf =====
+   Ruhig und klar, mit zwei Erkennungszeichen:
+   - das gelbe Preisschild (Beträge, Schilder auf den Karten)
+   - das gelbe Ortsschild für Orte, in der Schrift deutscher Straßenschilder (Barlow, nach DIN 1451)
    Farben: Schiefer für Text, Klinkerrot für die wichtigste Handlung, Rapsgelb für Geld, Heckengrün für Erledigtes.
    Ecken: groß außen, kleiner innen (32 → 20 → 14 → 10). */
 @font-face { font-family: "Barlow"; font-style: normal; font-weight: 400; font-display: swap; src: url("assets/fonts/barlow-regular.woff") format("woff"); }
@@ -85,9 +84,6 @@
   --r-l: 22px;
   --r-m: 16px;
   --r-s: 11px;
-  --mini-bild-tag: url("assets/garbsen-miniatur.webp");
-  --mini-bild-nacht: url("assets/garbsen-miniatur-nacht.webp");
-  --mini-bild: var(--mini-bild-tag);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -100,7 +96,6 @@
     --schatten-1: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 10px rgba(0, 0, 0, .3);
     --schatten-2: 0 2px 6px rgba(0, 0, 0, .4), 0 14px 36px rgba(0, 0, 0, .5);
     --glas: rgba(27, 40, 57, .72); --glas-rand: rgba(255, 255, 255, .08);
-    --mini-bild: var(--mini-bild-nacht);
     color-scheme: dark;
   }
 }
@@ -114,7 +109,6 @@
   --schatten-1: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 10px rgba(0, 0, 0, .3);
   --schatten-2: 0 2px 6px rgba(0, 0, 0, .4), 0 14px 36px rgba(0, 0, 0, .5);
   --glas: rgba(27, 40, 57, .72); --glas-rand: rgba(255, 255, 255, .08);
-  --mini-bild: var(--mini-bild-nacht);
   color-scheme: dark;
 }
 
@@ -197,49 +191,31 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .price::before { content: ""; position: absolute; left: 8px; top: 50%; width: 6px; height: 6px; margin-top: -3px; border-radius: 50%; background: var(--loch); }
 
-/* ----- Die Miniatur auf der Startseite ----- */
-.mini {
-  position: relative; height: 340px; height: clamp(300px, 88vw, 380px); margin-left: -6px; margin-right: -6px;
-  border-radius: var(--r-xl); overflow: hidden; isolation: isolate;
-  background: linear-gradient(180deg, var(--sky-oben) 0%, var(--sky-unten) 72%);
-  background: radial-gradient(120% 70% at 50% 108%, color-mix(in srgb, var(--sky-unten) 70%, var(--paper)) 0%, transparent 60%), linear-gradient(180deg, var(--sky-oben) 0%, var(--sky-unten) 72%);
-  touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab;
-}
-.mini.ist-gezogen { cursor: grabbing; }
-.mini::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--glas-rand); pointer-events: none; }
-/* Nachts: Sterne */
-:root[data-theme="dark"] .mini { --stiel-farbe: rgba(255, 255, 255, .55); }
-:root[data-theme="dark"] .mini::before { content: ""; position: absolute; top: 0; right: 0; bottom: 45%; left: 0; z-index: -1; opacity: .8;
-  background-image: radial-gradient(1.2px 1.2px at 12% 18%, #fff, transparent), radial-gradient(1px 1px at 28% 8%, #fff, transparent), radial-gradient(1.4px 1.4px at 46% 22%, #fff, transparent), radial-gradient(1px 1px at 63% 10%, #fff, transparent), radial-gradient(1.2px 1.2px at 81% 26%, #fff, transparent), radial-gradient(1px 1px at 91% 7%, #fff, transparent), radial-gradient(1px 1px at 5% 36%, #fff, transparent), radial-gradient(1px 1px at 72% 40%, #fff, transparent); }
+/* ----- Umgebung: kleine Karte auf der Startseite ----- */
+.umgebung { position: relative; height: 220px; height: clamp(190px, 56vw, 260px); border-radius: var(--r-xl); overflow: hidden; isolation: isolate;
+  background: var(--map-kachel-grund); box-shadow: var(--schatten-1); cursor: pointer; font-family: var(--f-body);
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+.umgebung::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 5; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--line); pointer-events: none; }
+.u-kacheln { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+:root[data-theme="dark"] .umgebung.k-filter .u-kacheln { -webkit-filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); }
+:root[data-theme="dark"] .umgebung.k-filter .k-veraendert { display: inline; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .mini { --stiel-farbe: rgba(255, 255, 255, .55); }
-  :root:not([data-theme="light"]) .mini::before { content: ""; position: absolute; top: 0; right: 0; bottom: 45%; left: 0; z-index: -1; opacity: .8;
-    background-image: radial-gradient(1.2px 1.2px at 12% 18%, #fff, transparent), radial-gradient(1px 1px at 28% 8%, #fff, transparent), radial-gradient(1.4px 1.4px at 46% 22%, #fff, transparent), radial-gradient(1px 1px at 63% 10%, #fff, transparent), radial-gradient(1.2px 1.2px at 81% 26%, #fff, transparent), radial-gradient(1px 1px at 91% 7%, #fff, transparent), radial-gradient(1px 1px at 5% 36%, #fff, transparent), radial-gradient(1px 1px at 72% 40%, #fff, transparent); }
+  :root:not([data-theme="light"]) .umgebung.k-filter .u-kacheln { -webkit-filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); }
+  :root:not([data-theme="light"]) .umgebung.k-filter .k-veraendert { display: inline; }
 }
-.mini-leinwand { position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; display: block; }
-.mini.ohne-3d, .start-bild { background-image: var(--mini-bild), linear-gradient(180deg, var(--sky-oben) 0%, var(--sky-unten) 72%); background-size: contain, cover; background-repeat: no-repeat; background-position: center 60%, center; }
-.mini.ohne-3d { cursor: default; touch-action: auto; height: 260px; height: clamp(230px, 64vw, 300px); }
-.mini.ohne-3d .mini-anker { display: none; }
-.mini-schilder { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; }
-/* Anker am Dach: Stiel und Nagel, darüber das Schild als Knopf */
-.mini-anker { --stiel: 14px; position: absolute; left: 0; top: 0; width: 0; height: 0; opacity: 0; transition: opacity .3s ease calc(var(--i) * 70ms); }
-.mini.ist-bereit .mini-anker { opacity: 1; }
-.mini-anker::before { content: ""; position: absolute; left: -1px; bottom: 0; width: 2px; height: var(--stiel); background: var(--stiel-farbe, rgba(17, 22, 28, .55)); }
-.mini-anker::after { content: ""; position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 50%; background: #11161C; box-shadow: 0 0 0 2px var(--accent); }
-.mini-schild {
-  position: absolute; left: 0; bottom: var(--stiel); transform: translateX(-50%) scale(.6); transform-origin: 50% 100%;
-  display: inline-flex; align-items: center; gap: 3px; min-height: 30px; padding: 3px 9px 3px 5px; border: 0; border-radius: 9px;
-  background: var(--accent); color: var(--on-accent); white-space: nowrap; pointer-events: auto; cursor: pointer;
-  font-family: var(--f-display); font-weight: 700; font-size: 0.9375rem; line-height: 1.2; font-variant-numeric: tabular-nums;
-  box-shadow: 0 1px 0 var(--accent-tief), 0 6px 14px rgba(17, 22, 28, .28);
-  transition: transform .45s cubic-bezier(.3, 1.6, .5, 1) calc(var(--i) * 70ms);
-}
-.mini.ist-bereit .mini-schild { transform: translateX(-50%) scale(1); animation: schweben 4.2s ease-in-out calc(var(--i) * -.6s) infinite; }
-.mini-schild .bild { width: 19px; height: 19px; }
-.mini-schild:hover, .mini-schild:focus-visible { transform: translateX(-50%) scale(1.1); animation: none; }
-.mini-schild:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-.mini-anker-zugesagt .mini-schild { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink), 0 6px 14px rgba(17, 22, 28, .28); }
-@keyframes schweben { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-4px); } }
+.u-schicht { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 2; }
+.umgebung.u-ohne { background: var(--map-umland); }
+.u-kreis { position: absolute; box-sizing: border-box; border-radius: 50%; border: 1.5px dashed var(--muted); opacity: .55; pointer-events: none; }
+.u-kreis span { position: absolute; left: -1px; top: 50%; -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%); padding: 0 5px; border-radius: 6px; background: var(--map-umland); color: var(--ink); font-size: 0.875rem; line-height: 1.4; white-space: nowrap; }
+.u-oeffnen { position: absolute; top: 10px; right: 10px; z-index: 4; display: -webkit-inline-flex; display: inline-flex; -webkit-align-items: center; align-items: center; gap: 6px;
+  min-height: 44px; padding: 0 16px 0 13px; border: 0; border-radius: 999px; background: var(--glas); color: var(--ink); cursor: pointer;
+  font-family: var(--f-body); font-weight: 600; font-size: 0.9375rem; box-shadow: var(--schatten-1), inset 0 0 0 1px var(--glas-rand);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.u-oeffnen:focus { outline: none; }
+.u-oeffnen:focus-visible { box-shadow: 0 0 0 3px var(--focus); }
+@media (hover: hover) { .u-oeffnen:hover { background: var(--surface); } }
+.u-quelle { position: absolute; right: 0; bottom: 0; z-index: 4; max-width: 100%; box-sizing: border-box; margin: 0; padding: 2px 10px; border-radius: 10px 0 0 0; background: var(--glas); color: var(--muted); font-size: 0.875rem; line-height: 1.35; text-align: right; }
+.u-quelle a { color: inherit; }
 
 /* ----- Suche ----- */
 .suche { position: relative; }
@@ -788,7 +764,8 @@ html.ist-offline body { padding-top: 34px; }
 .start { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 2000; display: grid; place-items: center; background: var(--paper); padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); overflow-y: auto; }
 .start[hidden] { display: none; }
 .start-inhalt { position: relative; width: 100%; max-width: 440px; display: grid; gap: 18px; padding-top: 44px; }
-.start-bild { height: 190px; height: clamp(150px, 26vh, 230px); border-radius: var(--r-xl); }
+.start-zeichen { display: block; width: 62%; max-width: 250px; height: auto; margin: 10px auto 2px; color: var(--ink); }
+.start-zeichen use { fill: currentColor; stroke: none; }
 .start-schrift { display: grid; gap: 10px; }
 .start-schrift .wahl-knopf { min-height: 64px; flex-direction: row; justify-content: space-between; padding: 10px 18px; text-align: left; }
 .start-schrift .wahl-knopf span:last-child { color: var(--muted); font-weight: 400; }
@@ -810,7 +787,7 @@ html.ist-offline body { padding-top: 34px; }
 .start-punkte { display: flex; justify-content: center; gap: 8px; }
 .start-punkte span { width: 8px; height: 8px; border-radius: 50%; background: var(--line); transition: width .25s; }
 .start-punkte span.an { width: 26px; border-radius: 4px; background: var(--klinker); }
-@media (max-height: 700px) { .start-bild { height: 120px; } .start-liste li { padding: 12px 16px; } }
+@media (max-height: 700px) { .start-zeichen { width: 44%; margin-top: 0; } .start-liste li { padding: 12px 16px; } }
 
 /* ----- Hinweise ----- */
 .beispiel-band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 14px; margin: -2px 0 4px; padding: 10px 16px; border-radius: var(--r-m); background: var(--warn-bg); color: var(--ink); font-size: 1rem; }
@@ -1035,8 +1012,11 @@ a.btn { text-decoration: none; }
         <p class="lead" id="anzahl-text">Hilfe in deiner Nähe</p>
         <p class="geholfen" id="geholfen" hidden></p>
       </div>
-      <div class="mini" id="mini" role="group" aria-label="Deine Nachbarschaft als kleines Modell. Die Schilder über den Dächern sind offene Anfragen.">
-        <div class="mini-schilder"></div>
+      <div class="umgebung" id="umgebung" role="group" aria-label="Karte deiner Umgebung mit den offenen Anfragen">
+        <div class="u-kacheln" aria-hidden="true"></div>
+        <div class="u-schicht"></div>
+        <button type="button" class="u-oeffnen"><svg class="i i-sm" aria-hidden="true"><use href="#i-karte"/></svg>Karte öffnen</button>
+        <p class="u-quelle"></p>
       </div>
       <div id="banner-naechstes"></div>
       <div class="suche">
@@ -1288,7 +1268,7 @@ a.btn { text-decoration: none; }
 </div>
 
 <script>
-const EINSTELLUNGEN = {"adresse": "https://z6dfczy4jt-code.github.io/Nachbarhand/", "supabase": {"url": "https://hgfwbjesolgneyapehta.supabase.co", "key": "sb_publishable_aHSISOj3lPHJwpWqa64gnA_iLcJV1w3"}, "push": "BAeSkBv6_TrKXn_vTxc3F5qJOLIJ2bIjB3ro4IFlHjX32LlpKFu4quz2Wr5DVsCatqeKFvXfYHgCZRPQr29zAuc", "betreiber": {"name": "", "anschrift": "", "email": "", "telefon": ""}, "hosting": {"art": "github", "anbieter": "", "standort": ""}, "karte": {"carto": ""}, "geocoder": "https://photon.komoot.io", "codeLogin": false, "gebuehren": false, "supabaseJs": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js", "fassung": "55a4728297"};
+const EINSTELLUNGEN = {"adresse": "https://z6dfczy4jt-code.github.io/Nachbarhand/", "supabase": {"url": "https://hgfwbjesolgneyapehta.supabase.co", "key": "sb_publishable_aHSISOj3lPHJwpWqa64gnA_iLcJV1w3"}, "push": "BAeSkBv6_TrKXn_vTxc3F5qJOLIJ2bIjB3ro4IFlHjX32LlpKFu4quz2Wr5DVsCatqeKFvXfYHgCZRPQr29zAuc", "betreiber": {"name": "", "anschrift": "", "email": "", "telefon": ""}, "hosting": {"art": "github", "anbieter": "", "standort": ""}, "karte": {"carto": ""}, "geocoder": "https://photon.komoot.io", "codeLogin": false, "gebuehren": false, "supabaseJs": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js", "fassung": "73ff4fd1b6"};
 /* Tätigkeits-Bilder: Microsoft Fluent Emoji 3D (MIT), siehe src/kategorien/LIZENZ-fluent-emoji.txt */
 const KAT_BILDER = {
   alle: 'data:image/webp;base64,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',
@@ -1344,12 +1324,12 @@ function RECHT_TEXTE(b, h, e) {
         <h3>2. Wenn du die App aufrufst</h3>
         ${h && h.art === 'server' ? `<p>Die App liegt auf einem Server, den wir bei ${h.anbieter ? e(h.anbieter) : '<span class="platzhalter">[Anbieter mit Anschrift]</span>'} gemietet haben${h.standort ? ` (Standort: ${e(h.standort)})` : ''}. Mit dem Anbieter besteht ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO). Beim Aufruf verarbeitet der Server technisch notwendige Daten wie deine IP-Adresse, Zeitpunkt, Browser und Betriebssystem, um die Seite auszuliefern. Zugriffe protokolliert der Server nicht. Rechtsgrundlage ist unser berechtigtes Interesse an einer sicheren, erreichbaren App (Art. 6 Abs. 1 lit. f DSGVO).</p>`
           : '<p>Die App liegt bei GitHub Pages, einem Dienst von GitHub (GitHub B.V., Prins Bernhardplein 200, 1097 JB Amsterdam, Niederlande, und GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA). Beim Aufruf verarbeitet GitHub technisch notwendige Daten wie deine IP-Adresse, Zeitpunkt, Browser und Betriebssystem, um die Seite auszuliefern und vor Angriffen zu schützen. Rechtsgrundlage ist unser berechtigtes Interesse an einer sicheren, erreichbaren App (Art. 6 Abs. 1 lit. f DSGVO). Für Übermittlungen in die USA stützt sich GitHub auf das EU-US Data Privacy Framework und auf EU-Standardvertragsklauseln.</p>'}
-        <p>Schriften, Bilder und die Bibliothek für das 3D-Modell liefern wir selbst aus. Dafür werden keine Daten an Google oder andere Anbieter übertragen.</p>
+        <p>Schriften und Bilder liefern wir selbst aus. Dafür werden keine Daten an Google oder andere Anbieter übertragen.</p>
         <p>Tritt in der App ein technischer Fehler auf, schickt sie eine kurze Meldung an unsere Datenbank: den Fehlertext, die Stelle im Programm, Browser und Gerätetyp sowie die Fassung der App. Namen, Inhalte und deine IP-Adresse speichern wir dabei nicht. Gleiche Meldungen werden nur gezählt, nach 30 Tagen löschen wir sie. So finden wir Fehler, die nur auf bestimmten Geräten auftreten. Rechtsgrundlage ist unser berechtigtes Interesse an einer funktionierenden App (Art. 6 Abs. 1 lit. f DSGVO).</p>
         ${h && h.supabaseCdn ? '<p>Die Programmbibliothek für die Verbindung zur Datenbank (supabase-js) lädt dein Gerät beim ersten Anmelden vom Dienst jsDelivr (www.jsdelivr.com). Dabei wird deine IP-Adresse an dessen Server übertragen. Rechtsgrundlage ist unser berechtigtes Interesse an einer funktionierenden App (Art. 6 Abs. 1 lit. f DSGVO).</p>' : ''}
 
         <h3>3. Karte</h3>
-        <p>Die Kartenbilder (Straßen, Namen, Parks) lädt dein Gerät von basemap.de, der amtlichen Webkarte von Bund und Ländern. Die Server betreibt das Bundesamt für Kartographie und Geodäsie (BKG), Richard-Strauss-Allee 11, 60598 Frankfurt am Main. Dabei werden deine IP-Adresse und der gezeigte Kartenausschnitt übertragen. Sind diese Server nicht erreichbar, lädt die App die Kartenbilder von OpenStreetMap (OpenStreetMap Foundation, Großbritannien; für Großbritannien gilt ein Angemessenheitsbeschluss der EU-Kommission) oder von openstreetmap.de (FOSSGIS e.V., Deutschland). Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO: Ohne Karte kann die App nicht zeigen, wo Hilfe gesucht wird.</p>
+        <p>Die Kartenbilder (Straßen, Namen, Parks) auf der Startseite und auf der Karte lädt dein Gerät von basemap.de, der amtlichen Webkarte von Bund und Ländern. Die Server betreibt das Bundesamt für Kartographie und Geodäsie (BKG), Richard-Strauss-Allee 11, 60598 Frankfurt am Main. Dabei werden deine IP-Adresse und der gezeigte Kartenausschnitt übertragen. Sind diese Server nicht erreichbar, lädt die App die Kartenbilder von OpenStreetMap (OpenStreetMap Foundation, Großbritannien; für Großbritannien gilt ein Angemessenheitsbeschluss der EU-Kommission) oder von openstreetmap.de (FOSSGIS e.V., Deutschland). Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO: Ohne Karte kann die App nicht zeigen, wo Hilfe gesucht wird.</p>
         <p>Kartenbilder: © GeoBasis-DE / BKG, CC BY 4.0, bzw. © OpenStreetMap-Mitwirkende, ODbL. Sind keine Kartenbilder erreichbar, zeigt die App nur die Anfragen, in Garbsen dazu die Stadtteile vereinfacht (Lage nach Daten von OpenStreetMap und GeoNames, CC BY 4.0).</p>
         <p><strong>Ortssuche:</strong> Wenn du einen Ort oder eine Adresse eintippst, ${!h || !h.geocoder ? 'sucht die App in einer eingebauten Liste, ohne etwas zu übertragen.' : /komoot\.io/.test(h.geocoder) ? 'schickt dein Gerät den eingetippten Text an den Suchdienst Photon (komoot GmbH, Berlin), der Vorschläge aus den Daten von OpenStreetMap liefert. Dabei wird auch deine IP-Adresse übertragen.' : 'schickt dein Gerät den eingetippten Text an unseren eigenen Suchdienst (Photon, Daten von OpenStreetMap). Er speichert die Anfragen nicht.'} Hand Drauf speichert nur den gewählten Ortsnamen und die Mitte eines Rasterfelds von etwa einem Kilometer, nie die genaue Lage deiner Adresse. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Nutzung der App) und unser berechtigtes Interesse an einer einfachen Ortsauswahl (Art. 6 Abs. 1 lit. f DSGVO).</p>
         <p>Anfragen erscheinen auf der Karte nur ungefähr: als Punkt 100 bis 400 Meter um die Mitte eines Rasterfelds von etwa einem Kilometer, in dem die Adresse liegt, oder, weiter herausgezoomt, als Zahl.</p>
@@ -1561,635 +1541,12 @@ function FRAGEN_TEXTE(c) {
   };
 }
 
-/* ===== Garbsen als Miniatur (Three.js) =====
-   Ein Stück Nachbarschaft zum Anfassen: Klinkerhäuser mit Schieferdach, Hecken, eine Straße mit Gehweg,
-   der Kanal vorne und ein Rapsfeld. Über den Dächern hängen die offenen Anfragen als Preisschilder.
-   Die Schilder sind echte Knöpfe im HTML (lesbar, antippbar, mit Tastatur erreichbar), die Szene liegt dahinter.
-   Aufruf: garbsenMiniatur(THREE, huelle, { nacht, wennSchild, foto, pruefen, zuLangsam }) → { schilder(liste), nacht(an), ruhe(an), ende() }
-   pruefen: beim Aufbauen messen, ob das Gerät die Szene flüssig schafft. Wenn nicht: erst ohne Schatten, dann zuLangsam(). */
-function garbsenMiniatur(THREE, huelle, opt = {}) {
-  const reduziert = !!opt.foto || matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const leinwand = document.createElement('canvas');
-  leinwand.className = 'mini-leinwand';
-  leinwand.setAttribute('aria-hidden', 'true');
-  let renderer;
-  try {
-    renderer = new THREE.WebGLRenderer({ canvas: leinwand, antialias: true, alpha: true, powerPreference: 'low-power', preserveDrawingBuffer: !!opt.foto });
-  } catch (e) {
-    return null;
-  }
-  huelle.insertBefore(leinwand, huelle.firstChild);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setClearColor(0x000000, 0);
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-  const szene = new THREE.Scene();
-  const kamera = new THREE.PerspectiveCamera(24, 1.6, 1, 140);
-  const welt = new THREE.Group();
-  szene.add(welt);
-
-  // Immer gleicher Zufall, damit Ziegel und Fenster bei jedem Start gleich aussehen
-  let saat = 20261109;
-  const zufall = () => { saat |= 0; saat = (saat + 0x6D2B79F5) | 0; let t = Math.imul(saat ^ (saat >>> 15), 1 | saat); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-
-  /* ----- Farben: Klinker, Schiefer, Hecke, Raps, Kanal ----- */
-  const F = {
-    rasen: 0x86BE62, rasenStreifen: 0x93C96E, erde: 0x8A6A4C, erdeDunkel: 0x6F543C, sockel: 0xC9C0B4,
-    klinker: [0x9E3A2B, 0xB04A36, 0x8E3427, 0xA8452F, 0x963A2E, 0xB2533B, 0x9A3F30],
-    dach: [0x4A5462, 0x6E4034, 0x4A5462, 0x8C3B2B, 0x56606E, 0x4A5462, 0x6E4034],
-    rahmen: 0xF3EFE8, glas: 0x2D4357, tuer: [0x2E6A86, 0x2F7346, 0x3B4552, 0xE9A800, 0x2E6A86, 0x7A2F2A, 0x2F7346],
-    strasse: 0x666E78, gehweg: 0xD6D0C6, linie: 0xF4F2EC, hecke: 0x3D7E45, hecke2: 0x4A8C4C,
-    baum: [0x5B9C4C, 0x6CAD54, 0x4C8E46], stamm: 0x76573C, nadel: 0x2E6A44, raps: 0xF2C318, rapsGruen: 0x7DAA48,
-    wasser: 0x4E9FCC, auto: [0x3F6E99, 0xE6E2DA], post: 0xF4B400, mast: 0x3B4552, haut: 0xE8B892,
-  };
-
-  /* ----- Bausteine ----- */
-  const mats = new Map();
-  const mat = (farbe, extra) => {
-    const k = farbe + (extra ? JSON.stringify(extra) : '');
-    if (!mats.has(k)) mats.set(k, new THREE.MeshStandardMaterial({ color: farbe, roughness: 0.86, metalness: 0, ...(extra || {}) }));
-    return mats.get(k);
-  };
-  const geos = new Map();
-  const geo = (k, bau) => { if (!geos.has(k)) geos.set(k, bau()); return geos.get(k); };
-  const kiste = (b, h, t) => geo(`k${b}|${h}|${t}`, () => new THREE.BoxGeometry(b, h, t));
-  const kugel = (r, d = 2) => geo(`s${r}|${d}`, () => new THREE.IcosahedronGeometry(r, d));
-  const rolle = (r1, r2, h, n = 16) => geo(`c${r1}|${r2}|${h}|${n}`, () => new THREE.CylinderGeometry(r1, r2, h, n));
-  // Weiche Kiste: abgerundete Kanten wie Knete
-  function weich(b, h, t, r = 0.08) {
-    return geo(`w${b}|${h}|${t}|${r}`, () => {
-      const s = new THREE.Shape();
-      const x = b / 2 - r, y = t / 2 - r, e = Math.min(r * 1.4, x, y);
-      s.moveTo(-x + e, -y); s.lineTo(x - e, -y); s.quadraticCurveTo(x, -y, x, -y + e); s.lineTo(x, y - e);
-      s.quadraticCurveTo(x, y, x - e, y); s.lineTo(-x + e, y); s.quadraticCurveTo(-x, y, -x, y - e); s.lineTo(-x, -y + e); s.quadraticCurveTo(-x, -y, -x + e, -y);
-      const g = new THREE.ExtrudeGeometry(s, { depth: Math.max(0.001, h - 2 * r), bevelEnabled: true, bevelThickness: r, bevelSize: r, bevelSegments: 3, curveSegments: 4 });
-      g.rotateX(-Math.PI / 2);
-      g.translate(0, -(h / 2 - r), 0);
-      g.computeVertexNormals();
-      return g;
-    });
-  }
-  function teil(g, m, x, y, z, eltern = welt, schatten = true) {
-    const n = new THREE.Mesh(g, m);
-    n.position.set(x, y, z);
-    n.castShadow = schatten;
-    n.receiveShadow = true;
-    eltern.add(n);
-    return n;
-  }
-  const aufbau = []; // Teile, die beim Start nacheinander auf den Tisch gesetzt werden
-  function gruppe(x, z, verz) {
-    const g = new THREE.Group();
-    g.position.set(x, 0, z);
-    welt.add(g);
-    aufbau.push({ g, verz });
-    return g;
-  }
-
-  // Ziegel als Bild, pro Farbe einmal gemalt
-  const ziegelBilder = new Map();
-  function ziegel(farbe) {
-    if (!ziegelBilder.has(farbe)) {
-      const c = document.createElement('canvas');
-      c.width = c.height = 128;
-      const x = c.getContext('2d');
-      x.fillStyle = '#d9d0c5';
-      x.fillRect(0, 0, 128, 128);
-      const basis = new THREE.Color(farbe);
-      for (let r = 0; r < 8; r++) {
-        for (let s = -1; s < 4; s++) {
-          const f = basis.clone().offsetHSL((zufall() - 0.5) * 0.015, 0, (zufall() - 0.5) * 0.09);
-          x.fillStyle = '#' + f.getHexString();
-          x.fillRect(s * 32 + (r % 2) * 16 + 1.5, r * 16 + 1.5, 29, 13);
-        }
-      }
-      const t = new THREE.CanvasTexture(c);
-      t.colorSpace = THREE.SRGBColorSpace;
-      t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      t.anisotropy = 4;
-      ziegelBilder.set(farbe, t);
-    }
-    return ziegelBilder.get(farbe);
-  }
-  function wandMat(farbe, b, h) {
-    const t = ziegel(farbe).clone();
-    t.repeat.set(b / 1.05, h / 0.85);
-    t.needsUpdate = true;
-    return new THREE.MeshStandardMaterial({ map: t, roughness: 0.9, metalness: 0 });
-  }
-
-  // Dachziegel: Reihen parallel zum First
-  const dachBild = (() => {
-    const c = document.createElement('canvas');
-    c.width = c.height = 64;
-    const x = c.getContext('2d');
-    x.fillStyle = '#ffffff';
-    x.fillRect(0, 0, 64, 64);
-    x.fillStyle = '#c9c9c9';
-    x.fillRect(0, 0, 7, 64);
-    x.fillStyle = '#e6e6e6';
-    x.fillRect(7, 0, 6, 64);
-    const t = new THREE.CanvasTexture(c);
-    t.colorSpace = THREE.SRGBColorSpace;
-    t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.repeat.set(1 / 0.2, 1 / 0.2);
-    t.anisotropy = 4;
-    return t;
-  })();
-  const dachMats = new Map();
-  const dachMat = (farbe) => {
-    if (!dachMats.has(farbe)) dachMats.set(farbe, new THREE.MeshStandardMaterial({ color: farbe, map: dachBild, roughness: 0.7 }));
-    return dachMats.get(farbe);
-  };
-
-  // Fenster leuchten abends, nicht alle
-  const glasAn = new THREE.MeshStandardMaterial({ color: F.glas, roughness: 0.22, metalness: 0.15, emissive: 0xFFB54A, emissiveIntensity: 0 });
-  const glasAus = new THREE.MeshStandardMaterial({ color: F.glas, roughness: 0.22, metalness: 0.15 });
-
-  /* ----- Der Tisch: Rasen, Erde, Kanal ----- */
-  const BREIT = 15, HINTEN = -5, KANAL = 4.5, VORN = 5.7, R = 0.7;
-  function form(x0, x1, z0, z1, ecken) {
-    // ecken: [hinten links, hinten rechts, vorne rechts, vorne links] gerundet? Formkoordinate y = -z
-    const s = new THREE.Shape();
-    const [hl, hr, vr, vl] = ecken.map((e) => (e ? R : 0));
-    s.moveTo(x0 + vl, -z1);
-    s.lineTo(x1 - vr, -z1); if (vr) s.quadraticCurveTo(x1, -z1, x1, -z1 + vr);
-    s.lineTo(x1, -z0 - hr); if (hr) s.quadraticCurveTo(x1, -z0, x1 - hr, -z0);
-    s.lineTo(x0 + hl, -z0); if (hl) s.quadraticCurveTo(x0, -z0, x0, -z0 - hl);
-    s.lineTo(x0, -z1 + vl); if (vl) s.quadraticCurveTo(x0, -z1, x0 + vl, -z1);
-    return s;
-  }
-  function platte(shape, dicke, oben, material, bevel = 0.06) {
-    const g = new THREE.ExtrudeGeometry(shape, { depth: dicke - 2 * bevel, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 3, curveSegments: 10 });
-    g.rotateX(-Math.PI / 2);
-    g.translate(0, oben - dicke + bevel, 0);
-    const m = new THREE.Mesh(g, material);
-    m.receiveShadow = true;
-    welt.add(m);
-    return m;
-  }
-  // Rasen mit Mähstreifen
-  const streifen = (() => {
-    const c = document.createElement('canvas');
-    c.width = c.height = 64;
-    const x = c.getContext('2d');
-    x.fillStyle = '#' + new THREE.Color(F.rasen).getHexString();
-    x.fillRect(0, 0, 64, 64);
-    x.fillStyle = '#' + new THREE.Color(F.rasenStreifen).getHexString();
-    x.fillRect(0, 0, 32, 64);
-    const t = new THREE.CanvasTexture(c);
-    t.colorSpace = THREE.SRGBColorSpace;
-    t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.repeat.set(1 / 1.6, 1 / 1.6);
-    return t;
-  })();
-  const rasenMat = new THREE.MeshStandardMaterial({ map: streifen, roughness: 0.95 });
-  platte(form(-BREIT / 2, BREIT / 2, HINTEN, VORN, [1, 1, 1, 1]), 1.15, -0.28, [mat(F.erde), mat(F.erde)], 0.1);
-  platte(form(-BREIT / 2, BREIT / 2, HINTEN, VORN, [1, 1, 1, 1]), 0.22, -1.1, mat(F.erdeDunkel), 0.08);
-  platte(form(-BREIT / 2, BREIT / 2, HINTEN, KANAL, [1, 1, 0, 0]), 0.3, 0, [rasenMat, mat(F.rasen)], 0.05);
-  const wasser = platte(form(-BREIT / 2, BREIT / 2, KANAL, VORN, [0, 0, 1, 1]), 0.2, -0.16, mat(F.wasser, { roughness: 0.18, metalness: 0.05, transparent: true, opacity: 0.94 }), 0.04);
-  wasser.receiveShadow = true;
-  // Uferkante aus Stein
-  teil(kiste(BREIT - 0.02, 0.12, 0.16), mat(F.sockel), 0, -0.02, KANAL + 0.06);
-
-  /* ----- Straße mit Gehwegen ----- */
-  const STR = 0.95;
-  teil(kiste(BREIT - 0.04, 0.05, 1.9), mat(F.strasse, { roughness: 0.95 }), 0, 0.02, STR, welt, false);
-  teil(kiste(BREIT - 0.04, 0.1, 0.56), mat(F.gehweg), 0, 0.05, STR - 1.23);
-  teil(kiste(BREIT - 0.04, 0.1, 0.56), mat(F.gehweg), 0, 0.05, STR + 1.23);
-  for (let x = -6.6; x <= 6.6; x += 1.2) teil(kiste(0.55, 0.012, 0.07), mat(F.linie), x, 0.05, STR, welt, false);
-
-  /* ----- Häuser ----- */
-  const haeuser = [];
-  function haus(nr, x, z, { b = 2.3, t = 2.0, h = 2.0, blick = 1, gaube = false, verz = 0, stiel = 14 }) {
-    const g = gruppe(x, z, verz);
-    if (blick < 0) g.rotation.y = Math.PI;
-    const klinker = F.klinker[nr % F.klinker.length];
-    teil(kiste(b + 0.14, 0.2, t + 0.14), mat(F.sockel), 0, 0.1, 0, g);
-    teil(kiste(b, h, t), wandMat(klinker, b, h), 0, 0.2 + h / 2, 0, g);
-    // Satteldach mit Überstand
-    const ue = 0.24, dh = Math.min(1.25, t * 0.58), lang = b + 0.3;
-    const dach = new THREE.Shape([new THREE.Vector2(-t / 2 - ue, 0), new THREE.Vector2(t / 2 + ue, 0), new THREE.Vector2(0, dh)]);
-    const dg = new THREE.ExtrudeGeometry(dach, { depth: lang, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 2 });
-    dg.translate(0, 0, -lang / 2);
-    dg.rotateY(Math.PI / 2);
-    const oben = 0.2 + h;
-    teil(dg, dachMat(F.dach[nr % F.dach.length]), 0, oben - 0.04, 0, g);
-    // Giebeldreieck in Klinker an den Seiten
-    const giebel = new THREE.ExtrudeGeometry(new THREE.Shape([new THREE.Vector2(-t / 2, 0), new THREE.Vector2(t / 2, 0), new THREE.Vector2(0, dh * (t / 2) / (t / 2 + ue))]), { depth: b, bevelEnabled: false });
-    giebel.translate(0, 0, -b / 2);
-    giebel.rotateY(Math.PI / 2);
-    teil(giebel, wandMat(klinker, b, 1), 0, oben - 0.02, 0, g);
-    // Schornstein
-    teil(kiste(0.3, 0.75, 0.3), wandMat(klinker, 0.3, 0.75), b / 2 - 0.55, oben + dh * 0.62, -t / 5, g);
-    // Fenster und Tür vorne (lokal +z), Fenster hinten
-    const fenster = (fx, fy, seite, fb = 0.44, fh = 0.56) => {
-      const z0 = seite * (t / 2 + 0.03);
-      teil(kiste(fb + 0.12, fh + 0.12, 0.06), mat(F.rahmen), fx, fy, z0, g, false);
-      const gl = teil(kiste(fb, fh, 0.065), zufall() < 0.72 ? glasAn : glasAus, fx, fy, z0 + seite * 0.006, g, false);
-      teil(kiste(0.035, fh, 0.075), mat(F.rahmen), fx, fy, z0 + seite * 0.008, g, false);
-      teil(kiste(fb + 0.18, 0.05, 0.12), mat(F.sockel), fx, fy - fh / 2 - 0.08, z0 + seite * 0.04, g, false);
-      return gl;
-    };
-    const unten = 0.2 + 0.62, obenF = 0.2 + h - 0.58, zweiStock = h > 1.7;
-    const tuerX = -b / 2 + 0.62;
-    teil(kiste(0.5, 0.92, 0.06), mat(F.tuer[nr % F.tuer.length], { roughness: 0.5 }), tuerX, 0.2 + 0.46, t / 2 + 0.03, g);
-    teil(kiste(0.62, 1.02, 0.04), mat(F.rahmen), tuerX, 0.2 + 0.51, t / 2 + 0.012, g, false);
-    teil(kiste(0.05, 0.05, 0.06), mat(0xD4B15A, { metalness: 0.6, roughness: 0.35 }), tuerX + 0.16, 0.2 + 0.45, t / 2 + 0.07, g, false);
-    teil(kiste(0.8, 0.08, 0.4), mat(F.sockel), tuerX, 0.04, t / 2 + 0.22, g);
-    teil(kiste(0.72, 0.05, 0.36), mat(F.rahmen), tuerX, 0.2 + 1.08, t / 2 + 0.17, g); // Vordach
-    for (let fx = tuerX + 0.78; fx < b / 2 - 0.3; fx += 0.72) fenster(fx, unten, 1);
-    if (zweiStock) for (let fx = -b / 2 + 0.5; fx < b / 2 - 0.3; fx += 0.72) fenster(fx, obenF, 1);
-    for (let fx = -b / 2 + 0.5; fx < b / 2 - 0.3; fx += 0.9) fenster(fx, unten, -1);
-    if (gaube) {
-      const gz = t / 2 * 0.42, gy = oben + dh * 0.32;
-      teil(kiste(0.78, 0.55, 0.7), wandMat(klinker, 0.78, 0.55), 0.2, gy + 0.22, gz - 0.12, g);
-      const gd = new THREE.ExtrudeGeometry(new THREE.Shape([new THREE.Vector2(-0.5, 0), new THREE.Vector2(0.5, 0), new THREE.Vector2(0, 0.32)]), { depth: 0.85, bevelEnabled: false });
-      gd.translate(0, 0, -0.42);
-      teil(gd, dachMat(F.dach[nr % F.dach.length]), 0.2, gy + 0.48, gz - 0.12, g);
-      teil(kiste(0.5, 0.4, 0.04), mat(F.rahmen), 0.2, gy + 0.22, gz + 0.24, g, false);
-      teil(kiste(0.4, 0.3, 0.05), zufall() < 0.6 ? glasAn : glasAus, 0.2, gy + 0.22, gz + 0.25, g, false);
-    }
-    // Ankerpunkt für das Preisschild: über dem First
-    const anker = new THREE.Vector3(0, oben + dh + 0.55, 0);
-    g.updateMatrix();
-    haeuser.push({ g, anker: anker.applyMatrix4(g.matrix), nr, stiel }); // Anker im Tisch, unabhängig vom Aufbauen
-    return g;
-  }
-  // Hintere Reihe blickt zur Straße, vorne zwei Bungalows mit Garten zum Kanal
-  haus(0, -0.15, -2.15, { b: 2.4, t: 2.1, h: 2.1, gaube: true, verz: 0 });
-  haus(1, -3.15, -2.3, { b: 2.2, t: 2.0, h: 1.9, verz: 1, stiel: 46 });
-  haus(2, 2.85, -2.2, { b: 2.3, t: 2.0, h: 2.05, verz: 2, stiel: 46 });
-  haus(3, -5.95, -2.05, { b: 2.0, t: 1.9, h: 1.55, verz: 3 });
-  haus(4, 5.75, -2.1, { b: 2.1, t: 2.0, h: 1.7, gaube: true, verz: 4 });
-  haus(5, -4.6, 3.15, { b: 2.4, t: 1.7, h: 1.35, blick: -1, verz: 5 });
-  haus(6, 4.75, 3.15, { b: 2.3, t: 1.7, h: 1.35, blick: -1, verz: 6 });
-
-  /* ----- Gärten: Hecken, Bäume, Wege ----- */
-  const heckenMat = mat(F.hecke, { roughness: 0.95 });
-  const hecke = (x, z, b, t, verz) => { const g = gruppe(x, z, verz); teil(weich(b, 0.5, t, 0.14), heckenMat, 0, 0.25, 0, g); };
-  hecke(-1.65, -3.4, 0.38, 2.6, 7); hecke(1.35, -3.4, 0.38, 2.6, 7); hecke(-4.55, -3.4, 0.38, 2.6, 8); hecke(4.3, -3.4, 0.38, 2.6, 8);
-  hecke(-1.1, 2.6, 4.1, 0.36, 9); hecke(3.0, 2.6, 0.9, 0.36, 9); hecke(-6.4, 2.6, 0.9, 0.36, 9); hecke(6.6, 2.6, 0.6, 0.36, 9);
-  // Wege von der Tür zum Gehweg
-  [[-0.15, 2.4], [-3.15, 2.2], [2.85, 2.3], [-5.95, 2.0], [5.75, 2.1]].forEach(([x, b], i) => {
-    const tx = x - b / 2 + 0.62;
-    teil(kiste(0.62, 0.05, 0.62), mat(F.gehweg), tx, 0.02, STR - 1.8 + (i === 3 ? 0.1 : 0), welt, false);
-  });
-  function baum(x, z, s, art, verz) {
-    const g = gruppe(x, z, verz);
-    g.scale.setScalar(s);
-    g.userData.s = s;
-    teil(rolle(0.08, 0.12, 0.9, 10), mat(F.stamm), 0, 0.45, 0, g);
-    if (art === 3) {
-      teil(geo('kegel1', () => new THREE.ConeGeometry(0.62, 1.15, 14)), mat(F.nadel), 0, 1.15, 0, g);
-      teil(geo('kegel2', () => new THREE.ConeGeometry(0.46, 0.95, 14)), mat(F.nadel), 0, 1.7, 0, g);
-    } else {
-      const m = mat(F.baum[art], { roughness: 0.92 });
-      teil(kugel(0.66), m, 0, 1.35, 0, g);
-      teil(kugel(0.46), m, 0.38, 1.08, 0.12, g);
-      teil(kugel(0.44), m, -0.34, 1.12, -0.14, g);
-      teil(kugel(0.36), m, 0.05, 1.82, -0.05, g);
-    }
-  }
-  baum(-7.0, -4.2, 1.05, 0, 10); baum(1.45, -4.35, 0.95, 1, 10); baum(-1.85, -4.4, 0.8, 3, 11); baum(6.9, -4.0, 1.1, 2, 11);
-  baum(-4.4, -4.5, 0.75, 1, 12); baum(4.35, -4.5, 0.85, 3, 12); baum(-6.75, 3.7, 0.9, 2, 13); baum(6.85, 3.75, 0.8, 0, 13);
-
-  /* ----- Rapsfeld zwischen den Bungalows ----- */
-  const raps = gruppe(0.1, 3.55, 14);
-  teil(weich(4.6, 0.12, 1.5, 0.05), mat(F.rapsGruen), 0, 0.06, 0, raps, false);
-  const bluete = new THREE.InstancedMesh(kugel(0.11, 1), mat(F.raps, { roughness: 0.8 }), 132);
-  const tmp = new THREE.Object3D();
-  for (let i = 0; i < 132; i++) {
-    const r = Math.floor(i / 22), s = i % 22;
-    tmp.position.set(-2.1 + s * 0.2 + (r % 2) * 0.1, 0.2 + zufall() * 0.08, -0.6 + r * 0.24);
-    tmp.scale.setScalar(0.8 + zufall() * 0.5);
-    tmp.updateMatrix();
-    bluete.setMatrixAt(i, tmp.matrix);
-  }
-  bluete.castShadow = true;
-  raps.add(bluete);
-
-  /* ----- Kleinigkeiten: Auto, Laternen, Briefkasten, zwei Nachbarn ----- */
-  const auto = gruppe(-1.95, STR - 0.42, 15);
-  teil(weich(1.45, 0.42, 0.72, 0.12), mat(F.auto[0], { roughness: 0.45 }), 0, 0.33, 0, auto);
-  teil(weich(0.82, 0.34, 0.66, 0.1), mat(F.auto[1], { roughness: 0.3 }), -0.08, 0.66, 0, auto);
-  [[-0.45, 0.35], [0.45, 0.35], [-0.45, -0.35], [0.45, -0.35]].forEach(([x, z]) => {
-    const rad = teil(rolle(0.15, 0.15, 0.12, 14), mat(0x2A2F36), x, 0.16, z, auto);
-    rad.rotation.x = Math.PI / 2;
-  });
-  const lampen = [];
-  [[-4.3, STR - 1.38], [1.6, STR - 1.38], [5.1, STR + 1.38]].forEach(([x, z], i) => {
-    const g = gruppe(x, z, 16 + i * 0.3);
-    teil(rolle(0.04, 0.05, 1.55, 8), mat(F.mast), 0, 0.78, 0, g);
-    teil(kiste(0.08, 0.06, 0.38), mat(F.mast), 0, 1.53, 0.15 * (z < STR ? 1 : -1), g);
-    const kopf = teil(kiste(0.16, 0.08, 0.2), new THREE.MeshStandardMaterial({ color: 0xF4EAD2, emissive: 0xFFD27A, emissiveIntensity: 0 }), 0, 1.48, 0.3 * (z < STR ? 1 : -1), g, false);
-    const licht = new THREE.PointLight(0xFFC66B, 0, 4.2, 1.6);
-    licht.position.set(0, 1.3, 0.3 * (z < STR ? 1 : -1));
-    g.add(licht);
-    lampen.push({ kopf, licht });
-  });
-  const post = gruppe(3.95, STR - 1.32, 17);
-  teil(rolle(0.03, 0.03, 0.55, 6), mat(F.mast), 0, 0.28, 0, post);
-  teil(weich(0.3, 0.36, 0.22, 0.05), mat(F.post, { roughness: 0.5 }), 0, 0.68, 0, post);
-  // Zwei Nachbarn vor dem mittleren Haus: Hand drauf
-  const person = (x, farbe, dreh, verz) => {
-    const g = gruppe(x, STR - 1.25, verz);
-    g.rotation.y = dreh;
-    teil(geo('koerper', () => new THREE.CapsuleGeometry(0.13, 0.32, 4, 10)), mat(farbe), 0, 0.36, 0, g);
-    teil(kugel(0.12), mat(F.haut), 0, 0.73, 0, g);
-  };
-  person(-0.95, 0x2F7346, Math.PI / 2, 18);
-  person(-0.6, 0xE9A800, -Math.PI / 2, 18.5);
-
-  // Zu jeder Tätigkeit ein kleines Ding: Rasenmäher, Einkaufstüten, Umzugskartons, ein Hund
-  const maeher = gruppe(5.7, 4.05, 19);
-  maeher.rotation.y = -0.5;
-  teil(weich(0.42, 0.18, 0.32, 0.05), mat(0xC8372D, { roughness: 0.5 }), 0, 0.16, 0, maeher);
-  teil(weich(0.24, 0.1, 0.2, 0.03), mat(0x2A2F36), 0.02, 0.29, 0, maeher);
-  [[-0.14, 0.17], [0.14, 0.17], [-0.14, -0.17], [0.14, -0.17]].forEach(([x, z]) => { const rad = teil(rolle(0.06, 0.06, 0.04, 10), mat(0x2A2F36), x, 0.07, z, maeher); rad.rotation.x = Math.PI / 2; });
-  const stiel = teil(rolle(0.018, 0.018, 0.62, 6), mat(0x2A2F36), -0.33, 0.42, 0, maeher);
-  stiel.rotation.z = 0.85;
-  teil(rolle(0.02, 0.02, 0.3, 6), mat(0x2A2F36), -0.57, 0.62, 0, maeher).rotation.x = Math.PI / 2;
-  const tueten = gruppe(2.85 - 2.3 / 2 + 0.62 + 0.42, STR - 1.62, 19.5);
-  [[0, 0, 0xC9A57A], [0.2, 0.06, 0xE2D3B5]].forEach(([x, z, f]) => {
-    teil(kiste(0.18, 0.24, 0.12), mat(f, { roughness: 0.95 }), x, 0.17, z, tueten);
-    teil(kugel(0.045, 1), mat(0x7DAA48), x - 0.03, 0.32, z, tueten);
-    teil(kugel(0.04, 1), mat(0xE7A33A), x + 0.04, 0.31, z + 0.02, tueten);
-  });
-  const kartons = gruppe(-5.95 + 0.55, STR - 1.75, 20);
-  kartons.rotation.y = 0.25;
-  teil(kiste(0.42, 0.32, 0.36), mat(0xC69C6D, { roughness: 0.95 }), 0, 0.16, 0, kartons);
-  teil(kiste(0.36, 0.26, 0.3), mat(0xB88D5E, { roughness: 0.95 }), 0.03, 0.45, 0.01, kartons).rotation.y = 0.3;
-  teil(kiste(0.43, 0.012, 0.06), mat(0xE8DCC6), 0, 0.325, 0, kartons, false);
-  const hund = gruppe(-1.3, STR - 1.15, 20.5);
-  hund.rotation.y = 0.4;
-  const fell = mat(0xA8763E, { roughness: 0.95 });
-  teil(geo('hundkoerper', () => new THREE.CapsuleGeometry(0.085, 0.22, 4, 10)), fell, 0, 0.2, 0, hund).rotation.z = Math.PI / 2;
-  teil(kugel(0.085), fell, 0.2, 0.3, 0, hund);
-  teil(kugel(0.04, 1), mat(0x3A2A1E), 0.28, 0.28, 0, hund);
-  teil(kiste(0.04, 0.09, 0.05), mat(0x7A5430), 0.18, 0.38, 0.06, hund);
-  teil(kiste(0.04, 0.09, 0.05), mat(0x7A5430), 0.18, 0.38, -0.06, hund);
-  [[-0.1, 0.05], [0.1, 0.05], [-0.1, -0.05], [0.1, -0.05]].forEach(([x, z]) => teil(rolle(0.025, 0.025, 0.14, 6), fell, x, 0.07, z, hund));
-  teil(rolle(0.015, 0.02, 0.16, 6), fell, -0.2, 0.28, 0, hund).rotation.z = 0.7;
-
-  /* ----- Wolken ----- */
-  const wolken = [];
-  [[-5, 5.2, -3.8, 1], [3.5, 6.2, -4.6, 0.8], [8, 5.6, -1.5, 0.7]].forEach(([x, y, z, s]) => {
-    const g = new THREE.Group();
-    g.position.set(x, y, z);
-    g.scale.setScalar(s);
-    const m = mat(0xFFFFFF, { roughness: 1, transparent: true, opacity: 0.92 });
-    [[0, 0, 0, 0.7], [0.75, -0.12, 0.1, 0.52], [-0.72, -0.15, 0, 0.5], [0.2, 0.3, -0.1, 0.5]].forEach(([a, b, c, r]) => teil(kugel(r), m, a, b, c, g, false));
-    szene.add(g);
-    wolken.push(g);
-  });
-
-  /* ----- Licht ----- */
-  const himmel = new THREE.HemisphereLight(0xE4F1FF, 0x8FB574, 1.25);
-  szene.add(himmel);
-  const sonne = new THREE.DirectionalLight(0xFFF3E0, 2.6);
-  sonne.position.set(-6, 12, 7);
-  sonne.castShadow = true;
-  sonne.shadow.mapSize.set(1024, 1024);
-  Object.assign(sonne.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 40 });
-  sonne.shadow.bias = -0.0006;
-  sonne.shadow.normalBias = 0.02;
-  sonne.shadow.radius = 4;
-  szene.add(sonne);
-  // weicher Schatten unter dem schwebenden Tisch
-  const bodenSchatten = (() => {
-    const c = document.createElement('canvas');
-    c.width = c.height = 128;
-    const x = c.getContext('2d');
-    const v = x.createRadialGradient(64, 64, 8, 64, 64, 64);
-    v.addColorStop(0, 'rgba(20,30,45,.38)');
-    v.addColorStop(1, 'rgba(20,30,45,0)');
-    x.fillStyle = v;
-    x.fillRect(0, 0, 128, 128);
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(BREIT * 1.35, (VORN - HINTEN) * 1.45), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
-    m.rotation.x = -Math.PI / 2;
-    m.position.set(0, -1.9, 0.6);
-    szene.add(m);
-    return m;
-  })();
-
-  function setzeNacht(an) {
-    himmel.color.set(an ? 0x7C97C9 : 0xE4F1FF);
-    himmel.groundColor.set(an ? 0x2A3A30 : 0x8FB574);
-    himmel.intensity = an ? 1.0 : 1.25;
-    sonne.color.set(an ? 0xA9BEE6 : 0xFFF3E0);
-    sonne.intensity = an ? 0.95 : 2.6;
-    sonne.position.set(an ? 6 : -6, 12, 7);
-    glasAn.emissiveIntensity = an ? 1.6 : 0;
-    lampen.forEach(({ kopf, licht }) => { kopf.material.emissiveIntensity = an ? 2.2 : 0; licht.intensity = an ? 5 : 0; });
-    wolken.forEach((w) => { w.visible = !an; });
-    bodenSchatten.material.opacity = an ? 0.6 : 1;
-    renderer.toneMappingExposure = an ? 1.15 : 1.0;
-    wecken();
-  }
-
-  /* ----- Kamera passend zur Größe ----- */
-  // Kamera so weit weg und so hoch, dass Tisch und Schilder genau hineinpassen, egal wie breit der Bildschirm ist
-  const richtung = new THREE.Vector3(0, 0.8, 1).normalize();
-  const ecken = [];
-  [-BREIT / 2 - 0.1, BREIT / 2 + 0.1].forEach((x) => [HINTEN - 0.1, VORN + 0.1].forEach((z) => [-1.36, 0.1].forEach((y) => ecken.push(new THREE.Vector3(x, y, z)))));
-  const pp = new THREE.Vector3();
-  function stelle(abstand, hoehe) {
-    const ziel = new THREE.Vector3(0, hoehe, 0.4);
-    kamera.position.copy(ziel).addScaledVector(richtung, abstand);
-    kamera.lookAt(ziel);
-    kamera.updateMatrixWorld();
-    kamera.updateProjectionMatrix();
-  }
-  function grenzen(raumOben) {
-    let x = 0, yMin = 1e9, yMax = -1e9;
-    ecken.forEach((p) => { pp.copy(p).project(kamera); x = Math.max(x, Math.abs(pp.x)); yMin = Math.min(yMin, pp.y); yMax = Math.max(yMax, pp.y); });
-    haeuser.forEach((hs) => { pp.copy(hs.anker).applyMatrix4(welt.matrixWorld).project(kamera); x = Math.max(x, Math.abs(pp.x) + 0.12); yMax = Math.max(yMax, pp.y + raumOben); });
-    return { x, yMin, yMax };
-  }
-  function einpassen() {
-    const w = huelle.clientWidth || 1, h = huelle.clientHeight || 1;
-    renderer.setSize(w, h, false);
-    kamera.aspect = w / h;
-    const winkelVorher = welt.rotation.y;
-    welt.rotation.y = 0;
-    welt.updateMatrixWorld(true);
-    const raumOben = 84 / (h / 2); // Schild mit langem Stiel über dem höchsten Ankerpunkt
-    let unten = 12, oben = 160, hoehe = 0.8;
-    for (let k = 0; k < 22; k++) {
-      const d = (unten + oben) / 2;
-      // erst senkrecht mittig ausrichten, dann prüfen, ob alles passt
-      for (let j = 0; j < 3; j++) {
-        stelle(d, hoehe);
-        const g = grenzen(raumOben);
-        const sichtH = 2 * d * Math.tan(THREE.MathUtils.degToRad(kamera.fov / 2));
-        hoehe += ((g.yMax + g.yMin) / 2) * (sichtH / 2) * 0.9;
-      }
-      stelle(d, hoehe);
-      const g = grenzen(raumOben);
-      if (g.x <= 0.96 && g.yMax <= 0.96 && g.yMin >= -0.92) oben = d; else unten = d;
-    }
-    stelle(oben, hoehe);
-    welt.rotation.y = winkelVorher;
-    wecken();
-  }
-
-  /* ----- Preisschilder (HTML) ----- */
-  const ebene = huelle.querySelector('.mini-schilder') || huelle;
-  let schilder = [];
-  function setzeSchilder(liste) {
-    ebene.querySelectorAll('.mini-anker').forEach((b) => b.remove());
-    schilder = liste.slice(0, haeuser.length).map((s, i) => {
-      const haus = haeuser[REIHENFOLGE[i]];
-      // Anker am Dach (wandert mit der Szene), darin das Schild als echter Knopf
-      const a = document.createElement('div');
-      a.className = 'mini-anker' + (s.art ? ' mini-anker-' + s.art : '');
-      a.style.setProperty('--i', i);
-      a.style.setProperty('--stiel', haus.stiel + 'px');
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'mini-schild';
-      b.dataset.id = s.id;
-      b.setAttribute('aria-label', s.label);
-      b.innerHTML = `${s.bild ? `<img class="bild" src="${s.bild}" alt="">` : ''}<span>${s.text}</span>`;
-      b.addEventListener('click', () => opt.wennSchild && opt.wennSchild(s.id));
-      a.appendChild(b);
-      ebene.appendChild(a);
-      return { b: a, haus };
-    });
-    wecken();
-  }
-  // Mitte zuerst, dann nach außen: die wichtigsten Schilder stehen vorne
-  const REIHENFOLGE = [0, 2, 1, 5, 6, 4, 3];
-  const v = new THREE.Vector3();
-  function schilderSetzen() {
-    const w = huelle.clientWidth, h = huelle.clientHeight;
-    schilder.forEach(({ b, haus }) => {
-      v.copy(haus.anker).applyMatrix4(welt.matrixWorld).project(kamera);
-      b.style.transform = `translate(${((v.x + 1) / 2 * w).toFixed(1)}px, ${((1 - v.y) / 2 * h).toFixed(1)}px)`;
-    });
-  }
-
-  /* ----- Bewegung: aufbauen, sanft schwenken, mit dem Finger drehen ----- */
-  let ziel = 0, winkel = 0, ziehen = null, start = 0, laeuft = false, sichtbar = true, letzte = 0, ruhig = 0, aktiv = 0, pause = false;
-  const AUFBAU_MS = 1300;
-  aufbau.forEach((a) => { a.y = a.g.position.y; a.s = a.g.userData.s || 1; });
-  const zurueck = (p) => { const c = 1.6; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
-  function zeichnen(t) {
-    if (!start) start = t;
-    const vergangen = reduziert ? 1e9 : t - start;
-    aufbau.forEach((a) => {
-      const p = Math.min(1, Math.max(0, (vergangen - a.verz * 45) / 520));
-      const e = p >= 1 ? 1 : zurueck(p);
-      a.g.scale.setScalar(Math.max(0.0001, e * a.s));
-      a.g.position.y = a.y + (1 - Math.min(1, p * 1.4)) * 1.2;
-    });
-    if (vergangen > AUFBAU_MS * 0.7) huelle.classList.add('ist-bereit');
-    const schwenk = reduziert ? 0 : Math.sin(t / 5200) * 0.05;
-    winkel += (ziel + schwenk - winkel) * 0.08;
-    welt.rotation.y = winkel;
-    const dt = Math.min(64, t - (letzte || t)) / 1000;
-    wolken.forEach((w) => { w.position.x += dt * 0.18; if (w.position.x > 11) w.position.x = -11; });
-    renderer.render(szene, kamera);
-    schilderSetzen();
-  }
-  // Schafft das Gerät die Szene? Gemessen wird in den ersten Sekunden, in denen jedes Bild gezeichnet wird.
-  // Unter 24 Bildern pro Sekunde: erst ohne Schatten und in einfacher Auflösung, dann als Standbild (opt.zuLangsam).
-  let messung = opt.pruefen && !reduziert ? { seit: 0, bilder: 0, stufe: 0 } : null;
-  function messen(t) {
-    if (!messung) return;
-    if (!messung.seit) { messung.seit = t; return; } // das erste Bild baut Texturen und Schatten auf
-    messung.bilder++;
-    const dauer = t - messung.seit;
-    if (dauer < 900) return;
-    if (messung.bilder / dauer * 1000 >= 24) { messung = null; return; }
-    if (messung.stufe === 0) {
-      renderer.shadowMap.enabled = false;
-      sonne.castShadow = false;
-      renderer.setPixelRatio(1);
-      szene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => { m.needsUpdate = true; }); });
-      einpassen();
-      messung = { seit: 0, bilder: 0, stufe: 1 };
-    } else {
-      messung = null;
-      if (opt.zuLangsam) setTimeout(opt.zuLangsam, 0);
-    }
-  }
-  function schleife(t) {
-    if (!laeuft || pause) { laeuft = false; return; }
-    // Ohne Bewegung reichen 30 Bilder pro Sekunde
-    const aufbauFertig = start && t - start > AUFBAU_MS + 600;
-    if (aufbauFertig && !messung && !ziehen && t - letzte < 31) { requestAnimationFrame(schleife); return; }
-    zeichnen(t);
-    letzte = t;
-    messen(t);
-    if (reduziert && aufbauFertig && Math.abs(ziel - winkel) < 0.001 && ++ruhig > 2) { laeuft = false; return; }
-    // Akku schonen: nach 15 Sekunden ohne Berührung bleibt die Szene stehen (die Schilder schweben per CSS weiter)
-    if (aufbauFertig && !ziehen && t - aktiv > 15000) { laeuft = false; return; }
-    requestAnimationFrame(schleife);
-  }
-  function wecken() {
-    ruhig = 0;
-    aktiv = performance.now();
-    if (messung && !laeuft) { messung.seit = 0; messung.bilder = 0; } // nach einer Pause neu messen
-    if (!laeuft && sichtbar && !pause && !document.hidden) { laeuft = true; requestAnimationFrame(schleife); }
-  }
-  const aus = () => { laeuft = false; };
-  huelle.addEventListener('pointerdown', (e) => {
-    if (e.target.closest('.mini-schild') || e.button > 0) return;
-    ziehen = { x: e.clientX, w: ziel };
-    huelle.classList.add('ist-gezogen');
-    wecken();
-  });
-  const bewegen = (e) => { if (ziehen) { ziel = Math.max(-0.7, Math.min(0.7, ziehen.w + (e.clientX - ziehen.x) * 0.006)); aktiv = performance.now(); wecken(); } };
-  const loslassen = () => { ziehen = null; huelle.classList.remove('ist-gezogen'); };
-  window.addEventListener('pointermove', bewegen);
-  window.addEventListener('pointerup', loslassen);
-  window.addEventListener('pointercancel', loslassen);
-  const beobachter = new IntersectionObserver((e) => { sichtbar = e[0].isIntersecting && e[0].intersectionRatio > 0; if (sichtbar) wecken(); else aus(); });
-  beobachter.observe(huelle);
-  const sichtWechsel = () => { if (document.hidden) aus(); else wecken(); };
-  document.addEventListener('visibilitychange', sichtWechsel);
-  const groesse = new ResizeObserver(einpassen);
-  groesse.observe(huelle);
-
-  einpassen();
-  setzeNacht(!!opt.nacht);
-  if (opt.foto) { zeichnen(1e9); huelle.classList.add('ist-bereit'); }
-  else wecken();
-  huelle.classList.add('ist-3d');
-
-  return {
-    schilder: setzeSchilder,
-    nacht: setzeNacht,
-    ruhe(an) { pause = !!an; if (!pause) wecken(); },
-    bild: () => { zeichnen(performance.now()); return leinwand.toDataURL('image/png'); },
-    ende() {
-      aus();
-      beobachter.disconnect();
-      groesse.disconnect();
-      document.removeEventListener('visibilitychange', sichtWechsel);
-      window.removeEventListener('pointermove', bewegen);
-      window.removeEventListener('pointerup', loslassen);
-      window.removeEventListener('pointercancel', loslassen);
-      renderer.dispose();
-      leinwand.remove();
-      huelle.classList.remove('ist-3d', 'ist-bereit');
-    },
-  };
-}
-
 (() => {
   'use strict';
 
   /* ===== Betriebsart ===== */
   // Wird beim Bauen für die Claude-Vorschau auf true gesetzt: Dort ist keine Datenbank erreichbar, also immer Demo.
   const VORSCHAU = false;
-  // Three.js für die Miniatur auf der Startseite (in der Vorschau aus dem CDN, sonst aus assets/)
-  const DREI_URL = './assets/vendor/three-0.170.0.module.min.js';
   // Läuft die App als iPhone-App (Capacitor)? Dann liegt sie lokal auf dem Gerät, Links zeigen auf die Website.
   const NATIV = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
   // Alle Angaben für den Betrieb stehen in einstellungen.json; der Build setzt sie hier als EINSTELLUNGEN ein.
@@ -2381,11 +1738,9 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   const ANSICHT_OPTIONEN = {
     thema: [['auto', 'Automatisch'], ['hell', 'Hell'], ['dunkel', 'Dunkel']],
     schrift: [['normal', 'Normal'], ['gross', 'Groß'], ['sehr-gross', 'Sehr groß']],
-    start: [['entdecken', 'Liste'], ['karte', 'Karte']],
-    // Modell auf der Startseite: „auto“ prüft beim Start, ob das Gerät die 3D-Szene flüssig schafft
-    modell: [['auto', 'Automatisch'], ['an', 'Bewegt (3D)'], ['aus', 'Als Bild']]
+    start: [['entdecken', 'Liste'], ['karte', 'Karte']]
   };
-  const ansicht = { thema: 'auto', schrift: 'normal', start: 'entdecken', modell: 'auto' };
+  const ansicht = { thema: 'auto', schrift: 'normal', start: 'entdecken' };
   try {
     const gespeichert = JSON.parse(localStorage.getItem(ANSICHT_SPEICHER) || '{}');
     Object.keys(ansicht).forEach((k) => {
@@ -2409,7 +1764,6 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     ansicht[k] = w;
     try { localStorage.setItem(ANSICHT_SPEICHER, JSON.stringify(ansicht)); } catch (e) { /* nur für diese Sitzung */ }
     ansichtAnwenden();
-    if (k === 'modell') miniNeu();
   }
   ansichtAnwenden();
 
@@ -3313,16 +2667,16 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     $('#anzahl-text').textContent = `${nah.length} ${nah.length === 1 ? 'Nachbar sucht' : 'Nachbarn suchen'} gerade Hilfe, bis ${ui.umkreis} km um ${ort.stadtteil}`;
 
     if (istLive() && !db.geladen) {
-      ui.miniListe = [];
-      miniSchilder();
+      ui.umgebungListe = [];
+      umgebungZeichnen();
       $('#liste').innerHTML = db.fehler
         ? `<div class="leer"><p><strong>Die Anfragen konnten nicht geladen werden.</strong></p><p>${esc(db.fehler)}</p><button type="button" class="btn btn-secondary btn-auto" data-neu-laden>Erneut versuchen</button></div>`
         : `<p class="lade">Anfragen werden geladen …</p>`;
       return;
     }
     const treffer = sortiere(offene.filter((g) => passt(g) && meterVonMir(g) <= ui.umkreis * 1000));
-    ui.miniListe = ui.sort === 'termin' ? [...treffer].sort((a, b) => (terminWert(a) - terminWert(b)) || (meterVonMir(a) - meterVonMir(b))) : treffer;
-    miniSchilder();
+    ui.umgebungListe = treffer;
+    umgebungZeichnen();
     if (!treffer.length) {
       const q = ui.suche.trim();
       const wo = ` im Umkreis von ${ui.umkreis} km`;
@@ -3460,71 +2814,6 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
       ? zeilen(eigene.map((g) => karteHTML(g, pills(g))))
       : `<div class="leer-klein"><p>Noch keine Anfragen. Brauchst du selbst Hilfe?</p><button type="button" class="btn btn-secondary btn-auto" data-go="neu">Hilfe suchen</button></div>`;
   }
-
-  /* ===== Garbsen als Miniatur (3D, Startseite) ===== */
-  const mini = { welt: null, laedt: false };
-  function miniSchilder() {
-    if (!mini.welt) return;
-    mini.welt.schilder((ui.miniListe || []).map((g) => ({
-      id: g.id,
-      text: euroKurz(g.betrag),
-      bild: KAT_BILDER[g.kat] || '',
-      art: g.helfer === 'ich' ? 'zugesagt' : '',
-      label: `${g.titel}, ${euroKurz(g.betrag)}, ${wannText(g)}, ${g.stadtteil}`,
-    })));
-  }
-  // Sparsam: wenig Arbeitsspeicher oder Datensparmodus. Dann gleich das Standbild, ohne 700 KB für die 3D-Szene zu laden.
-  // Auch wenn die Szene auf diesem Gerät zuletzt geruckelt hat (zwei Wochen lang merken, danach neu probieren).
-  const LANGSAM_SPEICHER = 'handdrauf-3d-langsam';
-  function miniSparsam() {
-    if ((navigator.connection && navigator.connection.saveData) || (navigator.deviceMemory && navigator.deviceMemory <= 2)) return true;
-    try { return Date.now() - Number(localStorage.getItem(LANGSAM_SPEICHER) || 0) < 14 * TAG_MS; } catch (e) { return false; }
-  }
-  function miniAlsBild() {
-    const huelle = $('#mini');
-    if (mini.welt) { mini.welt.ende(); mini.welt = null; }
-    huelle.querySelectorAll('.mini-anker').forEach((a) => a.remove());
-    huelle.classList.add('ohne-3d');
-  }
-  async function miniStarten() {
-    const huelle = $('#mini');
-    if (!huelle || mini.welt || mini.laedt) return;
-    if (ansicht.modell === 'aus' || (ansicht.modell === 'auto' && miniSparsam())) { miniAlsBild(); return; }
-    mini.laedt = true;
-    try {
-      const THREE = await import(DREI_URL);
-      // Erst aufbauen, wenn Start-Animation und Begrüßung weg sind, damit man das Aufbauen sieht
-      await new Promise((ok) => { const warte = () => (!$('#start').hidden || ($('#intro') && !$('#intro').hidden && getComputedStyle($('#intro')).display !== 'none')) ? setTimeout(warte, 300) : ok(); warte(); });
-      if (ansicht.modell === 'aus') { miniAlsBild(); return; }
-      huelle.classList.remove('ohne-3d');
-      mini.welt = garbsenMiniatur(THREE, huelle, {
-        nacht: dunklesThema(),
-        wennSchild: (id) => oeffnen(id, document.activeElement),
-        // „Automatisch“: Ruckelt die Szene, wird sie zum Bild. „Bewegt (3D)“ erzwingt sie.
-        pruefen: ansicht.modell === 'auto',
-        zuLangsam: () => { try { localStorage.setItem(LANGSAM_SPEICHER, String(Date.now())); } catch (e) { /* nur für diese Sitzung */ } miniAlsBild(); }
-      });
-      if (!mini.welt) throw new Error('Kein WebGL');
-      miniSchilder();
-    } catch (e) {
-      console.warn('Miniatur nicht verfügbar:', e && e.message);
-      miniAlsBild();
-    } finally {
-      mini.laedt = false;
-    }
-  }
-  function miniNeu() { // nach einer Änderung im Menü
-    if (ansicht.modell === 'aus') { miniAlsBild(); return; }
-    if (!mini.welt) miniStarten();
-  }
-  const miniThema = () => { if (mini.welt) mini.welt.nacht(dunklesThema()); };
-  // Unter einem Blatt oder der Feier muss die Szene nicht weiterlaufen
-  const miniRuhe = () => { if (mini.welt) mini.welt.ruhe(!$('#sheet').hidden || !$('#feier').hidden); };
-  if (window.matchMedia) {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    if (mq.addEventListener) mq.addEventListener('change', miniThema);
-  }
-  new MutationObserver(miniThema).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   /* ===== Karte: eigene, schlanke Karte (ohne Kartenbibliothek) =====
      Unten liegen Kartenbilder (Straßen, Namen, Parks) wie bei Google Maps, darüber Preisschilder.
@@ -3797,6 +3086,152 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     kachelQuelleSetzen(0);
     if (kartenStatus.blick) kachelnLegen(kartenStatus.blick);
   });
+
+  /* ===== Umgebung: kleine Karte auf der Startseite =====
+     Die echte Straßenkarte um den eigenen Ort, darauf dieselben offenen Anfragen wie in der Liste darunter
+     (mit Betrag, genau dort, wo sie sind). Feste Zoomstufe, nichts zum Ziehen: Ein Schild öffnet die Anfrage,
+     alles andere die große Karte an derselben Stelle. Ohne Kartenbilder (offline, Vorschau) bleiben „Du“,
+     die Schilder und ein Kreis mit 1 km zur Orientierung. */
+  const umgebung = { el: null, w: 0, h: 0, quellen: null, nr: 0, ok: 0, fehler: 0, aus: false, schluessel: '', blick: null, gruppen: [], warten: 0 };
+  function umgebungStarten() {
+    const u = umgebung;
+    u.el = $('#umgebung');
+    if (!u.el) return;
+    u.quellen = VORSCHAU ? [] : kachelQuellen();
+    u.aus = !u.quellen.length || navigator.onLine === false;
+    if (window.ResizeObserver) new ResizeObserver(() => umgebungZeichnen()).observe(u.el);
+    else window.addEventListener('resize', () => umgebungZeichnen());
+    const neuFarben = () => { u.schluessel = ''; umgebungZeichnen(); };
+    new MutationObserver(neuFarben).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    if (window.matchMedia) {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      if (mq.addEventListener) mq.addEventListener('change', neuFarben);
+    }
+    window.addEventListener('online', () => {
+      if (!u.aus || VORSCHAU) return;
+      u.quellen = kachelQuellen(); Object.assign(u, { nr: 0, ok: 0, fehler: 0, aus: false, schluessel: '' });
+      umgebungZeichnen();
+    });
+    // Tippen auf die Karte (nicht auf ein Schild): große Karte an derselben Stelle
+    u.el.addEventListener('click', (e) => {
+      const sammel = e.target.closest('[data-u-sammel]');
+      if (e.target.closest('[data-oeffne]')) return; // öffnet die Anfrage (wie überall in der App)
+      const b = u.blick;
+      if (!b) return;
+      if (sammel) {
+        // Mehrere Anfragen an einem Fleck: große Karte so nah, dass sie auseinanderrücken
+        const gr = u.gruppen[Number(sammel.dataset.uSammel)];
+        if (gr) { ui.kartenZiel = { m: gr.m, s: massstabFuerZoom(Math.min(KARTE.zoomMax, b.z + 2)) }; gehe('karte'); }
+        return;
+      }
+      ui.kartenZiel = { m: b.c, s: b.s };
+      gehe('karte');
+    });
+    umgebungZeichnen();
+  }
+  // Ausschnitt: „Du“ in der Mitte, so nah wie möglich, aber die nächsten Anfragen noch im Bild
+  function umgebungBlick(liste) {
+    const u = umgebung, o = meinOrt(), c = inMeter(o.lat, o.lng);
+    const naechste = liste.slice().sort((a, b) => meterVonMir(a) - meterVonMir(b)).slice(0, 4).map((g) => inMeter(g.lat, g.lng));
+    let z = 16;
+    for (; z > 11; z--) {
+      const s = massstabFuerZoom(z);
+      // Schilder stehen über ihrem Punkt: oben mehr Platz lassen, unten für die Quellenangabe
+      if (naechste.every((m) => Math.abs(m.x - c.x) * s < u.w / 2 - 30 && (c.y - m.y) * s < u.h / 2 - 40 && (m.y - c.y) * s < u.h / 2 - 34)) break;
+    }
+    const s = massstabFuerZoom(z);
+    return { z, s, c, x: Math.round(u.w / 2 - c.x * s), y: Math.round(u.h / 2 - c.y * s) };
+  }
+  function umgebungKacheln(b) {
+    const u = umgebung, box = u.el.querySelector('.u-kacheln'), q = u.aus ? null : u.quellen[u.nr];
+    u.el.classList.toggle('u-ohne', !q);
+    u.el.classList.toggle('k-filter', !!q && !q.carto);
+    const quelle = u.el.querySelector('.u-quelle');
+    if (!q) {
+      box.textContent = '';
+      quelle.textContent = VORSCHAU ? 'Straßenkarte in der App' : 'Straßenkarte gerade nicht erreichbar';
+      return;
+    }
+    quelle.innerHTML = q.quelle;
+    const n = Math.pow(2, b.z), T = WELT / n, ox = NULLPUNKT.x + WELT / 2, oy = NULLPUNKT.y + WELT / 2;
+    const fest = (v) => Math.max(0, Math.min(n - 1, Math.floor(v / T)));
+    const x0 = fest(ox - b.x / b.s), x1 = fest(ox + (u.w - b.x) / b.s), y0 = fest(oy - b.y / b.s), y1 = fest(oy + (u.h - b.y) / b.s);
+    // Bilder, die schon da sind, bleiben liegen (kein Flackern beim Tippen in der Suche)
+    const da = {};
+    [].slice.call(box.children).forEach((img) => { da[img.dataset.k] = img; });
+    const brauche = {};
+    for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
+      const key = b.z + '/' + x + '/' + y;
+      brauche[key] = true;
+      let img = da[key];
+      if (!img) {
+        img = document.createElement('img');
+        img.className = 'k-kachel'; img.alt = ''; img.draggable = false; img.dataset.k = key;
+        img.setAttribute('decoding', 'async');
+        img.onload = () => { img.className = 'k-kachel da'; u.ok++; };
+        img.onerror = () => {
+          u.fehler++;
+          if (u.ok || u.fehler < 3) return;
+          // Dieser Anbieter lädt nicht: nächster, zuletzt ohne Kartenbilder
+          if (u.nr + 1 < u.quellen.length) u.nr++; else u.aus = true;
+          u.fehler = 0; u.schluessel = ''; box.textContent = '';
+          umgebungZeichnen();
+        };
+        img.src = kachelUrl(q, b.z, x, y);
+        box.appendChild(img);
+      }
+      img.style.cssText = `left:${Math.round((x * T - ox) * b.s + b.x)}px;top:${Math.round((y * T - oy) * b.s + b.y)}px;width:256px;height:256px`;
+    }
+    Object.keys(da).forEach((key) => { if (!brauche[key]) box.removeChild(da[key]); });
+  }
+  function umgebungZeichnen() {
+    const u = umgebung;
+    if (!u.el) return;
+    const w = u.el.clientWidth, h = u.el.clientHeight;
+    if (!w || !h) return; // Startseite gerade nicht zu sehen: beim nächsten Zeigen
+    u.w = w; u.h = h;
+    const liste = ui.umgebungListe || [];
+    const b = umgebungBlick(liste);
+    u.blick = b;
+    const schluessel = [b.z, b.x, b.y, w, h, u.nr, u.aus, dunklesThema()].join('|');
+    if (schluessel !== u.schluessel) { u.schluessel = schluessel; umgebungKacheln(b); }
+    // Schilder wie auf der großen Karte; wo sie sich berühren würden, steht eine Zahl
+    const gruppen = [];
+    liste.forEach((g) => {
+      const m = inMeter(g.lat, g.lng), x = m.x * b.s + b.x, y = m.y * b.s + b.y;
+      if (x < 22 || x > w - 22 || y < 44 || y > h - 30) return;
+      const ziel = gruppen.find((gr) => Math.abs(gr.x - x) < 56 && Math.abs(gr.y - y) < 42);
+      if (!ziel) { gruppen.push({ liste: [g], x, y, punkte: [m], m }); return; }
+      ziel.liste.push(g); ziel.punkte.push(m);
+      const k = ziel.punkte.length;
+      ziel.m = { x: ziel.punkte.reduce((t, p) => t + p.x, 0) / k, y: ziel.punkte.reduce((t, p) => t + p.y, 0) / k };
+      ziel.x = ziel.m.x * b.s + b.x; ziel.y = ziel.m.y * b.s + b.y;
+    });
+    u.gruppen = gruppen;
+    const an = (x, y, html, cls) => `<div class="k-anker${cls ? ' ' + cls : ''}" style="transform:translate(${Math.round(x)}px,${Math.round(y)}px)">${html}</div>`;
+    let html = '';
+    // Ohne Kartenbilder: Ringe um „Du“ zeigen, wie weit es ist
+    if (u.aus || !u.quellen[u.nr]) {
+      const jeMeter = dehnung(meinOrt().lat) * b.s;
+      [500, 1000, 2000, 5000, 10000, 20000].forEach((m) => {
+        const r = Math.round(m * jeMeter);
+        if (r < 34 || r > Math.max(w, h) * 0.8) return;
+        html += `<div class="u-kreis" style="left:${Math.round(w / 2 - r)}px;top:${Math.round(h / 2 - r)}px;width:${2 * r}px;height:${2 * r}px"><span>${m < 1000 ? m + ' m' : m / 1000 + ' km'}</span></div>`;
+      });
+    }
+    if (zeigeIch()) html += an(w / 2, h / 2, '<span class="k-ich" aria-hidden="true"><i></i><b>Du</b></span>', 'k-mein-anker');
+    gruppen.forEach((gr, i) => {
+      if (gr.liste.length > 1) {
+        const ab = Math.min(...gr.liste.map((g) => g.betrag));
+        html += an(gr.x, gr.y, `<button type="button" class="k-sammel" data-u-sammel="${i}" aria-label="${gr.liste.length} Anfragen hier, ab ${euroKurz(ab)}. Auf der großen Karte ansehen">${gr.liste.length}</button>`);
+        return;
+      }
+      const g = gr.liste[0];
+      const label = esc(`${g.titel}, ${euro(g.betrag)}, ${wannText(g)}, ${g.stadtteil}, ${distanz(g)}`);
+      html += an(gr.x, gr.y, `<button type="button" class="k-pin" data-oeffne="${esc(g.id)}" aria-label="${label}"><span class="pin${g.helfer === 'ich' ? ' pin-zugesagt' : ''}">${g.helfer === 'ich' ? icon('check', 'i-xs') : ''}${euroKurz(g.betrag)}</span></button>`);
+    });
+    u.el.querySelector('.u-schicht').innerHTML = html;
+  }
 
   function initKarte() {
     const k = kartenStatus;
@@ -4632,7 +4067,6 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
         ${gruppe('thema', 'Design')}
         ${gruppe('schrift', 'Schrift')}
         ${gruppe('start', 'Start mit')}
-        ${gruppe('modell', 'Modell auf der Startseite')}
         ${ohneKonto ? `<div class="menue-zeile"><span class="menue-label">Ort</span><button type="button" class="btn btn-secondary btn-auto" data-ort-aendern>${zeigeIch() ? esc(meinOrt().stadtteil) : 'Ort wählen'}</button></div>` : ''}
       </section>
       <section class="menue-gruppe" aria-labelledby="m-push"><h3 class="h-klein" id="m-push">Benachrichtigungen</h3>
@@ -4749,10 +4183,18 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     if (view !== 'karte') ui.markiert = null;
     if (view === 'karte' && initKarte()) {
       kartenGroesse(false);
+      if (ui.kartenZiel && kartenStatus.w) {
+        // Von der kleinen Karte auf der Startseite: dieselbe Stelle, gleich nah
+        kartenStatus.bewegt = true;
+        kartenStatus.blick = blickBegrenzen(blickAuf(ui.kartenZiel.m, ui.kartenZiel.s));
+        zeichneBlick();
+      }
+      ui.kartenZiel = null;
       if (ui.zentrieren) { zentriereAuf(ui.zentrieren); ui.zentrieren = null; }
       renderKarte();
     }
     if (view === 'auftraege') renderAuftraege();
+    if (view === 'entdecken') umgebungZeichnen(); // ältere Geräte ohne ResizeObserver
     window.scrollTo(0, 0);
   }
   function gehe(view) {
@@ -4770,7 +4212,6 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     $('#sheet').hidden = false;
     $('#sheet').scrollTop = 0;
     document.body.classList.add('sheet-offen');
-    miniRuhe();
     const c = $('#sheet [data-close]');
     if (c) c.focus({ preventScroll: true });
   }
@@ -4812,7 +4253,6 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     $('#backdrop').hidden = true;
     $('#sheet').hidden = true;
     document.body.classList.remove('sheet-offen');
-    miniRuhe();
     renderKarte();
     let ziel = (ui.zuletzt && ui.zuletzt.isConnected) ? ui.zuletzt : (id ? $(`#view-${ui.view} .card[data-id="${id}"]`) : null);
     if (!ziel && id && ui.view === 'karte' && kartenStatus.marker.has(id)) ziel = kartenStatus.marker.get(id);
@@ -4833,7 +4273,6 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     el.hidden = false;
     void el.offsetWidth; // Animation neu starten
     el.classList.add('spielt');
-    miniRuhe();
     $('#toast').classList.remove('zeigen');
     $('#feier-titel').textContent = titel;
     $('#feier-text').textContent = text;
@@ -4851,7 +4290,6 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     setTimeout(() => {
       el.hidden = true;
       el.classList.remove('spielt', 'geht');
-      miniRuhe();
       const f = !$('#sheet').hidden && ($('#sheet [data-stern="1"]') || $('#sheet .btn'));
       if (f) f.focus({ preventScroll: true });
     }, 200);
@@ -5730,7 +5168,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
     const ueber = `<button type="button" class="link-btn start-ueber" data-start="fertig">Überspringen</button>`;
     const fuss = (n, knopf, aktion) => `<div class="start-fuss">${punkte(n)}<button type="button" class="btn btn-primary" data-start="${aktion}">${knopf}</button></div>`;
     if (startSeite === 0) return `${ueber}
-      <div class="start-bild" role="img" aria-label="Eine kleine Nachbarschaft als Modell: Häuser, Gärten, eine Straße"></div>
+      <svg class="start-zeichen" viewBox="0 0 428 254" aria-hidden="true" focusable="false"><use href="#hs-form"/></svg>
       <h1 id="start-titel" tabindex="-1">Nachbarn helfen Nachbarn</h1>
       <p class="start-text">Rasen mähen, Einkauf hochtragen, Drucker einrichten: kleine Hilfen in deiner Nachbarschaft, gegen eine kleine Aufwandsentschädigung.</p>
       <ul class="start-liste">
@@ -6364,7 +5802,7 @@ function garbsenMiniatur(THREE, huelle, opt = {}) {
   else {
     if (!startGesehen()) startZeigen();
   }
-  miniStarten();
+  umgebungStarten();
   starteLive().then((live) => {
     if (!live) { if (linkId(start)) gesuchAusLink(linkId(start)); return; }
     renderStadtteilAuswahl();

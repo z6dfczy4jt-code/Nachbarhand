@@ -25,9 +25,8 @@ App für Nachbarschaftshilfe in ganz Deutschland (gestartet in Garbsen): Anfrage
 | `src/body.html` | Bildschirme und Bedien-Symbole |
 | `src/kategorien/` | Tätigkeits-Bilder (3D-Objekte aus Microsoft Fluent Emoji, MIT-Lizenz), werden beim Bauen eingebettet |
 | `src/kopfzeichen.svg` | Logo für die Kopfzeile (folgt hellem und dunklem Design) |
-| `src/styles.css` | Gestaltung „Garbsen in Miniatur“: Schiefer, Klinkerrot, Rapsgelb; helles und dunkles Design, drei Schriftgrößen |
-| `src/garbsen3d.js` | Die Nachbarschaft als 3D-Modell auf der Startseite (Three.js), offene Anfragen als Preisschilder über den Dächern |
-| `src/app.js` | App-Logik, eigene Karte (Straßenkarte basemap.de, ohne Kartenbibliothek), Demo- und Live-Modus, Nachrichten, Melden |
+| `src/styles.css` | Gestaltung: Schiefer, Klinkerrot, Rapsgelb; helles und dunkles Design, drei Schriftgrößen |
+| `src/app.js` | App-Logik, eigene Karte (Straßenkarte basemap.de, ohne Kartenbibliothek) und die kleine Karte der Umgebung auf der Startseite, Demo- und Live-Modus, Nachrichten, Melden |
 | `src/fragen.js` | Häufige Fragen (`#fragen`) |
 | `src/recht.js` | Impressum, Datenschutzerklärung, Nutzungsbedingungen, Regeln (Fassung für die Testphase, vor dem Start anwaltlich prüfen lassen) |
 | `supabase/schema.sql` | Tabellen, Zugriffsregeln und Funktionen für Supabase |
@@ -38,20 +37,19 @@ App für Nachbarschaftshilfe in ganz Deutschland (gestartet in Garbsen): Anfrage
 | `tools/build.py` | Baut aus `src/` die fertige `index.html` und `version.json`; mit `--dist` den Ordner `dist/` für den eigenen Server |
 | `server/` | Eigener Server: `Caddyfile`, `docker-compose.yml`, `aktualisieren.sh`, Datensicherung `sicherung.sh` (siehe SERVER.md) |
 | `version.json` | Fassung der App. Die App fragt sie ab und bietet bei einer neuen Fassung „Neu laden“ an |
-| `assets/` | App-Icons, Three.js, Schriften (Barlow) und das Standbild der Miniatur für Geräte ohne 3D |
+| `assets/` | App-Symbole, Schriften (Barlow), Vorschaubild, Aushang |
 | `manifest.webmanifest` | Angaben für „Zum Home-Bildschirm“ |
 | `design/logo/` | Logo „Hand Drauf“ als SVG (gestapelt, quer, hell, dunkel, App-Icon) und die Vorlage |
 | `design/` | Skripte: `trace.py` zeichnet den Handschlag aus der Vorlage nach, `marke.py` setzt das Logo, `icons.py` die App-Symbole (Browser-Tab, Startbildschirm, iPhone-App) |
 | `package.json`, `capacitor.config.json` | iPhone-App mit Capacitor (siehe APP-STORE.md) |
 | `app/resources/` | App-Symbol und Startbildschirme für die iPhone-App, erzeugt mit `design/icons.py` (Symbol) und `design/app-bilder.py` (Startbildschirme) |
 | `assets/vorschau.png` | Vorschaubild für geteilte Links, erzeugt mit `design/vorschau.py` |
-| `assets/aushang.pdf`, `assets/qr.svg`, `assets/badge-96.png` | Aushang, QR-Code und Zeichen für Benachrichtigungen, erzeugt mit `design/aushang.py` (QR-Code aus `design/qr.py`, ohne fremde Bibliothek) |
+| `assets/aushang.pdf`, `assets/qr.svg`, `assets/badge-96.png` | Aushang, QR-Code und Zeichen für Benachrichtigungen, erzeugt mit `design/aushang.py [Ort]` (QR-Code aus `design/qr.py`, ohne fremde Bibliothek; die Zettel aus `design/zettel.py`) |
 | `index.html` | Fertige App, wird von GitHub Pages ausgeliefert. Nicht von Hand ändern, sondern mit `python3 tools/build.py` neu bauen |
 
 ## Daten und Quellen
 
 - Karte: eigene, schlanke Karte im Code (`src/app.js`, Abschnitt „Karte“), ohne Kartenbibliothek. Kartenbilder: [basemap.de](https://basemap.de) Web Raster, © GeoBasis-DE / [BKG](https://www.bkg.bund.de) ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)); Ersatz: © [OpenStreetMap](https://www.openstreetmap.org/copyright)-Mitwirkende. Optional CARTO „Voyager“ mit eigenem Schlüssel (`CONFIG.karte.carto`). Ohne Netz zeichnet die App die Stadtteile vereinfacht selbst; Lage der Mittelpunkte: OpenStreetMap und [GeoNames](https://www.geonames.org) (CC BY 4.0)
-- 3D: [Three.js](https://threejs.org) r170 (MIT), liegt unter `assets/vendor/`. Das Modell selbst (Häuser, Hecken, Kanal) ist im Code gebaut, ohne fremde Modelldateien
 - Schrift: Barlow und Barlow Semi Condensed (SIL Open Font License), nach den deutschen Straßenschildern. Montserrat in der Wortmarke (SIL Open Font License)
 - Tätigkeits-Bilder: Microsoft Fluent Emoji 3D (MIT-Lizenz), siehe `src/kategorien/LIZENZ-fluent-emoji.txt`
 - Lage der Stadtteile: OpenStreetMap (Haltestellen) und GeoNames

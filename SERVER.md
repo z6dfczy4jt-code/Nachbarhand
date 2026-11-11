@@ -60,7 +60,7 @@ Nach etwa einer Minute ist die App unter `https://DOMAIN/` erreichbar, mit gült
 
 ```sh
 cd /srv/handdrauf
-curl -fo assets/vendor/supabase-js-2.110.1.js https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js
+curl -f --create-dirs -o assets/vendor/supabase-js-2.110.1.js https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js
 sh server/aktualisieren.sh
 ```
 

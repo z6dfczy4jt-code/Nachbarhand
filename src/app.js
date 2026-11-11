@@ -4,8 +4,6 @@
   /* ===== Betriebsart ===== */
   // Wird beim Bauen für die Claude-Vorschau auf true gesetzt: Dort ist keine Datenbank erreichbar, also immer Demo.
   const VORSCHAU = false;
-  // Three.js für die Miniatur auf der Startseite (in der Vorschau aus dem CDN, sonst aus assets/)
-  const DREI_URL = './assets/vendor/three-0.170.0.module.min.js';
   // Läuft die App als iPhone-App (Capacitor)? Dann liegt sie lokal auf dem Gerät, Links zeigen auf die Website.
   const NATIV = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
   // Alle Angaben für den Betrieb stehen in einstellungen.json; der Build setzt sie hier als EINSTELLUNGEN ein.
@@ -197,11 +195,9 @@
   const ANSICHT_OPTIONEN = {
     thema: [['auto', 'Automatisch'], ['hell', 'Hell'], ['dunkel', 'Dunkel']],
     schrift: [['normal', 'Normal'], ['gross', 'Groß'], ['sehr-gross', 'Sehr groß']],
-    start: [['entdecken', 'Liste'], ['karte', 'Karte']],
-    // Modell auf der Startseite: „auto“ prüft beim Start, ob das Gerät die 3D-Szene flüssig schafft
-    modell: [['auto', 'Automatisch'], ['an', 'Bewegt (3D)'], ['aus', 'Als Bild']]
+    start: [['entdecken', 'Liste'], ['karte', 'Karte']]
   };
-  const ansicht = { thema: 'auto', schrift: 'normal', start: 'entdecken', modell: 'auto' };
+  const ansicht = { thema: 'auto', schrift: 'normal', start: 'entdecken' };
   try {
     const gespeichert = JSON.parse(localStorage.getItem(ANSICHT_SPEICHER) || '{}');
     Object.keys(ansicht).forEach((k) => {
@@ -225,7 +221,6 @@
     ansicht[k] = w;
     try { localStorage.setItem(ANSICHT_SPEICHER, JSON.stringify(ansicht)); } catch (e) { /* nur für diese Sitzung */ }
     ansichtAnwenden();
-    if (k === 'modell') miniNeu();
   }
   ansichtAnwenden();
 
@@ -1129,16 +1124,16 @@
     $('#anzahl-text').textContent = `${nah.length} ${nah.length === 1 ? 'Nachbar sucht' : 'Nachbarn suchen'} gerade Hilfe, bis ${ui.umkreis} km um ${ort.stadtteil}`;
 
     if (istLive() && !db.geladen) {
-      ui.miniListe = [];
-      miniSchilder();
+      ui.umgebungListe = [];
+      umgebungZeichnen();
       $('#liste').innerHTML = db.fehler
         ? `<div class="leer"><p><strong>Die Anfragen konnten nicht geladen werden.</strong></p><p>${esc(db.fehler)}</p><button type="button" class="btn btn-secondary btn-auto" data-neu-laden>Erneut versuchen</button></div>`
         : `<p class="lade">Anfragen werden geladen …</p>`;
       return;
     }
     const treffer = sortiere(offene.filter((g) => passt(g) && meterVonMir(g) <= ui.umkreis * 1000));
-    ui.miniListe = ui.sort === 'termin' ? [...treffer].sort((a, b) => (terminWert(a) - terminWert(b)) || (meterVonMir(a) - meterVonMir(b))) : treffer;
-    miniSchilder();
+    ui.umgebungListe = treffer;
+    umgebungZeichnen();
     if (!treffer.length) {
       const q = ui.suche.trim();
       const wo = ` im Umkreis von ${ui.umkreis} km`;
@@ -1276,71 +1271,6 @@
       ? zeilen(eigene.map((g) => karteHTML(g, pills(g))))
       : `<div class="leer-klein"><p>Noch keine Anfragen. Brauchst du selbst Hilfe?</p><button type="button" class="btn btn-secondary btn-auto" data-go="neu">Hilfe suchen</button></div>`;
   }
-
-  /* ===== Garbsen als Miniatur (3D, Startseite) ===== */
-  const mini = { welt: null, laedt: false };
-  function miniSchilder() {
-    if (!mini.welt) return;
-    mini.welt.schilder((ui.miniListe || []).map((g) => ({
-      id: g.id,
-      text: euroKurz(g.betrag),
-      bild: KAT_BILDER[g.kat] || '',
-      art: g.helfer === 'ich' ? 'zugesagt' : '',
-      label: `${g.titel}, ${euroKurz(g.betrag)}, ${wannText(g)}, ${g.stadtteil}`,
-    })));
-  }
-  // Sparsam: wenig Arbeitsspeicher oder Datensparmodus. Dann gleich das Standbild, ohne 700 KB für die 3D-Szene zu laden.
-  // Auch wenn die Szene auf diesem Gerät zuletzt geruckelt hat (zwei Wochen lang merken, danach neu probieren).
-  const LANGSAM_SPEICHER = 'handdrauf-3d-langsam';
-  function miniSparsam() {
-    if ((navigator.connection && navigator.connection.saveData) || (navigator.deviceMemory && navigator.deviceMemory <= 2)) return true;
-    try { return Date.now() - Number(localStorage.getItem(LANGSAM_SPEICHER) || 0) < 14 * TAG_MS; } catch (e) { return false; }
-  }
-  function miniAlsBild() {
-    const huelle = $('#mini');
-    if (mini.welt) { mini.welt.ende(); mini.welt = null; }
-    huelle.querySelectorAll('.mini-anker').forEach((a) => a.remove());
-    huelle.classList.add('ohne-3d');
-  }
-  async function miniStarten() {
-    const huelle = $('#mini');
-    if (!huelle || mini.welt || mini.laedt) return;
-    if (ansicht.modell === 'aus' || (ansicht.modell === 'auto' && miniSparsam())) { miniAlsBild(); return; }
-    mini.laedt = true;
-    try {
-      const THREE = await import(DREI_URL);
-      // Erst aufbauen, wenn Start-Animation und Begrüßung weg sind, damit man das Aufbauen sieht
-      await new Promise((ok) => { const warte = () => (!$('#start').hidden || ($('#intro') && !$('#intro').hidden && getComputedStyle($('#intro')).display !== 'none')) ? setTimeout(warte, 300) : ok(); warte(); });
-      if (ansicht.modell === 'aus') { miniAlsBild(); return; }
-      huelle.classList.remove('ohne-3d');
-      mini.welt = garbsenMiniatur(THREE, huelle, {
-        nacht: dunklesThema(),
-        wennSchild: (id) => oeffnen(id, document.activeElement),
-        // „Automatisch“: Ruckelt die Szene, wird sie zum Bild. „Bewegt (3D)“ erzwingt sie.
-        pruefen: ansicht.modell === 'auto',
-        zuLangsam: () => { try { localStorage.setItem(LANGSAM_SPEICHER, String(Date.now())); } catch (e) { /* nur für diese Sitzung */ } miniAlsBild(); }
-      });
-      if (!mini.welt) throw new Error('Kein WebGL');
-      miniSchilder();
-    } catch (e) {
-      console.warn('Miniatur nicht verfügbar:', e && e.message);
-      miniAlsBild();
-    } finally {
-      mini.laedt = false;
-    }
-  }
-  function miniNeu() { // nach einer Änderung im Menü
-    if (ansicht.modell === 'aus') { miniAlsBild(); return; }
-    if (!mini.welt) miniStarten();
-  }
-  const miniThema = () => { if (mini.welt) mini.welt.nacht(dunklesThema()); };
-  // Unter einem Blatt oder der Feier muss die Szene nicht weiterlaufen
-  const miniRuhe = () => { if (mini.welt) mini.welt.ruhe(!$('#sheet').hidden || !$('#feier').hidden); };
-  if (window.matchMedia) {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    if (mq.addEventListener) mq.addEventListener('change', miniThema);
-  }
-  new MutationObserver(miniThema).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   /* ===== Karte: eigene, schlanke Karte (ohne Kartenbibliothek) =====
      Unten liegen Kartenbilder (Straßen, Namen, Parks) wie bei Google Maps, darüber Preisschilder.
@@ -1613,6 +1543,152 @@
     kachelQuelleSetzen(0);
     if (kartenStatus.blick) kachelnLegen(kartenStatus.blick);
   });
+
+  /* ===== Umgebung: kleine Karte auf der Startseite =====
+     Die echte Straßenkarte um den eigenen Ort, darauf dieselben offenen Anfragen wie in der Liste darunter
+     (mit Betrag, genau dort, wo sie sind). Feste Zoomstufe, nichts zum Ziehen: Ein Schild öffnet die Anfrage,
+     alles andere die große Karte an derselben Stelle. Ohne Kartenbilder (offline, Vorschau) bleiben „Du“,
+     die Schilder und ein Kreis mit 1 km zur Orientierung. */
+  const umgebung = { el: null, w: 0, h: 0, quellen: null, nr: 0, ok: 0, fehler: 0, aus: false, schluessel: '', blick: null, gruppen: [], warten: 0 };
+  function umgebungStarten() {
+    const u = umgebung;
+    u.el = $('#umgebung');
+    if (!u.el) return;
+    u.quellen = VORSCHAU ? [] : kachelQuellen();
+    u.aus = !u.quellen.length || navigator.onLine === false;
+    if (window.ResizeObserver) new ResizeObserver(() => umgebungZeichnen()).observe(u.el);
+    else window.addEventListener('resize', () => umgebungZeichnen());
+    const neuFarben = () => { u.schluessel = ''; umgebungZeichnen(); };
+    new MutationObserver(neuFarben).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    if (window.matchMedia) {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      if (mq.addEventListener) mq.addEventListener('change', neuFarben);
+    }
+    window.addEventListener('online', () => {
+      if (!u.aus || VORSCHAU) return;
+      u.quellen = kachelQuellen(); Object.assign(u, { nr: 0, ok: 0, fehler: 0, aus: false, schluessel: '' });
+      umgebungZeichnen();
+    });
+    // Tippen auf die Karte (nicht auf ein Schild): große Karte an derselben Stelle
+    u.el.addEventListener('click', (e) => {
+      const sammel = e.target.closest('[data-u-sammel]');
+      if (e.target.closest('[data-oeffne]')) return; // öffnet die Anfrage (wie überall in der App)
+      const b = u.blick;
+      if (!b) return;
+      if (sammel) {
+        // Mehrere Anfragen an einem Fleck: große Karte so nah, dass sie auseinanderrücken
+        const gr = u.gruppen[Number(sammel.dataset.uSammel)];
+        if (gr) { ui.kartenZiel = { m: gr.m, s: massstabFuerZoom(Math.min(KARTE.zoomMax, b.z + 2)) }; gehe('karte'); }
+        return;
+      }
+      ui.kartenZiel = { m: b.c, s: b.s };
+      gehe('karte');
+    });
+    umgebungZeichnen();
+  }
+  // Ausschnitt: „Du“ in der Mitte, so nah wie möglich, aber die nächsten Anfragen noch im Bild
+  function umgebungBlick(liste) {
+    const u = umgebung, o = meinOrt(), c = inMeter(o.lat, o.lng);
+    const naechste = liste.slice().sort((a, b) => meterVonMir(a) - meterVonMir(b)).slice(0, 4).map((g) => inMeter(g.lat, g.lng));
+    let z = 16;
+    for (; z > 11; z--) {
+      const s = massstabFuerZoom(z);
+      // Schilder stehen über ihrem Punkt: oben mehr Platz lassen, unten für die Quellenangabe
+      if (naechste.every((m) => Math.abs(m.x - c.x) * s < u.w / 2 - 30 && (c.y - m.y) * s < u.h / 2 - 40 && (m.y - c.y) * s < u.h / 2 - 34)) break;
+    }
+    const s = massstabFuerZoom(z);
+    return { z, s, c, x: Math.round(u.w / 2 - c.x * s), y: Math.round(u.h / 2 - c.y * s) };
+  }
+  function umgebungKacheln(b) {
+    const u = umgebung, box = u.el.querySelector('.u-kacheln'), q = u.aus ? null : u.quellen[u.nr];
+    u.el.classList.toggle('u-ohne', !q);
+    u.el.classList.toggle('k-filter', !!q && !q.carto);
+    const quelle = u.el.querySelector('.u-quelle');
+    if (!q) {
+      box.textContent = '';
+      quelle.textContent = VORSCHAU ? 'Straßenkarte in der App' : 'Straßenkarte gerade nicht erreichbar';
+      return;
+    }
+    quelle.innerHTML = q.quelle;
+    const n = Math.pow(2, b.z), T = WELT / n, ox = NULLPUNKT.x + WELT / 2, oy = NULLPUNKT.y + WELT / 2;
+    const fest = (v) => Math.max(0, Math.min(n - 1, Math.floor(v / T)));
+    const x0 = fest(ox - b.x / b.s), x1 = fest(ox + (u.w - b.x) / b.s), y0 = fest(oy - b.y / b.s), y1 = fest(oy + (u.h - b.y) / b.s);
+    // Bilder, die schon da sind, bleiben liegen (kein Flackern beim Tippen in der Suche)
+    const da = {};
+    [].slice.call(box.children).forEach((img) => { da[img.dataset.k] = img; });
+    const brauche = {};
+    for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
+      const key = b.z + '/' + x + '/' + y;
+      brauche[key] = true;
+      let img = da[key];
+      if (!img) {
+        img = document.createElement('img');
+        img.className = 'k-kachel'; img.alt = ''; img.draggable = false; img.dataset.k = key;
+        img.setAttribute('decoding', 'async');
+        img.onload = () => { img.className = 'k-kachel da'; u.ok++; };
+        img.onerror = () => {
+          u.fehler++;
+          if (u.ok || u.fehler < 3) return;
+          // Dieser Anbieter lädt nicht: nächster, zuletzt ohne Kartenbilder
+          if (u.nr + 1 < u.quellen.length) u.nr++; else u.aus = true;
+          u.fehler = 0; u.schluessel = ''; box.textContent = '';
+          umgebungZeichnen();
+        };
+        img.src = kachelUrl(q, b.z, x, y);
+        box.appendChild(img);
+      }
+      img.style.cssText = `left:${Math.round((x * T - ox) * b.s + b.x)}px;top:${Math.round((y * T - oy) * b.s + b.y)}px;width:256px;height:256px`;
+    }
+    Object.keys(da).forEach((key) => { if (!brauche[key]) box.removeChild(da[key]); });
+  }
+  function umgebungZeichnen() {
+    const u = umgebung;
+    if (!u.el) return;
+    const w = u.el.clientWidth, h = u.el.clientHeight;
+    if (!w || !h) return; // Startseite gerade nicht zu sehen: beim nächsten Zeigen
+    u.w = w; u.h = h;
+    const liste = ui.umgebungListe || [];
+    const b = umgebungBlick(liste);
+    u.blick = b;
+    const schluessel = [b.z, b.x, b.y, w, h, u.nr, u.aus, dunklesThema()].join('|');
+    if (schluessel !== u.schluessel) { u.schluessel = schluessel; umgebungKacheln(b); }
+    // Schilder wie auf der großen Karte; wo sie sich berühren würden, steht eine Zahl
+    const gruppen = [];
+    liste.forEach((g) => {
+      const m = inMeter(g.lat, g.lng), x = m.x * b.s + b.x, y = m.y * b.s + b.y;
+      if (x < 22 || x > w - 22 || y < 44 || y > h - 30) return;
+      const ziel = gruppen.find((gr) => Math.abs(gr.x - x) < 56 && Math.abs(gr.y - y) < 42);
+      if (!ziel) { gruppen.push({ liste: [g], x, y, punkte: [m], m }); return; }
+      ziel.liste.push(g); ziel.punkte.push(m);
+      const k = ziel.punkte.length;
+      ziel.m = { x: ziel.punkte.reduce((t, p) => t + p.x, 0) / k, y: ziel.punkte.reduce((t, p) => t + p.y, 0) / k };
+      ziel.x = ziel.m.x * b.s + b.x; ziel.y = ziel.m.y * b.s + b.y;
+    });
+    u.gruppen = gruppen;
+    const an = (x, y, html, cls) => `<div class="k-anker${cls ? ' ' + cls : ''}" style="transform:translate(${Math.round(x)}px,${Math.round(y)}px)">${html}</div>`;
+    let html = '';
+    // Ohne Kartenbilder: Ringe um „Du“ zeigen, wie weit es ist
+    if (u.aus || !u.quellen[u.nr]) {
+      const jeMeter = dehnung(meinOrt().lat) * b.s;
+      [500, 1000, 2000, 5000, 10000, 20000].forEach((m) => {
+        const r = Math.round(m * jeMeter);
+        if (r < 34 || r > Math.max(w, h) * 0.8) return;
+        html += `<div class="u-kreis" style="left:${Math.round(w / 2 - r)}px;top:${Math.round(h / 2 - r)}px;width:${2 * r}px;height:${2 * r}px"><span>${m < 1000 ? m + ' m' : m / 1000 + ' km'}</span></div>`;
+      });
+    }
+    if (zeigeIch()) html += an(w / 2, h / 2, '<span class="k-ich" aria-hidden="true"><i></i><b>Du</b></span>', 'k-mein-anker');
+    gruppen.forEach((gr, i) => {
+      if (gr.liste.length > 1) {
+        const ab = Math.min(...gr.liste.map((g) => g.betrag));
+        html += an(gr.x, gr.y, `<button type="button" class="k-sammel" data-u-sammel="${i}" aria-label="${gr.liste.length} Anfragen hier, ab ${euroKurz(ab)}. Auf der großen Karte ansehen">${gr.liste.length}</button>`);
+        return;
+      }
+      const g = gr.liste[0];
+      const label = esc(`${g.titel}, ${euro(g.betrag)}, ${wannText(g)}, ${g.stadtteil}, ${distanz(g)}`);
+      html += an(gr.x, gr.y, `<button type="button" class="k-pin" data-oeffne="${esc(g.id)}" aria-label="${label}"><span class="pin${g.helfer === 'ich' ? ' pin-zugesagt' : ''}">${g.helfer === 'ich' ? icon('check', 'i-xs') : ''}${euroKurz(g.betrag)}</span></button>`);
+    });
+    u.el.querySelector('.u-schicht').innerHTML = html;
+  }
 
   function initKarte() {
     const k = kartenStatus;
@@ -2448,7 +2524,6 @@
         ${gruppe('thema', 'Design')}
         ${gruppe('schrift', 'Schrift')}
         ${gruppe('start', 'Start mit')}
-        ${gruppe('modell', 'Modell auf der Startseite')}
         ${ohneKonto ? `<div class="menue-zeile"><span class="menue-label">Ort</span><button type="button" class="btn btn-secondary btn-auto" data-ort-aendern>${zeigeIch() ? esc(meinOrt().stadtteil) : 'Ort wählen'}</button></div>` : ''}
       </section>
       <section class="menue-gruppe" aria-labelledby="m-push"><h3 class="h-klein" id="m-push">Benachrichtigungen</h3>
@@ -2565,10 +2640,18 @@
     if (view !== 'karte') ui.markiert = null;
     if (view === 'karte' && initKarte()) {
       kartenGroesse(false);
+      if (ui.kartenZiel && kartenStatus.w) {
+        // Von der kleinen Karte auf der Startseite: dieselbe Stelle, gleich nah
+        kartenStatus.bewegt = true;
+        kartenStatus.blick = blickBegrenzen(blickAuf(ui.kartenZiel.m, ui.kartenZiel.s));
+        zeichneBlick();
+      }
+      ui.kartenZiel = null;
       if (ui.zentrieren) { zentriereAuf(ui.zentrieren); ui.zentrieren = null; }
       renderKarte();
     }
     if (view === 'auftraege') renderAuftraege();
+    if (view === 'entdecken') umgebungZeichnen(); // ältere Geräte ohne ResizeObserver
     window.scrollTo(0, 0);
   }
   function gehe(view) {
@@ -2586,7 +2669,6 @@
     $('#sheet').hidden = false;
     $('#sheet').scrollTop = 0;
     document.body.classList.add('sheet-offen');
-    miniRuhe();
     const c = $('#sheet [data-close]');
     if (c) c.focus({ preventScroll: true });
   }
@@ -2628,7 +2710,6 @@
     $('#backdrop').hidden = true;
     $('#sheet').hidden = true;
     document.body.classList.remove('sheet-offen');
-    miniRuhe();
     renderKarte();
     let ziel = (ui.zuletzt && ui.zuletzt.isConnected) ? ui.zuletzt : (id ? $(`#view-${ui.view} .card[data-id="${id}"]`) : null);
     if (!ziel && id && ui.view === 'karte' && kartenStatus.marker.has(id)) ziel = kartenStatus.marker.get(id);
@@ -2649,7 +2730,6 @@
     el.hidden = false;
     void el.offsetWidth; // Animation neu starten
     el.classList.add('spielt');
-    miniRuhe();
     $('#toast').classList.remove('zeigen');
     $('#feier-titel').textContent = titel;
     $('#feier-text').textContent = text;
@@ -2667,7 +2747,6 @@
     setTimeout(() => {
       el.hidden = true;
       el.classList.remove('spielt', 'geht');
-      miniRuhe();
       const f = !$('#sheet').hidden && ($('#sheet [data-stern="1"]') || $('#sheet .btn'));
       if (f) f.focus({ preventScroll: true });
     }, 200);
@@ -3546,7 +3625,7 @@
     const ueber = `<button type="button" class="link-btn start-ueber" data-start="fertig">Überspringen</button>`;
     const fuss = (n, knopf, aktion) => `<div class="start-fuss">${punkte(n)}<button type="button" class="btn btn-primary" data-start="${aktion}">${knopf}</button></div>`;
     if (startSeite === 0) return `${ueber}
-      <div class="start-bild" role="img" aria-label="Eine kleine Nachbarschaft als Modell: Häuser, Gärten, eine Straße"></div>
+      <svg class="start-zeichen" viewBox="0 0 428 254" aria-hidden="true" focusable="false"><use href="#hs-form"/></svg>
       <h1 id="start-titel" tabindex="-1">Nachbarn helfen Nachbarn</h1>
       <p class="start-text">Rasen mähen, Einkauf hochtragen, Drucker einrichten: kleine Hilfen in deiner Nachbarschaft, gegen eine kleine Aufwandsentschädigung.</p>
       <ul class="start-liste">
@@ -4180,7 +4259,7 @@
   else {
     if (!startGesehen()) startZeigen();
   }
-  miniStarten();
+  umgebungStarten();
   starteLive().then((live) => {
     if (!live) { if (linkId(start)) gesuchAusLink(linkId(start)); return; }
     renderStadtteilAuswahl();

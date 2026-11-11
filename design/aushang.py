@@ -1,6 +1,8 @@
 """Aushang fürs Schwarze Brett, QR-Code und Symbol für Benachrichtigungen.
 
-    python3 design/aushang.py
+    python3 design/aushang.py [Ort]
+
+Ort: steht oben im gelben Schild und auf den Zetteln zum Abreißen (Standard: Garbsen).
 
 Erzeugt
     assets/qr.svg        QR-Code zur App (steckt auch im Blatt „Nachbarn einladen“)
@@ -11,7 +13,6 @@ Braucht Playwright mit Chromium. Den QR-Code baut design/qr.py selbst.
 Ändert sich die Adresse der App (eigene Domain), ADRESSE in tools/build.py anpassen und neu ausführen.
 """
 import asyncio
-import base64
 import pathlib
 import re
 import sys
@@ -23,17 +24,18 @@ sys.path.insert(0, str(WURZEL / 'tools'))
 sys.path.insert(0, str(WURZEL / 'design'))
 from build import ADRESSE  # noqa: E402
 from qr import qr_svg  # noqa: E402
+import zettel as notizen  # noqa: E402
 
 SCHRIFTEN = (WURZEL / 'assets/fonts').as_uri()
 LOGO = (WURZEL / 'design/logo/hand-drauf-quer.svg').read_text()
 ZEICHEN = (WURZEL / 'design/logo/hand-drauf-zeichen.svg').read_text()
 TINTE = '#11161C'
+ORT = next((a for a in sys.argv[1:] if not a.startswith('--')), 'Garbsen')
 
 
 def aushang_html(qr):
-    bild = 'data:image/webp;base64,' + base64.b64encode((WURZEL / 'assets/garbsen-miniatur.webp').read_bytes()).decode()
     kurz = re.sub(r'^https?://', '', ADRESSE).rstrip('/')
-    zettel = ''.join(f'<div class="zettel"><div class="dreh"><div class="mini-qr">{qr}</div><span><b>Hand Drauf</b>Nachbarn helfen Nachbarn in Garbsen</span></div></div>' for _ in range(8))
+    zettel = ''.join(f'<div class="zettel"><div class="dreh"><div class="mini-qr">{qr}</div><span><b>Hand Drauf</b>Nachbarn helfen Nachbarn in {ORT}</span></div></div>' for _ in range(8))
     return f"""<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Hand Drauf: Aushang</title><style>
 @font-face {{ font-family: 'Barlow'; src: url('{SCHRIFTEN}/barlow-regular.woff') format('woff'); font-weight: 400; }}
 @font-face {{ font-family: 'Barlow'; src: url('{SCHRIFTEN}/barlow-semibold.woff') format('woff'); font-weight: 600; }}
@@ -50,10 +52,8 @@ body {{ position: relative; overflow: hidden; background: #fff; color: #1C2530; 
 h1 {{ margin-top: 8mm; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 23mm; line-height: .92; letter-spacing: -0.01em; }}
 .lead {{ margin-top: 4.5mm; font-size: 6.1mm; line-height: 1.3; color: #36404C; }}
 .mitte {{ margin-top: 7mm; display: grid; grid-template-columns: 1fr 60mm; gap: 7mm; height: 84mm; }}
-.szene {{ position: relative; border-radius: 8mm; overflow: hidden; background: linear-gradient(180deg, #B9D8EE 0%, #E7F0F6 72%); }}
-.szene img {{ position: absolute; left: 50%; top: 56%; width: 96%; transform: translate(-50%, -50%); }}
-.preis {{ position: absolute; padding: 1mm 3.6mm 1mm 6mm; border-radius: 1.8mm; background: #F4B400; color: {TINTE}; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 6.2mm; box-shadow: 0 1.2mm 3mm rgba(17, 22, 28, .28); }}
-.preis::before {{ content: ''; position: absolute; left: 2mm; top: 50%; width: 1.9mm; height: 1.9mm; margin-top: -0.95mm; border-radius: 50%; background: #fff; }}
+{notizen.CSS}
+.szene.wand {{ border-radius: 8mm; font-size: 5.2mm; gap: 3.4mm; padding: 5mm 4mm; }}
 .scan {{ display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3mm; padding: 4mm; border-radius: 8mm; background: #fff; box-shadow: inset 0 0 0 1mm #A3392B; text-align: center; }}
 .scan svg {{ display: block; width: 50mm; height: 50mm; }}
 .scan b {{ font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 7mm; line-height: 1.05; color: #A3392B; }}
@@ -73,12 +73,11 @@ li i {{ display: grid; place-items: center; width: 9.5mm; height: 9.5mm; border-
 .dreh b {{ display: block; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 5.4mm; line-height: 1.15; color: #1C2530; }}
 </style></head><body>
 <div class="blatt">
-  <div class="kopf"><div class="logo">{LOGO}</div><div class="schild">Garbsen</div></div>
+  <div class="kopf"><div class="logo">{LOGO}</div><div class="schild">{ORT}</div></div>
   <h1>Nachbarn helfen<br>Nachbarn.</h1>
   <p class="lead">Rasen mähen, Einkauf hochtragen, Drucker einrichten: kleine Hilfen gleich nebenan, gegen eine kleine Aufwandsentschädigung.</p>
   <div class="mitte">
-    <div class="szene"><img src="{bild}" alt="">
-      <span class="preis" style="left: 9%; top: 12%">15 €</span><span class="preis" style="left: 44%; top: 7%">8 €</span><span class="preis" style="left: 73%; top: 17%">20 €</span></div>
+    <div class="szene wand">{notizen.html()[len('<div class="wand">'):-len('</div>')]}</div>
     <div class="scan">{qr}<b>Scannen und<br>mitmachen</b></div>
   </div>
   <ol>

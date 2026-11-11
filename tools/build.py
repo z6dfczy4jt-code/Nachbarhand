@@ -68,8 +68,6 @@ def einstellungen_laden():
 
 
 EINSTELLUNGEN = einstellungen_laden()
-DREI_LOKAL = './assets/vendor/three-0.170.0.module.min.js'                      # Three.js für die Miniatur
-DREI_CDN = 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js'  # nur Vorschau
 # Schrift: Barlow, gebaut nach den deutschen Straßenschildern (DIN 1451). Auf GitHub Pages aus assets/fonts,
 # in der Vorschau von Google Fonts.
 SCHRIFTEN = [('Barlow', 400, 'barlow-regular'), ('Barlow', 500, 'barlow-medium'), ('Barlow', 600, 'barlow-semibold'),
@@ -168,19 +166,12 @@ def teile(vorschau):
     styles = inset_ausschreiben(styles)
     assert '/*SCHRIFTEN*/' in styles
     styles = styles.replace('/*SCHRIFTEN*/', schriften)
-    if vorschau:
-        # Die Vorschau ist eine einzelne Datei: Standbild der Miniatur (für Geräte ohne 3D) einbetten
-        import base64
-        for datei in ('garbsen-miniatur.webp', 'garbsen-miniatur-nacht.webp'):
-            bild = 'data:image/webp;base64,' + base64.b64encode((WURZEL / 'assets' / datei).read_bytes()).decode()
-            assert styles.count(f'url("assets/{datei}")') == 1, datei
-            styles = styles.replace(f'url("assets/{datei}")', f'url("{bild}")')
     body = (SRC / 'body.html').read_text().replace('<!--KOPFZEICHEN-->', (SRC / 'kopfzeichen.svg').read_text().strip())
     defs, intro, feier = handschlag()
     body = body.replace('<!--HANDSCHLAG-DEFS-->', defs).replace('<!--INTRO-SVG-->', intro).replace('<!--FEIER-SVG-->', feier)
     import hashlib
     oeffentlich = {k: EINSTELLUNGEN[k] for k in ('adresse', 'supabase', 'push', 'betreiber', 'hosting', 'karte', 'geocoder', 'codeLogin', 'gebuehren', 'supabaseJs') if k in EINSTELLUNGEN}
-    programm = '\n'.join([bilder(), qr()] + [(SRC / n).read_text() for n in ('recht.js', 'fragen.js', 'garbsen3d.js', 'app.js')])
+    programm = '\n'.join([bilder(), qr()] + [(SRC / n).read_text() for n in ('recht.js', 'fragen.js', 'app.js')])
     # Fassung: Fingerabdruck von Programm, Aussehen und Einstellungen. Ändert sich bei jeder neuen Version.
     fassung = hashlib.sha256((programm + styles + body + json.dumps(oeffentlich, sort_keys=True)).encode()).hexdigest()[:10]
     oeffentlich['fassung'] = 'vorschau' if vorschau else fassung
@@ -189,9 +180,6 @@ def teile(vorschau):
         alt = 'const VORSCHAU = false;'
         assert alt in app
         app = app.replace(alt, 'const VORSCHAU = true;')
-        alt = f"const DREI_URL = '{DREI_LOKAL}';"
-        assert alt in app
-        app = app.replace(alt, f"const DREI_URL = '{DREI_CDN}';")
     schrift_kopf = GOOGLE_FONTS if vorschau else ''.join(
         f'<link rel="preload" href="assets/fonts/{d}.woff" as="font" type="font/woff" crossorigin>' for _, _, d in SCHRIFTEN if d in ('barlow-regular', 'barlowsemicondensed-bold'))
     db = {} if vorschau else EINSTELLUNGEN['supabase']

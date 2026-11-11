@@ -56,8 +56,11 @@
         <p class="lead" id="anzahl-text">Hilfe in deiner Nähe</p>
         <p class="geholfen" id="geholfen" hidden></p>
       </div>
-      <div class="mini" id="mini" role="group" aria-label="Deine Nachbarschaft als kleines Modell. Die Schilder über den Dächern sind offene Anfragen.">
-        <div class="mini-schilder"></div>
+      <div class="umgebung" id="umgebung" role="group" aria-label="Karte deiner Umgebung mit den offenen Anfragen">
+        <div class="u-kacheln" aria-hidden="true"></div>
+        <div class="u-schicht"></div>
+        <button type="button" class="u-oeffnen"><svg class="i i-sm" aria-hidden="true"><use href="#i-karte"/></svg>Karte öffnen</button>
+        <p class="u-quelle"></p>
       </div>
       <div id="banner-naechstes"></div>
       <div class="suche">
