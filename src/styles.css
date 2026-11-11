@@ -29,6 +29,7 @@
   --klinker-text: #A3392B;   /* Klinkerrot als Schriftfarbe */
   --focus: #0B63CE;
   --you: #0B63CE;
+  --halo: #FFFFFF;
   --sky-oben: #B9D8EE;
   --sky-unten: #E7F0F6;
   --map-land: #ECEFEA;
@@ -59,7 +60,7 @@
     --paper: #0C131D; --surface: #152030; --raised: #1B2839; --ink: #EDF1F5; --muted: #9AA6B5; --line: #263446; --tile: #1D2A3B;
     --klinker: #C4503D; --klinker-tief: #A9412F; --on-klinker: #FFFFFF;
     --accent: #F4B400; --accent-tief: #D99E00; --on-accent: #1F1A0A; --hedge: #4CC27A; --on-hedge: #062312; --good-bg: #10301E;
-    --warn: #FFB44D; --warn-bg: #36270D; --crit: #FF7466; --crit-flaeche: #B3261E; --klinker-text: #F0907E; --focus: #5AA2FF; --you: #5AA2FF;
+    --warn: #FFB44D; --warn-bg: #36270D; --crit: #FF7466; --crit-flaeche: #B3261E; --klinker-text: #F0907E; --focus: #5AA2FF; --you: #5AA2FF; --halo: #0C131D;
     --sky-oben: #08111F; --sky-unten: #1A2D4D;
     --map-land: #152030; --map-area: #22324A; --map-edge: #34465E; --map-label: #9AA6B5; --map-sockel: #0B121C; --map-umland: #0F1824; --map-stadt: #172232; --map-stadt-rand: #24334A; --map-mein: #1F3552; --map-hover: #233246; --map-kachel-grund: #1B1D22;
     --schatten-1: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 10px rgba(0, 0, 0, .3);
@@ -72,7 +73,7 @@
   --paper: #0C131D; --surface: #152030; --raised: #1B2839; --ink: #EDF1F5; --muted: #9AA6B5; --line: #263446; --tile: #1D2A3B;
   --klinker: #C4503D; --klinker-tief: #A9412F; --on-klinker: #FFFFFF;
   --accent: #F4B400; --accent-tief: #D99E00; --on-accent: #1F1A0A; --hedge: #4CC27A; --on-hedge: #062312; --good-bg: #10301E;
-  --warn: #FFB44D; --warn-bg: #36270D; --crit: #FF7466; --crit-flaeche: #B3261E; --klinker-text: #F0907E; --focus: #5AA2FF; --you: #5AA2FF;
+  --warn: #FFB44D; --warn-bg: #36270D; --crit: #FF7466; --crit-flaeche: #B3261E; --klinker-text: #F0907E; --focus: #5AA2FF; --you: #5AA2FF; --halo: #0C131D;
   --sky-oben: #08111F; --sky-unten: #1A2D4D;
   --map-land: #152030; --map-area: #22324A; --map-edge: #34465E; --map-label: #9AA6B5; --map-sockel: #0B121C; --map-umland: #0F1824; --map-stadt: #172232; --map-stadt-rand: #24334A; --map-mein: #1F3552; --map-hover: #233246; --map-kachel-grund: #1B1D22;
   --schatten-1: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 10px rgba(0, 0, 0, .3);
@@ -176,10 +177,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .umgebung.u-ohne { background: var(--map-umland); }
 .u-kreis { position: absolute; box-sizing: border-box; border-radius: 50%; border: 1.5px dashed var(--muted); opacity: .55; pointer-events: none; }
 .u-kreis span { position: absolute; left: -1px; top: 50%; -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%); padding: 0 5px; border-radius: 6px; background: var(--map-umland); color: var(--ink); font-size: 0.875rem; line-height: 1.4; white-space: nowrap; }
-.u-oeffnen { position: absolute; top: 10px; right: 10px; z-index: 4; display: -webkit-inline-flex; display: inline-flex; -webkit-align-items: center; align-items: center; gap: 6px;
-  min-height: 44px; padding: 0 16px 0 13px; border: 0; border-radius: 999px; background: var(--glas); color: var(--ink); cursor: pointer;
-  font-family: var(--f-body); font-weight: 600; font-size: 0.9375rem; box-shadow: var(--schatten-1), inset 0 0 0 1px var(--glas-rand);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.u-oeffnen { position: absolute; top: 10px; right: 10px; z-index: 4; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 12px; display: grid; place-items: center;
+  background: var(--glas); color: var(--ink); cursor: pointer; box-shadow: var(--schatten-2), inset 0 0 0 1px var(--glas-rand);
+  -webkit-backdrop-filter: blur(16px) saturate(170%); backdrop-filter: blur(16px) saturate(170%); }
 .u-oeffnen:focus { outline: none; }
 .u-oeffnen:focus-visible { box-shadow: 0 0 0 3px var(--focus); }
 @media (hover: hover) { .u-oeffnen:hover { background: var(--surface); } }
@@ -326,38 +326,43 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .k-anker.k-mein-anker { z-index: 2; }
 .k-name b { display: inline-block; margin-right: 5px; padding: 1px 7px 0; border-radius: 999px; background: var(--you); color: var(--surface); font-weight: 700; text-shadow: none; }
 /* Ein Preisschild: der Knopf ist mindestens 44 × 44 groß, die Spitze zeigt auf die ungefähre Lage */
-.k-pin { position: absolute; left: 0; top: 0; -webkit-transform: translate(-50%, -100%); transform: translate(-50%, -100%); min-width: 44px; min-height: 44px; padding: 0 0 14px; margin: 0; border: 0; background: none; display: -webkit-flex; display: flex; -webkit-align-items: flex-end; align-items: flex-end; -webkit-justify-content: center; justify-content: center; cursor: pointer; font: inherit; color: inherit; }
-.k-pin:focus { outline: none; }
-.k-pin:focus-visible .pin { outline: 3px solid var(--focus); outline-offset: 2px; }
-.pin {
-  --pin-bg: var(--accent); --pin-fg: var(--on-accent); --pin-rand: #11161C;
-  position: relative; display: inline-flex; align-items: center; padding: 3px 9px 2px; border-radius: 8px;
-  background: var(--pin-bg); color: var(--pin-fg);
-  font-family: var(--f-display); font-weight: 700; font-size: 0.9375rem; line-height: 1.25; font-variant-numeric: tabular-nums; white-space: nowrap;
-  box-shadow: 0 1px 0 var(--accent-tief), 0 4px 10px rgba(17, 22, 28, .3); -webkit-transform-origin: 50% 100%; transform-origin: 50% 100%; transition: transform .15s ease;
-}
-.pin .i { margin-right: 3px; }
-.pin::after { content: ""; position: absolute; left: 50%; top: 100%; width: 2px; height: 8px; margin-left: -1px; background: var(--pin-rand); opacity: .6; }
-.pin::before { content: ""; position: absolute; left: 50%; top: 100%; margin-top: 6px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--pin-rand); }
-@media (hover: hover) { .k-pin:hover .pin { -webkit-transform: scale(1.06); transform: scale(1.06); } }
-.pin-eigen { --pin-bg: var(--hedge); --pin-fg: var(--on-hedge); }
-.pin-zugesagt { --pin-bg: var(--surface); --pin-fg: var(--ink); box-shadow: inset 0 0 0 2px var(--ink), 0 4px 10px rgba(17, 22, 28, .25); }
-.pin-abgelaufen { --pin-bg: var(--surface); --pin-fg: var(--muted); box-shadow: inset 0 0 0 1.5px var(--muted); }
-.pin.is-aktiv, .k-pin:hover .pin.is-aktiv { --pin-bg: var(--klinker); --pin-fg: var(--on-klinker); -webkit-transform: scale(1.14); transform: scale(1.14); box-shadow: 0 6px 16px rgba(17, 22, 28, .35); }
-/* Sammel-Schild: mehrere Anfragen in einem Stadtteil */
-.k-sammel { position: absolute; left: 0; top: 0; width: 46px; height: 46px; margin: -23px 0 0 -23px; padding: 0; border-radius: 50%; border: 3px solid var(--surface);
-  background: var(--accent); color: var(--on-accent); font-family: var(--f-display); font-weight: 700; font-size: 1.125rem; line-height: 1; font-variant-numeric: tabular-nums;
-  display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center;
-  box-shadow: 0 1px 0 var(--accent-tief), 0 5px 12px rgba(17, 22, 28, .3); cursor: pointer; transition: transform .15s ease; }
-.k-sammel-eigen { border-color: var(--hedge); }
-.k-sammel:focus { outline: none; }
-.k-sammel:focus-visible { box-shadow: 0 0 0 3px var(--focus); }
-@media (hover: hover) { .k-sammel:hover { -webkit-transform: scale(1.08); transform: scale(1.08); } }
+/* Markierungen wie bei Google Maps: Tropfen, Spitze genau am Ort, Betrag daneben mit hellem (nachts dunklem) Rand */
+.k-pin, .k-sammel { position: absolute; left: -22px; top: -39px; display: -webkit-flex; display: flex; -webkit-align-items: flex-start; align-items: flex-start;
+  margin: 0; padding: 5px 6px 5px 9px; border: 0; background: none; color: var(--ink); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  -webkit-transform-origin: 22px 39px; transform-origin: 22px 39px; transition: transform .15s ease; }
+/* Rand um den Tropfen: Tippfläche mindestens 44 Bildpunkte hoch, ohne dass der Tropfen größer wird */
+.k-pin.text-links, .k-sammel.text-links { left: auto; right: -22px; padding: 5px 9px 5px 6px; -webkit-flex-direction: row-reverse; flex-direction: row-reverse;
+  -webkit-transform-origin: calc(100% - 22px) 39px; transform-origin: calc(100% - 22px) 39px; }
+.k-pin:focus, .k-sammel:focus { outline: none; }
+.k-pin:focus-visible .pin-form, .k-sammel:focus-visible .pin-form { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 50%; }
+.pin { --pin-bg: var(--accent); --pin-rand: #11161C; --pin-kern: #11161C; display: -webkit-flex; display: flex; -webkit-align-items: flex-start; align-items: flex-start; }
+.text-links .pin { -webkit-flex-direction: row-reverse; flex-direction: row-reverse; }
+.pin-form { display: block; -webkit-flex: none; flex: none; width: 26px; height: 34px; overflow: visible;
+  -webkit-filter: drop-shadow(0 1px 1.5px rgba(17, 22, 28, .4)); filter: drop-shadow(0 1px 1.5px rgba(17, 22, 28, .4)); }
+.pin-form path { fill: var(--pin-bg); stroke: var(--pin-rand); stroke-width: 1.4; }
+.pin-form .pin-kern { fill: var(--pin-kern); stroke: none; }
+.pin-form .pin-haken { fill: none; stroke: var(--pin-kern); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.pin-text { margin: 4px 0 0 2px; font-family: var(--f-display); font-weight: 700; font-size: 0.9375rem; line-height: 1.2; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink);
+  text-shadow: 0 0 2px var(--halo), 0 0 2px var(--halo), 0 0 3px var(--halo), 0 0 4px var(--halo); }
+.text-links .pin-text { margin: 4px 2px 0 0; }
+.k-sammel .pin-text::after { content: attr(data-ab); }
+.pin-eigen { --pin-bg: var(--hedge); }
+.pin-zugesagt { --pin-bg: var(--surface); --pin-rand: var(--ink); --pin-kern: var(--ink); }
+.pin-abgelaufen { --pin-bg: var(--surface); --pin-rand: var(--muted); --pin-kern: var(--muted); }
+.pin-abgelaufen .pin-text { color: var(--muted); }
+.pin.is-aktiv { --pin-bg: var(--klinker); --pin-kern: #fff; }
+.k-anker.k-oben .k-pin { -webkit-transform: scale(1.18); transform: scale(1.18); }
+@media (hover: hover) { .k-pin:hover, .k-sammel:hover { -webkit-transform: scale(1.1); transform: scale(1.1); } }
+/* Mehrere Anfragen an einem Fleck: Zahl im Kopf des Tropfens */
+.k-sammel .pin-form path { fill: var(--accent); stroke: #11161C; stroke-width: 1.4; }
+.k-sammel-eigen .pin-form path { fill: var(--hedge); }
+.sammel-zahl { position: absolute; left: 9px; top: 9px; width: 26px; text-align: center; font-family: var(--f-display); font-weight: 700; font-size: 0.875rem; line-height: 17px; color: #11161C; font-variant-numeric: tabular-nums; }
+.k-sammel.text-links .sammel-zahl { left: auto; right: 9px; }
 .k-massstab { position: absolute; left: 14px; bottom: 10px; height: 20px; padding: 0 4px; border: 2px solid var(--muted); border-top: 0; color: var(--ink); font-size: 0.875rem; line-height: 18px; text-align: center; white-space: nowrap; pointer-events: none; text-shadow: 0 0 3px var(--map-land), 0 0 3px var(--map-land); box-sizing: border-box; }
 .k-quelle { position: absolute; right: 0; bottom: 0; max-width: calc(100% - 150px); margin: 0; padding: 2px 10px; border-radius: 10px 0 0 0; background: var(--glas); color: var(--muted); font-size: 0.875rem; line-height: 1.35; text-align: right; pointer-events: none; }
 .k-quelle a { color: inherit; pointer-events: auto; }
 @media (max-width: 400px) { .k-quelle { max-width: none; left: 0; border-radius: 0; } .k-massstab { bottom: 32px; } }
-@media (prefers-reduced-motion: reduce) { .pin, .k-sammel { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .k-pin, .k-sammel { transition: none; } }
 .karte-unterzeile { margin: -4px 0 0; color: var(--muted); font-size: 0.9375rem; }
 /* Hinweis auf der Karte, wenn keine Kartenbilder laden (Vorschau im Chat oder kein Internet) */
 .k-hinweis { position: absolute; left: 12px; right: 12px; top: 70px; z-index: 900; display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; -webkit-align-items: center; align-items: center; padding: 12px 14px; border-radius: var(--r-m); background: var(--surface); color: var(--ink); box-shadow: var(--schatten-2); font-size: 0.9375rem; line-height: 1.4; }
@@ -373,10 +378,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .karte-fehler { position: absolute; inset: 0; z-index: 1001; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); background: var(--map-land); }
 .legende { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 0.875rem; color: var(--muted); }
 .legende span { display: inline-flex; align-items: center; gap: 7px; }
+.legende .pin { position: relative; font-style: normal; }
+.sw-pin { display: block; width: 22px; height: 29px; overflow: visible; }
+.sw-pin path { fill: var(--pin-bg); stroke: var(--pin-rand); stroke-width: 1.6; }
+.sw-pin .pin-kern { fill: var(--pin-kern); stroke: none; }
+.sw-pin .pin-haken { fill: none; stroke: var(--pin-kern); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.sw-sammel b { position: absolute; left: 0; top: 2px; width: 22px; text-align: center; font: 700 0.875rem/17px var(--f-display); color: #11161C; }
 .sw { width: 18px; height: 12px; border-radius: 4px; }
-.sw-offen { background: var(--accent); }
-.sw-eigen { background: var(--hedge); }
-.sw-zugesagt { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }
 .sw-ich { width: 14px; height: 14px; border-radius: 50%; background: var(--you); box-shadow: 0 0 0 2px #fff, 0 0 0 3px var(--line); margin: 0 2px; }
 .sw-sammel { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--on-accent); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line); font: 700 0.8125rem/18px var(--f-display); font-style: normal; text-align: center; box-sizing: border-box; }
 .karte-leer { position: absolute; left: 14px; right: 14px; bottom: 32px; z-index: 1000; display: grid; gap: 12px; padding: 16px 18px; border-radius: var(--r-l); background: var(--surface); box-shadow: var(--schatten-2); }

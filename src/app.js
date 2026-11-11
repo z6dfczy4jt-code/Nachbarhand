@@ -1544,6 +1544,23 @@
     if (kartenStatus.blick) kachelnLegen(kartenStatus.blick);
   });
 
+  /* ----- Markierungen wie bei Google Maps: Tropfen mit Spitze am Ort, Betrag als Beschriftung daneben -----
+     Mehrere Anfragen dicht beieinander: derselbe Tropfen mit der Zahl im Kopf, daneben „ab … €“. */
+  const PIN_FORM = 'M13 1C6.4 1 1 6.3 1 12.8 1 22 13 33 13 33s12-11 12-20.2C25 6.3 19.6 1 13 1z';
+  function pinHTML(g, cls, label, links) {
+    const kopf = g.helfer === 'ich'
+      ? '<path class="pin-haken" d="m8.6 12.8 3 3 5.8-6.2"/>'
+      : '<circle class="pin-kern" cx="13" cy="12.8" r="4.4"/>';
+    return `<button type="button" class="k-pin${links ? ' text-links' : ''}" data-oeffne="${esc(g.id)}" aria-label="${label}"><span class="pin${cls ? ' ' + cls : ''}">`
+      + `<svg class="pin-form" viewBox="0 0 26 34" aria-hidden="true" focusable="false"><path d="${PIN_FORM}"/>${kopf}</svg>`
+      + `<b class="pin-text">${euroKurz(g.betrag)}</b></span></button>`;
+  }
+  function sammelHTML(attr, anzahl, ab, label, cls, links) {
+    return `<button type="button" class="k-sammel${cls ? ' ' + cls : ''}${links ? ' text-links' : ''}" ${attr} aria-label="${esc(label)}">`
+      + `<svg class="pin-form" viewBox="0 0 26 34" aria-hidden="true" focusable="false"><path d="${PIN_FORM}"/></svg>`
+      + `<b class="sammel-zahl">${anzahl}</b><span class="pin-text" data-ab="ab ${euroKurz(ab)}" aria-hidden="true"></span></button>`;
+  }
+
   /* ===== Umgebung: kleine Karte auf der Startseite =====
      Die echte Straßenkarte um den eigenen Ort, darauf dieselben offenen Anfragen wie in der Liste darunter
      (mit Betrag, genau dort, wo sie sind). Feste Zoomstufe, nichts zum Ziehen: Ein Schild öffnet die Anfrage,
@@ -1657,7 +1674,7 @@
     liste.forEach((g) => {
       const m = inMeter(g.lat, g.lng), x = m.x * b.s + b.x, y = m.y * b.s + b.y;
       if (x < 22 || x > w - 22 || y < 44 || y > h - 30) return;
-      const ziel = gruppen.find((gr) => Math.abs(gr.x - x) < 56 && Math.abs(gr.y - y) < 42);
+      const ziel = gruppen.find((gr) => Math.abs(gr.x - x) < 64 && Math.abs(gr.y - y) < 36);
       if (!ziel) { gruppen.push({ liste: [g], x, y, punkte: [m], m }); return; }
       ziel.liste.push(g); ziel.punkte.push(m);
       const k = ziel.punkte.length;
@@ -1676,16 +1693,30 @@
         html += `<div class="u-kreis" style="left:${Math.round(w / 2 - r)}px;top:${Math.round(h / 2 - r)}px;width:${2 * r}px;height:${2 * r}px"><span>${m < 1000 ? m + ' m' : m / 1000 + ' km'}</span></div>`;
       });
     }
-    if (zeigeIch()) html += an(w / 2, h / 2, '<span class="k-ich" aria-hidden="true"><i></i><b>Du</b></span>', 'k-mein-anker');
+    if (zeigeIch()) html += an(w / 2, h / 2, '<span class="k-ich" aria-hidden="true"><i></i><b>Du</b></span>');
+    // Knopf und Quellenangabe dürfen nichts verdecken: Beschriftung auf die andere Seite, sonst weglassen
+    // (die Anfrage steht ja in der Liste, und „Karte öffnen“ zeigt alle)
+    const belegt = ['.u-oeffnen', '.u-quelle'].map((sel) => {
+      const el = u.el.querySelector(sel);
+      return el && el.offsetWidth ? { l: el.offsetLeft - 4, o: el.offsetTop - 4, r: el.offsetLeft + el.offsetWidth + 4, u: el.offsetTop + el.offsetHeight + 4 } : null;
+    }).filter(Boolean);
+    const frei = (l, o, r, un) => l >= 2 && r <= w - 2 && o >= 2 && !belegt.some((q) => l < q.r && r > q.l && o < q.u && un > q.o);
     gruppen.forEach((gr, i) => {
+      const text = gr.liste.length > 1 ? 'ab ' + euroKurz(Math.min(...gr.liste.map((g) => g.betrag))) : euroKurz(gr.liste[0].betrag);
+      const breite = 16 + text.length * 8;
+      let links = false;
+      if (!frei(gr.x - 13, gr.y - 36, gr.x + 13 + breite, gr.y + 2)) {
+        if (!frei(gr.x - 13 - breite, gr.y - 36, gr.x + 13, gr.y + 2)) return;
+        links = true;
+      }
       if (gr.liste.length > 1) {
         const ab = Math.min(...gr.liste.map((g) => g.betrag));
-        html += an(gr.x, gr.y, `<button type="button" class="k-sammel" data-u-sammel="${i}" aria-label="${gr.liste.length} Anfragen hier, ab ${euroKurz(ab)}. Auf der großen Karte ansehen">${gr.liste.length}</button>`);
+        html += an(gr.x, gr.y, sammelHTML(`data-u-sammel="${i}"`, gr.liste.length, ab, `${gr.liste.length} Anfragen hier, ab ${euroKurz(ab)}. Auf der großen Karte ansehen`, '', links));
         return;
       }
       const g = gr.liste[0];
       const label = esc(`${g.titel}, ${euro(g.betrag)}, ${wannText(g)}, ${g.stadtteil}, ${distanz(g)}`);
-      html += an(gr.x, gr.y, `<button type="button" class="k-pin" data-oeffne="${esc(g.id)}" aria-label="${label}"><span class="pin${g.helfer === 'ich' ? ' pin-zugesagt' : ''}">${g.helfer === 'ich' ? icon('check', 'i-xs') : ''}${euroKurz(g.betrag)}</span></button>`);
+      html += an(gr.x, gr.y, pinHTML(g, g.helfer === 'ich' ? 'pin-zugesagt' : '', label, links));
     });
     u.el.querySelector('.u-schicht').innerHTML = html;
   }
@@ -1792,7 +1823,7 @@
     // Die Platten sind immer gleich dick, egal wie nah man herangeht
     k.sockel.setAttribute('transform', `translate(0 ${(KARTE.sockel / b.s).toFixed(1)})`);
     // Bei jeder halben Zoomstufe neu sortieren, welche Schilder zusammengefasst werden
-    if (zoomStufe(b.s) !== k.stufe) { renderKarte(true); return; }
+    if (zoomStufe(b.s) !== k.stufe && !k.finger) { renderKarte(true); return; }
     zeichneKacheln(b);
     k.elemente.forEach((e) => {
       const x = Math.round(e.m.x * b.s + b.x), y = Math.round(e.m.y * b.s + b.y);
@@ -1865,9 +1896,13 @@
     const finger = new Map();
     let start = null, letzterTipp = 0, letzterOrt = null;
     const ort = (e) => { const r = h.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+    // Solange ein Finger liegt, werden die Schilder nicht neu zusammengefasst: Sonst verschwände das Schild unter
+    // dem Finger, und dessen Touch-Ereignisse kämen nicht mehr an (Zwei-Finger-Zoom bliebe hängen)
+    const fingerWeg = () => { k.finger = 0; if (k.blick && zoomStufe(k.blick.s) !== k.stufe) renderKarte(true); };
     const runter = (id, p, ziel) => {
       cancelAnimationFrame(k.animation); k.ziel = null;
       finger.set(id, p);
+      k.finger = finger.size;
       if (finger.size === 1) start = { p, blick: k.blick, ziel, weg: 0 };
       else if (finger.size === 2) {
         const [a, b] = [...finger.values()];
@@ -1900,6 +1935,7 @@
       if (!finger.has(id)) return;
       finger.delete(id);
       k.huelle.classList.remove('ist-gezogen');
+      if (!finger.size) fingerWeg();
       if (!start) return;
       const war = start;
       if (finger.size === 1) { const [rest] = [...finger.values()]; start = { p: rest, blick: k.blick, weg: 99 }; return; }
@@ -1926,14 +1962,14 @@
       });
       const ende = (e) => hoch(e.pointerId, ort(e), e.target);
       h.addEventListener('pointerup', ende);
-      h.addEventListener('pointercancel', (e) => { finger.delete(e.pointerId); start = null; h.classList.remove('ist-gezogen'); });
+      h.addEventListener('pointercancel', (e) => { finger.delete(e.pointerId); start = null; h.classList.remove('ist-gezogen'); if (!finger.size) fingerWeg(); });
     } else {
       // Ältere iPhones (vor iOS 13) kennen keine Pointer-Events
       const jedes = (e, fn) => { for (let i = 0; i < e.changedTouches.length; i++) { const t = e.changedTouches[i]; fn(t.identifier, ort(t), e.target); } };
       h.addEventListener('touchstart', (e) => jedes(e, runter), { passive: true });
       h.addEventListener('touchmove', (e) => { let b = false; jedes(e, (id, p) => { b = bewegen(id, p) || b; }); if (b && e.cancelable) e.preventDefault(); }, { passive: false });
       h.addEventListener('touchend', (e) => jedes(e, hoch));
-      h.addEventListener('touchcancel', () => { finger.clear(); start = null; });
+      h.addEventListener('touchcancel', () => { finger.clear(); start = null; fingerWeg(); });
       h.addEventListener('mousedown', (e) => runter('maus', ort(e), e.target));
       window.addEventListener('mousemove', (e) => bewegen('maus', ort(e)));
       window.addEventListener('mouseup', (e) => hoch('maus', ort(e), e.target));
@@ -2013,8 +2049,8 @@
     const reihenfolge = sichtbar.slice().sort((a, b) => (b.id === hervor) - (a.id === hervor) || (b.eigen || b.helfer === 'ich') - (a.eigen || a.helfer === 'ich'));
     reihenfolge.forEach((g) => {
       const m = inMeter(g.lat, g.lng);
-      // Preisschilder sind breiter als hoch: berühren sich, wenn sie weniger als 56 × 42 Bildpunkte auseinander liegen
-      const ziel = g.id === hervor || !zusammen ? null : gruppen.find((gr) => !gr.fest && Math.abs(gr.m.x - m.x) * s < 56 && Math.abs(gr.m.y - m.y) * s < 42);
+      // Tropfen mit Betrag daneben: berühren sich, wenn sie weniger als 64 × 36 Bildpunkte auseinander liegen
+      const ziel = g.id === hervor || !zusammen ? null : gruppen.find((gr) => !gr.fest && Math.abs(gr.m.x - m.x) * s < 64 && Math.abs(gr.m.y - m.y) * s < 36);
       if (!ziel) { gruppen.push({ liste: [g], punkte: [m], m, fest: g.id === hervor }); return; }
       ziel.liste.push(g); ziel.punkte.push(m);
       const n = ziel.punkte.length;
@@ -2052,12 +2088,12 @@
         const orte = [...new Set(gr.liste.map((g) => g.stadtteil))];
         const eigene = gr.liste.some((g) => g.eigen || g.helfer === 'ich');
         const label = `${gr.liste.length} Anfragen in ${orte.length > 2 ? orte.slice(0, 2).join(', ') + ' und Umgebung' : orte.join(' und ')}, ab ${euroKurz(ab)}. Hineinzoomen`;
-        anker(gr.m, `<button type="button" class="k-sammel${eigene ? ' k-sammel-eigen' : ''}" data-sammel="${i}" aria-label="${esc(label)}">${gr.liste.length}</button>`);
+        anker(gr.m, sammelHTML(`data-sammel="${i}"`, gr.liste.length, ab, label, eigene ? 'k-sammel-eigen' : ''));
         return;
       }
       const g = gr.liste[0];
-      const cls = [g.eigen ? 'pin-eigen' : '', abgelaufen(g) ? 'pin-abgelaufen' : '', g.helfer === 'ich' ? 'pin-zugesagt' : '', g.id === hervor ? 'is-aktiv' : ''].join(' ');
-      anker(gr.m, `<button type="button" class="k-pin" data-oeffne="${esc(g.id)}" aria-label="${text(g)}"><span class="pin ${cls}">${g.helfer === 'ich' ? icon('check', 'i-xs') : ''}${euroKurz(g.betrag)}</span></button>`, g.id === hervor ? 'k-oben' : '', g.id);
+      const cls = [g.eigen ? 'pin-eigen' : '', abgelaufen(g) ? 'pin-abgelaufen' : '', g.helfer === 'ich' ? 'pin-zugesagt' : '', g.id === hervor ? 'is-aktiv' : ''].filter(Boolean).join(' ');
+      anker(gr.m, pinHTML(g, cls, text(g)), g.id === hervor ? 'k-oben' : '', g.id);
     });
     const b = k.blick;
     k.schicht.innerHTML = teile.map((t) => `<div class="k-anker ${t.cls}" style="transform:translate(${Math.round(t.m.x * b.s + b.x)}px,${Math.round(t.m.y * b.s + b.y)}px)">${t.html}</div>`).join('');
