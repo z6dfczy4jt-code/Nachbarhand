@@ -1614,6 +1614,44 @@
       .replace('{r}', q.retina && (window.devicePixelRatio || 1) > 1.4 ? '@2x' : '');
   }
 
+  /* ----- Quellenangabe der Karten: kurz ausgeklappt, dann nur noch ein (i) in der Ecke -----
+     Die Lizenzen (CC BY 4.0, ODbL) verlangen die Quellen „auf angemessene Weise“. Die Richtlinie von OpenStreetMap
+     erlaubt, sie nach fünf Sekunden oder beim ersten Bewegen der Karte einzuklappen, solange ein (i) sie wieder zeigt.
+     So machen es auch MapLibre und Mapbox. Vollständig stehen die Quellen außerdem in der Datenschutzerklärung. */
+  function quelleOffen(box, offen) {
+    box.classList.toggle('offen', offen);
+    const knopf = box.querySelector('.quelle-knopf');
+    knopf.setAttribute('aria-expanded', String(offen));
+    knopf.setAttribute('aria-label', offen ? 'Kartenquellen ausblenden' : 'Kartenquellen anzeigen');
+  }
+  // Beim ersten Zeigen der Karte: fünf Sekunden ausgeklappt
+  function quelleKurzZeigen(box) {
+    if (!box || box.dataset.gezeigt) return;
+    box.dataset.gezeigt = '1';
+    quelleOffen(box, true);
+    box.zu = setTimeout(() => quelleEinklappen(box), 5000);
+  }
+  function quelleEinklappen(box) {
+    if (!box || !box.classList.contains('offen') || box.classList.contains('fest')) return;
+    clearTimeout(box.zu);
+    quelleOffen(box, false);
+  }
+  // Manche Anbieter (Esri) verlangen, dass ihr Name immer zu sehen ist
+  function quelleFest(box, fest) {
+    if (!box || fest === box.classList.contains('fest')) return;
+    box.classList.toggle('fest', fest);
+    box.querySelector('.quelle-knopf').hidden = fest;
+    quelleOffen(box, fest);
+  }
+  document.addEventListener('click', (e) => {
+    const knopf = e.target.closest('.quelle-knopf');
+    if (!knopf) return;
+    const box = knopf.parentNode;
+    clearTimeout(box.zu);
+    box.dataset.gezeigt = '1';
+    quelleOffen(box, !box.classList.contains('offen'));
+  });
+
   /* ----- Luftbild über der Straßenkarte -----
      In Niedersachsen die Digitalen Orthophotos des LGLN (20 cm je Bildpunkt), frei nutzbar (CC BY 4.0), ohne Schlüssel.
      Der Dienst (WMS) zeichnet jedes Bild genau für ein Kartenquadrat. Wo er keine Luftbilder hat, ist das Bild
@@ -1675,11 +1713,9 @@
     if (foto !== k.huelle.parentNode.classList.contains('k-foto')) { k.huelle.parentNode.classList.toggle('k-foto', foto); namenBald(); }
     if (q && !kc.aus) {
       const text = quellenText(q, hier && !!luftQuelle(kc.quellen, kc.nr), foto && namenMoeglich());
-      if (quelle.dataset.text !== text) {
-        quelle.innerHTML = text; quelle.dataset.text = text;
-        // Maßstab und Knopf stehen über der Quellenangabe, auch wenn sie zwei Zeilen braucht
-        k.huelle.parentNode.style.setProperty('--k-quelle', quelle.offsetHeight + 'px');
-      }
+      if (quelle.dataset.text !== text) { quelle.innerHTML = text; quelle.dataset.text = text; }
+      // „Powered by Esri“ muss immer zu sehen sein
+      quelleFest(quelle.parentNode, !!q.foto);
     }
     knopf.hidden = !hier;
     if (!hier) return;
@@ -2117,7 +2153,7 @@
     if (!namen.url) return; // kommt nach dem Start von selbst
     const b = k.blick, rahmen = k.huelle.getBoundingClientRect();
     // Freihalten: Knöpfe, Quellenangabe, Maßstab und alle Anfragen auf der Karte
-    const belegt = [...document.querySelectorAll('.karte-knoepfe, .k-quelle, #map .k-massstab, .karte-art:not([hidden]), #map .k-schicht .pin, #map .k-schicht .k-sammel, #map .k-schicht .k-ich i, #map .k-schicht .k-ich b')]
+    const belegt = [...document.querySelectorAll('.karte-knoepfe, .k-quelle-box .quelle-knopf, #map .k-massstab, .karte-art:not([hidden]), #map .k-schicht .pin, #map .k-schicht .k-sammel, #map .k-schicht .k-ich i, #map .k-schicht .k-ich b')]
       .map((e) => e.getBoundingClientRect()).filter((r) => r.width)
       .map((r) => ({ l: r.left - rahmen.left - 3, o: r.top - rahmen.top - 3, r: r.right - rahmen.left + 3, u: r.bottom - rahmen.top + 3 }));
     // Nichts verändert (gleicher Ausschnitt, gleiche Daten, Anfragen an denselben Stellen): nicht neu zeichnen
@@ -2427,6 +2463,7 @@
     u.el.addEventListener('click', (e) => {
       const sammel = e.target.closest('[data-u-sammel]');
       if (e.target.closest('[data-oeffne]')) return; // öffnet die Anfrage (wie überall in der App)
+      if (e.target.closest('.quelle-box')) return; // Quellenangabe und ihr (i)
       const b = u.blick;
       if (!b) return;
       if (sammel) {
@@ -2469,6 +2506,7 @@
     const lq = luftQuelle(u.quellen, u.nr);
     const mitLuft = !!lq && b.z >= lq.min && luftDeckt(lq, b.z, x0, y0, x1, y1);
     quelle.innerHTML = quellenText(q, mitLuft, (mitLuft || !!q.foto) && namenMoeglich());
+    quelleFest(quelle.parentNode, !!q.foto);
     u.el.classList.toggle('k-foto', mitLuft || !!q.foto);
     // Bilder, die schon da sind, bleiben liegen (kein Flackern beim Tippen in der Suche)
     const legen = (ziel, url, luftbild) => {
@@ -2544,7 +2582,7 @@
     const masse = [w, h, document.documentElement.getAttribute('data-schrift') || '', u.el.querySelector('.u-quelle').textContent, document.fonts ? document.fonts.status : ''].join('|');
     if (u.belegtFuer !== masse) {
       u.belegtFuer = masse;
-      u.belegt = ['.u-oeffnen', '.u-quelle'].map((sel) => {
+      u.belegt = ['.u-oeffnen', '.u-quelle-box .quelle-knopf'].map((sel) => {
         const el = u.el.querySelector(sel);
         return el && el.offsetWidth ? { l: el.offsetLeft - 4, o: el.offsetTop - 4, r: el.offsetLeft + el.offsetWidth + 4, u: el.offsetTop + el.offsetHeight + 4 } : null;
       }).filter(Boolean);
@@ -2582,6 +2620,7 @@
     });
     gruppen.forEach((gr) => pinFlaechen.push({ l: gr.x - 15, o: gr.y - 38, r: gr.x + 15, u: gr.y + 4 }));
     if (zeigeIch()) pinFlaechen.push(DU_FLAECHE(w / 2, h / 2));
+    quelleKurzZeigen(u.el.querySelector('.u-quelle-box'));
     u.namenFuer = { b, belegt: belegt.concat(pinFlaechen.map((q) => ({ l: Math.round(q.l), o: Math.round(q.o), r: Math.round(q.r), u: Math.round(q.u) }))) };
     umgebungNamen();
   }
@@ -2640,6 +2679,9 @@
     kacheln.el = bilder;
     luft.el = luftbilder;
     namen.el = namenEbene;
+    // Wer die Karte bewegt, braucht die Quellenangabe nicht mehr ausgeklappt
+    const einklappen = () => quelleEinklappen($('.k-quelle-box'));
+    ['pointerdown', 'touchstart', 'wheel'].forEach((art) => huelle.addEventListener(art, einklappen, { passive: true }));
     kachelnStarten();
     kartenBedienung();
     kartenGroesse(true);
@@ -2722,7 +2764,7 @@
       if (drin) e.el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
     });
     clearTimeout(k.ruhig);
-    k.ruhig = setTimeout(() => { massstabZeichnen(); namenAufraeumen(); kartenArtZeigen(); namenBald(); }, 120);
+    k.ruhig = setTimeout(() => { massstabZeichnen(); namenAufraeumen(); kartenArtZeigen(); namenBald(); quelleKurzZeigen($('.k-quelle-box')); }, 120);
     if (!k.massstab.textContent) { massstabZeichnen(); kartenArtZeigen(); }
     clearTimeout(k.nachladen);
     if (istLive() && db.client) k.nachladen = setTimeout(ausschnittLaden, 700);
@@ -2916,7 +2958,7 @@
     const k = kartenStatus;
     if (!k.schicht) return;
     const rahmen = k.huelle.getBoundingClientRect();
-    const fest = [...document.querySelectorAll('.karte-knoepfe, .k-quelle, #map .k-massstab, .karte-art')].map((el) => el.getBoundingClientRect());
+    const fest = [...document.querySelectorAll('.karte-knoepfe, .k-quelle-box .quelle-knopf, #map .k-massstab, .karte-art')].map((el) => el.getBoundingClientRect());
     const schilder = [...k.schicht.querySelectorAll('.k-pin .pin, .k-sammel')].map((el) => el.getBoundingClientRect());
     const belegt = fest.slice();
     const namen = [...k.schicht.querySelectorAll('.k-name')];

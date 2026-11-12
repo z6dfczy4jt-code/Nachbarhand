@@ -210,8 +210,20 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .u-oeffnen:focus { outline: none; }
 .u-oeffnen:focus-visible { box-shadow: 0 0 0 3px var(--focus); }
 @media (hover: hover) { .u-oeffnen:hover { background: var(--surface); } }
-.u-quelle { position: absolute; right: 0; bottom: 0; z-index: 4; max-width: 100%; box-sizing: border-box; margin: 0; padding: 2px 10px; border-radius: 10px 0 0 0; background: var(--glas); color: var(--muted); font-size: 0.875rem; line-height: 1.35; text-align: right; }
-.u-quelle a { color: inherit; }
+/* Quellenangabe der Karten: beim ersten Zeigen 5 Sekunden ausgeklappt, danach nur ein (i) in der Ecke
+   (erlaubt nach der Richtlinie von OpenStreetMap; so machen es auch MapLibre und Mapbox) */
+.quelle-box { position: absolute; right: 0; bottom: 0; z-index: 4; max-width: 100%; box-sizing: border-box; min-width: 44px; min-height: 44px; }
+.quelle-box > p { display: none; margin: 0 6px 6px; padding: 6px 44px 6px 12px; border-radius: 16px; background: var(--glas); color: var(--muted); font-size: 0.875rem; line-height: 1.35; text-align: right;
+  box-shadow: var(--schatten-1), inset 0 0 0 1px var(--glas-rand); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.quelle-box.offen > p { display: block; }
+.quelle-box > p a { color: inherit; }
+.quelle-knopf { position: absolute; right: 0; bottom: 0; width: 44px; height: 44px; padding: 0; border: 0; background: none; color: var(--ink); cursor: pointer; display: grid; place-items: center; -webkit-tap-highlight-color: transparent; }
+.quelle-punkt { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--surface); box-shadow: 0 2px 0 var(--kante), 0 4px 8px -4px rgba(30, 42, 54, .35); }
+.quelle-punkt .i { width: 22px; height: 22px; }
+.quelle-box.offen .quelle-punkt { box-shadow: none; background: transparent; }
+.quelle-knopf:active .quelle-punkt { -webkit-transform: translateY(1px); transform: translateY(1px); box-shadow: 0 1px 0 var(--kante); }
+.quelle-knopf:focus { outline: none; }
+.quelle-knopf:focus-visible .quelle-punkt { box-shadow: 0 0 0 3px var(--focus); }
 
 /* ----- Suche ----- */
 .suche { position: relative; }
@@ -342,8 +354,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .k-kachel.da { opacity: 1; }
 .umgebung .k-kachel { transition: opacity .25s ease; }
 .k-veraendert { display: none; }
-:root[data-theme="dark"] #map.k-filter ~ .k-quelle .k-veraendert { display: inline; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #map.k-filter ~ .k-quelle .k-veraendert { display: inline; } }
+:root[data-theme="dark"] #map.k-filter ~ .quelle-box .k-veraendert { display: inline; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #map.k-filter ~ .quelle-box .k-veraendert { display: inline; } }
 :root[data-theme="dark"] #map.k-filter .k-kacheln { -webkit-filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #map.k-filter .k-kacheln { -webkit-filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); } }
 /* Mit Kartenbildern braucht es die gezeichneten Stadtteile nicht */
@@ -413,9 +425,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .sammel-zahl { position: absolute; left: 9px; top: 9px; width: 26px; text-align: center; font-family: var(--f-display); font-weight: 700; font-size: 0.875rem; line-height: 17px; color: #11161C; font-variant-numeric: tabular-nums; }
 .k-sammel.text-links .sammel-zahl { left: auto; right: 9px; }
 .k-massstab { position: absolute; left: 14px; bottom: 10px; height: 20px; padding: 0 4px; border: 2px solid var(--muted); border-top: 0; color: var(--ink); font-size: 0.875rem; line-height: 18px; text-align: center; white-space: nowrap; pointer-events: none; text-shadow: 0 0 3px var(--map-land), 0 0 3px var(--map-land); box-sizing: border-box; }
-.k-quelle { position: absolute; right: 0; bottom: 0; max-width: calc(100% - 150px); margin: 0; padding: 2px 10px; border-radius: 10px 0 0 0; background: var(--glas); color: var(--muted); font-size: 0.875rem; line-height: 1.35; text-align: right; pointer-events: none; }
-.k-quelle a { color: inherit; pointer-events: auto; }
-@media (max-width: 400px) { .k-quelle { max-width: none; left: 0; border-radius: 0; } .k-massstab { bottom: 32px; bottom: calc(var(--k-quelle, 22px) + 10px); } }
+.k-quelle-box { z-index: 1001; }
 /* Luftbild oder Straßenkarte: kleines Bild der Stelle, so wie sie nach dem Tippen aussieht (wie ein Foto am Brett) */
 .karte-art { position: absolute; left: 12px; bottom: 38px; z-index: 1000; width: 72px; height: 68px; padding: 0; border: 3px solid var(--surface); border-radius: 9px; overflow: hidden;
   background: var(--map-kachel-grund); box-shadow: var(--schatten-2); cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -424,7 +434,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .karte-art-name { position: absolute; left: 0; right: 0; bottom: 0; padding: 2px 0 1px; background: var(--surface); color: var(--ink); font: 700 0.875rem/1.15 var(--f-body); text-align: center; }
 .karte-art:active { -webkit-transform: translateY(1px); transform: translateY(1px); box-shadow: var(--schatten-1); }
 .karte-art:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-@media (max-width: 400px) { .karte-art { bottom: calc(var(--k-quelle, 22px) + 36px); } }
 :root[data-theme="dark"] .karte-art img.k-strasse { -webkit-filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .karte-art img.k-strasse { -webkit-filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); } }
 .menue-hinweis { margin: 4px 0 0; color: var(--muted); }
@@ -1140,7 +1149,6 @@ h1, .sheet h2, .liste-gruppe, .geholfen {
 .umgebung, .karte { border-radius: 10px; border: 5px solid var(--surface); box-shadow: var(--schatten-zettel); }
 .umgebung::after { border-radius: 5px; }
 .u-oeffnen { border-radius: 10px; background-color: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 2px 0 var(--kante), 0 5px 10px -4px rgba(30, 42, 54, .35); }
-.u-quelle { background: var(--glas); }
 
 /* Erledigtes ist gestempelt */
 .geholfen { margin-top: 8px; padding: 3px 11px 2px 9px; border-radius: 5px; background: transparent; border: 2px solid currentColor; color: var(--hedge);
