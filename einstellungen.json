@@ -24,7 +24,9 @@
   "karte": {
     "_hinweis": "carto: optionaler Schlüssel von carto.com für den Kartenstil Voyager. Leer = basemap.de. esri: optionaler Schlüssel der ArcGIS Location Platform für Luftbilder in ganz Deutschland. Leer = Luftbilder nur in Niedersachsen (LGLN).",
     "carto": "",
-    "esri": ""
+    "esri": "",
+    "_hinweis_beschriftung": "beschriftung: Namen von Orten und Straßen über dem Luftbild (Vektordaten von OpenStreetMap, OpenFreeMap, ohne Schlüssel). Leer = ohne Namen.",
+    "beschriftung": "https://tiles.openfreemap.org/planet"
   },
   "codeLogin": false,
   "gebuehren": false

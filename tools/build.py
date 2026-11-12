@@ -59,6 +59,7 @@ def einstellungen_laden():
         e['betreiber'].setdefault(feld, '')
     e.setdefault('karte', {}).setdefault('carto', '')
     e['karte'].setdefault('esri', '')
+    e['karte'].setdefault('beschriftung', 'https://tiles.openfreemap.org/planet')
     e.setdefault('geocoder', '')
     if e['geocoder'] and not re.match(r'^https://[^/\s]+(/[^\s]*)?$', e['geocoder']):
         fehler('"geocoder" muss mit https:// beginnen, zum Beispiel https://photon.komoot.io (leer = nur eingebaute Ortsliste)')
@@ -291,6 +292,7 @@ def inhaltsrichtlinie(html, einst=None, genau_zwei=True):
         "img-src 'self' data: blob: " + ' '.join(karten) + (f' https://{db}' if db else ''),
         "font-src 'self'",
         "connect-src 'self'" + (f' https://{db} wss://{db}' if db else '') + (' https://cdn.jsdelivr.net' if cdn else '')
+        + (' https://' + urlparse(einst['karte']['beschriftung']).netloc if einst['karte'].get('beschriftung', '').startswith('https://') else '')
         + (' ' + einst['geocoder'].rstrip('/') if einst.get('geocoder', '').startswith('https://') else ''),
         "worker-src 'self'",
         "manifest-src 'self'",

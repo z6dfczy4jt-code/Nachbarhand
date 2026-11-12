@@ -193,6 +193,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 .umgebung::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 5; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--line); pointer-events: none; }
 .u-kacheln, .u-luft { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+.u-namen { position: absolute; left: 0; top: 0; pointer-events: none; }
 :root[data-theme="dark"] .umgebung.k-filter .u-kacheln { -webkit-filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); }
 :root[data-theme="dark"] .umgebung.k-filter .k-veraendert { display: inline; }
 @media (prefers-color-scheme: dark) {
@@ -332,7 +333,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .k-svg { position: absolute; left: 0; top: 0; display: block; overflow: visible; }
 /* Kartenbilder: eine Schicht, die beim Ziehen und Zoomen nur verschoben und skaliert wird */
 #map:not(.ohne-kacheln) { background: var(--map-kachel-grund); }
-.k-kacheln, .k-luftbilder { position: absolute; left: 0; top: 0; width: 0; height: 0; -webkit-transform-origin: 0 0; transform-origin: 0 0; will-change: transform; }
+.k-kacheln, .k-luftbilder, .k-namen { position: absolute; left: 0; top: 0; width: 0; height: 0; -webkit-transform-origin: 0 0; transform-origin: 0 0; will-change: transform; pointer-events: none; }
+/* Namen über dem Luftbild: Zeichenfläche etwas größer als die Karte (NAMEN_RAND in app.js) */
+.k-namen canvas { position: absolute; left: -48px; top: -48px; pointer-events: none; }
 /* Auf der großen Karte erscheinen Bilder ohne Überblenden: jede Überblendung macht beim Zoomen eigene Ebenen
    und kostet Bilder pro Sekunde. Bis ein Bild da ist, liegt das alte (vergrößert) darunter. */
 .k-kachel { position: absolute; display: block; max-width: none; margin: 0; border: 0; opacity: 0; pointer-events: none; -webkit-user-select: none; user-select: none; }
