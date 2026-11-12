@@ -17,6 +17,7 @@ App für Nachbarschaftshilfe in ganz Deutschland (gestartet in Garbsen): Anfrage
 - **Preisvorschläge** aus echten Anfragen, sobald es je Tätigkeit genug gibt
 - **Ganz Deutschland:** Ort per Suche (Photon/OpenStreetMap), Umkreis 2 bis 50 km, Karte am eigenen Ort; gespeichert wird nur die Mitte eines Rasterfelds von etwa 1 km (Datenbank-Update Teil 7)
 - **Profile und Bewertungen:** Nach jedem Auftrag bewerten sich beide mit Sternen und ein paar Sätzen. Beide Bewertungen erscheinen gleichzeitig (wenn beide bewertet haben, spätestens nach 14 Tagen), danach lassen sie sich nicht mehr ändern. Im Profil: Durchschnitt, Verteilung der Sterne und die Bewertungen mit Tätigkeit und Datum; jede Bewertung lässt sich melden (Datenbank-Update Teil 8)
+- **Eigenes Profil:** Profilbild (wird auf dem Gerät zugeschnitten und verkleinert, ohne Aufnahmeort), „Über mich“, „Ich helfe gern bei …“, Sprachen und wann man meist Zeit hat; alles freiwillig. Im eigenen Profil steht darunter, wie man bewertet wurde. Profile lassen sich melden (Datenbank-Update Teil 9)
 - **Einladen:** QR-Code in der App und ein Aushang fürs Schwarze Brett mit Zetteln zum Abreißen: [assets/aushang.pdf](assets/aushang.pdf)
 
 ## Aufbau

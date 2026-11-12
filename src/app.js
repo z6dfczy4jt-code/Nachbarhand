@@ -198,6 +198,30 @@
       [5, 'Sandra P.', 'geholfen', 'garten', 'Hecke schneiden', 30, 'Herr G. hat die Hecke meiner Mutter sehr ordentlich geschnitten und sich danach noch Zeit für ein Gespräch genommen.'],
       [5, 'Marco B.', 'geholfen', 'tragen', 'Umzugskartons tragen', 150, 'Frank hat einen ganzen Samstag mit angepackt. Ohne ihn hätten wir das nicht geschafft.']] }
   };
+  // Steckbriefe der Beispiel-Personen: Über mich, hilft gern bei, Sprachen, meist Zeit
+  const DEMO_STECKBRIEFE = {
+    'Karin M.': ['Rentnerin, seit 30 Jahren in Berenbostel. Ich backe gern und kümmere mich um Katzen, wenn Nachbarn verreist sind. Für den Rasen fehlt mir inzwischen die Puste.', ['tiere', 'einkaufen'], ['Deutsch'], ['vormittags', 'nachmittags']],
+    'Herbert K.': ['Ich wohne allein in Altgarbsen. Den Garten schaffe ich nicht mehr ganz, aber Fahrräder repariere ich noch gern.', ['haushalt'], ['Deutsch'], ['vormittags']],
+    'Aylin Ö.': ['Ich studiere Soziale Arbeit in Hannover und wohne in Garbsen-Mitte. Ich mag Tiere und erkläre gern Handys und Tablets.', ['tiere', 'technik', 'einkaufen'], ['Deutsch', 'Englisch', 'Türkisch'], ['nachmittags', 'abends', 'wochenende']],
+    'Jens W.': ['Ich arbeite im Schichtdienst und habe deshalb oft vormittags Zeit. Sackkarre, Bohrmaschine und einen Kombi habe ich.', ['tragen', 'haushalt', 'garten'], ['Deutsch', 'Englisch'], ['vormittags', 'wochenende']],
+    'Lea S.': ['Azubi im ersten Jahr, wohne Auf der Horst. Einkaufen und Gartenarbeit mache ich gern nach Feierabend.', ['einkaufen', 'garten'], ['Deutsch', 'Englisch'], ['abends', 'wochenende']],
+    'Gisela R.': ['Seit meinem Umzug nach Meyenfeld kenne ich noch nicht so viele Leute. Ich gieße gern Blumen und freue mich über Besuch auf einen Kaffee.', ['garten'], ['Deutsch', 'Polnisch'], ['vormittags', 'nachmittags']],
+    'Marco B.': ['Vater von zwei Kindern in Stelingen. Für Tragen und Umzüge bin ich zu haben, wenn es zeitlich passt.', ['tragen'], ['Deutsch', 'Italienisch'], ['abends', 'wochenende']],
+    'Sandra P.': ['Ich kümmere mich viel um meine Mutter in Horst. Wenn ich selbst Luft habe, helfe ich gern anderen.', ['einkaufen', 'tiere', 'haushalt'], ['Deutsch', 'Russisch'], ['abends']],
+    'Werner T.': ['Mit dem Rollator komme ich nicht mehr gut zum Bäcker. Ich freue mich über Hilfe und erzähle gern von früher.', [], ['Deutsch'], ['vormittags']],
+    'Sabine L.': ['Lehrerin an der Grundschule, großer Garten, zwei Kaninchen. Werkzeug kann man sich bei mir auch leihen.', ['garten', 'tiere', 'haushalt'], ['Deutsch', 'Englisch', 'Französisch'], ['nachmittags', 'wochenende']],
+    'Paul D.': ['Ich arbeite in der IT, meistens von zu Hause. Router, Fernseher, Drucker: Ich schau mir das gern an.', ['technik'], ['Deutsch', 'Englisch'], ['abends']],
+    'Renate H.': ['Ich nähe gern und kürze auch mal eine Hose. Dafür brauche ich manchmal jemanden mit Leiter.', ['haushalt'], ['Deutsch'], ['vormittags', 'nachmittags']],
+    'Frank G.': ['Im Vorruhestand, handwerklich fit und mit Anhänger. Sagt einfach Bescheid.', ['tragen', 'haushalt', 'garten'], ['Deutsch'], ['morgens', 'vormittags']]
+  };
+  const SPRACHEN = ['Deutsch', 'Englisch', 'Türkisch', 'Arabisch', 'Russisch', 'Polnisch', 'Ukrainisch', 'Italienisch', 'Französisch', 'Spanisch'];
+  const ZEITEN = [['morgens', 'Morgens'], ['vormittags', 'Vormittags'], ['nachmittags', 'Nachmittags'], ['abends', 'Abends'], ['wochenende', 'Am Wochenende']];
+  // Dein Profil in der Demo (Über mich, Bild usw.): nur auf diesem Gerät
+  const DEMO_PROFIL_SPEICHER = 'handdrauf-demo-profil';
+  const demoSteckbrief = (() => {
+    try { const x = JSON.parse(localStorage.getItem(DEMO_PROFIL_SPEICHER) || '{}'); return x && typeof x === 'object' ? x : {}; } catch (e) { return {}; }
+  })();
+  const demoSteckbriefSpeichern = () => { try { localStorage.setItem(DEMO_PROFIL_SPEICHER, JSON.stringify(demoSteckbrief)); } catch (e) { /* nur für diese Sitzung */ } };
   // Du in der Demo (Tim)
   const DEMO_ICH = { name: 'Tim S.', stadtteil: 'Garbsen-Mitte', dabei: 'Juni 2025', hilfen: 6, gesuche: 1, schnitt: 4.9, bewertungen: [
     [5, 'Renate H.', 'geholfen', 'tragen', 'Gartenstühle in den Schuppen', 12, 'Tim war pünktlich und hat noch gefragt, ob er die Kissen auch reinbringen soll. Sehr aufmerksam.'],
@@ -238,6 +262,8 @@
     letzte: new Map(),      // gesuch_id -> Zeit der letzten Nachricht der anderen Person
     gemeldet: new Set(),    // in dieser Sitzung gemeldete Anfragen
     profile: new Map(),     // profil_id -> öffentliches Profil (für die Profil-Ansicht)
+    bilder: new Map(),      // profil_id -> Pfad des Profilbilds ('' = keins)
+    teil9: null,            // Datenbank kann Profilbild, Über mich usw. (Update Teil 9)? null = noch nicht bekannt
     rezensionen: new Map(), // profil_id -> erschienene Bewertungen (null = wird geladen, false = Datenbank ohne Update Teil 8)
     rezGemeldet: new Set(), // in dieser Sitzung gemeldete Bewertungen
     teil8: null,            // Datenbank kann geschriebene Bewertungen (Update Teil 8)? null = noch nicht bekannt
@@ -815,6 +841,8 @@
     if (uid) {
       const { data } = await db.client.from('profile').select('*').eq('id', uid).maybeSingle();
       db.profil = data || null;
+      // Mit Update Teil 9 hat das Profil „Über mich“, Bild usw.
+      if (data) { db.teil9 = 'bio' in data; db.bilder.set(uid, data.bild || ''); }
       // Rasterpunkt des eigenen Orts (erst mit Update Teil 7; davor zählt der Stadtteil von Garbsen)
       db.wohnort = null;
       if (db.profil) {
@@ -942,6 +970,7 @@
       db.fehler = null;
       db.geladen = true;
       db.geladenUm = Date.now();
+      bilderLaden(gesuche.map((g) => g.erstellerId).concat(gesuche.map((g) => g.helferId)));
     } catch (e) {
       db.fehler = fehlerText(e);
     } finally {
@@ -1230,7 +1259,7 @@
     const el = $('#kopf-rechts');
     if (!istLive()) el.innerHTML = `<span class="pill pill-muted">${BEISPIEL_MODUS ? 'Beispiele' : 'Demo'}</span>`;
     else if (!db.profil) el.innerHTML = '<button type="button" class="btn btn-secondary btn-klein" data-panel="anmelden">Anmelden</button>';
-    else el.innerHTML = `<button type="button" class="avatar-btn" data-panel="konto" aria-label="Dein Konto">${esc(kuerzel(db.profil))}</button>`;
+    else el.innerHTML = `<button type="button" class="avatar-btn${meinBild() ? ' mit-bild' : ''}" data-panel="konto" aria-label="Dein Konto">${esc(kuerzel(db.profil))}${meinBild() ? `<img src="${esc(bildUrl(meinBild()))}" alt="" decoding="async">` : ''}</button>`;
     $('#reset-knopf').hidden = istLive();
     $('#adresse-optional').hidden = istLive();
   }
@@ -2364,7 +2393,7 @@
         ? `${icon('stern', 'i-xs i-fill')}${komma(z.sterne)} · ${z.anzahl} ${z.anzahl === 1 ? 'Bewertung' : 'Bewertungen'}`
         : 'Neu bei Hand Drauf';
       html += `<button type="button" class="person person-knopf" data-profil aria-label="Profil von ${esc(g.wer)} ansehen">
-        <span class="avatar" aria-hidden="true">${esc(g.initialen)}</span>
+        ${avatarHTML(g.initialen, istLive() ? db.bilder.get(g.erstellerId) : '')}
         <span class="person-text">
           <span class="person-name">${esc(g.wer)}${live ? '' : ` <span class="pill pill-good">${icon('check', 'i-xs')}Verifiziert</span>`}</span>
           <span class="person-meta">${bewertung}</span>
@@ -2442,7 +2471,7 @@
     // In der eigenen Anfrage: Wer hilft? Mit Weg zum Profil
     const helferZeile = g.eigen && g.helferName && anderePerson(g) && g.status !== 'offen'
       ? `<button type="button" class="person person-knopf" data-profil aria-label="Profil von ${esc(g.helferName)} ansehen">
-          <span class="avatar" aria-hidden="true">${esc(initialenVon(g.helferName))}</span>
+          ${avatarHTML(initialenVon(g.helferName), istLive() ? db.bilder.get(g.helferId) : '')}
           <span class="person-text"><span class="person-name">${esc(g.helferName)}</span><span class="person-meta">Hilft dir</span></span>
           <span class="person-mehr" aria-hidden="true">Profil</span></button>` : '';
 
@@ -2616,7 +2645,7 @@
         <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
       </div>
       <div class="konto-kopf">
-        <span class="avatar" aria-hidden="true">${esc(kuerzel(p))}</span>
+        ${avatarHTML(kuerzel(p), p.bild)}
         <div>
           <h2 id="sheet-titel">${esc(anzeigename(p))}</h2>
           <div class="person-meta">${bewertung}</div>
@@ -2686,7 +2715,37 @@
     return { key, name, kuerzel: initialenVon(name), stadtteil: ich ? meinOrt().stadtteil : (anzeige ? anzeige.stadtteil : p.stadtteil), dabei: p.dabei,
       hilfen: p.hilfen + dazu.filter((b) => b.rolle === 'geholfen').length, gesuche: p.gesuche + dazu.filter((b) => b.rolle === 'gesucht').length,
       volljaehrig: true, ich, sterne: alle.length ? alle.reduce((t, x) => t + x, 0) / alle.length : null, anzahl: alle.length,
-      verteilung: verteilungVon(alle), liste: mitText.sort((x, y) => y.datum - x.datum), ohneText: alle.length - mitText.length };
+      verteilung: verteilungVon(alle), liste: mitText.sort((x, y) => y.datum - x.datum), ohneText: alle.length - mitText.length,
+      ...steckbriefVon(ich ? demoSteckbrief : DEMO_STECKBRIEFE[key]) };
+  }
+  // Über mich, Bild, hilft gern, Sprachen, Zeiten: aus der Demo (Liste oder dein Speicher) oder aus der Datenbank
+  function steckbriefVon(x) {
+    if (!x) return { bio: '', bild: '', hilftGern: [], sprachen: [], zeiten: [] };
+    if (Array.isArray(x)) return { bio: x[0], bild: '', hilftGern: x[1], sprachen: x[2], zeiten: x[3] };
+    return { bio: x.bio || '', bild: x.bild || '', hilftGern: x.hilftGern || x.hilft_gern || [], sprachen: x.sprachen || [], zeiten: x.zeiten || [] };
+  }
+  const bildUrl = (pfad) => !pfad ? '' : /^(data:|blob:)/.test(pfad) ? pfad : `${LIVE.url}/storage/v1/object/public/profilbilder/${pfad}`;
+  // Profilbild oder Anfangsbuchstaben. Lädt das Bild nicht, bleiben die Buchstaben (siehe Fehler-Lauscher unten).
+  function avatarHTML(kuerzelText, bild, cls) {
+    const url = bildUrl(bild);
+    return `<span class="avatar${cls ? ' ' + cls : ''}${url ? ' mit-bild' : ''}" aria-hidden="true">${esc(kuerzelText || '?')}${url ? `<img src="${esc(url)}" alt="" decoding="async" loading="lazy">` : ''}</span>`;
+  }
+  // Mein Profilbild (live: aus dem Profil, Demo: aus dem Speicher)
+  const meinBild = () => istLive() ? ((db.profil && db.profil.bild) || '') : (demoSteckbrief.bild || '');
+  // Live: Profilbilder anderer nachladen (einmal je Person; ohne Update Teil 9 gibt es keine)
+  function bilderLaden(ids) {
+    if (!istLive() || !db.client || db.teil9 === false) return;
+    const neu = Array.from(new Set(ids.filter((id) => id && !db.bilder.has(id))));
+    if (!neu.length) return;
+    neu.forEach((id) => db.bilder.set(id, ''));
+    db.client.from('profile').select('id, bild').in('id', neu).then(({ data, error }) => {
+      if (error) { if (error.code === '42703') db.teil9 = false; return; }
+      db.teil9 = true;
+      let geaendert = false;
+      (data || []).forEach((r) => { if (r.bild) { db.bilder.set(r.id, r.bild); geaendert = true; } });
+      if (!geaendert) return;
+      if (ui.offen || ui.panel) renderSheet();
+    });
   }
   // Sterne und Anzahl für die Zeile „Person“ in einer Anfrage
   function personZahlen(g) {
@@ -2699,8 +2758,10 @@
   function profilLaden(id) {
     if (!db.profile.has(id)) {
       db.profile.set(id, null);
-      db.client.from('profile').select('vorname, nachname_initial, stadtteil, volljaehrig, sterne_summe, sterne_anzahl, hilfen_anzahl, gesuche_anzahl, erstellt').eq('id', id).maybeSingle()
-        .then(({ data }) => { db.profile.set(id, data || false); if (ui.panel === 'profil') renderSheet(); });
+      const spalten = 'vorname, nachname_initial, stadtteil, volljaehrig, sterne_summe, sterne_anzahl, hilfen_anzahl, gesuche_anzahl, erstellt';
+      db.client.from('profile').select(spalten + (db.teil9 === false ? '' : ', bio, bild, hilft_gern, sprachen, zeiten')).eq('id', id).maybeSingle()
+        .then((r) => r.error && r.error.code === '42703' ? (db.teil9 = false, db.client.from('profile').select(spalten).eq('id', id).maybeSingle()) : r)
+        .then(({ data }) => { db.profile.set(id, data || false); if (data && data.bild !== undefined) db.bilder.set(id, data.bild); if (ui.panel === 'profil') renderSheet(); });
     }
     if (!db.rezensionen.has(id)) {
       db.rezensionen.set(id, null);
@@ -2710,6 +2771,7 @@
           db.teil8 = true;
           db.rezensionen.set(id, (data || []).map((r) => ({ gesuchId: r.gesuch_id, sterne: r.sterne, text: r.text || '', von: r.von_name, vonKey: r.von,
             rolle: r.rolle, kat: r.kategorie, titel: r.titel, datum: r.erstellt })));
+          bilderLaden((data || []).map((r) => r.von));
         }
         if (ui.panel === 'profil') renderSheet();
       });
@@ -2728,7 +2790,7 @@
     return { key: id, name: anzeigename(p), kuerzel: kuerzel(p), stadtteil: p.stadtteil, dabei: new Date(p.erstellt).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }),
       hilfen: p.hilfen_anzahl || 0, gesuche: p.gesuche_anzahl || 0, volljaehrig: p.volljaehrig, ich: !!(db.user && id === db.user.id),
       sterne: p.sterne_anzahl ? p.sterne_summe / p.sterne_anzahl : null, anzahl: p.sterne_anzahl || 0, verteilung, liste,
-      ohneText: rez ? rez.length - liste.length : 0 };
+      ohneText: rez ? rez.length - liste.length : 0, ...steckbriefVon(p) };
   }
 
   // Profil öffnen. zurueck: wohin „Zurück“ führt ({ art: 'gesuch', id } | { art: 'profil', key, name } | { art: 'panel', name })
@@ -2740,6 +2802,9 @@
     ui.profil = { key, name };
     ui.profilAlle = false;
     ui.rezMelden = null;
+    ui.profilMelden = false;
+    ui.profilBearbeiten = false;
+    ui.fotoEntwurf = null;
     ui.blockieren = false;
     renderSheet();
     $('#sheet').scrollTop = 0;
@@ -2754,7 +2819,7 @@
     if (ziel.art === 'gesuch') { const zuletzt = ui.zuletzt; oeffnen(ziel.id, zuletzt); return; }
     if (ziel.art === 'panel') { oeffnePanel(ziel.name); return; }
     ui.profil = { key: ziel.key, name: ziel.name };
-    ui.profilAlle = false; ui.rezMelden = null; ui.blockieren = false;
+    ui.profilAlle = false; ui.rezMelden = null; ui.profilMelden = false; ui.profilBearbeiten = false; ui.fotoEntwurf = null; ui.blockieren = false;
     renderSheet();
     $('#sheet').scrollTop = 0;
     const t = $('#sheet-titel');
@@ -2798,7 +2863,7 @@
     }
     return `<li class="rezension">
         <div class="rez-kopf">
-          <span class="avatar avatar-klein" aria-hidden="true">${esc(vonIch ? kuerzelIch() : initialenVon(b.von))}</span>
+          ${avatarHTML(vonIch ? kuerzelIch() : initialenVon(b.von), vonIch ? meinBild() : istLive() ? db.bilder.get(b.vonKey) : '', 'avatar-klein')}
           <div class="rez-wer">${name}<span class="rez-wann">${esc(wannBewertet(b.datum))}</span></div>
           ${sterneAnzeige(b.sterne)}
         </div>
@@ -2818,6 +2883,10 @@
       </div>`;
     const p = profilDaten(pr.key);
     if (!p) return kopf + `<h2 id="sheet-titel" tabindex="-1">${p === null ? 'Profil wird geladen …' : 'Profil nicht verfügbar'}</h2>`;
+    if (p.ich && ui.profilBearbeiten) return `<div class="sheet-top">
+        <button type="button" class="link-btn zurueck" data-profil-abbrechen><span class="zurueck-pfeil" aria-hidden="true">‹</span>Zurück zu deinem Profil</button>
+        <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
+      </div>` + profilFormHTML(p);
     const vn = vorname(p.name);
     let bewertungen;
     if (!p.anzahl) bewertungen = `<p class="rez-leer">${p.ich ? 'Du hast noch keine Bewertungen.' : `${esc(vn)} hat noch keine Bewertungen.`} Nach jedem Auftrag bewertet ihr euch gegenseitig.</p>`;
@@ -2839,24 +2908,218 @@
       bewertungen = `<div class="rez-uebersicht">${schnitt}${verteilung}</div>${liste}`;
     }
     const person = p.ich ? null : { id: p.key, name: p.name };
+    const chips = (liste) => liste.map((x) => `<span class="steck-chip">${x}</span>`).join('');
+    const zeilen = [];
+    if (p.hilftGern.length) zeilen.push(['Hilft gern bei', chips(p.hilftGern.filter((k) => KATEGORIEN.some((x) => x.id === k)).map((k) => icon(k, 'i-xs') + esc(katName(k))))]);
+    if (p.sprachen.length) zeilen.push(['Spricht', chips(p.sprachen.map(esc))]);
+    if (p.zeiten.length) zeilen.push(['Hat meist Zeit', chips(ZEITEN.filter(([w]) => p.zeiten.includes(w)).map(([, n]) => esc(n)))]);
+    const leer = !p.bio && !p.bild && !zeilen.length;
+    const steckbrief = (p.bio ? `<p class="profil-bio">${esc(p.bio).replace(/\n/g, '<br>')}</p>` : '')
+      + (zeilen.length ? `<dl class="steckbrief">${zeilen.map(([t, d]) => `<div><dt>${t}</dt><dd>${d}</dd></div>`).join('')}</dl>` : '');
+    const eigenes = p.ich ? (leer
+      ? `<div class="profil-anstoss"><p><strong>Mach dein Profil persönlich.</strong> Mit Foto und ein paar Sätzen über dich wissen Nachbarn, wer klingelt.</p>
+          <button type="button" class="btn btn-primary" data-profil-bearbeiten>${icon('kamera')}Foto und Angaben hinzufügen</button></div>`
+      : `<button type="button" class="btn btn-secondary profil-bearbeiten-knopf" data-profil-bearbeiten>${icon('stift')}Profil bearbeiten</button>`) : '';
     return kopf + `<div class="profil-kopf">
-        <span class="avatar avatar-gross" aria-hidden="true">${esc(p.kuerzel)}</span>
+        ${avatarHTML(p.kuerzel, p.bild, 'avatar-gross')}
         <div><h2 id="sheet-titel" tabindex="-1">${p.ich ? 'Dein Profil' : esc(p.name)}</h2><p class="person-meta">${p.ich ? esc(p.name) + ' · ' : ''}${esc(p.stadtteil || '')} · dabei seit ${esc(p.dabei)}</p></div>
       </div>
       ${p.ich ? '<p class="klein">So sehen dich andere. Adresse und E-Mail sieht niemand.</p>' : ''}
+      ${eigenes}
+      ${steckbrief}
       <dl class="profil-zahlen">
         <div><dt>Bewertung</dt><dd>${p.anzahl ? icon('stern', 'i-sm i-fill') + komma(p.sterne) : '–'}</dd><dd class="klein">${p.anzahl} ${p.anzahl === 1 ? 'Bewertung' : 'Bewertungen'}</dd></div>
         <div><dt>Geholfen</dt><dd>${p.hilfen}</dd><dd class="klein">${p.hilfen === 1 ? 'Auftrag' : 'Aufträge'}</dd></div>
         <div><dt>Hilfe bekommen</dt><dd>${p.gesuche}</dd><dd class="klein">${p.gesuche === 1 ? 'Auftrag' : 'Aufträge'}</dd></div>
       </dl>
-      <section class="rez" aria-labelledby="rez-titel"><h3 class="h-klein" id="rez-titel">Bewertungen</h3>${bewertungen}</section>
+      <section class="rez" aria-labelledby="rez-titel"><h3 class="h-klein" id="rez-titel">${p.ich ? 'So wurdest du bewertet' : 'Bewertungen'}</h3>${bewertungen}</section>
       <ul class="profil-belege">
         ${p.volljaehrig ? `<li>${icon('check', 'i-sm')}Mindestens 18 Jahre, bei der Anmeldung bestätigt</li>` : ''}
         <li>${icon('check', 'i-sm')}Konto mit E-Mail-Adresse</li>
         <li>${icon('check', 'i-sm')}Hat den Regeln für Nachbarn zugestimmt</li>
       </ul>
       <p class="klein">${p.ich ? 'Andere sehen nur deinen Vornamen, den Anfangsbuchstaben und deinen Ort.' : 'Andere sehen nur Vorname, Anfangsbuchstabe und Ort. Adresse und E-Mail sieht niemand.'} Bewertungen erscheinen für beide gleichzeitig, wenn beide bewertet haben, spätestens nach 14 Tagen.</p>
-      ${person ? blockierenHTML(person) : ''}`;
+      ${person ? profilMeldenHTML(person) + blockierenHTML(person) : ''}`;
+  }
+
+  // Profil melden (zum Beispiel ein unpassendes Bild): eigene Gründe, gespeichert als einer der Gründe der Datenbank
+  const PROFIL_GRUENDE = [['bild', 'Unpassendes Foto', 'unangemessen'], ['text', 'Beleidigender oder anstößiger Text', 'unangemessen'],
+    ['falsch', 'Gibt sich als jemand anderes aus', 'betrug'], ['anderes', 'Etwas anderes', 'anderes']];
+  function profilMeldenHTML(person) {
+    if (db.rezGemeldet.has('profil|' + person.id)) return `<p class="gemeldet">${icon('flagge', 'i-xs')}Profil gemeldet. Danke, wir prüfen das.</p>`;
+    if (!ui.profilMelden) return `<button type="button" class="link-btn rez-melden" data-profil-melden>${icon('flagge', 'i-xs')}Profil melden</button>`;
+    return `<form class="melden-box" id="profil-melden-form" novalidate>
+        <fieldset class="feld"><legend>Was stimmt mit diesem Profil nicht?</legend>
+          ${PROFIL_GRUENDE.map(([w, n]) => `<label class="check"><input type="radio" name="profil-grund" id="profil-grund-${w}" value="${w}"><span>${n}</span></label>`).join('')}
+        </fieldset>
+        <div class="feld"><label for="profil-melden-text">Was sollen wir wissen? (freiwillig)</label><textarea id="profil-melden-text" maxlength="400" rows="2"></textarea></div>
+        <p class="fehler" id="profil-melden-fehler" role="alert" hidden></p>
+        <div class="btn-row"><button type="submit" class="btn btn-danger-solid" ${ui.busy ? 'disabled aria-busy="true"' : ''}>Meldung senden</button>
+          <button type="button" class="btn btn-secondary" data-profil-melden-nein>Abbrechen</button></div>
+      </form>`;
+  }
+
+  /* ----- Eigenes Profil bearbeiten: Foto, Über mich, hilft gern bei, Sprachen, Zeiten ----- */
+  function profilFormHTML(p) {
+    const e = ui.fotoEntwurf;
+    const bildJetzt = e ? (e.entfernen ? '' : e.url) : p.bild;
+    const busy = ui.busy ? 'disabled aria-busy="true"' : '';
+    const gruppe = (id, titel, liste, gewaehlt) => `<div class="feld" role="group" aria-labelledby="wahl-${id}-titel">
+        <span class="wahl-titel" id="wahl-${id}-titel">${titel}</span>
+        <div class="vorschlaege">${liste.map(([w, n, ic]) => `<button type="button" class="chip chip-vorschlag" data-wahl="${id}" data-wert="${esc(w)}" aria-pressed="${gewaehlt.includes(w)}">${ic ? icon(ic) : ''}<span>${esc(n)}</span></button>`).join('')}</div>
+      </div>`;
+    const weitere = p.sprachen.filter((x) => !SPRACHEN.includes(x));
+    const ohne = istLive() && db.teil9 === false;
+    return `<h2 id="sheet-titel" tabindex="-1">Profil bearbeiten</h2>
+      ${ohne ? '<p class="status-box warn">Foto und Angaben gehen erst nach dem nächsten Update der Datenbank.</p>' : ''}
+      <form id="profil-form" class="profil-form" novalidate>
+        <div class="foto-feld">
+          ${avatarHTML(p.kuerzel, bildJetzt, 'avatar-riesig')}
+          <div class="foto-knoepfe">
+            <input type="file" id="foto-datei" class="datei-versteckt" accept="image/*" aria-describedby="foto-hinweis" ${ohne ? 'disabled' : ''}>
+            <label for="foto-datei" class="btn btn-secondary">${icon('kamera')}${bildJetzt ? 'Anderes Foto' : 'Foto wählen'}</label>
+            ${e && e.url ? `<button type="button" class="btn btn-secondary" data-foto-drehen>${icon('wieder')}Drehen</button>` : ''}
+            ${bildJetzt ? '<button type="button" class="link-btn" data-foto-weg>Foto entfernen</button>' : ''}
+          </div>
+        </div>
+        <p class="feld-hinweis" id="foto-hinweis">Am besten ein freundliches Foto von dir allein: keine anderen Personen, keine Kinder. Alle können es sehen. Die App verkleinert es und entfernt dabei Angaben wie den Aufnahmeort.</p>
+        <p class="fehler" id="foto-fehler" role="alert" hidden></p>
+        <div class="feld"><label for="profil-bio">Über mich <span class="klein">(freiwillig)</span></label>
+          <textarea id="profil-bio" maxlength="300" rows="4" aria-describedby="profil-bio-hinweis" placeholder="z. B. seit wann du hier wohnst, was du gern machst, ob du ein Auto oder Werkzeug hast">${esc(p.bio)}</textarea>
+          <p class="feld-hinweis" id="profil-bio-hinweis"><span id="bio-zahl">${p.bio.length}</span> von 300 Zeichen. Bitte keine Adresse, Telefonnummer oder E-Mail.</p></div>
+        ${gruppe('hilft', 'Ich helfe gern bei', KATEGORIEN.map((k) => [k.id, k.name, k.id]), p.hilftGern)}
+        ${gruppe('sprache', 'Ich spreche', SPRACHEN.map((x) => [x, x]), p.sprachen)}
+        <div class="feld"><label for="profil-sprachen">Weitere Sprachen <span class="klein">(mit Komma trennen)</span></label>
+          <input id="profil-sprachen" type="text" maxlength="120" autocomplete="off" value="${esc(weitere.join(', '))}"></div>
+        ${gruppe('zeit', 'Ich habe meist Zeit', ZEITEN, p.zeiten)}
+        <p class="fehler" id="profil-fehler" role="alert" hidden></p>
+        <div class="btn-row"><button type="submit" class="btn btn-primary" ${busy} ${ohne ? 'disabled' : ''}>Profil speichern</button>
+          <button type="button" class="btn btn-secondary" data-profil-abbrechen>Abbrechen</button></div>
+      </form>`;
+  }
+  // Foto auf dem Gerät quadratisch zuschneiden und verkleinern (JPEG, ohne Metadaten wie den Aufnahmeort)
+  function fotoZeichnen(bild, drehung, groesse) {
+    const c = document.createElement('canvas');
+    c.width = c.height = groesse;
+    const x = c.getContext('2d');
+    const seite = Math.min(bild.naturalWidth || bild.width, bild.naturalHeight || bild.height);
+    x.fillStyle = '#fff';
+    x.fillRect(0, 0, groesse, groesse);
+    x.translate(groesse / 2, groesse / 2);
+    x.rotate(drehung * Math.PI / 180);
+    const w = bild.naturalWidth || bild.width, h = bild.naturalHeight || bild.height;
+    x.drawImage(bild, (w - seite) / 2, (h - seite) / 2, seite, seite, -groesse / 2, -groesse / 2, groesse, groesse);
+    return c;
+  }
+  function fotoGewaehlt(datei) {
+    const fehler = $('#foto-fehler');
+    const zeige = (t) => { if (fehler) { fehler.textContent = t; fehler.hidden = false; } };
+    if (!datei) return;
+    if (!/^image\//.test(datei.type || 'image/')) { zeige('Bitte ein Foto wählen (JPG oder PNG).'); return; }
+    if (datei.size > 20 * 1024 * 1024) { zeige('Das Foto ist zu groß. Bitte eines unter 20 MB wählen.'); return; }
+    const url = URL.createObjectURL(datei);
+    const bild = new Image();
+    bild.onload = () => {
+      ui.fotoEntwurf = { bild, drehung: 0, url: fotoZeichnen(bild, 0, 240).toDataURL('image/jpeg', 0.85) };
+      URL.revokeObjectURL(url);
+      renderSheet();
+      const k = $('#sheet [data-foto-drehen]');
+      if (k) k.focus({ preventScroll: true });
+    };
+    bild.onerror = () => { URL.revokeObjectURL(url); zeige('Dieses Foto kann der Browser nicht öffnen. Bitte ein JPG oder PNG wählen.'); };
+    bild.src = url;
+  }
+  async function profilSpeichern() {
+    const p = profilDaten('ich');
+    if (!p) return;
+    const fehler = $('#profil-fehler');
+    const zeige = (t, feld) => { fehler.textContent = t; fehler.hidden = false; if (feld) feld.focus(); };
+    const bioFeld = $('#profil-bio');
+    const bio = bioFeld.value.replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n\n').trim();
+    if (bio.length > 300) { zeige('„Über mich“ darf höchstens 300 Zeichen lang sein.', bioFeld); return; }
+    if (bio && anstoessig(bio)) { zeige('Bitte schreib sachlich. Beleidigende oder anstößige Wörter werden nicht veröffentlicht.', bioFeld); return; }
+    if (/\S+@\S+\.\S+/.test(bio) || /\d[\d /-]{6,}\d/.test(bio)) { zeige('Bitte keine Telefonnummern oder E-Mail-Adressen ins Profil schreiben. Alle können es lesen.', bioFeld); return; }
+    const gewaehlt = (id) => Array.from(document.querySelectorAll(`#profil-form [data-wahl="${id}"][aria-pressed="true"]`)).map((b) => b.dataset.wert);
+    const sprFeld = $('#profil-sprachen');
+    const weitere = sprFeld.value.split(',').map((x) => x.replace(/\s+/g, ' ').trim()).filter(Boolean).map((x) => x.charAt(0).toUpperCase() + x.slice(1));
+    if (weitere.some((x) => x.length > 30 || !/^[A-Za-zÀ-ÖØ-öø-ÿĀ-ž][A-Za-zÀ-ÖØ-öø-ÿĀ-ž -]*$/.test(x) || anstoessig(x))) { zeige('Bitte bei den Sprachen nur Namen von Sprachen eintragen, mit Komma getrennt.', sprFeld); return; }
+    const sprachen = Array.from(new Set(gewaehlt('sprache').concat(weitere)));
+    if (sprachen.length > 8) { zeige('Bitte höchstens 8 Sprachen.', sprFeld); return; }
+    const neu = { bio, hilftGern: gewaehlt('hilft'), sprachen, zeiten: gewaehlt('zeit') };
+    const e = ui.fotoEntwurf;
+    ui.busy = true;
+    renderSheet();
+    try {
+      if (istLive()) {
+        const uid = db.user.id;
+        if (e && (e.entfernen || e.bild)) {
+          let pfad = '';
+          if (e.bild) {
+            const blob = await new Promise((ok) => fotoZeichnen(e.bild, e.drehung, 400).toBlob(ok, 'image/jpeg', 0.85));
+            if (!blob) throw new Error('Das Foto ließ sich nicht umwandeln.');
+            pfad = `${uid}/${Date.now().toString(36)}.jpg`;
+            const hoch = await db.client.storage.from('profilbilder').upload(pfad, blob, { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false });
+            if (hoch.error) throw hoch.error;
+          }
+          const { data: alt, error } = await db.client.rpc('profilbild_setzen', { p_pfad: pfad });
+          if (error) throw error;
+          if (alt) db.client.storage.from('profilbilder').remove([alt]);
+          db.profil.bild = pfad;
+          db.bilder.set(uid, pfad);
+        }
+        const { error } = await db.client.rpc('profil_bearbeiten', { p_bio: neu.bio, p_hilft_gern: neu.hilftGern, p_sprachen: neu.sprachen, p_zeiten: neu.zeiten });
+        if (error) throw error;
+        Object.assign(db.profil, { bio: neu.bio, hilft_gern: neu.hilftGern, sprachen: neu.sprachen, zeiten: neu.zeiten });
+        db.profile.delete(uid);
+      } else {
+        if (e && e.entfernen) demoSteckbrief.bild = '';
+        else if (e && e.bild) demoSteckbrief.bild = fotoZeichnen(e.bild, e.drehung, 240).toDataURL('image/jpeg', 0.82);
+        Object.assign(demoSteckbrief, neu);
+        demoSteckbriefSpeichern();
+      }
+      ui.fotoEntwurf = null;
+      ui.profilBearbeiten = false;
+      meldung('Profil gespeichert');
+    } catch (err) {
+      meldung(fehlerText(err));
+    } finally {
+      ui.busy = false;
+    }
+    renderSheet();
+    renderKopf();
+    if (!ui.profilBearbeiten) $('#sheet').scrollTop = 0;
+    const t = $('#sheet-titel');
+    if (t) t.focus({ preventScroll: true });
+  }
+  async function profilMeldenAbsenden() {
+    const wahl = document.querySelector('#profil-melden-form input[name="profil-grund"]:checked');
+    if (!wahl) {
+      const f = $('#profil-melden-fehler');
+      f.textContent = 'Bitte wähle einen Grund.';
+      f.hidden = false;
+      $('#profil-grund-bild').focus();
+      return;
+    }
+    const grund = PROFIL_GRUENDE.find((x) => x[0] === wahl.value);
+    const zusatz = $('#profil-melden-text').value.trim().slice(0, 400);
+    const text = `[${grund[1]}] ${zusatz}`.trim();
+    const pr = ui.profil;
+    ui.busy = true;
+    renderSheet();
+    try {
+      if (istLive()) {
+        const { error } = await db.client.rpc('profil_melden', { p_person: pr.key, p_grund: grund[2], p_text: text });
+        if (error) throw error;
+      }
+      db.rezGemeldet.add('profil|' + pr.key);
+      ui.profilMelden = false;
+      meldung('Danke für deine Meldung. Wir prüfen das Profil.');
+    } catch (err) {
+      meldung(fehlerText(err));
+    } finally {
+      ui.busy = false;
+    }
+    renderSheet();
   }
 
   // Die andere Person einer Anfrage: live über die Profil-ID, in der Demo über den Namen
@@ -3202,6 +3465,41 @@
       return;
     }
     if (t.hasAttribute('data-profil-zurueck')) { profilZurueck(); return; }
+    // Eigenes Profil bearbeiten
+    if (t.hasAttribute('data-profil-bearbeiten') || t.hasAttribute('data-profil-abbrechen')) {
+      ui.profilBearbeiten = t.hasAttribute('data-profil-bearbeiten');
+      ui.fotoEntwurf = null;
+      renderSheet();
+      $('#sheet').scrollTop = 0;
+      const f = ui.profilBearbeiten ? $('#sheet-titel') : $('#sheet [data-profil-bearbeiten]');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
+    if (t.dataset.wahl) { t.setAttribute('aria-pressed', String(t.getAttribute('aria-pressed') !== 'true')); return; }
+    if (t.hasAttribute('data-foto-drehen') && ui.fotoEntwurf && ui.fotoEntwurf.bild) {
+      const e2 = ui.fotoEntwurf;
+      e2.drehung = (e2.drehung + 90) % 360;
+      e2.url = fotoZeichnen(e2.bild, e2.drehung, 240).toDataURL('image/jpeg', 0.85);
+      renderSheet();
+      const f = $('#sheet [data-foto-drehen]');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
+    if (t.hasAttribute('data-foto-weg')) {
+      ui.fotoEntwurf = { entfernen: true };
+      renderSheet();
+      const f = $('#foto-datei');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
+    if (t.hasAttribute('data-profil-melden') || t.hasAttribute('data-profil-melden-nein')) {
+      if (t.hasAttribute('data-profil-melden') && istLive() && !db.profil) { oeffnePanel('anmelden', 'Bitte melde dich an, um ein Profil zu melden.'); return; }
+      ui.profilMelden = t.hasAttribute('data-profil-melden');
+      renderSheet();
+      const f = ui.profilMelden ? $('#profil-grund-bild') : $('#sheet [data-profil-melden]');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
     if (t.hasAttribute('data-mein-profil')) {
       const vorher = ui.offen ? { art: 'gesuch', id: ui.offen } : ui.panel === 'profil' && ui.profil ? { art: 'profil', key: ui.profil.key, name: ui.profil.name }
         : ui.panel ? { art: 'panel', name: ui.panel } : null;
@@ -3282,6 +3580,12 @@
     if (t.hasAttribute('data-konto-loeschen')) {
       ui.busy = true; renderSheet();
       try {
+        // Profilbilder zuerst löschen (die Datenbank selbst kann Dateien im Speicher nicht löschen)
+        if (db.teil9 && db.user) {
+          const liste = await db.client.storage.from('profilbilder').list(db.user.id);
+          const namen = (liste.data || []).map((f) => `${db.user.id}/${f.name}`);
+          if (namen.length) await db.client.storage.from('profilbilder').remove(namen);
+        }
         const { error } = await db.client.rpc('konto_loeschen');
         if (error) throw error;
         await pushTrennen(true);
@@ -3521,6 +3825,7 @@
   });
   // Eingabefeld wächst mit dem Text (bis 5 Zeilen)
   $('#sheet').addEventListener('input', (e) => {
+    if (e.target.id === 'profil-bio') { const z = $('#bio-zahl'); if (z) z.textContent = e.target.value.length; return; }
     if (e.target.id !== 'chat-text') return;
     e.target.style.height = 'auto';
     e.target.style.height = Math.min(e.target.scrollHeight, 140) + 'px';
@@ -3531,6 +3836,8 @@
     if (e.target.id === 'melden-form') { e.preventDefault(); meldungAbsenden(); return; }
     if (e.target.id === 'bewerten-form') { e.preventDefault(); bewertungAbsenden(); return; }
     if (e.target.id === 'rez-melden-form') { e.preventDefault(); rezMeldenAbsenden(e.target); return; }
+    if (e.target.id === 'profil-form') { e.preventDefault(); profilSpeichern(); return; }
+    if (e.target.id === 'profil-melden-form') { e.preventDefault(); profilMeldenAbsenden(); return; }
     if (e.target.id === 'code-form') { e.preventDefault(); codeAbsenden(e.target); return; }
     if (e.target.id !== 'auth-form') return;
     e.preventDefault();
@@ -3619,6 +3926,7 @@
   // Stadtteil im Konto ändern
   $('#sheet').addEventListener('change', async (e) => {
     if (e.target.name === 'grund') { const f = $('#melden-fehler'); if (f) f.hidden = true; return; }
+    if (e.target.id === 'foto-datei') { fotoGewaehlt(e.target.files && e.target.files[0]); e.target.value = ''; return; }
   });
   // Ort ändern (Menü, Konto, Liste) und übernehmen
   $('#sheet').addEventListener('click', async (e) => {
@@ -3882,6 +4190,11 @@
     $('#offline').hidden = !offline;
     document.documentElement.classList.toggle('ist-offline', offline);
   }
+  // Profilbild lädt nicht (gelöscht, offline): dann bleiben die Anfangsbuchstaben
+  document.addEventListener('error', (e) => {
+    const t = e.target, el = t && t.parentNode;
+    if (t && t.tagName === 'IMG' && el && el.classList && (el.classList.contains('avatar') || el.classList.contains('avatar-btn'))) { el.classList.remove('mit-bild'); el.removeChild(t); }
+  }, true);
   window.addEventListener('online', verbindungZeigen);
   window.addEventListener('offline', verbindungZeigen);
   verbindungZeigen();

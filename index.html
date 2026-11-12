@@ -22,7 +22,7 @@
 <link rel="icon" href="assets/favicon.svg?v=fbd0c798" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=c54958ad">
 <link rel="manifest" href="manifest.webmanifest">
-<script>try{var a=JSON.parse(localStorage.getItem("handdrauf-ansicht")||"{}"),r=document.documentElement;if(a.thema==="dunkel"||a.thema==="hell")r.setAttribute("data-theme",a.thema==="dunkel"?"dark":"light");if(a.schrift==="gross"||a.schrift==="sehr-gross")r.setAttribute("data-schrift",a.schrift)}catch(e){}(function(){var U="https://hgfwbjesolgneyapehta.supabase.co",K="sb_publishable_aHSISOj3lPHJwpWqa64gnA_iLcJV1w3",F="abaec2727d",n=0,g={};if(!U||!window.addEventListener)return;function m(t,s){try{t=String(t||"");s=String(s||"");if(!t||n>=5||/ResizeObserver loop|^Script error/i.test(t)||g[t])return;g[t]=1;n++;var x=new XMLHttpRequest();x.open("POST",U+"/rest/v1/rpc/fehler_melden");x.setRequestHeader("Content-Type","application/json");x.setRequestHeader("apikey",K);x.onload=function(){if(x.status===404)n=99};x.send(JSON.stringify({p_nachricht:t.slice(0,300),p_stelle:s.slice(0,200),p_geraet:String(navigator.userAgent).slice(0,200),p_fassung:F}))}catch(e){}}window.addEventListener("error",function(e){if(!e||!e.message)return;var f=String(e.filename||"");if(f&&f.indexOf(location.protocol+"//"+location.host)!==0)return;m(e.message,f.replace(/[?#].*$/,"").split("/").pop()+":"+(e.lineno||0)+":"+(e.colno||0))});window.addEventListener("unhandledrejection",function(e){var r=e&&e.reason,t=r&&(r.message||String(r))||"";if(/fetch|load failed|network|abort|timeout|JWT|auth/i.test(t))return;m("Promise: "+t,"")});window.hdFehler=m})();</script>
+<script>try{var a=JSON.parse(localStorage.getItem("handdrauf-ansicht")||"{}"),r=document.documentElement;if(a.thema==="dunkel"||a.thema==="hell")r.setAttribute("data-theme",a.thema==="dunkel"?"dark":"light");if(a.schrift==="gross"||a.schrift==="sehr-gross")r.setAttribute("data-schrift",a.schrift)}catch(e){}(function(){var U="https://hgfwbjesolgneyapehta.supabase.co",K="sb_publishable_aHSISOj3lPHJwpWqa64gnA_iLcJV1w3",F="51e161ef99",n=0,g={};if(!U||!window.addEventListener)return;function m(t,s){try{t=String(t||"");s=String(s||"");if(!t||n>=5||/ResizeObserver loop|^Script error/i.test(t)||g[t])return;g[t]=1;n++;var x=new XMLHttpRequest();x.open("POST",U+"/rest/v1/rpc/fehler_melden");x.setRequestHeader("Content-Type","application/json");x.setRequestHeader("apikey",K);x.onload=function(){if(x.status===404)n=99};x.send(JSON.stringify({p_nachricht:t.slice(0,300),p_stelle:s.slice(0,200),p_geraet:String(navigator.userAgent).slice(0,200),p_fassung:F}))}catch(e){}}window.addEventListener("error",function(e){if(!e||!e.message)return;var f=String(e.filename||"");if(f&&f.indexOf(location.protocol+"//"+location.host)!==0)return;m(e.message,f.replace(/[?#].*$/,"").split("/").pop()+":"+(e.lineno||0)+":"+(e.colno||0))});window.addEventListener("unhandledrejection",function(e){var r=e&&e.reason,t=r&&(r.message||String(r))||"";if(/fetch|load failed|network|abort|timeout|JWT|auth/i.test(t))return;m("Promise: "+t,"")});window.hdFehler=m})();</script>
 <link rel="preload" href="assets/fonts/barlow-regular.woff" as="font" type="font/woff" crossorigin><link rel="preload" href="assets/fonts/barlowsemicondensed-bold.woff" as="font" type="font/woff" crossorigin>
 <style>
 /* ===== Hand Drauf =====
@@ -387,6 +387,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Mehrere Anfragen an einem Fleck: Zahl im Kopf des Tropfens */
 .k-sammel .pin-form path { fill: var(--accent); stroke: #11161C; stroke-width: 1.4; }
 .k-sammel-eigen .pin-form path { fill: var(--hedge); }
+.k-sammel-eigen .sammel-zahl { color: var(--on-hedge); }
 .sammel-zahl { position: absolute; left: 9px; top: 9px; width: 26px; text-align: center; font-family: var(--f-display); font-weight: 700; font-size: 0.875rem; line-height: 17px; color: #11161C; font-variant-numeric: tabular-nums; }
 .k-sammel.text-links .sammel-zahl { left: auto; right: 9px; }
 .k-massstab { position: absolute; left: 14px; bottom: 10px; height: 20px; padding: 0 4px; border: 2px solid var(--muted); border-top: 0; color: var(--ink); font-size: 0.875rem; line-height: 18px; text-align: center; white-space: nowrap; pointer-events: none; text-shadow: 0 0 3px var(--map-land), 0 0 3px var(--map-land); box-sizing: border-box; }
@@ -442,7 +443,32 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .eyebrow .bild { width: 34px; height: 34px; filter: drop-shadow(0 3px 2px rgba(28, 37, 48, .18)); }
 .person { display: flex; align-items: center; gap: 12px; }
 .avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--ink); color: var(--surface); display: grid; place-items: center; font-family: var(--f-display); font-weight: 700; font-size: 1.0625rem; flex: none; }
-.avatar-gross { width: 68px; height: 68px; font-size: 1.375rem; }
+.avatar-gross { width: 80px; height: 80px; font-size: 1.5rem; }
+/* Profilbild über den Anfangsbuchstaben; lädt es nicht, bleiben die Buchstaben */
+.avatar, .avatar-btn { position: relative; overflow: hidden; -webkit-flex: none; flex: none; }
+.avatar img, .avatar-btn img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.avatar.mit-bild, .avatar-btn.mit-bild { color: transparent; background: var(--tile); }
+.avatar-riesig { width: 112px; height: 112px; font-size: 2.25rem; }
+/* Steckbrief im Profil */
+.profil-bio { margin: 0; font-size: 1.0625rem; line-height: 1.55; overflow-wrap: anywhere; }
+.steckbrief { margin: 0; display: grid; gap: 10px; }
+.steckbrief > div { display: grid; gap: 6px; }
+.steckbrief dt { color: var(--muted); font-size: 0.875rem; font-weight: 600; }
+.steckbrief dd { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.steck-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 999px; background: var(--tile); font-size: 0.9375rem; }
+.steck-chip .bild { width: 20px; height: 20px; }
+.profil-anstoss { display: grid; gap: 12px; padding: 16px; border-radius: var(--r-m); background: var(--tile); }
+.profil-anstoss p { margin: 0; }
+.profil-bearbeiten-knopf { justify-self: start; }
+/* Profil bearbeiten */
+.profil-form { display: grid; gap: 18px; }
+.foto-feld { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.foto-knoepfe { display: grid; gap: 8px; justify-items: start; }
+.foto-knoepfe .btn { min-height: 44px; }
+.datei-versteckt { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.datei-versteckt:focus-visible + label { outline: 3px solid var(--focus); outline-offset: 2px; }
+.profil-form .feld-hinweis, .profil-form > .feld-hinweis { margin: -10px 0 0; }
+.profil-form .feld .feld-hinweis { margin: 6px 0 0; }
 .person-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 600; }
 .person-meta { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 0.9375rem; }
 .person-meta .i { color: var(--accent); }
@@ -1037,6 +1063,8 @@ a.btn { text-decoration: none; }
   <symbol id="i-herz" viewBox="0 0 24 24"><path d="M12 19.5s-7-4.3-7-9.6A3.9 3.9 0 0 1 12 7.6a3.9 3.9 0 0 1 7 2.3c0 5.3-7 9.6-7 9.6z"/></symbol>
   <path id="hs-form" fill-rule="evenodd" d="M417.88 103.75Q417.94 102.88 417.58 101.62Q417.22 100.38 416.36 99.53Q415.50 98.68 414.88 98.41Q414.25 98.14 413.44 98.01Q412.62 97.88 411.38 98.06Q410.12 98.25 406.12 100.17Q402.12 102.10 379.25 112.38Q356.38 122.65 352.00 124.87Q347.62 127.08 343.38 129.74Q339.12 132.39 335.69 135.38Q332.25 138.38 327.62 143.06Q323.00 147.75 322.50 148.13Q322.00 148.51 321.56 148.62Q321.12 148.74 320.44 148.41Q319.75 148.08 307.19 136.73Q294.62 125.38 288.58 120.06Q282.53 114.75 282.02 114.06Q281.51 113.38 281.55 113.08Q281.58 112.78 281.92 112.59Q282.25 112.40 285.69 112.39Q289.12 112.38 292.19 111.97Q295.25 111.57 300.31 110.16Q305.38 108.75 306.56 108.21Q307.75 107.67 308.44 107.13Q309.12 106.60 309.66 105.92Q310.19 105.25 310.46 104.62Q310.72 104.00 310.80 103.31Q310.88 102.62 310.74 101.81Q310.61 101.00 310.18 100.06Q309.75 99.12 309.00 98.47Q308.25 97.82 307.56 97.53Q306.88 97.24 305.62 97.22Q304.38 97.19 300.50 98.40Q296.62 99.61 292.88 100.18Q289.12 100.75 286.06 100.69Q283.00 100.62 280.69 100.23Q278.38 99.83 275.12 98.82Q271.88 97.81 268.75 96.30Q265.62 94.79 261.69 92.33Q257.75 89.88 252.88 86.35Q248.00 82.83 246.69 82.12Q245.38 81.40 243.88 80.78Q242.38 80.17 240.75 79.74Q239.12 79.32 237.06 79.10Q235.00 78.88 233.12 78.88Q231.25 78.88 229.50 79.05Q227.75 79.22 225.69 79.63Q223.62 80.04 221.25 80.93Q218.88 81.82 215.88 84.00Q212.88 86.18 209.56 89.40Q206.25 92.62 203.06 95.40Q199.88 98.18 197.88 99.56Q195.88 100.93 193.88 101.92Q191.88 102.92 190.31 103.37Q188.75 103.82 187.00 104.10Q185.25 104.38 182.38 104.31Q179.50 104.25 178.19 104.06Q176.88 103.86 175.50 103.40Q174.12 102.94 173.19 102.39Q172.25 101.83 171.79 101.29Q171.33 100.75 171.28 100.12Q171.22 99.50 171.62 98.81Q172.03 98.12 184.12 82.75Q196.21 67.38 197.85 65.62Q199.50 63.88 200.56 62.97Q201.62 62.06 204.50 60.23Q207.38 58.40 214.38 55.74Q221.38 53.08 229.06 50.42Q236.75 47.75 240.12 46.91Q243.50 46.07 247.31 45.60Q251.12 45.12 253.81 45.12Q256.50 45.12 259.12 45.42Q261.75 45.71 269.31 47.26Q276.88 48.81 281.00 49.42Q285.12 50.03 287.94 50.26Q290.75 50.50 294.50 50.50Q298.25 50.50 301.94 50.08Q305.62 49.67 308.31 49.08Q311.00 48.49 316.56 46.57Q322.12 44.65 327.94 42.22Q333.75 39.79 353.12 30.53Q372.50 21.28 373.19 20.76Q373.88 20.25 374.41 19.62Q374.94 19.00 375.28 18.25Q375.62 17.50 375.75 16.50Q375.88 15.50 375.71 14.62Q375.54 13.75 375.16 13.06Q374.78 12.38 374.14 11.83Q373.50 11.29 372.75 10.97Q372.00 10.64 371.06 10.51Q370.12 10.38 368.69 10.72Q367.25 11.06 355.31 16.89Q343.38 22.72 331.25 28.33Q319.12 33.93 314.88 35.45Q310.62 36.97 306.69 37.88Q302.75 38.78 300.19 39.01Q297.62 39.25 293.62 39.19Q289.62 39.12 285.31 38.59Q281.00 38.06 276.12 36.94Q271.25 35.82 267.38 35.15Q263.50 34.47 260.38 34.24Q257.25 34.00 254.31 34.00Q251.38 34.00 248.00 34.29Q244.62 34.58 241.25 35.31Q237.88 36.04 227.25 39.58Q216.62 43.12 215.62 43.31Q214.62 43.50 207.12 41.92Q199.62 40.33 195.62 39.98Q191.62 39.62 188.38 39.62Q185.12 39.62 179.75 40.10Q174.38 40.58 168.00 41.74Q161.62 42.90 156.81 43.39Q152.00 43.88 149.69 43.88Q147.38 43.88 142.44 43.33Q137.50 42.79 134.19 42.12Q130.88 41.46 126.38 40.23Q121.88 39.00 115.00 36.17Q108.12 33.35 99.94 29.60Q91.75 25.85 82.31 21.25Q72.88 16.65 66.75 13.92Q60.62 11.19 59.75 10.94Q58.88 10.69 57.88 10.69Q56.88 10.68 56.19 10.87Q55.50 11.06 54.62 11.56Q53.75 12.06 53.28 12.59Q52.82 13.12 52.54 13.75Q52.26 14.38 52.19 15.56Q52.12 16.75 52.23 17.25Q52.33 17.75 53.05 18.83Q53.76 19.92 55.76 21.22Q57.75 22.53 65.06 25.82Q72.38 29.11 86.44 35.77Q100.50 42.43 108.12 45.54Q115.75 48.65 120.56 50.19Q125.38 51.72 131.31 53.00Q137.25 54.28 139.81 54.58Q142.38 54.88 147.19 55.00Q152.00 55.12 156.12 54.76Q160.25 54.40 167.56 53.18Q174.88 51.96 178.50 51.54Q182.12 51.12 186.12 51.06Q190.12 51.00 191.56 51.10Q193.00 51.21 193.75 51.42Q194.50 51.64 194.72 51.94Q194.94 52.25 194.78 52.62Q194.61 53.00 192.24 55.19Q189.88 57.38 187.97 59.62Q186.07 61.88 173.32 78.31Q160.57 94.75 160.01 95.88Q159.44 97.00 159.13 98.12Q158.82 99.25 158.88 101.06Q158.93 102.88 159.56 104.38Q160.19 105.88 161.41 107.32Q162.62 108.76 163.69 109.63Q164.75 110.50 166.69 111.74Q168.62 112.97 169.88 113.53Q171.12 114.08 173.38 114.69Q175.62 115.31 178.81 115.59Q182.00 115.88 184.62 115.69Q187.25 115.51 189.56 115.11Q191.88 114.71 195.00 113.65Q198.12 112.60 202.06 110.16Q206.00 107.72 209.19 105.11Q212.38 102.50 216.56 98.31Q220.75 94.12 222.38 92.88Q224.00 91.64 224.88 91.26Q225.75 90.89 227.44 90.57Q229.12 90.25 231.94 90.19Q234.75 90.12 235.56 90.28Q236.38 90.44 237.00 90.77Q237.62 91.10 250.19 101.78Q262.75 112.47 290.72 137.17Q318.68 161.88 319.62 163.38Q320.57 164.88 320.85 166.25Q321.12 167.62 320.99 169.25Q320.86 170.88 320.07 172.56Q319.28 174.25 318.14 175.27Q317.00 176.29 315.38 177.01Q313.75 177.74 312.00 177.87Q310.25 178.00 309.12 177.77Q308.00 177.54 306.94 177.07Q305.88 176.60 305.00 176.02Q304.12 175.44 290.31 163.74Q276.50 152.04 268.75 145.28Q261.00 138.51 260.00 137.99Q259.00 137.46 258.06 137.30Q257.12 137.14 256.12 137.35Q255.12 137.56 254.19 138.12Q253.25 138.69 252.62 139.53Q252.00 140.38 251.69 141.62Q251.38 142.88 251.53 143.75Q251.68 144.62 252.18 145.44Q252.68 146.25 253.72 147.34Q254.75 148.43 266.81 158.44Q278.88 168.46 286.12 174.79Q293.36 181.12 294.43 182.44Q295.50 183.75 296.16 184.94Q296.82 186.12 297.03 187.19Q297.25 188.25 297.15 189.56Q297.06 190.88 296.68 192.06Q296.31 193.25 295.85 194.06Q295.39 194.88 294.44 195.85Q293.50 196.83 292.50 197.47Q291.50 198.10 290.19 198.51Q288.88 198.92 287.75 198.96Q286.62 199.00 285.50 198.81Q284.38 198.62 283.56 198.30Q282.75 197.97 281.44 197.15Q280.12 196.32 272.94 190.37Q265.75 184.42 255.69 175.79Q245.62 167.17 243.31 165.03Q241.00 162.89 239.81 162.12Q238.62 161.35 238.00 161.14Q237.38 160.93 236.25 160.94Q235.12 160.94 234.12 161.33Q233.12 161.71 232.43 162.35Q231.74 163.00 231.28 164.06Q230.82 165.12 230.91 166.56Q231.00 168.00 231.47 168.88Q231.93 169.75 233.28 171.09Q234.62 172.43 248.81 184.64Q263.00 196.85 265.31 198.99Q267.62 201.12 268.69 202.50Q269.76 203.88 270.19 205.38Q270.62 206.88 270.59 208.06Q270.56 209.25 270.15 210.50Q269.74 211.75 268.93 212.88Q268.12 214.00 267.12 214.89Q266.12 215.78 265.25 216.22Q264.38 216.67 263.31 216.90Q262.25 217.12 260.88 217.01Q259.50 216.90 258.19 216.60Q256.88 216.29 256.00 215.87Q255.12 215.44 254.06 214.69Q253.00 213.93 236.56 200.28Q220.12 186.64 219.19 186.10Q218.25 185.56 217.62 185.40Q217.00 185.25 215.88 185.34Q214.75 185.43 213.88 185.76Q213.00 186.08 212.22 186.92Q211.43 187.75 211.06 188.75Q210.69 189.75 210.78 191.00Q210.88 192.25 211.40 193.25Q211.93 194.25 218.90 200.27Q225.88 206.29 229.50 209.19Q233.12 212.08 237.00 215.55Q240.88 219.01 241.56 219.94Q242.25 220.88 242.50 221.94Q242.75 223.00 242.66 223.75Q242.57 224.50 242.30 225.31Q242.03 226.12 241.61 226.75Q241.19 227.38 240.60 227.93Q240.00 228.49 238.94 229.10Q237.88 229.72 237.00 230.03Q236.12 230.33 234.88 230.54Q233.62 230.75 232.50 230.71Q231.38 230.67 230.38 230.45Q229.38 230.24 226.75 229.17Q224.12 228.10 220.56 225.78Q217.00 223.47 215.08 221.92Q213.15 220.38 212.87 219.75Q212.58 219.12 212.85 216.38Q213.12 213.62 212.96 211.44Q212.79 209.25 212.24 207.56Q211.68 205.88 210.73 204.06Q209.78 202.25 208.67 200.88Q207.56 199.50 206.03 198.12Q204.50 196.75 202.88 195.83Q201.25 194.90 199.56 194.31Q197.88 193.71 197.35 193.35Q196.83 192.99 196.67 192.49Q196.50 192.00 196.50 189.56Q196.50 187.12 196.31 185.88Q196.11 184.62 195.48 182.81Q194.85 181.00 194.03 179.62Q193.22 178.25 191.86 176.75Q190.50 175.25 188.75 173.86Q187.00 172.47 185.44 171.65Q183.88 170.82 181.19 170.00Q178.50 169.18 178.01 168.84Q177.53 168.50 177.28 168.00Q177.04 167.50 176.58 164.38Q176.11 161.25 175.27 159.38Q174.43 157.50 173.38 156.00Q172.32 154.50 171.28 153.38Q170.25 152.25 168.88 151.08Q167.50 149.92 166.56 149.31Q165.62 148.71 163.69 147.93Q161.75 147.15 158.81 146.83Q155.88 146.50 153.25 146.94Q150.62 147.38 148.75 148.14Q146.88 148.90 145.44 149.69Q144.00 150.49 143.56 150.53Q143.12 150.57 142.73 150.28Q142.33 150.00 140.70 147.50Q139.07 145.00 137.16 143.19Q135.25 141.39 133.06 140.23Q130.88 139.07 128.50 138.53Q126.12 138.00 123.88 138.10Q121.62 138.21 119.12 138.90Q116.62 139.58 114.38 140.86Q112.12 142.14 110.06 143.94Q108.00 145.74 107.38 145.84Q106.75 145.94 106.12 145.53Q105.50 145.12 103.31 142.91Q101.12 140.69 97.81 137.93Q94.50 135.17 91.69 133.19Q88.88 131.22 85.38 129.25Q81.88 127.28 76.62 124.78Q71.38 122.28 48.00 111.94Q24.62 101.60 21.81 100.20Q19.00 98.81 17.31 98.40Q15.62 98.00 14.81 98.08Q14.00 98.15 13.19 98.48Q12.38 98.81 11.78 99.28Q11.19 99.76 10.80 100.38Q10.40 101.00 10.17 101.75Q9.94 102.50 9.91 103.25Q9.88 104.00 10.06 104.75Q10.24 105.50 10.81 106.31Q11.38 107.12 12.31 107.83Q13.25 108.54 15.25 109.69Q17.25 110.85 29.44 116.09Q41.62 121.33 55.75 127.74Q69.88 134.15 74.88 136.67Q79.88 139.19 82.00 140.53Q84.12 141.88 86.56 143.72Q89.00 145.57 91.44 147.85Q93.88 150.12 95.22 151.62Q96.56 153.12 97.24 154.19Q97.92 155.25 97.90 155.81Q97.89 156.38 96.89 159.00Q95.89 161.62 95.51 163.75Q95.12 165.88 95.28 168.44Q95.44 171.00 95.87 172.62Q96.29 174.25 96.85 175.56Q97.40 176.88 98.42 178.44Q99.43 180.00 101.34 181.76Q103.25 183.51 105.31 184.67Q107.38 185.82 109.94 186.48Q112.50 187.14 113.15 187.51Q113.81 187.89 114.06 188.51Q114.31 189.12 114.51 191.31Q114.71 193.50 115.07 194.94Q115.43 196.38 116.33 198.19Q117.22 200.00 118.76 202.00Q120.29 204.00 122.27 205.65Q124.25 207.29 126.62 208.42Q129.00 209.54 130.62 209.91Q132.25 210.28 134.81 210.30Q137.38 210.32 137.88 210.47Q138.38 210.61 138.76 211.06Q139.15 211.50 139.67 213.38Q140.19 215.25 141.14 217.06Q142.08 218.88 143.29 220.38Q144.50 221.88 145.88 223.06Q147.25 224.24 148.62 225.04Q150.00 225.85 152.06 226.59Q154.12 227.33 155.75 227.60Q157.38 227.88 159.56 227.75Q161.75 227.62 162.31 227.74Q162.88 227.85 163.39 228.36Q163.90 228.88 164.59 230.75Q165.28 232.62 165.90 233.69Q166.53 234.75 167.83 236.38Q169.12 238.00 170.12 238.92Q171.12 239.85 172.62 240.78Q174.12 241.72 175.44 242.30Q176.75 242.88 178.31 243.28Q179.88 243.68 181.81 243.78Q183.75 243.88 185.25 243.71Q186.75 243.54 188.12 243.21Q189.50 242.88 192.00 241.71Q194.50 240.54 196.19 239.21Q197.88 237.88 201.25 234.31Q204.62 230.75 205.25 230.39Q205.88 230.03 206.50 230.17Q207.12 230.31 211.94 233.43Q216.75 236.56 220.19 238.43Q223.62 240.31 226.31 241.04Q229.00 241.78 231.75 241.83Q234.50 241.88 235.94 241.71Q237.38 241.54 239.00 241.15Q240.62 240.75 242.00 240.24Q243.38 239.72 244.62 238.98Q245.88 238.24 246.94 237.37Q248.00 236.50 249.37 235.00Q250.74 233.50 251.29 232.56Q251.85 231.62 252.44 230.12Q253.04 228.62 253.52 228.19Q254.00 227.76 254.38 227.70Q254.75 227.64 257.88 228.01Q261.00 228.38 262.88 228.26Q264.75 228.15 266.88 227.60Q269.00 227.04 270.62 226.31Q272.25 225.57 273.69 224.56Q275.12 223.56 276.62 221.97Q278.12 220.38 279.24 218.44Q280.35 216.50 281.14 214.06Q281.93 211.62 282.28 211.10Q282.64 210.58 283.26 210.38Q283.88 210.17 286.50 210.27Q289.12 210.38 290.75 210.09Q292.38 209.81 293.81 209.37Q295.25 208.93 297.00 207.99Q298.75 207.04 300.69 205.46Q302.62 203.88 304.15 201.94Q305.67 200.00 306.60 198.25Q307.54 196.50 308.19 193.81Q308.85 191.12 309.18 190.60Q309.51 190.07 310.13 189.83Q310.75 189.60 313.81 189.15Q316.88 188.71 318.69 188.09Q320.50 187.47 322.56 186.22Q324.62 184.97 326.28 183.42Q327.93 181.88 328.94 180.44Q329.94 179.00 330.50 177.88Q331.06 176.75 331.57 175.06Q332.08 173.38 332.35 171.75Q332.62 170.12 332.69 169.12Q332.75 168.12 332.47 165.88Q332.18 163.62 331.26 160.94Q330.35 158.25 330.38 157.50Q330.40 156.75 330.95 156.00Q331.50 155.25 335.25 151.50Q339.00 147.75 341.44 145.55Q343.88 143.35 347.12 140.97Q350.38 138.58 353.62 136.74Q356.88 134.90 373.19 127.40Q389.50 119.90 398.31 116.09Q407.12 112.28 410.56 110.56Q414.00 108.85 415.06 108.15Q416.12 107.44 416.67 106.85Q417.21 106.25 417.51 105.44Q417.81 104.62 417.88 103.75ZM197.44 205.85Q198.38 206.36 199.06 207.06Q199.74 207.75 200.23 208.62Q200.72 209.50 201.11 211.06Q201.50 212.62 201.50 213.62Q201.50 214.62 201.33 215.44Q201.17 216.25 200.80 217.06Q200.43 217.88 199.74 218.81Q199.06 219.75 195.22 223.90Q191.38 228.06 190.19 229.12Q189.00 230.18 187.75 231.04Q186.50 231.90 185.25 232.20Q184.00 232.50 182.88 232.40Q181.75 232.31 180.62 231.95Q179.50 231.60 178.62 231.02Q177.75 230.44 176.49 228.78Q175.22 227.12 174.80 225.31Q174.38 223.50 174.47 222.62Q174.56 221.75 174.83 220.94Q175.10 220.12 176.28 218.50Q177.47 216.88 182.67 211.78Q187.88 206.69 188.94 205.96Q190.00 205.22 190.81 204.96Q191.62 204.69 193.00 204.69Q194.38 204.69 195.44 205.01Q196.50 205.33 197.44 205.85ZM181.00 182.43Q182.12 183.21 182.81 183.98Q183.50 184.75 183.83 185.38Q184.17 186.00 184.43 186.94Q184.69 187.88 184.73 189.12Q184.76 190.38 184.52 191.38Q184.28 192.38 183.86 193.25Q183.44 194.12 181.97 195.88Q180.50 197.62 174.81 203.62Q169.12 209.62 166.06 212.41Q163.00 215.19 161.62 215.68Q160.25 216.17 158.88 216.17Q157.50 216.18 156.38 215.83Q155.25 215.49 154.19 214.77Q153.12 214.06 152.01 212.59Q150.90 211.12 150.58 210.25Q150.26 209.38 150.13 208.50Q150.00 207.62 150.22 206.25Q150.44 204.88 150.95 203.88Q151.46 202.88 152.10 202.06Q152.75 201.25 160.44 193.38Q168.12 185.50 170.25 183.67Q172.38 181.83 173.69 181.32Q175.00 180.81 176.25 180.81Q177.50 180.82 178.69 181.24Q179.88 181.65 181.00 182.43ZM161.06 159.71Q162.25 160.46 163.15 161.54Q164.06 162.62 164.52 163.69Q164.99 164.75 165.18 166.31Q165.38 167.88 165.08 169.38Q164.79 170.88 163.80 172.50Q162.81 174.12 157.97 179.38Q153.12 184.62 147.88 189.88Q142.62 195.12 141.19 196.37Q139.75 197.61 138.94 198.10Q138.12 198.60 136.94 198.92Q135.75 199.25 134.44 199.12Q133.12 198.99 131.88 198.47Q130.62 197.96 129.50 197.10Q128.38 196.25 127.66 195.31Q126.94 194.38 126.41 193.25Q125.88 192.12 125.69 191.12Q125.50 190.12 125.59 188.94Q125.68 187.75 125.98 186.88Q126.28 186.00 126.83 185.06Q127.39 184.12 129.32 181.88Q131.25 179.62 140.00 170.69Q148.75 161.75 150.31 160.55Q151.88 159.35 153.00 158.87Q154.12 158.39 155.44 158.26Q156.75 158.12 158.31 158.54Q159.88 158.96 161.06 159.71ZM127.25 150.07Q128.00 150.44 128.75 151.03Q129.50 151.62 130.12 152.38Q130.75 153.12 131.28 154.06Q131.82 155.00 132.06 155.81Q132.31 156.62 132.34 157.75Q132.38 158.88 132.18 160.00Q131.99 161.12 131.31 162.44Q130.62 163.75 126.62 168.06Q122.62 172.38 121.00 173.68Q119.38 174.99 118.62 175.30Q117.88 175.61 116.50 175.81Q115.12 176.00 114.00 175.77Q112.88 175.54 111.69 174.95Q110.50 174.36 109.24 173.12Q107.99 171.88 107.52 171.06Q107.06 170.25 106.82 169.38Q106.58 168.50 106.54 167.56Q106.50 166.62 106.65 165.75Q106.79 164.88 107.53 163.31Q108.26 161.75 112.63 157.25Q117.00 152.75 118.62 151.53Q120.25 150.32 121.31 149.87Q122.38 149.42 123.50 149.33Q124.62 149.25 125.56 149.47Q126.50 149.69 127.25 150.07Z"/><clipPath id="hs-clip-l"><polygon points="-60,-40 214,-40 206,42 160,86 150,104 166,118 208,124 214,176 206,205 210,290 -60,290"/></clipPath><clipPath id="hs-clip-r"><polygon points="214,-40 206,42 160,86 150,104 166,118 208,124 214,176 206,205 210,290 480,290 480,-40"/></clipPath>
   <symbol id="i-kalender" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4M8 14h2.5M13.5 14H16M8 17h2.5"/></symbol>
+  <symbol id="i-kamera" viewBox="0 0 24 24"><path d="M4 8.5h3.2l1.5-2.5h6.6l1.5 2.5H20v10H4z"/><circle cx="12" cy="13.2" r="3.3"/></symbol>
+  <symbol id="i-stift" viewBox="0 0 24 24"><path d="M15.6 5.4l3 3L9 18l-4 1 1-4z"/><path d="M13.6 7.4l3 3"/></symbol>
   <symbol id="i-stern" viewBox="0 0 24 24"><path d="m12 4 2.4 5 5.4.6-4 3.7 1.1 5.4L12 16l-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z"/></symbol>
 </svg>
 
@@ -1320,7 +1348,7 @@ a.btn { text-decoration: none; }
 </div>
 
 <script>
-const EINSTELLUNGEN = {"adresse": "https://z6dfczy4jt-code.github.io/Nachbarhand/", "supabase": {"url": "https://hgfwbjesolgneyapehta.supabase.co", "key": "sb_publishable_aHSISOj3lPHJwpWqa64gnA_iLcJV1w3"}, "push": "BAeSkBv6_TrKXn_vTxc3F5qJOLIJ2bIjB3ro4IFlHjX32LlpKFu4quz2Wr5DVsCatqeKFvXfYHgCZRPQr29zAuc", "betreiber": {"name": "", "anschrift": "", "email": "", "telefon": ""}, "hosting": {"art": "github", "anbieter": "", "standort": ""}, "karte": {"carto": ""}, "geocoder": "https://photon.komoot.io", "codeLogin": false, "gebuehren": false, "supabaseJs": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js", "fassung": "abaec2727d"};
+const EINSTELLUNGEN = {"adresse": "https://z6dfczy4jt-code.github.io/Nachbarhand/", "supabase": {"url": "https://hgfwbjesolgneyapehta.supabase.co", "key": "sb_publishable_aHSISOj3lPHJwpWqa64gnA_iLcJV1w3"}, "push": "BAeSkBv6_TrKXn_vTxc3F5qJOLIJ2bIjB3ro4IFlHjX32LlpKFu4quz2Wr5DVsCatqeKFvXfYHgCZRPQr29zAuc", "betreiber": {"name": "", "anschrift": "", "email": "", "telefon": ""}, "hosting": {"art": "github", "anbieter": "", "standort": ""}, "karte": {"carto": ""}, "geocoder": "https://photon.komoot.io", "codeLogin": false, "gebuehren": false, "supabaseJs": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js", "fassung": "51e161ef99"};
 /* Tätigkeits-Bilder: Microsoft Fluent Emoji 3D (MIT), siehe src/kategorien/LIZENZ-fluent-emoji.txt */
 const KAT_BILDER = {
   alle: 'data:image/webp;base64,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',
@@ -1402,7 +1430,9 @@ function RECHT_TEXTE(b, h, e) {
           <li>den Sicherheits-Code eines laufenden Auftrags</li>
           <li>Nachrichten zu einem Auftrag und Meldungen, die du abschickst</li>
           <li>wenn du Benachrichtigungen einschaltest: die Adresse, unter der dein Gerät dafür erreichbar ist (siehe 7.)</li>
+          <li>wenn du dein Profil gestaltest: dein Profilbild, dein Text „Über mich“, wobei du gern hilfst, welche Sprachen du sprichst und wann du meist Zeit hast. Das alles ist freiwillig.</li>
         </ul>
+        <p>Dein Profilbild verkleinert die App schon auf deinem Gerät auf 400 × 400 Bildpunkte. Dabei fallen Angaben weg, die in Fotos stecken können, etwa Aufnahmeort, Datum und Kameramodell. Das Bild liegt im Speicher von Supabase, ebenfalls in Frankfurt am Main. Ersetzt oder entfernst du es, löschen wir das alte Bild.</p>
         <p>Fragst du für jemand anderen an, zum Beispiel für deine Eltern, speichern wir auch deine Angaben zu dieser Person (Name oder Bezeichnung, Adresse, Telefonnummer). Bitte hol vorher ihr Einverständnis ein.</p>
         <p>Rechtsgrundlage ist der Nutzungsvertrag mit dir (Art. 6 Abs. 1 lit. b DSGVO). Meldungen verarbeiten wir außerdem, um rechtswidrige Inhalte zu entfernen und Nutzer zu schützen (Art. 6 Abs. 1 lit. c und f DSGVO). Die Bestätigungs-E-Mail bei der Registrierung verschickt Supabase für uns.</p>
         <p>Die Programmbibliothek für die Anmeldung lädt die App vom Dienst jsDelivr. Dabei wird deine IP-Adresse an dessen Server übertragen (Art. 6 Abs. 1 lit. f DSGVO).</p>
@@ -1410,7 +1440,7 @@ function RECHT_TEXTE(b, h, e) {
         <h3>6. Wer sieht was?</h3>
         <ul>
           <li><strong>Alle, auch ohne Konto:</strong> offene Anfragen mit Vorname, Anfangsbuchstabe, Ort, ungefährer Lage (100 bis 400 Meter um die Mitte eines Rasterfelds von etwa 1 km), Bewertungsschnitt und, wenn angegeben, für wen die Hilfe ist.</li>
-          <li><strong>Alle, auch ohne Konto, im Profil:</strong> Vorname, Anfangsbuchstabe, Ort, seit wann du dabei bist, wie oft du geholfen und Hilfe bekommen hast, und die Bewertungen über dich: Sterne, Text, Monat, Tätigkeit des Auftrags und Vorname mit Anfangsbuchstabe der Person, die bewertet hat. Bewertungen erscheinen erst, wenn beide bewertet haben, spätestens 14 Tage nach der ersten. Bis dahin sieht sie niemand außer der Person, die sie geschrieben hat.</li>
+          <li><strong>Alle, auch ohne Konto, im Profil:</strong> Vorname, Anfangsbuchstabe, Ort, seit wann du dabei bist, wie oft du geholfen und Hilfe bekommen hast, und die Bewertungen über dich: Sterne, Text, Monat, Tätigkeit des Auftrags und Vorname mit Anfangsbuchstabe der Person, die bewertet hat. Hast du ein Profilbild oder Angaben wie „Über mich“ eingetragen, sehen alle auch diese. Bewertungen erscheinen erst, wenn beide bewertet haben, spätestens 14 Tage nach der ersten. Bis dahin sieht sie niemand außer der Person, die sie geschrieben hat.</li>
           <li><strong>Nur die Person, die zusagt:</strong> die genaue Adresse und die Telefonnummer.</li>
           <li><strong>Nur ihr beide:</strong> eure Nachrichten und der Sicherheits-Code für die Tür.</li>
           <li><strong>Nur wir:</strong> Meldungen. Die gemeldete Person erfährt nicht, wer gemeldet hat.</li>
@@ -1422,7 +1452,7 @@ function RECHT_TEXTE(b, h, e) {
         <p>Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG). Du kannst sie jederzeit widerrufen: Schalte die Benachrichtigungen im Menü aus. Dann löschen wir die Adresse deines Geräts. Beim Abmelden lösen wir das Gerät von deinem Konto.</p>
 
         <h3>8. Wie lange?</h3>
-        <p>Dein Konto und deine Daten speichern wir, bis du das Konto löschst. Das geht jederzeit in der App unter „Dein Konto“. Dann löschen wir dein Profil, deine Anfragen, Adressen, Telefonnummern, Nachrichten, Bewertungen und die Adressen deiner Geräte für Benachrichtigungen. Meldungen bewahren wir höchstens zwölf Monate nach ihrer Bearbeitung auf, um wiederholte Verstöße erkennen zu können.</p>
+        <p>Dein Konto und deine Daten speichern wir, bis du das Konto löschst. Das geht jederzeit in der App unter „Dein Konto“. Dann löschen wir dein Profil mit Profilbild, deine Anfragen, Adressen, Telefonnummern, Nachrichten, Bewertungen und die Adressen deiner Geräte für Benachrichtigungen. Meldungen bewahren wir höchstens zwölf Monate nach ihrer Bearbeitung auf, um wiederholte Verstöße erkennen zu können.</p>
 
         <h3>9. Deine Rechte</h3>
         <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Datenübertragbarkeit (Art. 15 bis 20 DSGVO). Verarbeitungen auf Grundlage unseres berechtigten Interesses kannst du widersprechen (Art. 21 DSGVO). Schreib uns dafür an ${mail}.</p>
@@ -1473,10 +1503,11 @@ function RECHT_TEXTE(b, h, e) {
           <li>Bezahlt wird nach der Hilfe. Niemand darf Geld im Voraus, Gutscheinkarten oder Codes verlangen. Der Sicherheits-Code aus der App ist nur für die Begrüßung an der Tür gedacht.</li>
           <li>Keine Werbung, keine Weitergabe von Daten anderer.</li>
           <li>Bewerte ehrlich und sachlich, was beim Auftrag passiert ist. Keine Beleidigungen, keine Adressen, Telefonnummern oder Angaben zur Gesundheit, keine Bewertungen gegen Geld oder unter Druck. Beide Bewertungen eines Auftrags erscheinen gleichzeitig: wenn beide bewertet haben, spätestens 14 Tage nach der ersten. Danach lassen sie sich nicht mehr ändern.</li>
+          <li>Profilbild und „Über mich“ sind für alle sichtbar. Zeig auf dem Bild nur dich selbst: keine anderen Personen, keine Kinder, nichts Anstößiges. Gib dich nicht als jemand anderes aus. Schreib keine Adresse, Telefonnummer oder E-Mail ins Profil.</li>
         </ul>
 
         <h3>7. Melden und Sperren</h3>
-        <p>Über „Melden“ kannst du Anfragen, beteiligte Personen und Bewertungen melden. Wir prüfen jede Meldung. Verstößt etwas gegen Gesetze oder diese Bedingungen, können wir Inhalte entfernen und Konten vorübergehend oder dauerhaft sperren. Wir sagen dir, was wir entschieden haben und warum. Bist du anderer Meinung, schreib uns an ${mail}.</p>
+        <p>Über „Melden“ kannst du Anfragen, beteiligte Personen, Profile und Bewertungen melden. Wir prüfen jede Meldung. Verstößt etwas gegen Gesetze oder diese Bedingungen, können wir Inhalte entfernen und Konten vorübergehend oder dauerhaft sperren. Wir sagen dir, was wir entschieden haben und warum. Bist du anderer Meinung, schreib uns an ${mail}.</p>
 
         <h3>8. Haftung</h3>
         <p>Für Schäden bei einer Hilfe haftet ihr untereinander nach den gesetzlichen Regeln. Prüf vorher, ob deine private Haftpflichtversicherung Schäden bei Gefälligkeiten abdeckt.</p>
@@ -1505,6 +1536,7 @@ function RECHT_TEXTE(b, h, e) {
           <li><strong>Zusagen halten.</strong> Wenn etwas dazwischenkommt, sag so früh wie möglich in den Nachrichten ab.</li>
           <li><strong>Fair bewerten.</strong> Schreib, was beim Auftrag passiert ist, sachlich und ohne private Angaben.</li>
           <li><strong>Freundlich bleiben.</strong> Keine Beleidigungen, kein Druck, keine Anmache.</li>
+          <li><strong>Echtes Profil.</strong> Auf dein Profilbild gehörst nur du, keine anderen Personen und keine Kinder. Adresse und Telefonnummer gehören nicht ins Profil.</li>
           <li><strong>Sicherheit geht vor.</strong> Frag an der Tür nach dem Sicherheits-Code aus der App. Lass niemanden auf wackelige Leitern, an Strom oder Gas. Bei Unsicherheit: lieber eine Fachfirma.</li>
           <li><strong>Privat bleibt privat.</strong> Adresse, Telefonnummer und Nachrichten nur für den Auftrag nutzen. Keine Bank- oder Passwortdaten teilen.</li>
           <li><strong>Gelegentlich, nicht ständig.</strong> Hand Drauf ist Nachbarschaftshilfe, kein Nebenjob.</li>
@@ -1551,6 +1583,8 @@ function FRAGEN_TEXTE(c) {
           `<p>Unten in jeder Anfrage und jedem Auftrag steht „Melden“. Wir prüfen jede Meldung, und die andere Person erfährt nicht, wer gemeldet hat. Bei Gefahr ruf die Polizei unter 110 an.</p>`),
         frage('Wie funktionieren Bewertungen?',
           `<p>Nach jedem Auftrag bewertet ihr euch gegenseitig mit Sternen und, wenn ihr wollt, ein paar Sätzen. Beide Bewertungen erscheinen gleichzeitig: sobald ihr beide bewertet habt, spätestens 14 Tage nach der ersten. Bis dahin kannst du deine noch ändern. So kann niemand aus Ärger „zurückbewerten“.</p><p>Tippe in einer Anfrage auf den Namen, dann siehst du das Profil mit allen Bewertungen. Dein eigenes Profil findest du im Menü. Stimmt mit einer Bewertung etwas nicht, tippe darunter auf „Melden“.</p>`),
+        frage('Wie gestalte ich mein Profil?',
+          `<p>Öffne im Menü „Dein Profil und deine Bewertungen“ und tippe auf „Profil bearbeiten“. Dort kannst du ein Foto wählen, ein paar Sätze über dich schreiben und angeben, wobei du gern hilfst, welche Sprachen du sprichst und wann du meist Zeit hast. Alles ist freiwillig.</p><p>Das sehen alle. Darum gehören Adresse, Telefonnummer und E-Mail nicht hinein. Das Foto verkleinert die App auf deinem Handy und entfernt dabei Angaben wie den Aufnahmeort. Am besten ist ein freundliches Foto von dir allein.</p>`),
         frage('Wie blockiere ich jemanden?',
           `<p>Tippe in der Anfrage auf den Namen und dann unten auf „blockieren“. Ihr seht eure Anfragen danach gegenseitig nicht mehr, und laufende Zusagen zwischen euch enden. Die Person erfährt davon nichts. Aufheben kannst du das unter „Konto“.</p>`),
         frage('Was passiert mit beleidigenden Wörtern?',
@@ -1798,6 +1832,30 @@ function FRAGEN_TEXTE(c) {
       [5, 'Sandra P.', 'geholfen', 'garten', 'Hecke schneiden', 30, 'Herr G. hat die Hecke meiner Mutter sehr ordentlich geschnitten und sich danach noch Zeit für ein Gespräch genommen.'],
       [5, 'Marco B.', 'geholfen', 'tragen', 'Umzugskartons tragen', 150, 'Frank hat einen ganzen Samstag mit angepackt. Ohne ihn hätten wir das nicht geschafft.']] }
   };
+  // Steckbriefe der Beispiel-Personen: Über mich, hilft gern bei, Sprachen, meist Zeit
+  const DEMO_STECKBRIEFE = {
+    'Karin M.': ['Rentnerin, seit 30 Jahren in Berenbostel. Ich backe gern und kümmere mich um Katzen, wenn Nachbarn verreist sind. Für den Rasen fehlt mir inzwischen die Puste.', ['tiere', 'einkaufen'], ['Deutsch'], ['vormittags', 'nachmittags']],
+    'Herbert K.': ['Ich wohne allein in Altgarbsen. Den Garten schaffe ich nicht mehr ganz, aber Fahrräder repariere ich noch gern.', ['haushalt'], ['Deutsch'], ['vormittags']],
+    'Aylin Ö.': ['Ich studiere Soziale Arbeit in Hannover und wohne in Garbsen-Mitte. Ich mag Tiere und erkläre gern Handys und Tablets.', ['tiere', 'technik', 'einkaufen'], ['Deutsch', 'Englisch', 'Türkisch'], ['nachmittags', 'abends', 'wochenende']],
+    'Jens W.': ['Ich arbeite im Schichtdienst und habe deshalb oft vormittags Zeit. Sackkarre, Bohrmaschine und einen Kombi habe ich.', ['tragen', 'haushalt', 'garten'], ['Deutsch', 'Englisch'], ['vormittags', 'wochenende']],
+    'Lea S.': ['Azubi im ersten Jahr, wohne Auf der Horst. Einkaufen und Gartenarbeit mache ich gern nach Feierabend.', ['einkaufen', 'garten'], ['Deutsch', 'Englisch'], ['abends', 'wochenende']],
+    'Gisela R.': ['Seit meinem Umzug nach Meyenfeld kenne ich noch nicht so viele Leute. Ich gieße gern Blumen und freue mich über Besuch auf einen Kaffee.', ['garten'], ['Deutsch', 'Polnisch'], ['vormittags', 'nachmittags']],
+    'Marco B.': ['Vater von zwei Kindern in Stelingen. Für Tragen und Umzüge bin ich zu haben, wenn es zeitlich passt.', ['tragen'], ['Deutsch', 'Italienisch'], ['abends', 'wochenende']],
+    'Sandra P.': ['Ich kümmere mich viel um meine Mutter in Horst. Wenn ich selbst Luft habe, helfe ich gern anderen.', ['einkaufen', 'tiere', 'haushalt'], ['Deutsch', 'Russisch'], ['abends']],
+    'Werner T.': ['Mit dem Rollator komme ich nicht mehr gut zum Bäcker. Ich freue mich über Hilfe und erzähle gern von früher.', [], ['Deutsch'], ['vormittags']],
+    'Sabine L.': ['Lehrerin an der Grundschule, großer Garten, zwei Kaninchen. Werkzeug kann man sich bei mir auch leihen.', ['garten', 'tiere', 'haushalt'], ['Deutsch', 'Englisch', 'Französisch'], ['nachmittags', 'wochenende']],
+    'Paul D.': ['Ich arbeite in der IT, meistens von zu Hause. Router, Fernseher, Drucker: Ich schau mir das gern an.', ['technik'], ['Deutsch', 'Englisch'], ['abends']],
+    'Renate H.': ['Ich nähe gern und kürze auch mal eine Hose. Dafür brauche ich manchmal jemanden mit Leiter.', ['haushalt'], ['Deutsch'], ['vormittags', 'nachmittags']],
+    'Frank G.': ['Im Vorruhestand, handwerklich fit und mit Anhänger. Sagt einfach Bescheid.', ['tragen', 'haushalt', 'garten'], ['Deutsch'], ['morgens', 'vormittags']]
+  };
+  const SPRACHEN = ['Deutsch', 'Englisch', 'Türkisch', 'Arabisch', 'Russisch', 'Polnisch', 'Ukrainisch', 'Italienisch', 'Französisch', 'Spanisch'];
+  const ZEITEN = [['morgens', 'Morgens'], ['vormittags', 'Vormittags'], ['nachmittags', 'Nachmittags'], ['abends', 'Abends'], ['wochenende', 'Am Wochenende']];
+  // Dein Profil in der Demo (Über mich, Bild usw.): nur auf diesem Gerät
+  const DEMO_PROFIL_SPEICHER = 'handdrauf-demo-profil';
+  const demoSteckbrief = (() => {
+    try { const x = JSON.parse(localStorage.getItem(DEMO_PROFIL_SPEICHER) || '{}'); return x && typeof x === 'object' ? x : {}; } catch (e) { return {}; }
+  })();
+  const demoSteckbriefSpeichern = () => { try { localStorage.setItem(DEMO_PROFIL_SPEICHER, JSON.stringify(demoSteckbrief)); } catch (e) { /* nur für diese Sitzung */ } };
   // Du in der Demo (Tim)
   const DEMO_ICH = { name: 'Tim S.', stadtteil: 'Garbsen-Mitte', dabei: 'Juni 2025', hilfen: 6, gesuche: 1, schnitt: 4.9, bewertungen: [
     [5, 'Renate H.', 'geholfen', 'tragen', 'Gartenstühle in den Schuppen', 12, 'Tim war pünktlich und hat noch gefragt, ob er die Kissen auch reinbringen soll. Sehr aufmerksam.'],
@@ -1838,6 +1896,8 @@ function FRAGEN_TEXTE(c) {
     letzte: new Map(),      // gesuch_id -> Zeit der letzten Nachricht der anderen Person
     gemeldet: new Set(),    // in dieser Sitzung gemeldete Anfragen
     profile: new Map(),     // profil_id -> öffentliches Profil (für die Profil-Ansicht)
+    bilder: new Map(),      // profil_id -> Pfad des Profilbilds ('' = keins)
+    teil9: null,            // Datenbank kann Profilbild, Über mich usw. (Update Teil 9)? null = noch nicht bekannt
     rezensionen: new Map(), // profil_id -> erschienene Bewertungen (null = wird geladen, false = Datenbank ohne Update Teil 8)
     rezGemeldet: new Set(), // in dieser Sitzung gemeldete Bewertungen
     teil8: null,            // Datenbank kann geschriebene Bewertungen (Update Teil 8)? null = noch nicht bekannt
@@ -2415,6 +2475,8 @@ function FRAGEN_TEXTE(c) {
     if (uid) {
       const { data } = await db.client.from('profile').select('*').eq('id', uid).maybeSingle();
       db.profil = data || null;
+      // Mit Update Teil 9 hat das Profil „Über mich“, Bild usw.
+      if (data) { db.teil9 = 'bio' in data; db.bilder.set(uid, data.bild || ''); }
       // Rasterpunkt des eigenen Orts (erst mit Update Teil 7; davor zählt der Stadtteil von Garbsen)
       db.wohnort = null;
       if (db.profil) {
@@ -2542,6 +2604,7 @@ function FRAGEN_TEXTE(c) {
       db.fehler = null;
       db.geladen = true;
       db.geladenUm = Date.now();
+      bilderLaden(gesuche.map((g) => g.erstellerId).concat(gesuche.map((g) => g.helferId)));
     } catch (e) {
       db.fehler = fehlerText(e);
     } finally {
@@ -2830,7 +2893,7 @@ function FRAGEN_TEXTE(c) {
     const el = $('#kopf-rechts');
     if (!istLive()) el.innerHTML = `<span class="pill pill-muted">${BEISPIEL_MODUS ? 'Beispiele' : 'Demo'}</span>`;
     else if (!db.profil) el.innerHTML = '<button type="button" class="btn btn-secondary btn-klein" data-panel="anmelden">Anmelden</button>';
-    else el.innerHTML = `<button type="button" class="avatar-btn" data-panel="konto" aria-label="Dein Konto">${esc(kuerzel(db.profil))}</button>`;
+    else el.innerHTML = `<button type="button" class="avatar-btn${meinBild() ? ' mit-bild' : ''}" data-panel="konto" aria-label="Dein Konto">${esc(kuerzel(db.profil))}${meinBild() ? `<img src="${esc(bildUrl(meinBild()))}" alt="" decoding="async">` : ''}</button>`;
     $('#reset-knopf').hidden = istLive();
     $('#adresse-optional').hidden = istLive();
   }
@@ -3964,7 +4027,7 @@ function FRAGEN_TEXTE(c) {
         ? `${icon('stern', 'i-xs i-fill')}${komma(z.sterne)} · ${z.anzahl} ${z.anzahl === 1 ? 'Bewertung' : 'Bewertungen'}`
         : 'Neu bei Hand Drauf';
       html += `<button type="button" class="person person-knopf" data-profil aria-label="Profil von ${esc(g.wer)} ansehen">
-        <span class="avatar" aria-hidden="true">${esc(g.initialen)}</span>
+        ${avatarHTML(g.initialen, istLive() ? db.bilder.get(g.erstellerId) : '')}
         <span class="person-text">
           <span class="person-name">${esc(g.wer)}${live ? '' : ` <span class="pill pill-good">${icon('check', 'i-xs')}Verifiziert</span>`}</span>
           <span class="person-meta">${bewertung}</span>
@@ -4042,7 +4105,7 @@ function FRAGEN_TEXTE(c) {
     // In der eigenen Anfrage: Wer hilft? Mit Weg zum Profil
     const helferZeile = g.eigen && g.helferName && anderePerson(g) && g.status !== 'offen'
       ? `<button type="button" class="person person-knopf" data-profil aria-label="Profil von ${esc(g.helferName)} ansehen">
-          <span class="avatar" aria-hidden="true">${esc(initialenVon(g.helferName))}</span>
+          ${avatarHTML(initialenVon(g.helferName), istLive() ? db.bilder.get(g.helferId) : '')}
           <span class="person-text"><span class="person-name">${esc(g.helferName)}</span><span class="person-meta">Hilft dir</span></span>
           <span class="person-mehr" aria-hidden="true">Profil</span></button>` : '';
 
@@ -4216,7 +4279,7 @@ function FRAGEN_TEXTE(c) {
         <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
       </div>
       <div class="konto-kopf">
-        <span class="avatar" aria-hidden="true">${esc(kuerzel(p))}</span>
+        ${avatarHTML(kuerzel(p), p.bild)}
         <div>
           <h2 id="sheet-titel">${esc(anzeigename(p))}</h2>
           <div class="person-meta">${bewertung}</div>
@@ -4286,7 +4349,37 @@ function FRAGEN_TEXTE(c) {
     return { key, name, kuerzel: initialenVon(name), stadtteil: ich ? meinOrt().stadtteil : (anzeige ? anzeige.stadtteil : p.stadtteil), dabei: p.dabei,
       hilfen: p.hilfen + dazu.filter((b) => b.rolle === 'geholfen').length, gesuche: p.gesuche + dazu.filter((b) => b.rolle === 'gesucht').length,
       volljaehrig: true, ich, sterne: alle.length ? alle.reduce((t, x) => t + x, 0) / alle.length : null, anzahl: alle.length,
-      verteilung: verteilungVon(alle), liste: mitText.sort((x, y) => y.datum - x.datum), ohneText: alle.length - mitText.length };
+      verteilung: verteilungVon(alle), liste: mitText.sort((x, y) => y.datum - x.datum), ohneText: alle.length - mitText.length,
+      ...steckbriefVon(ich ? demoSteckbrief : DEMO_STECKBRIEFE[key]) };
+  }
+  // Über mich, Bild, hilft gern, Sprachen, Zeiten: aus der Demo (Liste oder dein Speicher) oder aus der Datenbank
+  function steckbriefVon(x) {
+    if (!x) return { bio: '', bild: '', hilftGern: [], sprachen: [], zeiten: [] };
+    if (Array.isArray(x)) return { bio: x[0], bild: '', hilftGern: x[1], sprachen: x[2], zeiten: x[3] };
+    return { bio: x.bio || '', bild: x.bild || '', hilftGern: x.hilftGern || x.hilft_gern || [], sprachen: x.sprachen || [], zeiten: x.zeiten || [] };
+  }
+  const bildUrl = (pfad) => !pfad ? '' : /^(data:|blob:)/.test(pfad) ? pfad : `${LIVE.url}/storage/v1/object/public/profilbilder/${pfad}`;
+  // Profilbild oder Anfangsbuchstaben. Lädt das Bild nicht, bleiben die Buchstaben (siehe Fehler-Lauscher unten).
+  function avatarHTML(kuerzelText, bild, cls) {
+    const url = bildUrl(bild);
+    return `<span class="avatar${cls ? ' ' + cls : ''}${url ? ' mit-bild' : ''}" aria-hidden="true">${esc(kuerzelText || '?')}${url ? `<img src="${esc(url)}" alt="" decoding="async" loading="lazy">` : ''}</span>`;
+  }
+  // Mein Profilbild (live: aus dem Profil, Demo: aus dem Speicher)
+  const meinBild = () => istLive() ? ((db.profil && db.profil.bild) || '') : (demoSteckbrief.bild || '');
+  // Live: Profilbilder anderer nachladen (einmal je Person; ohne Update Teil 9 gibt es keine)
+  function bilderLaden(ids) {
+    if (!istLive() || !db.client || db.teil9 === false) return;
+    const neu = Array.from(new Set(ids.filter((id) => id && !db.bilder.has(id))));
+    if (!neu.length) return;
+    neu.forEach((id) => db.bilder.set(id, ''));
+    db.client.from('profile').select('id, bild').in('id', neu).then(({ data, error }) => {
+      if (error) { if (error.code === '42703') db.teil9 = false; return; }
+      db.teil9 = true;
+      let geaendert = false;
+      (data || []).forEach((r) => { if (r.bild) { db.bilder.set(r.id, r.bild); geaendert = true; } });
+      if (!geaendert) return;
+      if (ui.offen || ui.panel) renderSheet();
+    });
   }
   // Sterne und Anzahl für die Zeile „Person“ in einer Anfrage
   function personZahlen(g) {
@@ -4299,8 +4392,10 @@ function FRAGEN_TEXTE(c) {
   function profilLaden(id) {
     if (!db.profile.has(id)) {
       db.profile.set(id, null);
-      db.client.from('profile').select('vorname, nachname_initial, stadtteil, volljaehrig, sterne_summe, sterne_anzahl, hilfen_anzahl, gesuche_anzahl, erstellt').eq('id', id).maybeSingle()
-        .then(({ data }) => { db.profile.set(id, data || false); if (ui.panel === 'profil') renderSheet(); });
+      const spalten = 'vorname, nachname_initial, stadtteil, volljaehrig, sterne_summe, sterne_anzahl, hilfen_anzahl, gesuche_anzahl, erstellt';
+      db.client.from('profile').select(spalten + (db.teil9 === false ? '' : ', bio, bild, hilft_gern, sprachen, zeiten')).eq('id', id).maybeSingle()
+        .then((r) => r.error && r.error.code === '42703' ? (db.teil9 = false, db.client.from('profile').select(spalten).eq('id', id).maybeSingle()) : r)
+        .then(({ data }) => { db.profile.set(id, data || false); if (data && data.bild !== undefined) db.bilder.set(id, data.bild); if (ui.panel === 'profil') renderSheet(); });
     }
     if (!db.rezensionen.has(id)) {
       db.rezensionen.set(id, null);
@@ -4310,6 +4405,7 @@ function FRAGEN_TEXTE(c) {
           db.teil8 = true;
           db.rezensionen.set(id, (data || []).map((r) => ({ gesuchId: r.gesuch_id, sterne: r.sterne, text: r.text || '', von: r.von_name, vonKey: r.von,
             rolle: r.rolle, kat: r.kategorie, titel: r.titel, datum: r.erstellt })));
+          bilderLaden((data || []).map((r) => r.von));
         }
         if (ui.panel === 'profil') renderSheet();
       });
@@ -4328,7 +4424,7 @@ function FRAGEN_TEXTE(c) {
     return { key: id, name: anzeigename(p), kuerzel: kuerzel(p), stadtteil: p.stadtteil, dabei: new Date(p.erstellt).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }),
       hilfen: p.hilfen_anzahl || 0, gesuche: p.gesuche_anzahl || 0, volljaehrig: p.volljaehrig, ich: !!(db.user && id === db.user.id),
       sterne: p.sterne_anzahl ? p.sterne_summe / p.sterne_anzahl : null, anzahl: p.sterne_anzahl || 0, verteilung, liste,
-      ohneText: rez ? rez.length - liste.length : 0 };
+      ohneText: rez ? rez.length - liste.length : 0, ...steckbriefVon(p) };
   }
 
   // Profil öffnen. zurueck: wohin „Zurück“ führt ({ art: 'gesuch', id } | { art: 'profil', key, name } | { art: 'panel', name })
@@ -4340,6 +4436,9 @@ function FRAGEN_TEXTE(c) {
     ui.profil = { key, name };
     ui.profilAlle = false;
     ui.rezMelden = null;
+    ui.profilMelden = false;
+    ui.profilBearbeiten = false;
+    ui.fotoEntwurf = null;
     ui.blockieren = false;
     renderSheet();
     $('#sheet').scrollTop = 0;
@@ -4354,7 +4453,7 @@ function FRAGEN_TEXTE(c) {
     if (ziel.art === 'gesuch') { const zuletzt = ui.zuletzt; oeffnen(ziel.id, zuletzt); return; }
     if (ziel.art === 'panel') { oeffnePanel(ziel.name); return; }
     ui.profil = { key: ziel.key, name: ziel.name };
-    ui.profilAlle = false; ui.rezMelden = null; ui.blockieren = false;
+    ui.profilAlle = false; ui.rezMelden = null; ui.profilMelden = false; ui.profilBearbeiten = false; ui.fotoEntwurf = null; ui.blockieren = false;
     renderSheet();
     $('#sheet').scrollTop = 0;
     const t = $('#sheet-titel');
@@ -4398,7 +4497,7 @@ function FRAGEN_TEXTE(c) {
     }
     return `<li class="rezension">
         <div class="rez-kopf">
-          <span class="avatar avatar-klein" aria-hidden="true">${esc(vonIch ? kuerzelIch() : initialenVon(b.von))}</span>
+          ${avatarHTML(vonIch ? kuerzelIch() : initialenVon(b.von), vonIch ? meinBild() : istLive() ? db.bilder.get(b.vonKey) : '', 'avatar-klein')}
           <div class="rez-wer">${name}<span class="rez-wann">${esc(wannBewertet(b.datum))}</span></div>
           ${sterneAnzeige(b.sterne)}
         </div>
@@ -4418,6 +4517,10 @@ function FRAGEN_TEXTE(c) {
       </div>`;
     const p = profilDaten(pr.key);
     if (!p) return kopf + `<h2 id="sheet-titel" tabindex="-1">${p === null ? 'Profil wird geladen …' : 'Profil nicht verfügbar'}</h2>`;
+    if (p.ich && ui.profilBearbeiten) return `<div class="sheet-top">
+        <button type="button" class="link-btn zurueck" data-profil-abbrechen><span class="zurueck-pfeil" aria-hidden="true">‹</span>Zurück zu deinem Profil</button>
+        <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
+      </div>` + profilFormHTML(p);
     const vn = vorname(p.name);
     let bewertungen;
     if (!p.anzahl) bewertungen = `<p class="rez-leer">${p.ich ? 'Du hast noch keine Bewertungen.' : `${esc(vn)} hat noch keine Bewertungen.`} Nach jedem Auftrag bewertet ihr euch gegenseitig.</p>`;
@@ -4439,24 +4542,218 @@ function FRAGEN_TEXTE(c) {
       bewertungen = `<div class="rez-uebersicht">${schnitt}${verteilung}</div>${liste}`;
     }
     const person = p.ich ? null : { id: p.key, name: p.name };
+    const chips = (liste) => liste.map((x) => `<span class="steck-chip">${x}</span>`).join('');
+    const zeilen = [];
+    if (p.hilftGern.length) zeilen.push(['Hilft gern bei', chips(p.hilftGern.filter((k) => KATEGORIEN.some((x) => x.id === k)).map((k) => icon(k, 'i-xs') + esc(katName(k))))]);
+    if (p.sprachen.length) zeilen.push(['Spricht', chips(p.sprachen.map(esc))]);
+    if (p.zeiten.length) zeilen.push(['Hat meist Zeit', chips(ZEITEN.filter(([w]) => p.zeiten.includes(w)).map(([, n]) => esc(n)))]);
+    const leer = !p.bio && !p.bild && !zeilen.length;
+    const steckbrief = (p.bio ? `<p class="profil-bio">${esc(p.bio).replace(/\n/g, '<br>')}</p>` : '')
+      + (zeilen.length ? `<dl class="steckbrief">${zeilen.map(([t, d]) => `<div><dt>${t}</dt><dd>${d}</dd></div>`).join('')}</dl>` : '');
+    const eigenes = p.ich ? (leer
+      ? `<div class="profil-anstoss"><p><strong>Mach dein Profil persönlich.</strong> Mit Foto und ein paar Sätzen über dich wissen Nachbarn, wer klingelt.</p>
+          <button type="button" class="btn btn-primary" data-profil-bearbeiten>${icon('kamera')}Foto und Angaben hinzufügen</button></div>`
+      : `<button type="button" class="btn btn-secondary profil-bearbeiten-knopf" data-profil-bearbeiten>${icon('stift')}Profil bearbeiten</button>`) : '';
     return kopf + `<div class="profil-kopf">
-        <span class="avatar avatar-gross" aria-hidden="true">${esc(p.kuerzel)}</span>
+        ${avatarHTML(p.kuerzel, p.bild, 'avatar-gross')}
         <div><h2 id="sheet-titel" tabindex="-1">${p.ich ? 'Dein Profil' : esc(p.name)}</h2><p class="person-meta">${p.ich ? esc(p.name) + ' · ' : ''}${esc(p.stadtteil || '')} · dabei seit ${esc(p.dabei)}</p></div>
       </div>
       ${p.ich ? '<p class="klein">So sehen dich andere. Adresse und E-Mail sieht niemand.</p>' : ''}
+      ${eigenes}
+      ${steckbrief}
       <dl class="profil-zahlen">
         <div><dt>Bewertung</dt><dd>${p.anzahl ? icon('stern', 'i-sm i-fill') + komma(p.sterne) : '–'}</dd><dd class="klein">${p.anzahl} ${p.anzahl === 1 ? 'Bewertung' : 'Bewertungen'}</dd></div>
         <div><dt>Geholfen</dt><dd>${p.hilfen}</dd><dd class="klein">${p.hilfen === 1 ? 'Auftrag' : 'Aufträge'}</dd></div>
         <div><dt>Hilfe bekommen</dt><dd>${p.gesuche}</dd><dd class="klein">${p.gesuche === 1 ? 'Auftrag' : 'Aufträge'}</dd></div>
       </dl>
-      <section class="rez" aria-labelledby="rez-titel"><h3 class="h-klein" id="rez-titel">Bewertungen</h3>${bewertungen}</section>
+      <section class="rez" aria-labelledby="rez-titel"><h3 class="h-klein" id="rez-titel">${p.ich ? 'So wurdest du bewertet' : 'Bewertungen'}</h3>${bewertungen}</section>
       <ul class="profil-belege">
         ${p.volljaehrig ? `<li>${icon('check', 'i-sm')}Mindestens 18 Jahre, bei der Anmeldung bestätigt</li>` : ''}
         <li>${icon('check', 'i-sm')}Konto mit E-Mail-Adresse</li>
         <li>${icon('check', 'i-sm')}Hat den Regeln für Nachbarn zugestimmt</li>
       </ul>
       <p class="klein">${p.ich ? 'Andere sehen nur deinen Vornamen, den Anfangsbuchstaben und deinen Ort.' : 'Andere sehen nur Vorname, Anfangsbuchstabe und Ort. Adresse und E-Mail sieht niemand.'} Bewertungen erscheinen für beide gleichzeitig, wenn beide bewertet haben, spätestens nach 14 Tagen.</p>
-      ${person ? blockierenHTML(person) : ''}`;
+      ${person ? profilMeldenHTML(person) + blockierenHTML(person) : ''}`;
+  }
+
+  // Profil melden (zum Beispiel ein unpassendes Bild): eigene Gründe, gespeichert als einer der Gründe der Datenbank
+  const PROFIL_GRUENDE = [['bild', 'Unpassendes Foto', 'unangemessen'], ['text', 'Beleidigender oder anstößiger Text', 'unangemessen'],
+    ['falsch', 'Gibt sich als jemand anderes aus', 'betrug'], ['anderes', 'Etwas anderes', 'anderes']];
+  function profilMeldenHTML(person) {
+    if (db.rezGemeldet.has('profil|' + person.id)) return `<p class="gemeldet">${icon('flagge', 'i-xs')}Profil gemeldet. Danke, wir prüfen das.</p>`;
+    if (!ui.profilMelden) return `<button type="button" class="link-btn rez-melden" data-profil-melden>${icon('flagge', 'i-xs')}Profil melden</button>`;
+    return `<form class="melden-box" id="profil-melden-form" novalidate>
+        <fieldset class="feld"><legend>Was stimmt mit diesem Profil nicht?</legend>
+          ${PROFIL_GRUENDE.map(([w, n]) => `<label class="check"><input type="radio" name="profil-grund" id="profil-grund-${w}" value="${w}"><span>${n}</span></label>`).join('')}
+        </fieldset>
+        <div class="feld"><label for="profil-melden-text">Was sollen wir wissen? (freiwillig)</label><textarea id="profil-melden-text" maxlength="400" rows="2"></textarea></div>
+        <p class="fehler" id="profil-melden-fehler" role="alert" hidden></p>
+        <div class="btn-row"><button type="submit" class="btn btn-danger-solid" ${ui.busy ? 'disabled aria-busy="true"' : ''}>Meldung senden</button>
+          <button type="button" class="btn btn-secondary" data-profil-melden-nein>Abbrechen</button></div>
+      </form>`;
+  }
+
+  /* ----- Eigenes Profil bearbeiten: Foto, Über mich, hilft gern bei, Sprachen, Zeiten ----- */
+  function profilFormHTML(p) {
+    const e = ui.fotoEntwurf;
+    const bildJetzt = e ? (e.entfernen ? '' : e.url) : p.bild;
+    const busy = ui.busy ? 'disabled aria-busy="true"' : '';
+    const gruppe = (id, titel, liste, gewaehlt) => `<div class="feld" role="group" aria-labelledby="wahl-${id}-titel">
+        <span class="wahl-titel" id="wahl-${id}-titel">${titel}</span>
+        <div class="vorschlaege">${liste.map(([w, n, ic]) => `<button type="button" class="chip chip-vorschlag" data-wahl="${id}" data-wert="${esc(w)}" aria-pressed="${gewaehlt.includes(w)}">${ic ? icon(ic) : ''}<span>${esc(n)}</span></button>`).join('')}</div>
+      </div>`;
+    const weitere = p.sprachen.filter((x) => !SPRACHEN.includes(x));
+    const ohne = istLive() && db.teil9 === false;
+    return `<h2 id="sheet-titel" tabindex="-1">Profil bearbeiten</h2>
+      ${ohne ? '<p class="status-box warn">Foto und Angaben gehen erst nach dem nächsten Update der Datenbank.</p>' : ''}
+      <form id="profil-form" class="profil-form" novalidate>
+        <div class="foto-feld">
+          ${avatarHTML(p.kuerzel, bildJetzt, 'avatar-riesig')}
+          <div class="foto-knoepfe">
+            <input type="file" id="foto-datei" class="datei-versteckt" accept="image/*" aria-describedby="foto-hinweis" ${ohne ? 'disabled' : ''}>
+            <label for="foto-datei" class="btn btn-secondary">${icon('kamera')}${bildJetzt ? 'Anderes Foto' : 'Foto wählen'}</label>
+            ${e && e.url ? `<button type="button" class="btn btn-secondary" data-foto-drehen>${icon('wieder')}Drehen</button>` : ''}
+            ${bildJetzt ? '<button type="button" class="link-btn" data-foto-weg>Foto entfernen</button>' : ''}
+          </div>
+        </div>
+        <p class="feld-hinweis" id="foto-hinweis">Am besten ein freundliches Foto von dir allein: keine anderen Personen, keine Kinder. Alle können es sehen. Die App verkleinert es und entfernt dabei Angaben wie den Aufnahmeort.</p>
+        <p class="fehler" id="foto-fehler" role="alert" hidden></p>
+        <div class="feld"><label for="profil-bio">Über mich <span class="klein">(freiwillig)</span></label>
+          <textarea id="profil-bio" maxlength="300" rows="4" aria-describedby="profil-bio-hinweis" placeholder="z. B. seit wann du hier wohnst, was du gern machst, ob du ein Auto oder Werkzeug hast">${esc(p.bio)}</textarea>
+          <p class="feld-hinweis" id="profil-bio-hinweis"><span id="bio-zahl">${p.bio.length}</span> von 300 Zeichen. Bitte keine Adresse, Telefonnummer oder E-Mail.</p></div>
+        ${gruppe('hilft', 'Ich helfe gern bei', KATEGORIEN.map((k) => [k.id, k.name, k.id]), p.hilftGern)}
+        ${gruppe('sprache', 'Ich spreche', SPRACHEN.map((x) => [x, x]), p.sprachen)}
+        <div class="feld"><label for="profil-sprachen">Weitere Sprachen <span class="klein">(mit Komma trennen)</span></label>
+          <input id="profil-sprachen" type="text" maxlength="120" autocomplete="off" value="${esc(weitere.join(', '))}"></div>
+        ${gruppe('zeit', 'Ich habe meist Zeit', ZEITEN, p.zeiten)}
+        <p class="fehler" id="profil-fehler" role="alert" hidden></p>
+        <div class="btn-row"><button type="submit" class="btn btn-primary" ${busy} ${ohne ? 'disabled' : ''}>Profil speichern</button>
+          <button type="button" class="btn btn-secondary" data-profil-abbrechen>Abbrechen</button></div>
+      </form>`;
+  }
+  // Foto auf dem Gerät quadratisch zuschneiden und verkleinern (JPEG, ohne Metadaten wie den Aufnahmeort)
+  function fotoZeichnen(bild, drehung, groesse) {
+    const c = document.createElement('canvas');
+    c.width = c.height = groesse;
+    const x = c.getContext('2d');
+    const seite = Math.min(bild.naturalWidth || bild.width, bild.naturalHeight || bild.height);
+    x.fillStyle = '#fff';
+    x.fillRect(0, 0, groesse, groesse);
+    x.translate(groesse / 2, groesse / 2);
+    x.rotate(drehung * Math.PI / 180);
+    const w = bild.naturalWidth || bild.width, h = bild.naturalHeight || bild.height;
+    x.drawImage(bild, (w - seite) / 2, (h - seite) / 2, seite, seite, -groesse / 2, -groesse / 2, groesse, groesse);
+    return c;
+  }
+  function fotoGewaehlt(datei) {
+    const fehler = $('#foto-fehler');
+    const zeige = (t) => { if (fehler) { fehler.textContent = t; fehler.hidden = false; } };
+    if (!datei) return;
+    if (!/^image\//.test(datei.type || 'image/')) { zeige('Bitte ein Foto wählen (JPG oder PNG).'); return; }
+    if (datei.size > 20 * 1024 * 1024) { zeige('Das Foto ist zu groß. Bitte eines unter 20 MB wählen.'); return; }
+    const url = URL.createObjectURL(datei);
+    const bild = new Image();
+    bild.onload = () => {
+      ui.fotoEntwurf = { bild, drehung: 0, url: fotoZeichnen(bild, 0, 240).toDataURL('image/jpeg', 0.85) };
+      URL.revokeObjectURL(url);
+      renderSheet();
+      const k = $('#sheet [data-foto-drehen]');
+      if (k) k.focus({ preventScroll: true });
+    };
+    bild.onerror = () => { URL.revokeObjectURL(url); zeige('Dieses Foto kann der Browser nicht öffnen. Bitte ein JPG oder PNG wählen.'); };
+    bild.src = url;
+  }
+  async function profilSpeichern() {
+    const p = profilDaten('ich');
+    if (!p) return;
+    const fehler = $('#profil-fehler');
+    const zeige = (t, feld) => { fehler.textContent = t; fehler.hidden = false; if (feld) feld.focus(); };
+    const bioFeld = $('#profil-bio');
+    const bio = bioFeld.value.replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n\n').trim();
+    if (bio.length > 300) { zeige('„Über mich“ darf höchstens 300 Zeichen lang sein.', bioFeld); return; }
+    if (bio && anstoessig(bio)) { zeige('Bitte schreib sachlich. Beleidigende oder anstößige Wörter werden nicht veröffentlicht.', bioFeld); return; }
+    if (/\S+@\S+\.\S+/.test(bio) || /\d[\d /-]{6,}\d/.test(bio)) { zeige('Bitte keine Telefonnummern oder E-Mail-Adressen ins Profil schreiben. Alle können es lesen.', bioFeld); return; }
+    const gewaehlt = (id) => Array.from(document.querySelectorAll(`#profil-form [data-wahl="${id}"][aria-pressed="true"]`)).map((b) => b.dataset.wert);
+    const sprFeld = $('#profil-sprachen');
+    const weitere = sprFeld.value.split(',').map((x) => x.replace(/\s+/g, ' ').trim()).filter(Boolean).map((x) => x.charAt(0).toUpperCase() + x.slice(1));
+    if (weitere.some((x) => x.length > 30 || !/^[A-Za-zÀ-ÖØ-öø-ÿĀ-ž][A-Za-zÀ-ÖØ-öø-ÿĀ-ž -]*$/.test(x) || anstoessig(x))) { zeige('Bitte bei den Sprachen nur Namen von Sprachen eintragen, mit Komma getrennt.', sprFeld); return; }
+    const sprachen = Array.from(new Set(gewaehlt('sprache').concat(weitere)));
+    if (sprachen.length > 8) { zeige('Bitte höchstens 8 Sprachen.', sprFeld); return; }
+    const neu = { bio, hilftGern: gewaehlt('hilft'), sprachen, zeiten: gewaehlt('zeit') };
+    const e = ui.fotoEntwurf;
+    ui.busy = true;
+    renderSheet();
+    try {
+      if (istLive()) {
+        const uid = db.user.id;
+        if (e && (e.entfernen || e.bild)) {
+          let pfad = '';
+          if (e.bild) {
+            const blob = await new Promise((ok) => fotoZeichnen(e.bild, e.drehung, 400).toBlob(ok, 'image/jpeg', 0.85));
+            if (!blob) throw new Error('Das Foto ließ sich nicht umwandeln.');
+            pfad = `${uid}/${Date.now().toString(36)}.jpg`;
+            const hoch = await db.client.storage.from('profilbilder').upload(pfad, blob, { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false });
+            if (hoch.error) throw hoch.error;
+          }
+          const { data: alt, error } = await db.client.rpc('profilbild_setzen', { p_pfad: pfad });
+          if (error) throw error;
+          if (alt) db.client.storage.from('profilbilder').remove([alt]);
+          db.profil.bild = pfad;
+          db.bilder.set(uid, pfad);
+        }
+        const { error } = await db.client.rpc('profil_bearbeiten', { p_bio: neu.bio, p_hilft_gern: neu.hilftGern, p_sprachen: neu.sprachen, p_zeiten: neu.zeiten });
+        if (error) throw error;
+        Object.assign(db.profil, { bio: neu.bio, hilft_gern: neu.hilftGern, sprachen: neu.sprachen, zeiten: neu.zeiten });
+        db.profile.delete(uid);
+      } else {
+        if (e && e.entfernen) demoSteckbrief.bild = '';
+        else if (e && e.bild) demoSteckbrief.bild = fotoZeichnen(e.bild, e.drehung, 240).toDataURL('image/jpeg', 0.82);
+        Object.assign(demoSteckbrief, neu);
+        demoSteckbriefSpeichern();
+      }
+      ui.fotoEntwurf = null;
+      ui.profilBearbeiten = false;
+      meldung('Profil gespeichert');
+    } catch (err) {
+      meldung(fehlerText(err));
+    } finally {
+      ui.busy = false;
+    }
+    renderSheet();
+    renderKopf();
+    if (!ui.profilBearbeiten) $('#sheet').scrollTop = 0;
+    const t = $('#sheet-titel');
+    if (t) t.focus({ preventScroll: true });
+  }
+  async function profilMeldenAbsenden() {
+    const wahl = document.querySelector('#profil-melden-form input[name="profil-grund"]:checked');
+    if (!wahl) {
+      const f = $('#profil-melden-fehler');
+      f.textContent = 'Bitte wähle einen Grund.';
+      f.hidden = false;
+      $('#profil-grund-bild').focus();
+      return;
+    }
+    const grund = PROFIL_GRUENDE.find((x) => x[0] === wahl.value);
+    const zusatz = $('#profil-melden-text').value.trim().slice(0, 400);
+    const text = `[${grund[1]}] ${zusatz}`.trim();
+    const pr = ui.profil;
+    ui.busy = true;
+    renderSheet();
+    try {
+      if (istLive()) {
+        const { error } = await db.client.rpc('profil_melden', { p_person: pr.key, p_grund: grund[2], p_text: text });
+        if (error) throw error;
+      }
+      db.rezGemeldet.add('profil|' + pr.key);
+      ui.profilMelden = false;
+      meldung('Danke für deine Meldung. Wir prüfen das Profil.');
+    } catch (err) {
+      meldung(fehlerText(err));
+    } finally {
+      ui.busy = false;
+    }
+    renderSheet();
   }
 
   // Die andere Person einer Anfrage: live über die Profil-ID, in der Demo über den Namen
@@ -4802,6 +5099,41 @@ function FRAGEN_TEXTE(c) {
       return;
     }
     if (t.hasAttribute('data-profil-zurueck')) { profilZurueck(); return; }
+    // Eigenes Profil bearbeiten
+    if (t.hasAttribute('data-profil-bearbeiten') || t.hasAttribute('data-profil-abbrechen')) {
+      ui.profilBearbeiten = t.hasAttribute('data-profil-bearbeiten');
+      ui.fotoEntwurf = null;
+      renderSheet();
+      $('#sheet').scrollTop = 0;
+      const f = ui.profilBearbeiten ? $('#sheet-titel') : $('#sheet [data-profil-bearbeiten]');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
+    if (t.dataset.wahl) { t.setAttribute('aria-pressed', String(t.getAttribute('aria-pressed') !== 'true')); return; }
+    if (t.hasAttribute('data-foto-drehen') && ui.fotoEntwurf && ui.fotoEntwurf.bild) {
+      const e2 = ui.fotoEntwurf;
+      e2.drehung = (e2.drehung + 90) % 360;
+      e2.url = fotoZeichnen(e2.bild, e2.drehung, 240).toDataURL('image/jpeg', 0.85);
+      renderSheet();
+      const f = $('#sheet [data-foto-drehen]');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
+    if (t.hasAttribute('data-foto-weg')) {
+      ui.fotoEntwurf = { entfernen: true };
+      renderSheet();
+      const f = $('#foto-datei');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
+    if (t.hasAttribute('data-profil-melden') || t.hasAttribute('data-profil-melden-nein')) {
+      if (t.hasAttribute('data-profil-melden') && istLive() && !db.profil) { oeffnePanel('anmelden', 'Bitte melde dich an, um ein Profil zu melden.'); return; }
+      ui.profilMelden = t.hasAttribute('data-profil-melden');
+      renderSheet();
+      const f = ui.profilMelden ? $('#profil-grund-bild') : $('#sheet [data-profil-melden]');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
     if (t.hasAttribute('data-mein-profil')) {
       const vorher = ui.offen ? { art: 'gesuch', id: ui.offen } : ui.panel === 'profil' && ui.profil ? { art: 'profil', key: ui.profil.key, name: ui.profil.name }
         : ui.panel ? { art: 'panel', name: ui.panel } : null;
@@ -4882,6 +5214,12 @@ function FRAGEN_TEXTE(c) {
     if (t.hasAttribute('data-konto-loeschen')) {
       ui.busy = true; renderSheet();
       try {
+        // Profilbilder zuerst löschen (die Datenbank selbst kann Dateien im Speicher nicht löschen)
+        if (db.teil9 && db.user) {
+          const liste = await db.client.storage.from('profilbilder').list(db.user.id);
+          const namen = (liste.data || []).map((f) => `${db.user.id}/${f.name}`);
+          if (namen.length) await db.client.storage.from('profilbilder').remove(namen);
+        }
         const { error } = await db.client.rpc('konto_loeschen');
         if (error) throw error;
         await pushTrennen(true);
@@ -5121,6 +5459,7 @@ function FRAGEN_TEXTE(c) {
   });
   // Eingabefeld wächst mit dem Text (bis 5 Zeilen)
   $('#sheet').addEventListener('input', (e) => {
+    if (e.target.id === 'profil-bio') { const z = $('#bio-zahl'); if (z) z.textContent = e.target.value.length; return; }
     if (e.target.id !== 'chat-text') return;
     e.target.style.height = 'auto';
     e.target.style.height = Math.min(e.target.scrollHeight, 140) + 'px';
@@ -5131,6 +5470,8 @@ function FRAGEN_TEXTE(c) {
     if (e.target.id === 'melden-form') { e.preventDefault(); meldungAbsenden(); return; }
     if (e.target.id === 'bewerten-form') { e.preventDefault(); bewertungAbsenden(); return; }
     if (e.target.id === 'rez-melden-form') { e.preventDefault(); rezMeldenAbsenden(e.target); return; }
+    if (e.target.id === 'profil-form') { e.preventDefault(); profilSpeichern(); return; }
+    if (e.target.id === 'profil-melden-form') { e.preventDefault(); profilMeldenAbsenden(); return; }
     if (e.target.id === 'code-form') { e.preventDefault(); codeAbsenden(e.target); return; }
     if (e.target.id !== 'auth-form') return;
     e.preventDefault();
@@ -5219,6 +5560,7 @@ function FRAGEN_TEXTE(c) {
   // Stadtteil im Konto ändern
   $('#sheet').addEventListener('change', async (e) => {
     if (e.target.name === 'grund') { const f = $('#melden-fehler'); if (f) f.hidden = true; return; }
+    if (e.target.id === 'foto-datei') { fotoGewaehlt(e.target.files && e.target.files[0]); e.target.value = ''; return; }
   });
   // Ort ändern (Menü, Konto, Liste) und übernehmen
   $('#sheet').addEventListener('click', async (e) => {
@@ -5482,6 +5824,11 @@ function FRAGEN_TEXTE(c) {
     $('#offline').hidden = !offline;
     document.documentElement.classList.toggle('ist-offline', offline);
   }
+  // Profilbild lädt nicht (gelöscht, offline): dann bleiben die Anfangsbuchstaben
+  document.addEventListener('error', (e) => {
+    const t = e.target, el = t && t.parentNode;
+    if (t && t.tagName === 'IMG' && el && el.classList && (el.classList.contains('avatar') || el.classList.contains('avatar-btn'))) { el.classList.remove('mit-bild'); el.removeChild(t); }
+  }, true);
   window.addEventListener('online', verbindungZeigen);
   window.addEventListener('offline', verbindungZeigen);
   verbindungZeigen();

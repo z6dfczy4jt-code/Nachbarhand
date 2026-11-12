@@ -66,7 +66,9 @@ function RECHT_TEXTE(b, h, e) {
           <li>den Sicherheits-Code eines laufenden Auftrags</li>
           <li>Nachrichten zu einem Auftrag und Meldungen, die du abschickst</li>
           <li>wenn du Benachrichtigungen einschaltest: die Adresse, unter der dein Gerät dafür erreichbar ist (siehe 7.)</li>
+          <li>wenn du dein Profil gestaltest: dein Profilbild, dein Text „Über mich“, wobei du gern hilfst, welche Sprachen du sprichst und wann du meist Zeit hast. Das alles ist freiwillig.</li>
         </ul>
+        <p>Dein Profilbild verkleinert die App schon auf deinem Gerät auf 400 × 400 Bildpunkte. Dabei fallen Angaben weg, die in Fotos stecken können, etwa Aufnahmeort, Datum und Kameramodell. Das Bild liegt im Speicher von Supabase, ebenfalls in Frankfurt am Main. Ersetzt oder entfernst du es, löschen wir das alte Bild.</p>
         <p>Fragst du für jemand anderen an, zum Beispiel für deine Eltern, speichern wir auch deine Angaben zu dieser Person (Name oder Bezeichnung, Adresse, Telefonnummer). Bitte hol vorher ihr Einverständnis ein.</p>
         <p>Rechtsgrundlage ist der Nutzungsvertrag mit dir (Art. 6 Abs. 1 lit. b DSGVO). Meldungen verarbeiten wir außerdem, um rechtswidrige Inhalte zu entfernen und Nutzer zu schützen (Art. 6 Abs. 1 lit. c und f DSGVO). Die Bestätigungs-E-Mail bei der Registrierung verschickt Supabase für uns.</p>
         <p>Die Programmbibliothek für die Anmeldung lädt die App vom Dienst jsDelivr. Dabei wird deine IP-Adresse an dessen Server übertragen (Art. 6 Abs. 1 lit. f DSGVO).</p>
@@ -74,7 +76,7 @@ function RECHT_TEXTE(b, h, e) {
         <h3>6. Wer sieht was?</h3>
         <ul>
           <li><strong>Alle, auch ohne Konto:</strong> offene Anfragen mit Vorname, Anfangsbuchstabe, Ort, ungefährer Lage (100 bis 400 Meter um die Mitte eines Rasterfelds von etwa 1 km), Bewertungsschnitt und, wenn angegeben, für wen die Hilfe ist.</li>
-          <li><strong>Alle, auch ohne Konto, im Profil:</strong> Vorname, Anfangsbuchstabe, Ort, seit wann du dabei bist, wie oft du geholfen und Hilfe bekommen hast, und die Bewertungen über dich: Sterne, Text, Monat, Tätigkeit des Auftrags und Vorname mit Anfangsbuchstabe der Person, die bewertet hat. Bewertungen erscheinen erst, wenn beide bewertet haben, spätestens 14 Tage nach der ersten. Bis dahin sieht sie niemand außer der Person, die sie geschrieben hat.</li>
+          <li><strong>Alle, auch ohne Konto, im Profil:</strong> Vorname, Anfangsbuchstabe, Ort, seit wann du dabei bist, wie oft du geholfen und Hilfe bekommen hast, und die Bewertungen über dich: Sterne, Text, Monat, Tätigkeit des Auftrags und Vorname mit Anfangsbuchstabe der Person, die bewertet hat. Hast du ein Profilbild oder Angaben wie „Über mich“ eingetragen, sehen alle auch diese. Bewertungen erscheinen erst, wenn beide bewertet haben, spätestens 14 Tage nach der ersten. Bis dahin sieht sie niemand außer der Person, die sie geschrieben hat.</li>
           <li><strong>Nur die Person, die zusagt:</strong> die genaue Adresse und die Telefonnummer.</li>
           <li><strong>Nur ihr beide:</strong> eure Nachrichten und der Sicherheits-Code für die Tür.</li>
           <li><strong>Nur wir:</strong> Meldungen. Die gemeldete Person erfährt nicht, wer gemeldet hat.</li>
@@ -86,7 +88,7 @@ function RECHT_TEXTE(b, h, e) {
         <p>Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG). Du kannst sie jederzeit widerrufen: Schalte die Benachrichtigungen im Menü aus. Dann löschen wir die Adresse deines Geräts. Beim Abmelden lösen wir das Gerät von deinem Konto.</p>
 
         <h3>8. Wie lange?</h3>
-        <p>Dein Konto und deine Daten speichern wir, bis du das Konto löschst. Das geht jederzeit in der App unter „Dein Konto“. Dann löschen wir dein Profil, deine Anfragen, Adressen, Telefonnummern, Nachrichten, Bewertungen und die Adressen deiner Geräte für Benachrichtigungen. Meldungen bewahren wir höchstens zwölf Monate nach ihrer Bearbeitung auf, um wiederholte Verstöße erkennen zu können.</p>
+        <p>Dein Konto und deine Daten speichern wir, bis du das Konto löschst. Das geht jederzeit in der App unter „Dein Konto“. Dann löschen wir dein Profil mit Profilbild, deine Anfragen, Adressen, Telefonnummern, Nachrichten, Bewertungen und die Adressen deiner Geräte für Benachrichtigungen. Meldungen bewahren wir höchstens zwölf Monate nach ihrer Bearbeitung auf, um wiederholte Verstöße erkennen zu können.</p>
 
         <h3>9. Deine Rechte</h3>
         <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Datenübertragbarkeit (Art. 15 bis 20 DSGVO). Verarbeitungen auf Grundlage unseres berechtigten Interesses kannst du widersprechen (Art. 21 DSGVO). Schreib uns dafür an ${mail}.</p>
@@ -137,10 +139,11 @@ function RECHT_TEXTE(b, h, e) {
           <li>Bezahlt wird nach der Hilfe. Niemand darf Geld im Voraus, Gutscheinkarten oder Codes verlangen. Der Sicherheits-Code aus der App ist nur für die Begrüßung an der Tür gedacht.</li>
           <li>Keine Werbung, keine Weitergabe von Daten anderer.</li>
           <li>Bewerte ehrlich und sachlich, was beim Auftrag passiert ist. Keine Beleidigungen, keine Adressen, Telefonnummern oder Angaben zur Gesundheit, keine Bewertungen gegen Geld oder unter Druck. Beide Bewertungen eines Auftrags erscheinen gleichzeitig: wenn beide bewertet haben, spätestens 14 Tage nach der ersten. Danach lassen sie sich nicht mehr ändern.</li>
+          <li>Profilbild und „Über mich“ sind für alle sichtbar. Zeig auf dem Bild nur dich selbst: keine anderen Personen, keine Kinder, nichts Anstößiges. Gib dich nicht als jemand anderes aus. Schreib keine Adresse, Telefonnummer oder E-Mail ins Profil.</li>
         </ul>
 
         <h3>7. Melden und Sperren</h3>
-        <p>Über „Melden“ kannst du Anfragen, beteiligte Personen und Bewertungen melden. Wir prüfen jede Meldung. Verstößt etwas gegen Gesetze oder diese Bedingungen, können wir Inhalte entfernen und Konten vorübergehend oder dauerhaft sperren. Wir sagen dir, was wir entschieden haben und warum. Bist du anderer Meinung, schreib uns an ${mail}.</p>
+        <p>Über „Melden“ kannst du Anfragen, beteiligte Personen, Profile und Bewertungen melden. Wir prüfen jede Meldung. Verstößt etwas gegen Gesetze oder diese Bedingungen, können wir Inhalte entfernen und Konten vorübergehend oder dauerhaft sperren. Wir sagen dir, was wir entschieden haben und warum. Bist du anderer Meinung, schreib uns an ${mail}.</p>
 
         <h3>8. Haftung</h3>
         <p>Für Schäden bei einer Hilfe haftet ihr untereinander nach den gesetzlichen Regeln. Prüf vorher, ob deine private Haftpflichtversicherung Schäden bei Gefälligkeiten abdeckt.</p>
@@ -169,6 +172,7 @@ function RECHT_TEXTE(b, h, e) {
           <li><strong>Zusagen halten.</strong> Wenn etwas dazwischenkommt, sag so früh wie möglich in den Nachrichten ab.</li>
           <li><strong>Fair bewerten.</strong> Schreib, was beim Auftrag passiert ist, sachlich und ohne private Angaben.</li>
           <li><strong>Freundlich bleiben.</strong> Keine Beleidigungen, kein Druck, keine Anmache.</li>
+          <li><strong>Echtes Profil.</strong> Auf dein Profilbild gehörst nur du, keine anderen Personen und keine Kinder. Adresse und Telefonnummer gehören nicht ins Profil.</li>
           <li><strong>Sicherheit geht vor.</strong> Frag an der Tür nach dem Sicherheits-Code aus der App. Lass niemanden auf wackelige Leitern, an Strom oder Gas. Bei Unsicherheit: lieber eine Fachfirma.</li>
           <li><strong>Privat bleibt privat.</strong> Adresse, Telefonnummer und Nachrichten nur für den Auftrag nutzen. Keine Bank- oder Passwortdaten teilen.</li>
           <li><strong>Gelegentlich, nicht ständig.</strong> Hand Drauf ist Nachbarschaftshilfe, kein Nebenjob.</li>

@@ -356,6 +356,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Mehrere Anfragen an einem Fleck: Zahl im Kopf des Tropfens */
 .k-sammel .pin-form path { fill: var(--accent); stroke: #11161C; stroke-width: 1.4; }
 .k-sammel-eigen .pin-form path { fill: var(--hedge); }
+.k-sammel-eigen .sammel-zahl { color: var(--on-hedge); }
 .sammel-zahl { position: absolute; left: 9px; top: 9px; width: 26px; text-align: center; font-family: var(--f-display); font-weight: 700; font-size: 0.875rem; line-height: 17px; color: #11161C; font-variant-numeric: tabular-nums; }
 .k-sammel.text-links .sammel-zahl { left: auto; right: 9px; }
 .k-massstab { position: absolute; left: 14px; bottom: 10px; height: 20px; padding: 0 4px; border: 2px solid var(--muted); border-top: 0; color: var(--ink); font-size: 0.875rem; line-height: 18px; text-align: center; white-space: nowrap; pointer-events: none; text-shadow: 0 0 3px var(--map-land), 0 0 3px var(--map-land); box-sizing: border-box; }
@@ -411,7 +412,32 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .eyebrow .bild { width: 34px; height: 34px; filter: drop-shadow(0 3px 2px rgba(28, 37, 48, .18)); }
 .person { display: flex; align-items: center; gap: 12px; }
 .avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--ink); color: var(--surface); display: grid; place-items: center; font-family: var(--f-display); font-weight: 700; font-size: 1.0625rem; flex: none; }
-.avatar-gross { width: 68px; height: 68px; font-size: 1.375rem; }
+.avatar-gross { width: 80px; height: 80px; font-size: 1.5rem; }
+/* Profilbild über den Anfangsbuchstaben; lädt es nicht, bleiben die Buchstaben */
+.avatar, .avatar-btn { position: relative; overflow: hidden; -webkit-flex: none; flex: none; }
+.avatar img, .avatar-btn img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.avatar.mit-bild, .avatar-btn.mit-bild { color: transparent; background: var(--tile); }
+.avatar-riesig { width: 112px; height: 112px; font-size: 2.25rem; }
+/* Steckbrief im Profil */
+.profil-bio { margin: 0; font-size: 1.0625rem; line-height: 1.55; overflow-wrap: anywhere; }
+.steckbrief { margin: 0; display: grid; gap: 10px; }
+.steckbrief > div { display: grid; gap: 6px; }
+.steckbrief dt { color: var(--muted); font-size: 0.875rem; font-weight: 600; }
+.steckbrief dd { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.steck-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 999px; background: var(--tile); font-size: 0.9375rem; }
+.steck-chip .bild { width: 20px; height: 20px; }
+.profil-anstoss { display: grid; gap: 12px; padding: 16px; border-radius: var(--r-m); background: var(--tile); }
+.profil-anstoss p { margin: 0; }
+.profil-bearbeiten-knopf { justify-self: start; }
+/* Profil bearbeiten */
+.profil-form { display: grid; gap: 18px; }
+.foto-feld { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.foto-knoepfe { display: grid; gap: 8px; justify-items: start; }
+.foto-knoepfe .btn { min-height: 44px; }
+.datei-versteckt { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.datei-versteckt:focus-visible + label { outline: 3px solid var(--focus); outline-offset: 2px; }
+.profil-form .feld-hinweis, .profil-form > .feld-hinweis { margin: -10px 0 0; }
+.profil-form .feld .feld-hinweis { margin: 6px 0 0; }
 .person-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 600; }
 .person-meta { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 0.9375rem; }
 .person-meta .i { color: var(--accent); }

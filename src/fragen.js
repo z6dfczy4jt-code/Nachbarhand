@@ -34,6 +34,8 @@ function FRAGEN_TEXTE(c) {
           `<p>Unten in jeder Anfrage und jedem Auftrag steht „Melden“. Wir prüfen jede Meldung, und die andere Person erfährt nicht, wer gemeldet hat. Bei Gefahr ruf die Polizei unter 110 an.</p>`),
         frage('Wie funktionieren Bewertungen?',
           `<p>Nach jedem Auftrag bewertet ihr euch gegenseitig mit Sternen und, wenn ihr wollt, ein paar Sätzen. Beide Bewertungen erscheinen gleichzeitig: sobald ihr beide bewertet habt, spätestens 14 Tage nach der ersten. Bis dahin kannst du deine noch ändern. So kann niemand aus Ärger „zurückbewerten“.</p><p>Tippe in einer Anfrage auf den Namen, dann siehst du das Profil mit allen Bewertungen. Dein eigenes Profil findest du im Menü. Stimmt mit einer Bewertung etwas nicht, tippe darunter auf „Melden“.</p>`),
+        frage('Wie gestalte ich mein Profil?',
+          `<p>Öffne im Menü „Dein Profil und deine Bewertungen“ und tippe auf „Profil bearbeiten“. Dort kannst du ein Foto wählen, ein paar Sätze über dich schreiben und angeben, wobei du gern hilfst, welche Sprachen du sprichst und wann du meist Zeit hast. Alles ist freiwillig.</p><p>Das sehen alle. Darum gehören Adresse, Telefonnummer und E-Mail nicht hinein. Das Foto verkleinert die App auf deinem Handy und entfernt dabei Angaben wie den Aufnahmeort. Am besten ist ein freundliches Foto von dir allein.</p>`),
         frage('Wie blockiere ich jemanden?',
           `<p>Tippe in der Anfrage auf den Namen und dann unten auf „blockieren“. Ihr seht eure Anfragen danach gegenseitig nicht mehr, und laufende Zusagen zwischen euch enden. Die Person erfährt davon nichts. Aufheben kannst du das unter „Konto“.</p>`),
         frage('Was passiert mit beleidigenden Wörtern?',

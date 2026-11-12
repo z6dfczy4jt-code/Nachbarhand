@@ -245,7 +245,7 @@ def inhaltsrichtlinie(html, einst=None, genau_zwei=True):
         "default-src 'self'",
         f"script-src 'self' {hashes}" + (' https://cdn.jsdelivr.net' if cdn else ''),
         "style-src 'self' 'unsafe-inline'",
-        "img-src 'self' data: blob: " + ' '.join(karten),
+        "img-src 'self' data: blob: " + ' '.join(karten) + (f' https://{db}' if db else ''),
         "font-src 'self'",
         "connect-src 'self'" + (f' https://{db} wss://{db}' if db else '') + (' https://cdn.jsdelivr.net' if cdn else '')
         + (' ' + einst['geocoder'].rstrip('/') if einst.get('geocoder', '').startswith('https://') else ''),
