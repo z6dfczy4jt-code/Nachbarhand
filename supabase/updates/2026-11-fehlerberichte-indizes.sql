@@ -1,4 +1,4 @@
--- Hand Drauf: Datenbank-Update November 2026, Teil 6 (noch nicht eingespielt, siehe SETUP.md)
+-- Hand Drauf: Datenbank-Update November 2026, Teil 6 (eingespielt am 12. November 2026)
 -- * Fehlerberichte: Stürzt die App auf einem Gerät ab, schickt sie eine kurze technische Meldung
 --   (Fehlertext, Stelle im Programm, Browser und Gerät, App-Fassung). Keine Namen, keine Inhalte,
 --   keine IP-Adresse. Gleiche Fehler am selben Tag werden nur gezählt. Nach 30 Tagen gelöscht.

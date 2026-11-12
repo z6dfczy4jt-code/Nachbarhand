@@ -1,4 +1,4 @@
--- Hand Drauf: Datenbank-Update November 2026, Teil 7 (noch nicht eingespielt, siehe SETUP.md)
+-- Hand Drauf: Datenbank-Update November 2026, Teil 7 (eingespielt am 12. November 2026)
 -- Deutschlandweit: Orte statt fester Stadtteile von Garbsen.
 -- * Anfragen und Profile tragen einen Ortsnamen (z. B. „Linden-Mitte, Hannover“) statt eines Garbsener Stadtteils.
 -- * Die App schickt beim Erstellen nur die Mitte eines Rasterfelds von etwa 1 km, nie die genaue Lage.

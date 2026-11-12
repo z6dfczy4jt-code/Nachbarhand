@@ -1,4 +1,4 @@
--- Hand Drauf: Datenbank-Update November 2026, Teil 9 (noch nicht eingespielt, siehe SETUP.md)
+-- Hand Drauf: Datenbank-Update November 2026, Teil 9 (eingespielt am 12. November 2026)
 -- Profile zum Selbstgestalten: Profilbild, „Über mich“, „Ich helfe gern bei …“, Sprachen, wann man meist Zeit hat.
 -- * Alles davon ist freiwillig und für alle sichtbar (wie Vorname und Ort).
 -- * Profilbilder liegen im öffentlichen Speicher „profilbilder“, jede Person nur im eigenen Ordner (Ordnername =

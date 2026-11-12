@@ -1,4 +1,4 @@
--- Hand Drauf: Datenbank-Update November 2026, Teil 8 (noch nicht eingespielt, siehe SETUP.md)
+-- Hand Drauf: Datenbank-Update November 2026, Teil 8 (eingespielt am 12. November 2026)
 -- Geschriebene Bewertungen und öffentliche Profile mit Rezensionen.
 -- * Zu den Sternen kommt ein freiwilliger Text (bis 600 Zeichen).
 -- * Beide Bewertungen eines Auftrags erscheinen gleichzeitig: sobald beide bewertet haben, spätestens 14 Tage
