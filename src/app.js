@@ -71,7 +71,6 @@
     { name: 'Altgarbsen', lat: 52.4188, lng: 9.5815, r: 420 },
     { name: 'Auf der Horst', lat: 52.4166, lng: 9.5975, r: 420 }
   ];
-  const STADTTEIL_NAMEN = STADTTEILE.map((s) => s.name).sort((a, b) => a.localeCompare(b, 'de'));
 
   const KATEGORIEN = [
     { id: 'garten', name: 'Garten' },
@@ -271,6 +270,10 @@
     blockiert: new Map()    // profil_id -> Name (von mir blockiert)
   };
   const istLive = () => db.modus === 'live';
+  // Echte Seite mit Datenbank: Bis die Verbindung steht, nichts aus der Demo zeigen (keine erfundenen Anfragen, kein „Tim“)
+  const LIVE_GEPLANT = !VORSCHAU && !BEISPIEL_MODUS && !!(LIVE.url && LIVE.key);
+  const wartetAufLive = () => LIVE_GEPLANT && !istLive() && !db.liveAus;
+  const seiteZeigen = () => document.documentElement.classList.remove('startet');
 
   function demoLaden() {
     try {
@@ -800,12 +803,17 @@
       if (!(window.supabase && window.supabase.createClient)) await ladeSkript(SUPABASE_JS);
       db.client = window.supabase.createClient(LIVE.url, LIVE.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
     } catch (e) {
+      db.liveAus = true;
+      gesuche = demoLaden();
+      renderAlles();
+      seiteZeigen();
       meldung('Die Datenbank ist gerade nicht erreichbar. Du siehst die Demo.');
       return false;
     }
     db.modus = 'live';
     gesuche = [];
     renderAlles();
+    seiteZeigen();
     const { data } = await db.client.auth.getSession();
     await setzeSitzung(data && data.session, true);
     db.client.auth.onAuthStateChange((event, session) => {
@@ -1257,7 +1265,8 @@
 
   function renderKopf() {
     const el = $('#kopf-rechts');
-    if (!istLive()) el.innerHTML = `<span class="pill pill-muted">${BEISPIEL_MODUS ? 'Beispiele' : 'Demo'}</span>`;
+    if (wartetAufLive()) el.innerHTML = '';
+    else if (!istLive()) el.innerHTML = `<span class="pill pill-muted">${BEISPIEL_MODUS ? 'Beispiele' : 'Demo'}</span>`;
     else if (!db.profil) el.innerHTML = '<button type="button" class="btn btn-secondary btn-klein" data-panel="anmelden">Anmelden</button>';
     else el.innerHTML = `<button type="button" class="avatar-btn${meinBild() ? ' mit-bild' : ''}" data-panel="konto" aria-label="Dein Konto">${esc(kuerzel(db.profil))}${meinBild() ? `<img src="${esc(bildUrl(meinBild()))}" alt="" decoding="async">` : ''}</button>`;
     $('#reset-knopf').hidden = istLive();
@@ -1315,17 +1324,20 @@
   function renderListe() {
     const offene = gesuche.filter((g) => !g.eigen && g.status === 'offen' && !abgelaufen(g) && !versteckt(g));
     const ort = meinOrt();
-    $('#h-entdecken').textContent = istLive() ? (db.profil ? `Hallo ${db.profil.vorname}` : 'Hilfe in deiner Nähe') : 'Hallo Tim';
+    $('#h-entdecken').textContent = istLive() || wartetAufLive() ? (db.profil ? `Hallo ${db.profil.vorname}` : 'Hilfe in deiner Nähe') : 'Hallo Tim';
     $('#datum').textContent = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
     const nah = offene.filter((g) => meterVonMir(g) <= ui.umkreis * 1000);
-    $('#anzahl-text').textContent = `${nah.length} ${nah.length === 1 ? 'Nachbar sucht' : 'Nachbarn suchen'} gerade Hilfe, bis ${ui.umkreis} km um ${ort.stadtteil}`;
+    const laedt = (istLive() && !db.geladen) || wartetAufLive();
+    $('#anzahl-text').textContent = laedt
+      ? (db.fehler ? `Hilfe bis ${ui.umkreis} km um ${ort.stadtteil}` : `Anfragen bis ${ui.umkreis} km um ${ort.stadtteil} werden geladen …`)
+      : `${nah.length} ${nah.length === 1 ? 'Nachbar sucht' : 'Nachbarn suchen'} gerade Hilfe, bis ${ui.umkreis} km um ${ort.stadtteil}`;
 
-    if (istLive() && !db.geladen) {
+    if (laedt) {
       ui.umgebungListe = [];
       umgebungZeichnen();
       $('#liste').innerHTML = db.fehler
         ? `<div class="leer"><p><strong>Die Anfragen konnten nicht geladen werden.</strong></p><p>${esc(db.fehler)}</p><button type="button" class="btn btn-secondary btn-auto" data-neu-laden>Erneut versuchen</button></div>`
-        : `<p class="lade">Anfragen werden geladen …</p>`;
+        : '<p class="sr-only" role="status">Anfragen werden geladen …</p>' + '<div class="card skelett" aria-hidden="true"><span class="ico"></span><span class="card-main"><i></i><i></i><i></i></span><span class="skelett-preis"></span></div>'.repeat(3);
       return;
     }
     const treffer = sortiere(offene.filter((g) => passt(g) && meterVonMir(g) <= ui.umkreis * 1000));
@@ -1757,6 +1769,23 @@
       + `<svg class="pin-form" viewBox="0 0 26 34" aria-hidden="true" focusable="false"><path d="${PIN_FORM}"/></svg>`
       + `<b class="sammel-zahl">${anzahl}</b><span class="pin-text" data-ab="ab ${euroKurz(ab)}" aria-hidden="true"></span></button>`;
   }
+  // Auf welcher Seite steht der Betrag? Normal rechts; würde er dort ein anderes Schild, eine andere Beschriftung oder
+  // „Du“ verdecken und ist links Platz, dann links. liste: [{x, y, text}] in Bildpunkten (Spitze des Tropfens),
+  // besetzt: weitere Flächen {l, o, r, u}. Rückgabe je Schild: true = links.
+  const beschriftungBreite = (text) => 16 + text.length * 8;
+  function beschriftungsSeiten(liste, besetzt) {
+    const belegt = besetzt.concat(liste.map((p) => ({ l: p.x - 13, o: p.y - 36, r: p.x + 13, u: p.y + 2 })));
+    const trifft = (a) => belegt.some((q) => a.l < q.r && a.r > q.l && a.o < q.u && a.u > q.o);
+    return liste.map((p) => {
+      const breite = beschriftungBreite(p.text);
+      const rechts = { l: p.x + 13, o: p.y - 34, r: p.x + 13 + breite, u: p.y - 8 };
+      const links = { l: p.x - 13 - breite, o: rechts.o, r: p.x - 13, u: rechts.u };
+      const nachLinks = !!p.links || (trifft(rechts) && !trifft(links));
+      belegt.push(nachLinks ? links : rechts);
+      return nachLinks;
+    });
+  }
+  const DU_FLAECHE = (x, y) => ({ l: x - 17, o: y - 17, r: x + 52, u: y + 17 });
 
   /* ===== Umgebung: kleine Karte auf der Startseite =====
      Die echte Straßenkarte um den eigenen Ort, darauf dieselben offenen Anfragen wie in der Liste darunter
@@ -1892,20 +1921,30 @@
     }
     if (zeigeIch()) html += an(w / 2, h / 2, '<span class="k-ich" aria-hidden="true"><i></i><b>Du</b></span>');
     // Knopf und Quellenangabe dürfen nichts verdecken: Beschriftung auf die andere Seite, sonst weglassen
-    // (die Anfrage steht ja in der Liste, und „Karte öffnen“ zeigt alle)
-    const belegt = ['.u-oeffnen', '.u-quelle'].map((sel) => {
-      const el = u.el.querySelector(sel);
-      return el && el.offsetWidth ? { l: el.offsetLeft - 4, o: el.offsetTop - 4, r: el.offsetLeft + el.offsetWidth + 4, u: el.offsetTop + el.offsetHeight + 4 } : null;
-    }).filter(Boolean);
+    // (die Anfrage steht ja in der Liste, und „Karte öffnen“ zeigt alle). Ihre Lage wird nur bei neuer Größe gemessen.
+    const masse = [w, h, document.documentElement.getAttribute('data-schrift') || '', u.el.querySelector('.u-quelle').textContent, document.fonts ? document.fonts.status : ''].join('|');
+    if (u.belegtFuer !== masse) {
+      u.belegtFuer = masse;
+      u.belegt = ['.u-oeffnen', '.u-quelle'].map((sel) => {
+        const el = u.el.querySelector(sel);
+        return el && el.offsetWidth ? { l: el.offsetLeft - 4, o: el.offsetTop - 4, r: el.offsetLeft + el.offsetWidth + 4, u: el.offsetTop + el.offsetHeight + 4 } : null;
+      }).filter(Boolean);
+    }
+    const belegt = u.belegt;
     const frei = (l, o, r, un) => l >= 2 && r <= w - 2 && o >= 2 && !belegt.some((q) => l < q.r && r > q.l && o < q.u && un > q.o);
-    gruppen.forEach((gr, i) => {
+    const plaetze = [];
+    gruppen.forEach((gr) => {
       const text = gr.liste.length > 1 ? 'ab ' + euroKurz(Math.min(...gr.liste.map((g) => g.betrag))) : euroKurz(gr.liste[0].betrag);
-      const breite = 16 + text.length * 8;
-      let links = false;
-      if (!frei(gr.x - 13, gr.y - 36, gr.x + 13 + breite, gr.y + 2)) {
-        if (!frei(gr.x - 13 - breite, gr.y - 36, gr.x + 13, gr.y + 2)) return;
-        links = true;
-      }
+      const breite = beschriftungBreite(text);
+      if (frei(gr.x - 13, gr.y - 36, gr.x + 13 + breite, gr.y + 2)) plaetze.push({ gr, x: gr.x, y: gr.y, text });
+      else if (frei(gr.x - 13 - breite, gr.y - 36, gr.x + 13, gr.y + 2)) plaetze.push({ gr, x: gr.x, y: gr.y, text, links: true, fest: true });
+    });
+    // Rechts ginge auch, wenn links nicht frei ist: dann bleibt es rechts (nur Knöpfe und Rand zwingen nach links)
+    const seiten = beschriftungsSeiten(plaetze.map((p) => p.fest ? p : { x: p.x, y: p.y, text: p.text }), zeigeIch() ? [DU_FLAECHE(w / 2, h / 2)] : []);
+    plaetze.forEach((p, n) => {
+      const gr = p.gr, i = gruppen.indexOf(gr);
+      let links = seiten[n];
+      if (links && !p.fest && !frei(gr.x - 13 - beschriftungBreite(p.text), gr.y - 36, gr.x + 13, gr.y + 2)) links = false;
       if (gr.liste.length > 1) {
         const ab = Math.min(...gr.liste.map((g) => g.betrag));
         html += an(gr.x, gr.y, sammelHTML(`data-u-sammel="${i}"`, gr.liste.length, ab, `${gr.liste.length} Anfragen hier, ab ${euroKurz(ab)}. Auf der großen Karte ansehen`, '', links));
@@ -2279,20 +2318,25 @@
       const o = meinOrt();
       anker(inMeter(o.lat, o.lng), '<span class="k-ich" aria-hidden="true"><i></i><b>Du</b></span>');
     }
+    const b = k.blick;
+    // Betrag links statt rechts, wo er sonst ein Nachbarschild oder „Du“ verdecken würde
+    const o = mein && !kacheln.aus ? inMeter(meinOrt().lat, meinOrt().lng) : null;
+    const seiten = beschriftungsSeiten(gruppen.map((gr) => ({ x: gr.m.x * b.s + b.x, y: gr.m.y * b.s + b.y,
+      text: gr.liste.length > 1 ? 'ab ' + euroKurz(Math.min(...gr.liste.map((g) => g.betrag))) : euroKurz(gr.liste[0].betrag) })),
+      o ? [DU_FLAECHE(o.x * b.s + b.x, o.y * b.s + b.y)] : []);
     gruppen.forEach((gr, i) => {
       if (gr.liste.length > 1) {
         const ab = Math.min(...gr.liste.map((g) => g.betrag));
         const orte = [...new Set(gr.liste.map((g) => g.stadtteil))];
         const eigene = gr.liste.some((g) => g.eigen || g.helfer === 'ich');
         const label = `${gr.liste.length} Anfragen in ${orte.length > 2 ? orte.slice(0, 2).join(', ') + ' und Umgebung' : orte.join(' und ')}, ab ${euroKurz(ab)}. Hineinzoomen`;
-        anker(gr.m, sammelHTML(`data-sammel="${i}"`, gr.liste.length, ab, label, eigene ? 'k-sammel-eigen' : ''));
+        anker(gr.m, sammelHTML(`data-sammel="${i}"`, gr.liste.length, ab, label, eigene ? 'k-sammel-eigen' : '', seiten[i]));
         return;
       }
       const g = gr.liste[0];
       const cls = [g.eigen ? 'pin-eigen' : '', abgelaufen(g) ? 'pin-abgelaufen' : '', g.helfer === 'ich' ? 'pin-zugesagt' : '', g.id === hervor ? 'is-aktiv' : ''].filter(Boolean).join(' ');
-      anker(gr.m, pinHTML(g, cls, text(g)), g.id === hervor ? 'k-oben' : '', g.id);
+      anker(gr.m, pinHTML(g, cls, text(g), seiten[i]), g.id === hervor ? 'k-oben' : '', g.id);
     });
-    const b = k.blick;
     k.schicht.innerHTML = teile.map((t) => `<div class="k-anker ${t.cls}" style="transform:translate(${Math.round(t.m.x * b.s + b.x)}px,${Math.round(t.m.y * b.s + b.y)}px)">${t.html}</div>`).join('');
     const kinder = k.schicht.children;
     k.elemente = teile.map((t, i) => {
@@ -4331,7 +4375,7 @@
     const el = $('#geholfen');
     if (!el) return;
     const fertig = gesuche.filter((g) => g.status === 'bezahlt').length;
-    const st = istLive() ? db.statistik : { woche: 12 + fertig, gesamt: 148 + fertig };
+    const st = istLive() || wartetAufLive() ? db.statistik : { woche: 12 + fertig, gesamt: 148 + fertig };
     const text = !st ? '' : st.woche > 0 ? `Diese Woche ${st.woche}× geholfen` : st.gesamt > 0 ? `Schon ${st.gesamt}× geholfen` : '';
     el.hidden = !text;
     el.innerHTML = text ? `${icon('check', 'i-xs')}<span>${text}</span>` : '';
@@ -5018,7 +5062,7 @@
     $('#beispiel-band').hidden = false;
     $('#beispiel-zurueck').href = location.pathname + '#entdecken';
   }
-  gesuche = demoLaden();
+  gesuche = LIVE_GEPLANT ? [] : demoLaden();
   const start = location.hash.slice(1);
   renderStadtteilAuswahl();
   renderAlles();
@@ -5030,6 +5074,9 @@
     if (!startGesehen()) startZeigen();
   }
   umgebungStarten();
+  // Erst jetzt, mit allen Inhalten, die Seite zeigen: So springt beim Laden nichts (siehe .startet in styles.css).
+  // Mit Datenbank erst, wenn die Verbindung steht (starteLive), damit keine Demo-Inhalte aufblitzen.
+  if (!LIVE_GEPLANT) seiteZeigen();
   starteLive().then((live) => {
     if (!live) { if (linkId(start)) gesuchAusLink(linkId(start)); return; }
     renderStadtteilAuswahl();

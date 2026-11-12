@@ -139,7 +139,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Schmale Handys: Bild in der Anfrage etwas kleiner, damit mehr Platz für den Text bleibt */
 @media (max-width: 360px) { .card { gap: 10px; padding-inline: 12px 12px; } .card .ico { width: 44px; height: 44px; } .card .ico .bild { width: 32px; height: 32px; } }
 .avatar-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--ink); color: var(--surface); font-family: var(--f-display); font-weight: 700; font-size: 0.9375rem; cursor: pointer; display: grid; place-items: center; }
-.btn-klein { width: auto; min-height: 44px; padding: 8px 16px; font-size: 0.9375rem; border-radius: 999px; }
+/* .btn.btn-klein: muss gegen .btn gewinnen (steht weiter unten), sonst wird der Knopf oben 54 statt 44 Punkte hoch */
+.btn.btn-klein { width: auto; min-height: 44px; padding: 8px 16px; font-size: 0.9375rem; border-radius: 999px; }
 
 /* ----- Ortsschild: Stadtteile wie das gelbe Schild am Ortseingang ----- */
 .ortsschild {
@@ -197,14 +198,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* ----- Tätigkeiten: Objekte zum Anfassen ----- */
 .chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; scrollbar-width: none; }
 .chips::-webkit-scrollbar { display: none; }
-.chips-wrap { flex-wrap: wrap; overflow: visible; }
 .chip { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 15px; border-radius: 999px; border: 0; background: var(--surface); box-shadow: var(--schatten-1); color: var(--ink); font-weight: 600; font-size: 0.9375rem; cursor: pointer; }
 .chip:hover { background: var(--raised); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
-.chip-radio { position: relative; display: inline-flex; }
-.chip-radio input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-.chip-radio input:checked + .chip { background: var(--ink); color: var(--surface); }
-.chip-radio input:focus-visible + .chip { outline: 3px solid var(--focus); outline-offset: 2px; }
 .kat-leiste { gap: 6px; margin-inline: -16px; padding: 4px 16px 10px; }
 .kat-leiste .chip {
   flex-direction: column; gap: 5px; min-width: 76px; min-height: 0; padding: 10px 8px 9px;
@@ -255,6 +251,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .leer-knoepfe { display: flex; flex-wrap: wrap; gap: 10px; justify-self: stretch; }
 .leer-knoepfe .btn { text-decoration: none; }
 .lade { color: var(--muted); padding: 18px 4px; }
+/* Platzhalter, solange die Anfragen laden: so groß wie echte Karten, damit beim Erscheinen nichts springt */
+.skelett { pointer-events: none; animation: skelett-puls 1.4s ease-in-out infinite; }
+.skelett .ico { background: var(--tile); }
+.skelett i { display: block; width: 72%; height: 15px; margin: 3px 0; border-radius: 8px; background: var(--tile); }
+.skelett i + i { width: 52%; height: 12px; }
+.skelett i + i + i { width: 34%; }
+.skelett-preis { flex: none; width: 54px; height: 34px; border-radius: 9px; background: var(--tile); }
+@keyframes skelett-puls { 50% { opacity: .55; } }
 
 /* ----- Knöpfe ----- */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 54px; padding: 14px 20px; border-radius: var(--r-m); border: 0; font-weight: 600; font-size: 1.0625rem; cursor: pointer; text-decoration: none; transition: transform .12s ease, background .15s; }
@@ -264,13 +268,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn-primary:hover { background: color-mix(in srgb, var(--klinker) 90%, #000); }
 .btn-secondary { background: var(--tile); color: var(--ink); }
 .btn-secondary:hover { background: color-mix(in srgb, var(--tile) 82%, var(--ink) 8%); }
-.btn-danger { color: var(--crit); }
 .btn-danger-solid { background: var(--crit-flaeche); color: #fff; }
 .btn[disabled], .btn[aria-busy="true"] { opacity: .55; cursor: progress; }
 .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .link-btn { min-height: 44px; background: none; border: 0; color: var(--muted); font-size: 0.9375rem; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 8px; justify-self: center; }
 .link-inline { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 4px 0; color: var(--ink); font-weight: 600; font-size: 1rem; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; cursor: pointer; }
-.link-als-knopf { display: inline-flex; align-items: center; }
 .icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--tile); color: var(--ink); display: grid; place-items: center; cursor: pointer; flex: none; }
 
 .pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 0.875rem; font-weight: 600; line-height: 1.35; white-space: nowrap; }
@@ -467,8 +469,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .stand-warn { color: var(--warn); }
 .hinweis { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r-m); background: var(--tile); color: var(--muted); font-size: 0.9375rem; }
 .hinweis .i { margin-top: 2px; }
-.hinweis-offen { color: var(--ink); background: var(--good-bg); }
-.hinweis-offen .i { color: var(--hedge); }
 .schritte { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .schritte li { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; font-size: 0.875rem; color: var(--muted); padding: 0 4px; }
 .schritte li::before { content: ""; position: absolute; top: 12px; right: 50%; width: 100%; height: 3px; border-radius: 2px; background: var(--line); }
@@ -534,8 +534,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .kosten-summe { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 2px; font-weight: 600; }
 .kosten-summe span:first-child { color: var(--ink); }
 .kosten-hinweis { font-size: 0.875rem; color: var(--muted); }
-.regel { display: flex; gap: 10px; align-items: flex-start; font-size: 0.9375rem; color: var(--muted); }
-.regel .i { color: var(--hedge); margin-top: 2px; }
 
 /* ----- Hilfe suchen in vier Schritten ----- */
 .wizard-kopf { display: grid; gap: 10px; }
@@ -564,9 +562,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .wahl span { display: flex; flex-direction: column; gap: 1px; line-height: 1.2; align-items: center; justify-content: center; min-height: 52px; padding: 8px 10px; border-radius: var(--r-s); background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line); font-weight: 600; text-align: center; cursor: pointer; }
 .wahl input:checked + span { background: var(--ink); color: var(--surface); box-shadow: none; }
 .wahl input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
-.wahl-datum { font-size: 0.875rem; font-weight: 400; color: var(--muted); }
-.wahl input:checked + span .wahl-datum { color: inherit; opacity: .8; }
-.wahl-datum:empty { display: none; }
 .wahl-knopf { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1.2; min-height: 50px; padding: 8px 10px; border: 0; border-radius: var(--r-s); background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line); color: var(--ink); font-weight: 600; font-size: 1rem; cursor: pointer; transition: background .15s, color .15s; }
 .wahl-knopf[aria-pressed="true"] { background: var(--ink); color: var(--surface); box-shadow: none; }
 .wahl-knopf small { font-size: 0.875rem; font-weight: 400; color: var(--muted); }
@@ -697,9 +692,7 @@ html.ist-offline body { padding-top: 34px; }
 .loeschen-box { background: var(--warn-bg); }
 
 /* ----- Rechtliches, Fragen, Menü ----- */
-.app-fuss nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; padding-top: 8px; border-top: 1px solid var(--line); }
-.app-fuss a, .recht-nav a, .recht-links-form a { color: var(--muted); font-size: 0.9375rem; font-weight: 600; text-underline-offset: 3px; }
-.app-fuss a { display: inline-flex; align-items: center; min-height: 44px; }
+.recht-nav a, .recht-links-form a { color: var(--muted); font-size: 0.9375rem; font-weight: 600; text-underline-offset: 3px; }
 .recht-links-form { margin: 0; }
 .recht-links-form a { color: var(--ink); font-size: inherit; }
 .recht { display: grid; gap: 10px; font-size: 1.0625rem; line-height: 1.55; }
@@ -739,13 +732,8 @@ html.ist-offline body { padding-top: 34px; }
 .menue-link:last-child { border-bottom: 0; }
 .menue-link span { color: var(--muted); font-size: 1.375rem; line-height: 1; }
 .einladen-zeile:focus-visible, .menue-link:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-.schrift-probe { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: var(--r-m); background: var(--tile); font-size: 1rem; color: var(--muted); }
-.schrift-probe strong { color: var(--ink); font-size: 1.0625rem; }
 .einladen-zeile { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 58px; padding: 0 18px; border: 0; border-radius: var(--r-l); background: var(--surface); box-shadow: var(--schatten-1); color: var(--ink); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
 .einladen-zeile span:nth-child(2) { flex: 1; }
-.einladen-karte { display: grid; gap: 12px; padding: 18px; border-radius: var(--r-l); background: var(--tile); }
-.einladen-karte p { margin: 4px 0 0; color: var(--muted); font-size: 1rem; }
-.einladen-karte .btn { justify-self: start; }
 
 /* ----- Konto, Profil ----- */
 .konto-kopf { display: flex; align-items: center; gap: 12px; }
@@ -820,7 +808,6 @@ button.rez-name:hover { text-decoration-color: currentColor; }
 .start-probe { margin: 0; padding: 16px 18px; border-radius: var(--r-l); background: var(--surface); box-shadow: var(--schatten-1); }
 .start-probe strong { display: block; font-family: var(--f-display); font-size: 1.25rem; }
 .start-ueber { position: absolute; top: 0; right: 0; }
-.start-logo .marke-logo { height: 52px; width: auto; color: var(--ink); }
 .start h1 { margin: 0; font-size: 2.5rem; line-height: 1.02; outline: none; }
 .start-text { margin: 0; color: var(--muted); font-size: 1.125rem; line-height: 1.5; }
 .start-liste { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
@@ -829,7 +816,6 @@ button.rez-name:hover { text-decoration-color: currentColor; }
 .start-liste li > .i { flex: none; width: 28px; height: 28px; padding: 8px; box-sizing: content-box; border-radius: 50%; background: var(--tile); color: var(--ink); }
 .start-liste strong { display: block; font-family: var(--f-display); font-size: 1.25rem; font-weight: 700; color: var(--ink); }
 .start-liste span { color: var(--muted); line-height: 1.45; }
-.start-orte { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .start-fuss { display: grid; gap: 16px; padding-top: 4px; }
 .start-punkte { display: flex; justify-content: center; gap: 8px; }
 .start-punkte span { width: 8px; height: 8px; border-radius: 50%; background: var(--line); transition: width .25s; }
@@ -863,6 +849,12 @@ button.rez-name:hover { text-decoration-color: currentColor; }
 .intro .hs-funken { animation: hs-funken .5s ease-out .66s both; }
 .intro .hs-wort { opacity: 0; animation: hs-wort .45s ease 1s forwards; }
 .intro.weg { animation: intro-weg .18s ease forwards; }
+/* Wer die App in den letzten 12 Stunden schon geöffnet hat, kommt ohne Animation direkt hinein (Klasse setzt das erste Skript) */
+.ohne-intro .intro { display: none; }
+/* Bis das Programm alles gezeichnet hat, bleibt der Inhalt unsichtbar: So springt beim Laden nichts, und es blitzt kein
+   falscher Name auf. Startet das Programm gar nicht (sehr altes Gerät), erscheint der Inhalt nach 5 Sekunden trotzdem. */
+.startet main { visibility: hidden; animation: zeigen-spaet 0s linear 5s forwards; }
+@keyframes zeigen-spaet { to { visibility: visible; } }
 @keyframes hs-von-links { from { transform: translate(-280px, 70px) rotate(-16deg); opacity: 0; } 25% { opacity: 1; } to { transform: none; opacity: 1; } }
 @keyframes hs-von-rechts { from { transform: translate(280px, -70px) rotate(16deg); opacity: 0; } 25% { opacity: 1; } to { transform: none; opacity: 1; } }
 @keyframes hs-schuetteln { 0% { transform: none; } 25% { transform: translateY(-12px) rotate(-3deg); } 55% { transform: translateY(9px) rotate(2deg); } 80% { transform: translateY(-3px); } 100% { transform: none; } }
@@ -972,6 +964,8 @@ a.btn { text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .intro { display: none; }
+  /* keine Bewegung, nur das Sicherheitsnetz: ohne Programm erscheint der Inhalt nach 5 Sekunden */
+  .startet main { animation: zeigen-spaet 0s linear 5s forwards !important; }
   .feier .hs-funken { opacity: 0; }
 }
 #banner-naechstes:empty { display: none; }

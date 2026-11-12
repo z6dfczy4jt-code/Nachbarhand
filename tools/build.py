@@ -75,12 +75,15 @@ SCHRIFTEN = [('Barlow', 400, 'barlow-regular'), ('Barlow', 500, 'barlow-medium')
 GOOGLE_FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
                 '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap">')
 # Erstes Skript der Seite (bewusst altes JavaScript, läuft auch auf sehr alten Geräten):
-# 1. setzt Design und Schriftgröße vor dem ersten Zeichnen, damit nichts aufblitzt
+# 1. setzt Design und Schriftgröße vor dem ersten Zeichnen, damit nichts aufblitzt; hält den Inhalt verborgen, bis die
+#    App ihn gezeichnet hat (Klasse startet); zeigt die Start-Animation höchstens alle 12 Stunden (Klasse ohne-intro)
 # 2. meldet technische Fehler der App an die Datenbank (public.fehler_melden), auch wenn die App auf einem
 #    alten Gerät gar nicht erst startet. Ohne Namen und Inhalte, höchstens 5 je Besuch.
 FRUEH = ('<script>try{var a=JSON.parse(localStorage.getItem("handdrauf-ansicht")||"{}"),r=document.documentElement;'
          'if(a.thema==="dunkel"||a.thema==="hell")r.setAttribute("data-theme",a.thema==="dunkel"?"dark":"light");'
          'if(a.schrift==="gross"||a.schrift==="sehr-gross")r.setAttribute("data-schrift",a.schrift)}catch(e){}'
+         'try{var r=document.documentElement,j=new Date().getTime(),z=+localStorage.getItem("handdrauf-intro")||0;r.className+=" startet";'
+         'if(j-z>=0&&j-z<432e5)r.className+=" ohne-intro";else localStorage.setItem("handdrauf-intro",String(j))}catch(e){}'
          '(function(){var U=%(url)s,K=%(key)s,F=%(fassung)s,n=0,g={};if(!U||!window.addEventListener)return;'
          'function m(t,s){try{t=String(t||"");s=String(s||"");if(!t||n>=5||/ResizeObserver loop|^Script error/i.test(t)||g[t])return;g[t]=1;n++;'
          'var x=new XMLHttpRequest();x.open("POST",U+"/rest/v1/rpc/fehler_melden");x.setRequestHeader("Content-Type","application/json");'
@@ -142,6 +145,36 @@ def qr():
     return 'const QR_SVG = ' + json.dumps(svg) + ';'
 
 
+def esbuild():
+    """Pfad zu esbuild (zum Verkleinern), falls vorhanden: Umgebungsvariable ESBUILD, sonst im Suchpfad."""
+    import os
+    import shutil
+    for kandidat in (os.environ.get('ESBUILD'), shutil.which('esbuild'), '/opt/npm-tools/node_modules/esbuild/bin/esbuild'):
+        if kandidat and pathlib.Path(kandidat).is_file():
+            return kandidat
+    return None
+
+
+VERKLEINERT = []
+
+
+def verkleinern(code, art):
+    """Kommentare und Leerraum entfernen (kleinere Seite, schneller auf dem Handy). Namen bleiben lesbar, damit
+    Fehlerberichte verständlich bleiben. Ziel: Safari 11 (iPhone ab iOS 11); neuere Schreibweisen wären ein Fehler.
+    Ohne esbuild bleibt der Code, wie er ist."""
+    import subprocess
+    pfad = esbuild()
+    if not pfad:
+        return code
+    befehl = [pfad, '--loader=' + art, '--target=safari11', '--log-level=error', '--charset=utf8']
+    befehl += ['--minify'] if art == 'css' else ['--minify-whitespace', '--minify-syntax', '--supported:destructuring=true']
+    r = subprocess.run(befehl, input=code, capture_output=True, text=True)
+    if r.returncode != 0:
+        sys.exit(f'\nFEHLER beim Verkleinern ({art}):\n{r.stderr}')
+    VERKLEINERT.append(art)
+    return r.stdout
+
+
 def inset_ausschreiben(css):
     """`inset` können Safari und iPhones erst ab Version 14.1: als top/right/bottom/left ausschreiben."""
     import re
@@ -166,6 +199,8 @@ def teile(vorschau):
     styles = inset_ausschreiben(styles)
     assert '/*SCHRIFTEN*/' in styles
     styles = styles.replace('/*SCHRIFTEN*/', schriften)
+    styles_quelle = styles
+    styles = verkleinern(styles, 'css')
     body = (SRC / 'body.html').read_text().replace('<!--KOPFZEICHEN-->', (SRC / 'kopfzeichen.svg').read_text().strip())
     defs, intro, feier = handschlag()
     body = body.replace('<!--HANDSCHLAG-DEFS-->', defs).replace('<!--INTRO-SVG-->', intro).replace('<!--FEIER-SVG-->', feier)
@@ -173,13 +208,13 @@ def teile(vorschau):
     oeffentlich = {k: EINSTELLUNGEN[k] for k in ('adresse', 'supabase', 'push', 'betreiber', 'hosting', 'karte', 'geocoder', 'codeLogin', 'gebuehren', 'supabaseJs') if k in EINSTELLUNGEN}
     programm = '\n'.join([bilder(), qr()] + [(SRC / n).read_text() for n in ('recht.js', 'fragen.js', 'app.js')])
     # Fassung: Fingerabdruck von Programm, Aussehen und Einstellungen. Ändert sich bei jeder neuen Version.
-    fassung = hashlib.sha256((programm + styles + body + json.dumps(oeffentlich, sort_keys=True)).encode()).hexdigest()[:10]
+    fassung = hashlib.sha256((programm + styles_quelle + body + json.dumps(oeffentlich, sort_keys=True)).encode()).hexdigest()[:10]
     oeffentlich['fassung'] = 'vorschau' if vorschau else fassung
-    app = 'const EINSTELLUNGEN = ' + json.dumps(oeffentlich, ensure_ascii=False) + ';\n' + programm
     if vorschau:
         alt = 'const VORSCHAU = false;'
-        assert alt in app
-        app = app.replace(alt, 'const VORSCHAU = true;')
+        assert alt in programm
+        programm = programm.replace(alt, 'const VORSCHAU = true;')
+    app = 'const EINSTELLUNGEN = ' + json.dumps(oeffentlich, ensure_ascii=False) + ';\n' + verkleinern(programm, 'js')
     schrift_kopf = GOOGLE_FONTS if vorschau else ''.join(
         f'<link rel="preload" href="assets/fonts/{d}.woff" as="font" type="font/woff" crossorigin>' for _, _, d in SCHRIFTEN if d in ('barlow-regular', 'barlowsemicondensed-bold'))
     db = {} if vorschau else EINSTELLUNGEN['supabase']
@@ -213,7 +248,7 @@ def standalone():
             f'<meta property="og:image" content="{ADRESSE}assets/vorschau.png">\n'
             '<meta property="og:image:width" content="1200">\n'
             '<meta property="og:image:height" content="630">\n'
-            '<meta property="og:image:alt" content="Hand Drauf: eine kleine Nachbarschaft als Modell, darüber Preisschilder mit Beträgen">\n'
+            '<meta property="og:image:alt" content="Hand Drauf: drei Anfragen aus der Nachbarschaft als Zettel am Schwarzen Brett, mit Beträgen">\n'
             '<meta name="twitter:card" content="summary_large_image">\n'
             '<title>Hand Drauf</title>\n'
             f'<link rel="icon" href="assets/favicon-32.png?v={kennung("favicon-32.png")}" sizes="32x32" type="image/png">\n'
@@ -374,7 +409,7 @@ def vorschau_fragment():
 if __name__ == '__main__':
     ziel = WURZEL / 'index.html'
     ziel.write_text(standalone())
-    print('index.html', ziel.stat().st_size, 'Bytes')
+    print('index.html', ziel.stat().st_size, 'Bytes', '(verkleinert)' if VERKLEINERT else '(nicht verkleinert: esbuild fehlt)')
     if '--app' in sys.argv:
         import shutil
         www = WURZEL / 'app/www'

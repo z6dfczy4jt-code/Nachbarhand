@@ -36,7 +36,7 @@ App für Nachbarschaftshilfe in ganz Deutschland (gestartet in Garbsen): Anfrage
 | `supabase/functions/push/` | Edge Function für Benachrichtigungen: Verschlüsselung (RFC 8291) und Absender-Nachweis (VAPID) mit Bordmitteln |
 | `sw.js` | Offline-Hülle: Seite zuerst aus dem Netz, feste Dateien aus dem Speicher, Anfragen nie zwischengespeichert. Zeigt Benachrichtigungen an |
 | `einstellungen.json` | Alle Angaben für den Betrieb an einer Stelle: Adresse, Datenbank, Push, Betreiber, Hosting, Schalter. Der Build prüft sie |
-| `tools/build.py` | Baut aus `src/` die fertige `index.html` und `version.json`; mit `--dist` den Ordner `dist/` für den eigenen Server |
+| `tools/build.py` | Baut aus `src/` die fertige `index.html` und `version.json`; mit `--dist` den Ordner `dist/` für den eigenen Server. Ist [esbuild](https://esbuild.github.io/) installiert, werden Programm und Gestaltung dabei verkleinert (ohne Kommentare und Leerraum, Namen bleiben lesbar; Ziel: iPhones ab iOS 11). Ohne esbuild funktioniert alles genauso, die Seite ist nur etwas größer |
 | `server/` | Eigener Server: `Caddyfile`, `docker-compose.yml`, `aktualisieren.sh`, Datensicherung `sicherung.sh` (siehe SERVER.md) |
 | `version.json` | Fassung der App. Die App fragt sie ab und bietet bei einer neuen Fassung „Neu laden“ an |
 | `assets/` | App-Symbole, Schriften (Barlow), Vorschaubild, Aushang |
