@@ -20,14 +20,14 @@ HTML = f"""<!doctype html><html><head><meta charset="utf-8"><style>
 @font-face {{ font-family: 'Barlow'; src: url('{SCHRIFTEN}/barlow-semibold.woff') format('woff'); font-weight: 600; }}
 @font-face {{ font-family: 'Barlow Semi Condensed'; src: url('{SCHRIFTEN}/barlowsemicondensed-bold.woff') format('woff'); font-weight: 700; }}
 * {{ box-sizing: border-box; margin: 0; }}
-body {{ width: 1200px; height: 630px; background: #EDF1F5; color: #1C2530; font-family: 'Barlow', sans-serif; overflow: hidden; }}
+body {{ width: 1200px; height: 630px; background: #E3E6DF; color: #1E2A36; font-family: 'Barlow', sans-serif; overflow: hidden; }}
 .rahmen {{ position: relative; width: 1200px; height: 630px; padding: 60px 0 0 68px; }}
 .logo svg {{ width: 300px; height: auto; display: block; fill: #1C2530; }}
 h1 {{ margin-top: 78px; width: 640px; white-space: nowrap; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 88px; line-height: .94; letter-spacing: -0.012em; }}
 p {{ margin-top: 30px; width: 560px; font-size: 32px; line-height: 1.3; color: #36404C; }}
 .schild {{ position: absolute; left: 68px; bottom: 58px; padding: 5px 18px 2px; border-radius: 7px; background: #F4B400; color: #11161C; box-shadow: inset 0 0 0 3px #11161C; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 34px; line-height: 1.15; }}
 {zettel.CSS}
-.szene.wand {{ position: absolute; right: 44px; top: 52px; width: 470px; height: 526px; border-radius: 44px; font-size: 25px; box-shadow: 0 2px 6px rgba(28, 37, 48, .06), 0 22px 50px rgba(28, 37, 48, .16); }}
+.szene.wand {{ background-image: none; position: absolute; right: 44px; top: 52px; width: 470px; height: 526px; border-radius: 44px; font-size: 25px; box-shadow: 0 2px 6px rgba(28, 37, 48, .06), 0 22px 50px rgba(28, 37, 48, .16); }}
 </style></head><body><div class="rahmen">
 <div class="logo">{LOGO}</div>
 <h1>Nachbarn helfen<br>Nachbarn.</h1>

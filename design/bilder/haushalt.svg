@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120"><defs>
+<filter id="zittern" x="-10%" y="-10%" width="120%" height="120%">
+  <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="9" result="t"/>
+  <feDisplacementMap in="SourceGraphic" in2="t" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+</filter>
+<filter id="korn" x="0" y="0" width="100%" height="100%">
+  <feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="1" seed="9" result="n"/>
+  <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -16 10.6" result="loch"/>
+  <feComposite in="SourceGraphic" in2="loch" operator="in" result="gedruckt"/>
+  <feTurbulence type="fractalNoise" baseFrequency="0.07" numOctaves="2" seed="9" result="w"/>
+  <feColorMatrix in="w" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.7 0.62" result="wolke"/>
+  <feComposite in="gedruckt" in2="wolke" operator="in"/>
+</filter>
+<filter id="schatten" x="-20%" y="-20%" width="140%" height="150%">
+  <feDropShadow dx="1.2" dy="3.2" stdDeviation="2.2" flood-color="#1E2A36" flood-opacity=".30"/>
+</filter>
+<pattern id="schraffur" width="4.2" height="4.2" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">
+  <line x1="0" y1="0" x2="0" y2="4.2" stroke="#1E2A36" stroke-width="1.25"/>
+</pattern>
+</defs><g transform="rotate(0 60 60)"><g filter="url(#schatten)"><g fill="#FCFBF7" stroke="#FCFBF7" stroke-width="13" stroke-linejoin="round" stroke-linecap="round"><g transform="rotate(-38 60 60)"><path d="M54 30 h12 v74 h-12 Z M38 14 h44 v20 h-44 Z"/></g><g transform="rotate(40 60 60)"><path d="M53 16 h14 v38 h-14 Z M58 54 h4 v46 h-4 Z"/></g></g></g><g transform="translate(1.6 1.4)" filter="url(#korn)"><g transform="rotate(40 60 60)"><path d="M53 18 Q60 12 67 18 V52 H53 Z" fill="#C24A30"/><path d="M57 54 h6 v42 l-3 6 l-3 -6 Z" fill="#B9C2CB"/></g><g transform="rotate(-38 60 60)"><path d="M55 34 h10 v68 q-5 3 -10 0 Z" fill="#D39B5A"/><path d="M38 16 h44 v16 h-44 Z" fill="#8E9AA6"/></g></g><g fill="url(#schraffur)" opacity=".55" filter="url(#zittern)"><g transform="rotate(-38 60 60)"><path d="M62 34 h3 v68 h-3 Z M38 27 h44 v5 h-44 Z"/></g></g><g fill="none" stroke="#1E2A36" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" filter="url(#zittern)"><g transform="rotate(40 60 60)"><path d="M53 52 V19 Q60 12 67 19 V52 Z M56 22 v26 M60 21 v28 M64 22 v26"/><path d="M57 53 v43 l3 6 l3 -6 v-43"/></g><g transform="rotate(-38 60 60)"><path d="M55 33 V102 Q60 105 65 102 V33"/><path d="M38 16 H82 V32 H38 Z M46 16 v16"/></g></g></g></svg>

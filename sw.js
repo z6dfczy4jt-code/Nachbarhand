@@ -7,7 +7,7 @@
  * - Benachrichtigungen: zeigt an, was die Datenbank schickt, und öffnet beim Antippen die passende Anfrage.
  * Nach Änderungen an Dateien in assets/ die Versionsnummer erhöhen.
  */
-const VERSION = 'handdrauf-2026-11-12c';
+const VERSION = 'handdrauf-2026-11-12d';
 const HUELLE = [
   './',
   'manifest.webmanifest',
@@ -21,7 +21,12 @@ const HUELLE = [
   'assets/fonts/barlow-medium.woff',
   'assets/fonts/barlow-semibold.woff',
   'assets/fonts/barlowsemicondensed-semibold.woff',
-  'assets/fonts/barlowsemicondensed-bold.woff'
+  'assets/fonts/barlowsemicondensed-bold.woff',
+  'assets/textur/wand-hell.png',
+  'assets/textur/wand-dunkel.png',
+  'assets/textur/papier-hell.png',
+  'assets/textur/papier-dunkel.png',
+  'assets/textur/druck.png'
 ];
 const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@';
 

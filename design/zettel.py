@@ -8,9 +8,14 @@ ZETTEL = [
     ('Drucker einrichten', 'Morgen · 1,2 km', '20 €', -1.0, 0.6),
 ]
 
+import base64 as _b64
+import pathlib as _pl
+# Raufaser wie in der App (design/texturen.py)
+_WAND = 'data:image/png;base64,' + _b64.b64encode((_pl.Path(__file__).resolve().parent.parent / 'assets/textur/wand-hell.png').read_bytes()).decode()
+
 CSS = """
-.wand { position: relative; overflow: hidden; background: #DDE5EE; display: flex; flex-direction: column; justify-content: center; gap: 0.9em; padding: 1.2em 1.1em; }
-.notiz { position: relative; width: fit-content; min-width: 74%; box-sizing: border-box; padding: 0.75em 0.9em 0.7em; border-radius: 0.35em; background: #FFFFFF; color: #1C2530;
+.wand { position: relative; overflow: hidden; background: #E3E6DF url(WANDBILD); background-size: 90px 90px; display: flex; flex-direction: column; justify-content: center; gap: 0.9em; padding: 1.2em 1.1em; }
+.notiz { position: relative; width: fit-content; min-width: 74%; box-sizing: border-box; padding: 0.75em 0.9em 0.7em; border-radius: 0.35em; background: #FFFFFF; color: #1E2A36;
   box-shadow: 0 0.05em 0.1em rgba(28, 37, 48, .12), 0 0.5em 1.1em rgba(28, 37, 48, .14); display: grid; grid-template-columns: 1fr auto; column-gap: 0.7em; align-items: center; }
 .notiz::before { content: ''; position: absolute; left: 50%; top: -0.32em; width: 0.62em; height: 0.62em; margin-left: -0.31em; border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #D86A59, #A3392B 60%); box-shadow: 0 0.12em 0.2em rgba(28, 37, 48, .35); }
@@ -26,3 +31,5 @@ def html():
     return '<div class="wand">' + ''.join(
         f'<div class="notiz" style="transform: rotate({drehung}deg); margin-left: {links}em"><b>{titel}</b><span>{wann}</span><em>{betrag}</em></div>'
         for titel, wann, betrag, drehung, links in ZETTEL) + '</div>'
+
+CSS = CSS.replace('WANDBILD', _WAND)

@@ -125,12 +125,12 @@ def handschlag():
 
 
 def bilder():
-    """Tätigkeits-Bilder (3D-Objekte aus Microsoft Fluent Emoji, MIT-Lizenz) als eingebettete Daten."""
+    """Tätigkeits-Bilder (gezeichnete Aufkleber aus design/bilder.py) als eingebettete Daten."""
     import base64
     eintraege = []
     for f in sorted((SRC / 'kategorien').glob('*.webp')):
         eintraege.append(f"  {f.stem}: 'data:image/webp;base64,{base64.b64encode(f.read_bytes()).decode()}'")
-    return '/* Tätigkeits-Bilder: Microsoft Fluent Emoji 3D (MIT), siehe src/kategorien/LIZENZ-fluent-emoji.txt */\nconst KAT_BILDER = {\n' + ',\n'.join(eintraege) + '\n};'
+    return '/* Tätigkeits-Bilder: gezeichnet für Hand Drauf (design/bilder.py) */\nconst KAT_BILDER = {\n' + ',\n'.join(eintraege) + '\n};'
 
 
 def qr():
@@ -197,6 +197,11 @@ def teile(vorschau):
         f'@font-face {{ font-family: "{f}"; font-style: normal; font-weight: {w}; font-display: swap; src: url("assets/fonts/{d}.woff") format("woff"); }}'
         for f, w, d in SCHRIFTEN)
     styles = inset_ausschreiben(styles)
+    if vorschau:
+        # In der Vorschau gibt es keinen Ordner assets/: Oberflächen direkt einbetten
+        import base64
+        styles = re.sub(r'url\("assets/textur/([a-z-]+)\.png"\)',
+                        lambda m: 'url("data:image/png;base64,' + base64.b64encode((WURZEL / 'assets/textur' / (m.group(1) + '.png')).read_bytes()).decode() + '")', styles)
     assert '/*SCHRIFTEN*/' in styles
     styles = styles.replace('/*SCHRIFTEN*/', schriften)
     styles_quelle = styles

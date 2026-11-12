@@ -25,7 +25,7 @@ App für Nachbarschaftshilfe in ganz Deutschland (gestartet in Garbsen): Anfrage
 | Datei | Inhalt |
 | --- | --- |
 | `src/body.html` | Bildschirme und Bedien-Symbole |
-| `src/kategorien/` | Tätigkeits-Bilder (3D-Objekte aus Microsoft Fluent Emoji, MIT-Lizenz), werden beim Bauen eingebettet |
+| `src/kategorien/` | Tätigkeits-Bilder (gezeichnete Aufkleber, erzeugt mit `design/bilder.py`), werden beim Bauen eingebettet |
 | `src/kopfzeichen.svg` | Logo für die Kopfzeile (folgt hellem und dunklem Design) |
 | `src/styles.css` | Gestaltung: Schiefer, Klinkerrot, Rapsgelb; helles und dunkles Design, drei Schriftgrößen |
 | `src/app.js` | App-Logik, eigene Karte (Straßenkarte basemap.de, ohne Kartenbibliothek) und die kleine Karte der Umgebung auf der Startseite, Demo- und Live-Modus, Nachrichten, Melden |
@@ -39,10 +39,10 @@ App für Nachbarschaftshilfe in ganz Deutschland (gestartet in Garbsen): Anfrage
 | `tools/build.py` | Baut aus `src/` die fertige `index.html` und `version.json`; mit `--dist` den Ordner `dist/` für den eigenen Server. Ist [esbuild](https://esbuild.github.io/) installiert, werden Programm und Gestaltung dabei verkleinert (ohne Kommentare und Leerraum, Namen bleiben lesbar; Ziel: iPhones ab iOS 11). Ohne esbuild funktioniert alles genauso, die Seite ist nur etwas größer |
 | `server/` | Eigener Server: `Caddyfile`, `docker-compose.yml`, `aktualisieren.sh`, Datensicherung `sicherung.sh` (siehe SERVER.md) |
 | `version.json` | Fassung der App. Die App fragt sie ab und bietet bei einer neuen Fassung „Neu laden“ an |
-| `assets/` | App-Symbole, Schriften (Barlow), Vorschaubild, Aushang |
+| `assets/` | App-Symbole, Schriften (Barlow), Oberflächen (`assets/textur/`: Raufaser, Papier, Druckkorn; erzeugt mit `design/texturen.py`), Vorschaubild, Aushang |
 | `manifest.webmanifest` | Angaben für „Zum Home-Bildschirm“ |
 | `design/logo/` | Logo „Hand Drauf“ als SVG (gestapelt, quer, hell, dunkel, App-Icon) und die Vorlage |
-| `design/` | Skripte: `trace.py` zeichnet den Handschlag aus der Vorlage nach, `marke.py` setzt das Logo, `icons.py` die App-Symbole (Browser-Tab, Startbildschirm, iPhone-App) |
+| `design/` | Skripte: `trace.py` zeichnet den Handschlag aus der Vorlage nach, `marke.py` setzt das Logo, `icons.py` die App-Symbole (Browser-Tab, Startbildschirm, iPhone-App), `bilder.py` die Tätigkeits-Bilder (Tusche und Risodruck als SVG in `design/bilder/`), `texturen.py` die Oberflächen |
 | `package.json`, `capacitor.config.json` | iPhone-App mit Capacitor (siehe APP-STORE.md) |
 | `app/resources/` | App-Symbol und Startbildschirme für die iPhone-App, erzeugt mit `design/icons.py` (Symbol) und `design/app-bilder.py` (Startbildschirme) |
 | `assets/vorschau.png` | Vorschaubild für geteilte Links, erzeugt mit `design/vorschau.py` |
@@ -53,6 +53,6 @@ App für Nachbarschaftshilfe in ganz Deutschland (gestartet in Garbsen): Anfrage
 
 - Karte: eigene, schlanke Karte im Code (`src/app.js`, Abschnitt „Karte“), ohne Kartenbibliothek. Kartenbilder: [basemap.de](https://basemap.de) Web Raster, © GeoBasis-DE / [BKG](https://www.bkg.bund.de) ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)); Ersatz: © [OpenStreetMap](https://www.openstreetmap.org/copyright)-Mitwirkende. Optional CARTO „Voyager“ mit eigenem Schlüssel (`CONFIG.karte.carto`). Ohne Netz zeichnet die App die Stadtteile vereinfacht selbst; Lage der Mittelpunkte: OpenStreetMap und [GeoNames](https://www.geonames.org) (CC BY 4.0)
 - Schrift: Barlow und Barlow Semi Condensed (SIL Open Font License), nach den deutschen Straßenschildern. Montserrat in der Wortmarke (SIL Open Font License)
-- Tätigkeits-Bilder: Microsoft Fluent Emoji 3D (MIT-Lizenz), siehe `src/kategorien/LIZENZ-fluent-emoji.txt`
+- Tätigkeits-Bilder und Oberflächen: eigens für Hand Drauf gezeichnet (`design/bilder.py`, `design/texturen.py`)
 - Lage der Stadtteile: OpenStreetMap (Haltestellen) und GeoNames
 - Im Demo-Modus sind alle Personen und Anfragen erfunden. Es fließt kein Geld.

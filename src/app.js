@@ -1259,7 +1259,7 @@
         <span class="card-ort"><span class="ortsschild">${esc(g.stadtteil)}</span><span>${distanz(g)}</span></span>
         ${extra}
       </span>
-      <span class="price">${euroKurz(g.betrag)}</span>
+      <span class="abriss"><span class="price">${euroKurz(g.betrag)}</span></span>
     </button>`;
   }
 
@@ -1337,7 +1337,7 @@
       umgebungZeichnen();
       $('#liste').innerHTML = db.fehler
         ? `<div class="leer"><p><strong>Die Anfragen konnten nicht geladen werden.</strong></p><p>${esc(db.fehler)}</p><button type="button" class="btn btn-secondary btn-auto" data-neu-laden>Erneut versuchen</button></div>`
-        : '<p class="sr-only" role="status">Anfragen werden geladen …</p>' + '<div class="card skelett" aria-hidden="true"><span class="ico"></span><span class="card-main"><i></i><i></i><i></i></span><span class="skelett-preis"></span></div>'.repeat(3);
+        : '<p class="sr-only" role="status">Anfragen werden geladen …</p>' + '<div class="card skelett" aria-hidden="true"><span class="ico"></span><span class="card-main"><i></i><i></i><i></i></span><span class="abriss"><span class="skelett-preis"></span></span></div>'.repeat(3);
       return;
     }
     const treffer = sortiere(offene.filter((g) => passt(g) && meterVonMir(g) <= ui.umkreis * 1000));
@@ -1773,15 +1773,38 @@
   // „Du“ verdecken und ist links Platz, dann links. liste: [{x, y, text}] in Bildpunkten (Spitze des Tropfens),
   // besetzt: weitere Flächen {l, o, r, u}. Rückgabe je Schild: true = links.
   const beschriftungBreite = (text) => 16 + text.length * 8;
-  function beschriftungsSeiten(liste, besetzt) {
-    const belegt = besetzt.concat(liste.map((p) => ({ l: p.x - 13, o: p.y - 36, r: p.x + 13, u: p.y + 2 })));
-    const trifft = (a) => belegt.some((q) => a.l < q.r && a.r > q.l && a.o < q.u && a.u > q.o);
+  function beschriftungsSeiten(liste, besetzt, breite, hoehe) {
+    // Flächen in einem Raster von 80 Bildpunkten ablegen: jede Prüfung sieht nur die Nachbarschaft. Schilder außerhalb des
+    // Bildes bleiben rechts beschriftet (spart auf alten Handys Zeit beim Zoomen mit vielen Anfragen).
+    const Z = 80, raster = new Map();
+    const rein = (a) => {
+      for (let x = Math.floor(a.l / Z), x1 = Math.floor(a.r / Z); x <= x1; x++) {
+        for (let y = Math.floor(a.o / Z), y1 = Math.floor(a.u / Z); y <= y1; y++) {
+          const k = x * 100003 + y, b = raster.get(k);
+          if (b) b.push(a); else raster.set(k, [a]);
+        }
+      }
+    };
+    const trifft = (a) => {
+      for (let x = Math.floor(a.l / Z), x1 = Math.floor(a.r / Z); x <= x1; x++) {
+        for (let y = Math.floor(a.o / Z), y1 = Math.floor(a.u / Z); y <= y1; y++) {
+          const b = raster.get(x * 100003 + y);
+          if (b) for (let i = 0; i < b.length; i++) { const q = b[i]; if (a.l < q.r && a.r > q.l && a.o < q.u && a.u > q.o) return true; }
+        }
+      }
+      return false;
+    };
+    const drin = (p) => !breite || (p.x > -90 && p.x < breite + 90 && p.y > -60 && p.y < hoehe + 60);
+    besetzt.forEach(rein);
+    liste.forEach((p) => { if (drin(p)) rein({ l: p.x - 13, o: p.y - 36, r: p.x + 13, u: p.y + 2 }); });
     return liste.map((p) => {
-      const breite = beschriftungBreite(p.text);
-      const rechts = { l: p.x + 13, o: p.y - 34, r: p.x + 13 + breite, u: p.y - 8 };
-      const links = { l: p.x - 13 - breite, o: rechts.o, r: p.x - 13, u: rechts.u };
-      const nachLinks = !!p.links || (trifft(rechts) && !trifft(links));
-      belegt.push(nachLinks ? links : rechts);
+      if (p.links) return true;
+      if (!drin(p)) return false;
+      const breiteText = beschriftungBreite(p.text);
+      const rechts = { l: p.x + 13, o: p.y - 34, r: p.x + 13 + breiteText, u: p.y - 8 };
+      const links = { l: p.x - 13 - breiteText, o: rechts.o, r: p.x - 13, u: rechts.u };
+      const nachLinks = trifft(rechts) && !trifft(links);
+      rein(nachLinks ? links : rechts);
       return nachLinks;
     });
   }
@@ -2323,7 +2346,7 @@
     const o = mein && !kacheln.aus ? inMeter(meinOrt().lat, meinOrt().lng) : null;
     const seiten = beschriftungsSeiten(gruppen.map((gr) => ({ x: gr.m.x * b.s + b.x, y: gr.m.y * b.s + b.y,
       text: gr.liste.length > 1 ? 'ab ' + euroKurz(Math.min(...gr.liste.map((g) => g.betrag))) : euroKurz(gr.liste[0].betrag) })),
-      o ? [DU_FLAECHE(o.x * b.s + b.x, o.y * b.s + b.y)] : []);
+      o ? [DU_FLAECHE(o.x * b.s + b.x, o.y * b.s + b.y)] : [], k.w, k.h);
     gruppen.forEach((gr, i) => {
       if (gr.liste.length > 1) {
         const ab = Math.min(...gr.liste.map((g) => g.betrag));
