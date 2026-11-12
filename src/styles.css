@@ -192,7 +192,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   background: var(--map-kachel-grund); box-shadow: var(--schatten-1); cursor: pointer; font-family: var(--f-body);
   -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 .umgebung::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 5; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--line); pointer-events: none; }
-.u-kacheln { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+.u-kacheln, .u-luft { position: absolute; left: 0; top: 0; width: 0; height: 0; }
 :root[data-theme="dark"] .umgebung.k-filter .u-kacheln { -webkit-filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); }
 :root[data-theme="dark"] .umgebung.k-filter .k-veraendert { display: inline; }
 @media (prefers-color-scheme: dark) {
@@ -332,9 +332,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .k-svg { position: absolute; left: 0; top: 0; display: block; overflow: visible; }
 /* Kartenbilder: eine Schicht, die beim Ziehen und Zoomen nur verschoben und skaliert wird */
 #map:not(.ohne-kacheln) { background: var(--map-kachel-grund); }
-.k-kacheln { position: absolute; left: 0; top: 0; width: 0; height: 0; -webkit-transform-origin: 0 0; transform-origin: 0 0; will-change: transform; }
-.k-kachel { position: absolute; display: block; max-width: none; margin: 0; border: 0; opacity: 0; transition: opacity .25s ease; pointer-events: none; -webkit-user-select: none; user-select: none; }
+.k-kacheln, .k-luftbilder { position: absolute; left: 0; top: 0; width: 0; height: 0; -webkit-transform-origin: 0 0; transform-origin: 0 0; will-change: transform; }
+/* Auf der großen Karte erscheinen Bilder ohne Überblenden: jede Überblendung macht beim Zoomen eigene Ebenen
+   und kostet Bilder pro Sekunde. Bis ein Bild da ist, liegt das alte (vergrößert) darunter. */
+.k-kachel { position: absolute; display: block; max-width: none; margin: 0; border: 0; opacity: 0; pointer-events: none; -webkit-user-select: none; user-select: none; }
 .k-kachel.da { opacity: 1; }
+.umgebung .k-kachel { transition: opacity .25s ease; }
 .k-veraendert { display: none; }
 :root[data-theme="dark"] #map.k-filter ~ .k-quelle .k-veraendert { display: inline; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #map.k-filter ~ .k-quelle .k-veraendert { display: inline; } }
@@ -378,14 +381,20 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .k-pin:focus-visible .pin-form, .k-sammel:focus-visible .pin-form { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 50%; }
 .pin { --pin-bg: var(--accent); --pin-rand: #11161C; --pin-kern: #11161C; display: -webkit-flex; display: flex; -webkit-align-items: flex-start; align-items: flex-start; }
 .text-links .pin { -webkit-flex-direction: row-reverse; flex-direction: row-reverse; }
-.pin-form { display: block; -webkit-flex: none; flex: none; width: 26px; height: 34px; overflow: visible;
-  -webkit-filter: drop-shadow(0 1px 1.5px rgba(17, 22, 28, .4)); filter: drop-shadow(0 1px 1.5px rgba(17, 22, 28, .4)); }
+.pin-form { display: block; -webkit-flex: none; flex: none; width: 26px; height: 34px; overflow: visible; }
 .pin-form path { fill: var(--pin-bg); stroke: var(--pin-rand); stroke-width: 1.4; }
+/* Schatten als zweite Form statt CSS-Filter: kostet beim Bewegen der Karte nichts */
+.pin-form .pin-schatten { fill: rgba(17, 22, 28, .32); stroke: none; -webkit-transform: translate(1.2px, 1.8px); transform: translate(1.2px, 1.8px); }
+.k-sammel .pin-form .pin-schatten { fill: rgba(17, 22, 28, .32); stroke: none; }
 .pin-form .pin-kern { fill: var(--pin-kern); stroke: none; }
 .pin-form .pin-haken { fill: none; stroke: var(--pin-kern); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .pin-text { margin: 4px 0 0 2px; font-family: var(--f-display); font-weight: 700; font-size: 0.9375rem; line-height: 1.2; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink);
   text-shadow: 0 0 2px var(--halo), 0 0 2px var(--halo), 0 0 3px var(--halo), 0 0 4px var(--halo); }
 .text-links .pin-text { margin: 4px 2px 0 0; }
+/* Auf dem Luftbild: helle Schrift mit dunklem Rand, sonst geht sie zwischen Dächern und Bäumen unter */
+.k-foto .pin-text { color: #FFFFFF; text-shadow: 0 0 2px #0B0F14, 0 0 2px #0B0F14, 0 0 3px #0B0F14, 0 0 5px rgba(11, 15, 20, .8); }
+.k-foto .pin-abgelaufen .pin-text { color: #D5DBE1; }
+.k-foto .k-massstab { color: #FFFFFF; border-color: #FFFFFF; text-shadow: 0 0 3px #0B0F14, 0 0 3px #0B0F14; }
 .k-sammel .pin-text::after { content: attr(data-ab); }
 .pin-eigen { --pin-bg: var(--hedge); }
 .pin-zugesagt { --pin-bg: var(--surface); --pin-rand: var(--ink); --pin-kern: var(--ink); }
@@ -403,7 +412,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .k-massstab { position: absolute; left: 14px; bottom: 10px; height: 20px; padding: 0 4px; border: 2px solid var(--muted); border-top: 0; color: var(--ink); font-size: 0.875rem; line-height: 18px; text-align: center; white-space: nowrap; pointer-events: none; text-shadow: 0 0 3px var(--map-land), 0 0 3px var(--map-land); box-sizing: border-box; }
 .k-quelle { position: absolute; right: 0; bottom: 0; max-width: calc(100% - 150px); margin: 0; padding: 2px 10px; border-radius: 10px 0 0 0; background: var(--glas); color: var(--muted); font-size: 0.875rem; line-height: 1.35; text-align: right; pointer-events: none; }
 .k-quelle a { color: inherit; pointer-events: auto; }
-@media (max-width: 400px) { .k-quelle { max-width: none; left: 0; border-radius: 0; } .k-massstab { bottom: 32px; } }
+@media (max-width: 400px) { .k-quelle { max-width: none; left: 0; border-radius: 0; } .k-massstab { bottom: 32px; bottom: calc(var(--k-quelle, 22px) + 10px); } }
+/* Luftbild oder Straßenkarte: kleines Bild der Stelle, so wie sie nach dem Tippen aussieht (wie ein Foto am Brett) */
+.karte-art { position: absolute; left: 12px; bottom: 38px; z-index: 1000; width: 72px; height: 68px; padding: 0; border: 3px solid var(--surface); border-radius: 9px; overflow: hidden;
+  background: var(--map-kachel-grund); box-shadow: var(--schatten-2); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.karte-art[hidden] { display: none; }
+.karte-art img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; -webkit-transform: scale(1.15); transform: scale(1.15); }
+.karte-art-name { position: absolute; left: 0; right: 0; bottom: 0; padding: 2px 0 1px; background: var(--surface); color: var(--ink); font: 700 0.875rem/1.15 var(--f-body); text-align: center; }
+.karte-art:active { -webkit-transform: translateY(1px); transform: translateY(1px); box-shadow: var(--schatten-1); }
+.karte-art:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 400px) { .karte-art { bottom: calc(var(--k-quelle, 22px) + 36px); } }
+:root[data-theme="dark"] .karte-art img.k-strasse { -webkit-filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .karte-art img.k-strasse { -webkit-filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55); } }
+.menue-hinweis { margin: 4px 0 0; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .k-pin, .k-sammel { transition: none; } }
 .karte-unterzeile { margin: -4px 0 0; color: var(--muted); font-size: 0.9375rem; }
 /* Hinweis auf der Karte, wenn keine Kartenbilder laden (Vorschau im Chat oder kein Internet) */

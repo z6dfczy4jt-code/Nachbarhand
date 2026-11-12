@@ -22,8 +22,9 @@
   },
   "geocoder": "https://photon.komoot.io",
   "karte": {
-    "_hinweis": "carto: optionaler Schlüssel von carto.com für den Kartenstil Voyager. Leer = basemap.de.",
-    "carto": ""
+    "_hinweis": "carto: optionaler Schlüssel von carto.com für den Kartenstil Voyager. Leer = basemap.de. esri: optionaler Schlüssel der ArcGIS Location Platform für Luftbilder in ganz Deutschland. Leer = Luftbilder nur in Niedersachsen (LGLN).",
+    "carto": "",
+    "esri": ""
   },
   "codeLogin": false,
   "gebuehren": false

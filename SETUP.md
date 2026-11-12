@@ -59,6 +59,10 @@ Eingerichtet am 10. November 2026, nichts mehr zu tun. So funktioniert es:
 
 Die Straßenkarte kommt ohne Einrichtung von [basemap.de](https://basemap.de), der amtlichen Webkarte von Bund und Ländern (kostenlos, ohne Schlüssel, Server in Deutschland, Lizenz CC BY 4.0). Ist basemap.de nicht erreichbar, nimmt die App OpenStreetMap, ohne Netz zeichnet sie Garbsen vereinfacht selbst.
 
+**Luftbild:** Standardmäßig legt die App in Niedersachsen Luftbilder über die Straßenkarte (Digitale Orthophotos des [LGLN](https://www.lgln.niedersachsen.de), 20 cm je Bildpunkt, kostenlos, ohne Schlüssel, Lizenz CC BY 4.0). Außerhalb Niedersachsens und weit herausgezoomt bleibt es bei der Straßenkarte. Jede Person kann auf der Karte (Knopf unten links) oder im Menü zwischen „Luftbild“ und „Straßenkarte“ wechseln.
+
+Luftbilder für ganz Deutschland (optional): Bei der [ArcGIS Location Platform](https://location.arcgis.com) von Esri ein kostenloses Konto anlegen, dort einen API-Schlüssel mit dem Recht „Basemaps“ erstellen und ihn auf die Adresse der App beschränken (Referrer, z. B. `https://z6dfczy4jt-code.github.io`). Den Schlüssel in `einstellungen.json` bei `karte` → `esri` eintragen und neu bauen. Der Schlüssel ist öffentlich (er steht in der App), deshalb die Beschränkung auf die eigene Adresse. Im kostenlosen Umfang sind 2 Millionen Kartenbilder im Monat enthalten. Esri sitzt in den USA; die Datenschutzerklärung (Abschnitt 3) erwähnt das dann automatisch, bitte trotzdem prüfen lassen.
+
 Optional: Mit einem kostenlosen Schlüssel von [carto.com](https://carto.com/basemaps) zeigt die Karte zuerst den Stil „Voyager“ (nachts „Dark Matter“). Den Schlüssel in `einstellungen.json` bei `karte` → `carto` eintragen und neu bauen. Gewerblich ist das bis 1 Million Kartenbilder im Monat kostenlos. CARTO sitzt in den USA, dann muss die Datenschutzerklärung (Abschnitt 3) ergänzt werden.
 
 ## Fehlerberichte ansehen (nach Teil 6)

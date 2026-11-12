@@ -58,6 +58,7 @@ def einstellungen_laden():
     for feld in ('name', 'anschrift', 'email', 'telefon'):
         e['betreiber'].setdefault(feld, '')
     e.setdefault('karte', {}).setdefault('carto', '')
+    e['karte'].setdefault('esri', '')
     e.setdefault('geocoder', '')
     if e['geocoder'] and not re.match(r'^https://[^/\s]+(/[^\s]*)?$', e['geocoder']):
         fehler('"geocoder" muss mit https:// beginnen, zum Beispiel https://photon.komoot.io (leer = nur eingebaute Ortsliste)')
@@ -278,9 +279,11 @@ def inhaltsrichtlinie(html, einst=None, genau_zwei=True):
     hashes = ' '.join("'sha256-" + base64.b64encode(hashlib.sha256(t.encode()).digest()).decode() + "'" for t in skripte)
     cdn = einst['supabaseJs'].startswith('http')
     db = urlparse(einst['supabase']['url']).netloc if einst['supabase'].get('url') else ''
-    karten = ['https://sgx.geodatenzentrum.de', 'https://tile.openstreetmap.org', 'https://tile.openstreetmap.de']
+    karten = ['https://sgx.geodatenzentrum.de', 'https://opendata.lgln.niedersachsen.de', 'https://tile.openstreetmap.org', 'https://tile.openstreetmap.de']
     if einst['karte'].get('carto'):
         karten.append('https://basemaps.cartocdn.com')
+    if einst['karte'].get('esri'):
+        karten.append('https://ibasemaps-api.arcgis.com')
     teile = [
         "default-src 'self'",
         f"script-src 'self' {hashes}" + (' https://cdn.jsdelivr.net' if cdn else ''),
