@@ -57,7 +57,7 @@ Eingerichtet am 10. November 2026, nichts mehr zu tun. So funktioniert es:
 
 ## Karte
 
-Die Straßenkarte kommt ohne Einrichtung von [basemap.de](https://basemap.de), der amtlichen Webkarte von Bund und Ländern (kostenlos, ohne Schlüssel, Server in Deutschland, Lizenz CC BY 4.0). Ist basemap.de nicht erreichbar, nimmt die App OpenStreetMap, ohne Netz zeichnet sie Garbsen vereinfacht selbst.
+Die Straßenkarte zeichnet die App selbst, ohne Einrichtung: Straßen, Häuser, Wald, Wasser, Grenzen und Namen aus den Daten von OpenStreetMap, für ganz Deutschland und ein Stück der Nachbarländer, hell und dunkel im Stil der App. Die Daten kommen von [OpenFreeMap](https://openfreemap.org) (kostenlos, ohne Schlüssel, auch gewerblich; Format „OpenMapTiles“). Gezeichnet wird im Hintergrund (Web Worker), damit die Karte beim Zoomen flüssig bleibt. Herauszoomen geht bis ganz Deutschland mit gut 30 km Rand. Kommen die Daten nicht, nimmt die App fertige Kartenbilder von [basemap.de](https://basemap.de) (amtliche Webkarte von Bund und Ländern, CC BY 4.0), danach OpenStreetMap; ohne Netz zeichnet sie Garbsen vereinfacht selbst. Beim eigenen Server lassen sich die Daten später selbst bereitstellen (`einstellungen.json` → `karte` → `beschriftung`).
 
 **Luftbild:** Standardmäßig legt die App in Niedersachsen Luftbilder über die Straßenkarte (Digitale Orthophotos des [LGLN](https://www.lgln.niedersachsen.de), 20 cm je Bildpunkt, kostenlos, ohne Schlüssel, Lizenz CC BY 4.0). Außerhalb Niedersachsens und weit herausgezoomt bleibt es bei der Straßenkarte. Jede Person kann auf der Karte (Knopf unten links) oder im Menü zwischen „Luftbild“ und „Straßenkarte“ wechseln.
 

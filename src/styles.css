@@ -345,6 +345,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .k-svg { position: absolute; left: 0; top: 0; display: block; overflow: visible; }
 /* Kartenbilder: eine Schicht, die beim Ziehen und Zoomen nur verschoben und skaliert wird */
 #map:not(.ohne-kacheln) { background: var(--map-kachel-grund); }
+/* Eigene Karte: Wo noch nichts gezeichnet ist, dieselbe Landfarbe wie die Karte (kein heller Fleck) */
+#map.k-vektor:not(.ohne-kacheln), .umgebung.k-vektor { background: #EEF0E9; }
+:root[data-theme="dark"] #map.k-vektor:not(.ohne-kacheln), :root[data-theme="dark"] .umgebung.k-vektor { background: #18202A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #map.k-vektor:not(.ohne-kacheln), :root:not([data-theme="light"]) .umgebung.k-vektor { background: #18202A; } }
 .k-kacheln, .k-luftbilder, .k-namen { position: absolute; left: 0; top: 0; width: 0; height: 0; -webkit-transform-origin: 0 0; transform-origin: 0 0; will-change: transform; pointer-events: none; }
 /* Namen über dem Luftbild: Zeichenfläche etwas größer als die Karte (NAMEN_RAND in app.js) */
 .k-namen canvas { position: absolute; left: -48px; top: -48px; pointer-events: none; }

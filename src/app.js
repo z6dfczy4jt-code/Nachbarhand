@@ -37,11 +37,12 @@
     maxBetrag: 50,             // Obergrenze für Nachbarschaftshilfe
     freigrenze: 255,           // § 22 Nr. 3 EStG: unter 256 € Gewinn im Jahr steuerfrei
     bereichMeter: 250,         // Radius des ungefähren Bereichs um eine Anfrage
-    // Kartenbilder: ohne Eintrag die amtliche Straßenkarte basemap.de (Bund und Länder, kostenlos, ohne Schlüssel).
+    // Karte: die App zeichnet sie selbst (Daten über „beschriftung“, siehe unten); Ersatz: basemap.de (Bund und Länder).
     // Optional mit kostenlosem Schlüssel von carto.com (siehe SETUP.md) der Stil „Voyager“. Der Schlüssel ist öffentlich.
     // Luftbild: in Niedersachsen ohne Schlüssel vom LGLN. Mit esri (kostenloser Schlüssel der ArcGIS Location Platform,
     // siehe SETUP.md) Luftbilder für ganz Deutschland. Auch dieser Schlüssel ist öffentlich.
-    // Namen von Orten und Straßen über dem Luftbild: Vektordaten von OpenStreetMap (OpenFreeMap, ohne Schlüssel). Leer = aus.
+    // Kartendaten für die eigene Karte und die Namen auf dem Luftbild: Vektordaten von OpenStreetMap (OpenFreeMap,
+    // ohne Schlüssel). Leer = fertige Kartenbilder von basemap.de, ohne Namen auf dem Luftbild.
     karte: { carto: EINSTELLUNGEN.karte.carto || '', esri: EINSTELLUNGEN.karte.esri || '', beschriftung: EINSTELLUNGEN.karte.beschriftung || '' },
     // Anmelden mit einem Code per E-Mail statt mit Passwort. Erst einschalten, wenn der E-Mail-Versand
     // eingerichtet ist und die E-Mail-Vorlage den Code enthält (siehe SETUP.md).
@@ -1486,7 +1487,7 @@
   }
 
   /* ===== Karte: eigene, schlanke Karte (ohne Kartenbibliothek) =====
-     Unten liegen Kartenbilder (Straßen, Namen, Parks) wie bei Google Maps, darüber Preisschilder.
+     Unten liegt die Straßenkarte (von der App selbst gezeichnet) oder das Luftbild, darüber Namen und Preisschilder.
      Liegen Schilder dicht beieinander, steht dort eine Zahl; Antippen zoomt hinein.
      Sind keine Kartenbilder erreichbar (offline, Vorschau), zeichnet die App die Stadtteile vereinfacht selbst.
      Nur 2D-Verschiebungen und einfache Bilder, damit es auch auf älteren Handys flüssig läuft. */
@@ -1509,15 +1510,20 @@
   // Breitengrad zu einem Punkt der Karte (Mercator-Meter)
   const breiteVon = (y) => (2 * Math.atan(Math.exp(-(y + NULLPUNKT.y) / ERDE)) - Math.PI / 2) * 180 / Math.PI;
   const inMeter = (lat, lng) => { const p = mercator(lat, lng); return { x: p.x - NULLPUNKT.x, y: p.y - NULLPUNKT.y }; };
-  // So weit lässt sich die Karte verschieben: Deutschland mit etwas Rand
-  const DE_A = inMeter(55.3, 5.4), DE_B = inMeter(47.0, 15.5);
+  // So weit lässt sich die Karte verschieben: Deutschland (47,27–55,06° N, 5,87–15,04° O) mit gut 30 km Rand,
+  // damit man ein Stück der Nachbarländer sieht, aber nicht halb Europa
+  const DE_A = inMeter(55.06 + 0.3, 5.87 - 0.45), DE_B = inMeter(47.27 - 0.3, 15.04 + 0.45);
   const massstabFuerZoom = (z) => 256 * Math.pow(2, z) / WELT;
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const kartenStatus = { svg: null, welt: null, schicht: null, huelle: null, w: 0, h: 0, blick: null, ruhig: null,
     formen: [], grenzen: null, bewegt: false, gezogen: 0, marker: new Map(), elemente: [], gruppen: [], stufe: null, animation: 0 };
   const groesster = () => massstabFuerZoom(kacheln.aus ? KARTE.zoomMaxOhne : KARTE.zoomMax);
-  // So weit lässt sich herauszoomen: ganz Deutschland mit Rand (Zoomstufe 5)
-  const kleinster = () => massstabFuerZoom(KARTE.zoomMin);
+  // So weit lässt sich herauszoomen: ganz Deutschland mit dem Rand passt gerade ins Bild, weiter nicht
+  const kleinster = () => {
+    const k = kartenStatus, fest = massstabFuerZoom(KARTE.zoomMin);
+    if (!k.w || !k.h) return fest;
+    return Math.max(fest, Math.min(k.w / (DE_B.x - DE_A.x), k.h / (DE_B.y - DE_A.y)));
+  };
 
   function dunklesThema() {
     const t = document.documentElement.getAttribute('data-theme');
@@ -1583,8 +1589,9 @@
   }
 
   /* ----- Kartenbilder (Kacheln) -----
-     Standard: basemap.de, die amtliche Straßenkarte von Bund und Ländern (BKG, Frankfurt). Kostenlos, ohne Schlüssel,
-     auch für kommerzielle Nutzung (CC BY 4.0), Server in Deutschland. Ersatz: OpenStreetMap.
+     Standard: die eigene, selbst gezeichnete Karte (Abschnitt „Eigene Straßenkarte“, Daten von OpenStreetMap).
+     Ersatz, wenn deren Daten nicht kommen: basemap.de, die amtliche Straßenkarte von Bund und Ländern (BKG, Frankfurt,
+     CC BY 4.0), danach OpenStreetMap.
      Mit CONFIG.karte.carto (kostenloser Schlüssel von carto.com) zuerst der Stil „Voyager“, nachts „Dark Matter“.
      Lädt ein Anbieter nicht, nimmt die App den nächsten, zuletzt die vereinfachte Zeichnung. */
   const OSM_QUELLE = '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-Mitwirkende';
@@ -1601,6 +1608,9 @@
     const q = [];
     const carto = CONFIG.karte && CONFIG.karte.carto;
     if (esriQuelle() && ansicht.kartenart === 'luftbild') q.push(esriQuelle());
+    // Die eigene, selbst gezeichnete Karte (Daten von OpenStreetMap); fertige Kartenbilder nur als Ersatz
+    if (CONFIG.karte.beschriftung && !VORSCHAU && window.fetch && window.TextDecoder) q.push({ vektor: true, min: 0, max: 18,
+      quelle: '© <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-Mitwirkende' });
     if (carto) q.push({ url: 'https://basemaps.cartocdn.com/rastertiles/{stil}/{z}/{x}/{y}{r}.png?key=' + encodeURIComponent(carto), max: 20, retina: true, carto: true,
       quelle: OSM_QUELLE + ' © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>' });
     q.push({ url: 'https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_farbe/default/GLOBAL_WEBMERCATOR/{z}/{y}/{x}.png', min: 5, max: 18, bkg: true,
@@ -1694,6 +1704,7 @@
   const NAMEN_QUELLE = ' · © <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
   function quellenText(q, mitLuft, mitNamen) {
     const jahr = new Date().getFullYear();
+    if (q.vektor) return (mitLuft ? `Luftbild © GeoBasis-DE / ${LGLN.quelle} (${jahr}) ${CC_BY} · ` : '') + q.quelle;
     const text = !mitLuft ? q.quelle : q.bkg ? `© ${BKG}<span class="k-veraendert"> (Farben angepasst)</span>, ${LGLN.quelle} (${jahr}) ${CC_BY}` : `Luftbild © ${LGLN.quelle} (${jahr}) ${CC_BY} · ${q.quelle}`;
     return text + (mitNamen ? NAMEN_QUELLE : '');
   }
@@ -1725,10 +1736,22 @@
     const z = Math.min(18, r.z + 1), n = Math.pow(2, z), T = WELT / n;
     const x = Math.floor((r.ox + (k.w / 2 - k.blick.x) / k.blick.s) / T), y = Math.floor((r.oy + (k.h / 2 - k.blick.y) / k.blick.s) / T);
     const strasse = kc.quellen.find((e) => !e.foto) || q;
-    const src = zuLuft ? (CONFIG.karte.esri ? kachelUrl(esriQuelle(), z, x, y) : luftUrl(LGLN, z, x, y)) : kachelUrl(strasse, z, x, y);
     const bild = knopf.querySelector('img');
-    if (bild.dataset.src !== src) { bild.dataset.src = src; bild.src = src; }
-    bild.classList.toggle('k-strasse', !zuLuft && !strasse.carto);
+    if (!zuLuft && strasse.vektor) {
+      // Die eigene Karte: das Quadrat klein zeichnen (sobald die Daten da sind)
+      const schl = ['v', z, x, y, dunklesThema()].join('/');
+      if (bild.dataset.fertig !== schl) {
+        const t = k.vorschauBild || (k.vorschauBild = { img: bild, vorschau: true });
+        Object.assign(t, { z, x, y, schl });
+        vektorPlanen(t);
+      }
+      bild.dataset.src = schl;
+      bild.classList.remove('k-strasse');
+    } else {
+      const src = zuLuft ? (CONFIG.karte.esri ? kachelUrl(esriQuelle(), z, x, y) : luftUrl(LGLN, z, x, y)) : kachelUrl(strasse, z, x, y);
+      if (bild.dataset.src !== src) { bild.dataset.src = src; bild.src = src; }
+      bild.classList.toggle('k-strasse', !zuLuft && !strasse.carto);
+    }
     knopf.querySelector('.karte-art-name').textContent = zuLuft ? 'Luftbild' : 'Karte';
     knopf.setAttribute('aria-label', zuLuft ? 'Luftbild zeigen' : 'Straßenkarte zeigen');
   }
@@ -1751,89 +1774,30 @@
     namenBald();
   }
 
-  /* ----- Namen und Straßen über dem Luftbild (wie „Hybrid“ bei Google Maps) -----
-     Auf dem Luftbild allein sieht man nicht, welcher Ort und welche Straße das ist. Dafür holt die App Kartendaten von
-     OpenStreetMap als Vektordaten (OpenFreeMap: kostenlos, ohne Schlüssel, auch gewerblich; Aufbau „OpenMapTiles“) und
-     zeichnet selbst: Straßen als helle Linien, Orte, Stadtteile und Straßennamen hell mit dunklem Rand, dazu Schilder
-     für Autobahnen (blau) und Bundesstraßen (gelb). Nichts überdeckt sich, auch keine Anfrage und kein Knopf.
-     Gezeichnet wird in eine Fläche über dem Luftbild, wenn die Karte ruht. Beim Zoomen und Verschieben wird die fertige
-     Zeichnung nur mitbewegt, das kostet nichts. Kommen keine Daten, bleibt es beim Luftbild ohne Namen. */
-  const namen = { url: '', max: 14, start: null, daten: new Map(), laden: new Set(), ok: 0, fehler: 0, aus: false, bald: 0, stand: 0, el: null, ref: null };
-  const NAMEN_RAND = 48; // so viele Bildpunkte rundherum mehr zeichnen: kurzes Verschieben zeigt sie schon
-  const NAMEN_SCHRIFT = '"Barlow Semi Condensed", "Barlow", "Helvetica Neue", Arial, sans-serif';
-  // Straßen: Art in OpenMapTiles, ab Zoomstufe, Breite, Farbe (von unten nach oben gezeichnet)
-  const NAMEN_STRASSEN = [
-    ['service', 16, 1, 'rgba(255,255,255,.26)'], ['minor', 14, 1.4, 'rgba(255,255,255,.4)'], ['tertiary', 12, 1.9, 'rgba(255,255,255,.52)'],
-    ['secondary', 11, 2.3, 'rgba(255,246,222,.6)'], ['primary', 10, 2.7, 'rgba(255,238,186,.68)'], ['trunk', 8, 3, 'rgba(255,214,110,.76)'],
-    ['motorway', 7, 3.2, 'rgba(255,198,80,.84)']
-  ];
-  const NAMEN_STRASSE_ART = {};
-  NAMEN_STRASSEN.forEach((s) => { NAMEN_STRASSE_ART[s[0]] = 1; });
+  /* ===== Kartenwerkstatt: Kartendaten lesen und daraus die Karte zeichnen =====
+     Alles hier kommt ohne den Rest der App aus. So kann es im Hintergrund laufen (Web Worker mit eigener Zeichenfläche):
+     Lesen und Zeichnen kosten dann auf dem Handy keine Zeit, in der die Karte beim Zoomen stocken würde.
+     Kann der Browser das nicht, läuft dieselbe Werkstatt hier, aber nur, wenn die Karte ruht. */
+  function kartenWerkstatt() {
   // Straßennamen: ab welcher Zoomstufe, Rang (kleiner = wichtiger)
   const NAMEN_STRASSENNAMEN = { trunk: [13, 1], primary: [13, 1], secondary: [14, 2], tertiary: [14, 3], minor: [15, 4], service: [17, 6], path: [17, 7] };
   // Orte: ab Zoomstufe, Rang, Schriftgröße, Stärke
-  const NAMEN_ORTE = { city: [5, 0, 18, 700], town: [9, 1, 16, 700], village: [11, 2, 15, 600], borough: [12, 3, 14, 600], suburb: [12, 3, 14, 600],
-    quarter: [14, 4, 13, 600], hamlet: [13, 4, 13, 600], neighbourhood: [15, 5, 12.5, 600], isolated_dwelling: [16, 6, 12, 600] };
-  const namenMoeglich = () => !!CONFIG.karte.beschriftung && !VORSCHAU && !namen.aus && !!window.fetch && !!window.TextDecoder;
-
-  function namenStart() {
-    const q = CONFIG.karte.beschriftung;
-    if (namen.start || !namenMoeglich()) return;
-    const fertig = (url, max) => { namen.url = url; namen.max = Math.max(0, Math.min(14, Number(max) || 14)); namenBald(); };
-    if (/\{z\}/.test(q)) { namen.start = true; fertig(q, 14); return; }
-    // Beschreibung des Dienstes (TileJSON) mit der Adresse der aktuellen Daten; sonst die Adresse für „neueste“
-    namen.start = fetch(q).then((r) => (r.ok ? r.json() : Promise.reject(new Error('Namen ' + r.status))))
-      .then((j) => {
-        const t = j && j.tiles && j.tiles[0];
-        if (!/^https?:\/\/[^ ]+\{z\}/.test(t || '')) throw new Error('Namen: keine Adresse');
-        fertig(t, j.maxzoom);
-      })
-      .catch(() => fertig(q.replace(/\/$/, '') + '/latest/{z}/{x}/{y}.pbf', 14));
-  }
-
-  // Daten eines Kartenquadrats: sofort, wenn schon geladen, sonst wird geladen und danach neu gezeichnet
-  function namenDaten(z, x, y) {
-    const key = z + '/' + x + '/' + y;
-    let d = namen.daten.get(key);
-    if (d) {
-      // Erst hier lesen (die Karte ruht gerade), nicht schon beim Ankommen mitten in einer Bewegung
-      if (d.roh) { try { d = mvtLesen(d.roh); } catch (e) { d = {}; } }
-      namen.daten.delete(key); namen.daten.set(key, d); // zuletzt benutzt: nach hinten
-      return d;
-    }
-    if (namen.aus || !namen.url || namen.laden.has(key) || namen.laden.size >= 8) return null;
-    namen.laden.add(key);
-    fetch(namen.url.replace('{z}', z).replace('{x}', x).replace('{y}', y))
-      .then((r) => { if (!r.ok) throw new Error('Namen ' + r.status); return r.arrayBuffer(); })
-      .then((buf) => { namen.daten.set(key, { roh: buf }); namen.ok++; },
-        () => {
-          namen.daten.set(key, {}); // nicht immer wieder versuchen
-          namen.fehler++;
-          if (!namen.ok && namen.fehler >= 4) namenAus();
-        })
-      .then(() => {
-        namen.laden.delete(key);
-        while (namen.daten.size > 60) namen.daten.delete(namen.daten.keys().next().value);
-        namen.stand++;
-        namenBald();
-      });
-    return null;
-  }
-  function namenAus() {
-    namen.aus = true;
-    if (namen.el) namen.el.style.display = 'none';
-    const c = umgebung.el && umgebung.el.querySelector('.u-namen');
-    if (c) c.style.display = 'none';
-    kartenArtZeigen();
-    if (umgebung.el) { umgebung.schluessel = ''; umgebungZeichnen(); }
-  }
-
-  /* Vektordaten lesen (Mapbox Vector Tile, Protocol Buffers). Nur die drei Ebenen, die gezeichnet werden, und davon
-     nur die Merkmale, die es braucht. Ergebnis: { ebene: { extent, liste: [{ typ, eig, teile: [[x, y, x, y, …]] }] } } */
+  const NAMEN_ORTE = { city: [5, 0, 18, 700], town: [9, 1, 16, 700], village: [12, 2, 15, 600], borough: [12, 3, 14, 600], suburb: [12, 3, 14, 600],
+    quarter: [14, 4, 13, 600], hamlet: [14, 4, 13, 600], neighbourhood: [15, 5, 12.5, 600], isolated_dwelling: [16, 6, 12, 600] };
+  /* Vektordaten lesen (Mapbox Vector Tile, Protocol Buffers). Eine Ebene wird erst gelesen, wenn sie gebraucht wird
+     (Häuser z. B. erst ganz nah), und davon nur die Merkmale, die gezeichnet werden. Jedes Merkmal bekommt sein
+     umgebendes Rechteck mit, damit beim Vergrößern nur gezeichnet wird, was im Bild liegt.
+     Ergebnis: d.ebene(name) → { extent, liste: [{ typ, eig, teile: [[x, y, x, y, …]], bb: [x0, y0, x1, y1] }] } */
+  const KEINE_FLAECHE = { suburb: 1, quarter: 1, neighbourhood: 1 };
   const MVT_WAHL = {
-    place: (e) => !!NAMEN_ORTE[e.class],
-    transportation: (e) => !!NAMEN_STRASSE_ART[e.class] && e.brunnel !== 'tunnel',
-    transportation_name: (e) => !!(NAMEN_STRASSENNAMEN[e.class] || e.class === 'motorway' || e.ref) && e.brunnel !== 'tunnel'
+    place: (e) => !!NAMEN_ORTE[e.class] || e.class === 'country' || e.class === 'state',
+    transportation: (e) => !!STRASSEN_ART[e.class],
+    transportation_name: (e) => !!(NAMEN_STRASSENNAMEN[e.class] || e.class === 'motorway' || e.ref) && e.brunnel !== 'tunnel',
+    landuse: (e) => !KEINE_FLAECHE[e.class],
+    boundary: (e) => (e.admin_level === 2 || e.admin_level === 4) && !e.maritime,
+    waterway: (e) => e.brunnel !== 'tunnel',
+    aeroway: (e) => e.class === 'runway' || e.class === 'taxiway',
+    water: () => true, landcover: () => true, building: () => true, water_name: () => true
   };
   function mvtLesen(buf) {
     const b = new Uint8Array(buf), dec = new TextDecoder('utf-8');
@@ -1859,7 +1823,7 @@
       return v;
     };
     const merkmal = (ende, keys, werte, wahl) => {
-      const m = { typ: 0, eig: {}, teile: [] };
+      const m = { typ: 0, eig: {}, teile: [], bb: null };
       let hatEig = false;
       while (p < ende) {
         const k = zahl(), f = k >> 3, t = k & 7;
@@ -1871,48 +1835,326 @@
         else if (f === 4 && t === 2) {
           const l = zahl(), e = p + l;
           if (hatEig && !wahl(m.eig)) { p = e; return null; }
-          let x = 0, y = 0, teil = null;
+          let x = 0, y = 0, teil = null, x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
           while (p < e) {
             const c = zahl(), id = c & 7, n = c >> 3;
             if (id === 7) { if (teil && teil.length > 2) teil.push(teil[0], teil[1]); continue; }
             for (let j = 0; j < n && p < e; j++) {
               x += zz(zahl()); y += zz(zahl());
+              if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
               if (id === 1) { teil = [x, y]; m.teile.push(teil); } else if (teil) teil.push(x, y);
             }
           }
+          m.bb = [x0, y0, x1, y1];
         } else ueber(t);
       }
       return m.teile.length && wahl(m.eig) ? m : null;
     };
-    const ebenen = {};
+    // Erst nur merken, wo welche Ebene steht
+    const roh = {}, fertig = {};
     while (p < b.length) {
       const k = zahl();
       if (k >> 3 !== 3 || (k & 7) !== 2) { ueber(k & 7); continue; }
-      const l = zahl(), ende = p + l;
-      let name = '', extent = 4096;
-      const keys = [], werte = [], merkmale = [];
+      const l = zahl(), anfang = p, ende = p + l;
+      let name = '';
       while (p < ende) {
+        const kk = zahl();
+        if (kk >> 3 === 1 && (kk & 7) === 2) { name = text(); break; }
+        ueber(kk & 7);
+      }
+      if (name && MVT_WAHL[name]) roh[name] = [anfang, ende];
+      p = ende;
+    }
+    const ebene = (name) => {
+      if (name in fertig) return fertig[name];
+      const r = roh[name];
+      if (!r) return (fertig[name] = null);
+      p = r[0];
+      let extent = 4096;
+      const keys = [], werte = [], merkmale = [];
+      while (p < r[1]) {
         const kk = zahl(), f = kk >> 3, t = kk & 7;
-        if (f === 1 && t === 2) name = text();
-        else if (f === 2 && t === 2) { const ml = zahl(); merkmale.push(p, p + ml); p += ml; }
+        if (f === 2 && t === 2) { const ml = zahl(); merkmale.push(p, p + ml); p += ml; }
         else if (f === 3 && t === 2) keys.push(text());
         else if (f === 4 && t === 2) werte.push(wert());
         else if (f === 5 && t === 0) extent = zahl();
         else ueber(t);
       }
-      const wahl = MVT_WAHL[name];
-      if (wahl) {
-        const liste = [];
-        for (let i = 0; i < merkmale.length; i += 2) {
-          p = merkmale[i];
-          const m = merkmal(merkmale[i + 1], keys, werte, wahl);
-          if (m) liste.push(m);
-        }
-        ebenen[name] = { extent, liste };
+      const liste = [], wahl = MVT_WAHL[name];
+      for (let i = 0; i < merkmale.length; i += 2) {
+        p = merkmale[i];
+        const m = merkmal(merkmale[i + 1], keys, werte, wahl);
+        if (m) liste.push(m);
       }
-      p = ende;
+      return (fertig[name] = { extent, liste });
+    };
+    return { ebene };
+  }
+
+  const KARTENSTIL = {
+    hell: {
+      land: '#EEF0E9', wald: '#CDDFC1', gras: '#DAE8CD', sumpf: '#D6E6DB', sand: '#EFE8D2', fels: '#E3E2DC', eis: '#F6F9FA',
+      wohnen: '#E6E6DF', gewerbe: '#EDE4E0', industrie: '#E5E3E9', friedhof: '#D3E1CA', schule: '#F1EAD7', klinik: '#F3E3E2',
+      sport: '#D2E6C4', bahngelaende: '#E5E3DF', militaer: '#ECE0DF', steinbruch: '#E2DFD9',
+      wasser: '#A9CBE0', haus: '#DDD6CC', hausRand: '#C9BFB2', hausSchatten: 'rgba(112, 96, 76, .2)', piste: '#D6D8DE', platz: '#F6F4EF',
+      rand: '#BEC4CC', weiss: '#FFFFFF', sekundaer: '#FFF0C0', sekundaerRand: '#D7BF79', primaer: '#F8D77E', primaerRand: '#CDA347',
+      fern: '#F4B863', fernRand: '#C2853A', autobahn: '#E98F58', autobahnRand: '#B05E2E',
+      weg: '#A99377', bahn: '#9198A2', bahnHell: '#FFFFFF', grenze: '#8C78AC', grenzeHalo: 'rgba(140, 120, 172, .2)', land2: '#ABA0BF'
+    },
+    dunkel: {
+      land: '#18202A', wald: '#1C2A24', gras: '#1E2C26', sumpf: '#1B2A2B', sand: '#2A2A24', fels: '#24272B', eis: '#26303A',
+      wohnen: '#1D2530', gewerbe: '#272430', industrie: '#222433', friedhof: '#1D2B25', schule: '#28292A', klinik: '#2B2329',
+      sport: '#1E2E25', bahngelaende: '#23252B', militaer: '#2A2328', steinbruch: '#25262A',
+      wasser: '#0E2638', haus: '#283342', hausRand: '#33404F', hausSchatten: 'rgba(0, 0, 0, .35)', piste: '#2C333C', platz: '#232B36',
+      rand: '#0E141B', weiss: '#323E4D', sekundaer: '#4A4636', sekundaerRand: '#16140E', primaer: '#6E5D33', primaerRand: '#1E1A10',
+      fern: '#7C5A33', fernRand: '#22180D', autobahn: '#8A5333', autobahnRand: '#26150B',
+      weg: '#5B6575', bahn: '#56606D', bahnHell: '#18202A', grenze: '#9B8AC2', grenzeHalo: 'rgba(155, 138, 194, .18)', land2: '#6B6385'
     }
-    return ebenen;
+  };
+  // Straßen: Art in OpenMapTiles, ab Zoomstufe, Breite in Bildpunkten bei Zoomstufe 10/12/14/16/18, Farbe, Rand, gestrichelt
+  const STRASSEN_STIL = [
+    ['path', 15, [0, 0, 0.7, 1.1, 1.8], 'weg', null, true],
+    ['track', 14, [0, 0, 0.8, 1.2, 2], 'weg', null, true],
+    ['service', 14, [0, 0, 1, 2.6, 6], 'weiss', 'rand'],
+    ['minor', 12, [0, 0.7, 1.7, 5, 11], 'weiss', 'rand'],
+    ['tertiary', 11, [0.5, 1.1, 2.4, 6, 12], 'weiss', 'rand'],
+    ['secondary', 9, [0.8, 1.5, 3, 7, 14], 'sekundaer', 'sekundaerRand'],
+    ['primary', 8, [1, 1.9, 3.6, 8, 16], 'primaer', 'primaerRand'],
+    ['trunk', 6, [1.2, 2.2, 4, 8.5, 17], 'fern', 'fernRand'],
+    ['motorway', 5, [1.4, 2.5, 4.4, 9, 18], 'autobahn', 'autobahnRand']
+  ];
+  const STRASSEN_ART = { rail: 1, bridge: 1, pier: 1 };
+  STRASSEN_STIL.forEach((s) => { STRASSEN_ART[s[0]] = 1; });
+  // Flächen: Art (landuse/landcover) → Farbe; gross: unter Wald und Wiesen, sonst darüber
+  const FLAECHEN_FARBE = { wood: 'wald', grass: 'gras', wetland: 'sumpf', sand: 'sand', rock: 'fels', ice: 'eis',
+    residential: 'wohnen', commercial: 'gewerbe', retail: 'gewerbe', industrial: 'industrie', garages: 'industrie', bus_station: 'industrie',
+    railway: 'bahngelaende', military: 'militaer', quarry: 'steinbruch', cemetery: 'friedhof', hospital: 'klinik',
+    school: 'schule', university: 'schule', college: 'schule', kindergarten: 'schule', library: 'schule',
+    stadium: 'sport', pitch: 'sport', track: 'sport', playground: 'gras', zoo: 'gras', theme_park: 'gras' };
+  const FLAECHE_GROSS = { residential: 1, commercial: 1, retail: 1, industrial: 1, garages: 1, bus_station: 1, railway: 1, military: 1, quarry: 1 };
+  // Breite für Zoomstufe z aus [z10, z12, z14, z16, z18], darunter kleiner werdend
+  function linienBreite(tab, z) {
+    if (z <= 10) return tab[0] * Math.pow(0.72, 10 - z);
+    const zi = Math.min(18, z), i = Math.min(3, Math.floor((zi - 10) / 2)), t = (zi - 10 - i * 2) / 2;
+    return tab[i] + (tab[i + 1] - tab[i]) * t;
+  }
+
+  /* Ein Kartenquadrat (z, x, y) in die Zeichenfläche cv zeichnen. Daten gibt es bis Zoomstufe 14; näher wird ein
+     Ausschnitt davon vergrößert gezeichnet (scharf, weil es Linien sind). d: gelesene Daten des Quadrats dz. */
+  function vektorMalen(cv, d, z, x, y, dz, stilName, dpr) {
+    const f = Math.pow(2, z - dz), px = Math.floor(x / f), py = Math.floor(y / f);
+    const st = KARTENSTIL[stilName], g = Math.round(256 * dpr);
+    if (cv.width !== g) { cv.width = g; cv.height = g; }
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = st.land;
+    ctx.fillRect(0, 0, g, g);
+    if (!d.ebene) return 'leer'; // Daten kamen nicht: erst einmal leeres Land, später neu versuchen
+    // Ausschnitt in Datenkoordinaten (mit etwas Rand, damit breite Linien am Rand nicht abreißen)
+    const ext = 4096, m = g * f / ext, ox = -(x - px * f) * g, oy = -(y - py * f) * g;
+    const rand = 24 / m, a0 = -ox / m - rand, b0 = -oy / m - rand, a1 = (g - ox) / m + rand, b1 = (g - oy) / m + rand;
+    const imBild = (e) => !e.bb || (e.bb[2] >= a0 && e.bb[0] <= a1 && e.bb[3] >= b0 && e.bb[1] <= b1);
+    const px2 = dpr / m; // ein Bildpunkt in Datenkoordinaten
+    const pfad = (liste, nur) => {
+      let etwas = false;
+      ctx.beginPath();
+      liste.forEach((e) => {
+        if ((nur && !nur(e)) || !imBild(e)) return;
+        e.teile.forEach((t) => {
+          ctx.moveTo(t[0], t[1]);
+          for (let i = 2; i < t.length; i += 2) ctx.lineTo(t[i], t[i + 1]);
+        });
+        etwas = true;
+      });
+      return etwas;
+    };
+    const flaechen = (name, farbeVon) => {
+      const e = d.ebene(name);
+      if (!e) return;
+      const gruppen = {};
+      e.liste.forEach((m2) => { if (m2.typ !== 3) return; const fa = farbeVon(m2.eig); if (fa) (gruppen[fa] = gruppen[fa] || []).push(m2); });
+      Object.keys(gruppen).forEach((fa) => { if (pfad(gruppen[fa])) { ctx.fillStyle = st[fa]; ctx.fill('nonzero'); } });
+    };
+    ctx.setTransform(m, 0, 0, m, ox, oy);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // 1. Flächen: Siedlungen, Wald und Wiesen, kleinere Flächen (Sportplätze, Schulen, Friedhöfe)
+    flaechen('landuse', (e) => FLAECHE_GROSS[e.class] && FLAECHEN_FARBE[e.class]);
+    flaechen('landcover', (e) => FLAECHEN_FARBE[e.class]);
+    flaechen('landuse', (e) => !FLAECHE_GROSS[e.class] && FLAECHEN_FARBE[e.class]);
+    // 2. Wasser: Seen, Flüsse als Fläche, dazu Bäche und Flüsse als Linien
+    const wasser = d.ebene('water');
+    if (wasser && pfad(wasser.liste, (e) => e.typ === 3)) { ctx.fillStyle = st.wasser; ctx.fill('nonzero'); }
+    const ww = d.ebene('waterway');
+    if (ww) [['river', 8, [0.8, 1.4, 2.4, 5, 10]], ['canal', 10, [0.6, 1.2, 2, 4, 8]], ['stream', 13, [0, 0, 0.8, 1.4, 2.2]], ['ditch', 15, [0, 0, 0, 0.8, 1.4]], ['drain', 15, [0, 0, 0, 0.8, 1.4]]].forEach(([art, ab, tab]) => {
+      if (z < ab || !pfad(ww.liste, (e) => e.typ === 2 && e.eig.class === art)) return;
+      ctx.lineWidth = linienBreite(tab, z) * px2; ctx.strokeStyle = st.wasser; ctx.stroke();
+    });
+    // 3. Start- und Landebahnen
+    const flug = d.ebene('aeroway');
+    if (flug && z >= 10 && pfad(flug.liste, (e) => e.typ === 2)) { ctx.lineWidth = linienBreite([1, 2, 5, 14, 40], z) * px2; ctx.strokeStyle = st.piste; ctx.stroke(); }
+    // 4. Häuser (ganz nah mit kleinem Schatten, wie gedruckt)
+    const haeuser = z >= 14 && d.ebene('building');
+    if (haeuser && pfad(haeuser.liste)) {
+      if (z >= 16) {
+        ctx.setTransform(m, 0, 0, m, ox + 1.3 * dpr, oy + 1.7 * dpr);
+        ctx.fillStyle = st.hausSchatten; ctx.fill('nonzero');
+        ctx.setTransform(m, 0, 0, m, ox, oy);
+      }
+      ctx.fillStyle = st.haus; ctx.fill('nonzero');
+      if (z >= 15) { ctx.lineWidth = 0.7 * px2; ctx.strokeStyle = st.hausRand; ctx.stroke(); }
+    }
+    // 5. Plätze, Fußgängerzonen, Brücken als Fläche
+    const verkehr = d.ebene('transportation');
+    if (verkehr && z >= 15 && pfad(verkehr.liste, (e) => e.typ === 3)) { ctx.fillStyle = st.platz; ctx.fill('nonzero'); }
+    if (verkehr) {
+      const linien = (art, tunnel) => (e) => e.typ === 2 && e.eig.class === art && (e.eig.brunnel === 'tunnel') === tunnel;
+      // Tunnel: blass, ohne Rand
+      ctx.globalAlpha = 0.45;
+      STRASSEN_STIL.forEach(([art, ab, tab, farbe]) => {
+        if (z < ab || !pfad(verkehr.liste, linien(art, true))) return;
+        ctx.lineWidth = linienBreite(tab, z) * px2; ctx.strokeStyle = st[farbe]; ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+      // Bahn: graue Linie, nah mit hellen Strichen darin
+      if (z >= 9 && pfad(verkehr.liste, (e) => e.typ === 2 && e.eig.class === 'rail' && e.eig.brunnel !== 'tunnel' && (z >= 13 || e.eig.subclass === 'rail'))) {
+        ctx.lineWidth = linienBreite([0.6, 0.8, 1.3, 2.2, 3], z) * px2; ctx.strokeStyle = st.bahn; ctx.stroke();
+        if (z >= 14) {
+          ctx.lineWidth = linienBreite([0, 0, 0.5, 1, 1.4], z) * px2; ctx.strokeStyle = st.bahnHell;
+          ctx.setLineDash([4 * px2, 4 * px2]); ctx.stroke(); ctx.setLineDash([]);
+        }
+      }
+      // Straßen: erst alle Ränder, dann alle Füllungen (so gehen Kreuzungen sauber ineinander über)
+      const sichtbar = STRASSEN_STIL.filter((s2) => z >= s2[1]);
+      sichtbar.forEach(([art, , tab, , rand, gestrichelt]) => {
+        if (!rand || gestrichelt || !pfad(verkehr.liste, linien(art, false))) return;
+        if (z < 10) return; // weit heraus ohne Rand, sonst wirken die Straßen zu dick
+        ctx.lineWidth = (linienBreite(tab, z) + (z >= 16 ? 2 : z >= 13 ? 1.4 : 1)) * px2; ctx.strokeStyle = st[rand]; ctx.stroke();
+      });
+      sichtbar.forEach(([art, , tab, farbe, , gestrichelt]) => {
+        if (!pfad(verkehr.liste, linien(art, false))) return;
+        ctx.lineWidth = linienBreite(tab, z) * px2; ctx.strokeStyle = st[farbe];
+        if (gestrichelt) ctx.setLineDash([3 * px2, 2.5 * px2]);
+        ctx.stroke();
+        if (gestrichelt) ctx.setLineDash([]);
+      });
+    }
+    // 6. Grenzen: Staaten kräftig gestrichelt mit zartem Band, Bundesländer fein
+    const grenzen = d.ebene('boundary');
+    if (grenzen) {
+      if (z >= 5 && z <= 12 && pfad(grenzen.liste, (e) => e.eig.admin_level === 4)) {
+        ctx.lineWidth = (z < 8 ? 0.6 : 0.9) * px2; ctx.strokeStyle = st.land2; ctx.setLineDash([4 * px2, 3 * px2]); ctx.stroke(); ctx.setLineDash([]);
+      }
+      if (pfad(grenzen.liste, (e) => e.eig.admin_level === 2)) {
+        ctx.lineWidth = (z >= 10 ? 7 : 5) * px2; ctx.strokeStyle = st.grenzeHalo; ctx.stroke();
+        ctx.lineWidth = (z >= 10 ? 1.8 : 1.4) * px2; ctx.strokeStyle = st.grenze; ctx.setLineDash([7 * px2, 3 * px2, 1.5 * px2, 3 * px2]); ctx.stroke(); ctx.setLineDash([]);
+      }
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    return true;
+  }
+
+    return { NAMEN_ORTE, NAMEN_STRASSENNAMEN, mvtLesen, vektorMalen, KARTENSTIL };
+  }
+  const WERKSTATT = kartenWerkstatt();
+  const { NAMEN_ORTE, NAMEN_STRASSENNAMEN, mvtLesen } = WERKSTATT;
+
+  /* ----- Namen und Straßen über dem Luftbild (wie „Hybrid“ bei Google Maps) -----
+     Auf dem Luftbild allein sieht man nicht, welcher Ort und welche Straße das ist. Dafür holt die App Kartendaten von
+     OpenStreetMap als Vektordaten (OpenFreeMap: kostenlos, ohne Schlüssel, auch gewerblich; Aufbau „OpenMapTiles“) und
+     zeichnet selbst: Straßen als helle Linien, Orte, Stadtteile und Straßennamen hell mit dunklem Rand, dazu Schilder
+     für Autobahnen (blau) und Bundesstraßen (gelb). Nichts überdeckt sich, auch keine Anfrage und kein Knopf.
+     Gezeichnet wird in eine Fläche über dem Luftbild, wenn die Karte ruht. Beim Zoomen und Verschieben wird die fertige
+     Zeichnung nur mitbewegt, das kostet nichts. Kommen keine Daten, bleibt es beim Luftbild ohne Namen. */
+  const namen = { url: '', max: 14, start: null, daten: new Map(), laden: new Set(), ok: 0, fehler: 0, aus: false, bald: 0, stand: 0, el: null, ref: null };
+  const NAMEN_RAND = 48; // so viele Bildpunkte rundherum mehr zeichnen: kurzes Verschieben zeigt sie schon
+  const NAMEN_SCHRIFT = '"Barlow Semi Condensed", "Barlow", "Helvetica Neue", Arial, sans-serif';
+  // Straßen: Art in OpenMapTiles, ab Zoomstufe, Breite, Farbe (von unten nach oben gezeichnet)
+  const NAMEN_STRASSEN = [
+    ['service', 16, 1, 'rgba(255,255,255,.26)'], ['minor', 14, 1.4, 'rgba(255,255,255,.4)'], ['tertiary', 12, 1.9, 'rgba(255,255,255,.52)'],
+    ['secondary', 11, 2.3, 'rgba(255,246,222,.6)'], ['primary', 10, 2.7, 'rgba(255,238,186,.68)'], ['trunk', 8, 3, 'rgba(255,214,110,.76)'],
+    ['motorway', 7, 3.2, 'rgba(255,198,80,.84)']
+  ];
+  const NAMEN_STRASSE_ART = {};
+  NAMEN_STRASSEN.forEach((s) => { NAMEN_STRASSE_ART[s[0]] = 1; });
+  const namenMoeglich = () => !!CONFIG.karte.beschriftung && !VORSCHAU && !namen.aus && !!window.fetch && !!window.TextDecoder;
+
+  function namenStart() {
+    const q = CONFIG.karte.beschriftung;
+    if (namen.start || !namenMoeglich()) return;
+    const fertig = (url, max) => { namen.url = url; namen.max = Math.max(0, Math.min(14, Number(max) || 14)); namenBald(); vektorWartende(); };
+    if (/\{z\}/.test(q)) { namen.start = true; fertig(q, 14); return; }
+    // Beschreibung des Dienstes (TileJSON) mit der Adresse der aktuellen Daten; sonst die Adresse für „neueste“
+    namen.start = fetch(q).then((r) => (r.ok ? r.json() : Promise.reject(new Error('Namen ' + r.status))))
+      .then((j) => {
+        const t = j && j.tiles && j.tiles[0];
+        if (!/^https?:\/\/[^ ]+\{z\}/.test(t || '')) throw new Error('Namen: keine Adresse');
+        fertig(t, j.maxzoom);
+      })
+      .catch(() => fertig(q.replace(/\/$/, '') + '/latest/{z}/{x}/{y}.pbf', 14));
+  }
+
+  // Daten eines Kartenquadrats: sofort, wenn schon geladen, sonst wird geladen und danach neu gezeichnet
+  // Daten eines Quadrats gelesen (für Namen und das Zeichnen hier); null: kommt noch
+  function namenDaten(z, x, y) {
+    const e = namenEintrag(z, x, y);
+    if (!e) return null;
+    // Erst hier lesen (die Karte ruht gerade), nicht schon beim Ankommen mitten in einer Bewegung
+    if (e.roh && !e.d) { try { e.d = mvtLesen(e.roh); } catch (err) { e.d = {}; } }
+    return e.fehler ? {} : e.d;
+  }
+  // Manche Server schicken die Daten noch gepackt (gzip) ohne passende Kopfzeile: dann hier auspacken
+  function entpacken(buf) {
+    const b = new Uint8Array(buf, 0, Math.min(2, buf.byteLength));
+    if (b[0] !== 0x1f || b[1] !== 0x8b) return buf;
+    if (!window.DecompressionStream) throw new Error('gzip');
+    return new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+  }
+  // Rohe Daten eines Quadrats (für die Werkstatt im Hintergrund); null: kommt noch, false: kam nicht
+  function namenRoh(z, x, y) {
+    const e = namenEintrag(z, x, y);
+    return !e ? null : e.fehler ? false : e.roh;
+  }
+  function namenEintrag(z, x, y) {
+    const key = z + '/' + x + '/' + y;
+    let d = namen.daten.get(key);
+    if (d && d.fehler && Date.now() - d.fehler > 20000) { namen.daten.delete(key); d = null; }
+    if (d) {
+      namen.daten.delete(key); namen.daten.set(key, d); // zuletzt benutzt: nach hinten
+      return d;
+    }
+    if (namen.aus || !namen.url || namen.laden.has(key) || namen.laden.size >= 8) return null;
+    namen.laden.add(key);
+    fetch(namen.url.replace('{z}', z).replace('{x}', x).replace('{y}', y))
+      .then((r) => { if (!r.ok) throw new Error('Namen ' + r.status); return r.arrayBuffer(); })
+      .then(entpacken)
+      .then((buf) => { namen.daten.set(key, { roh: buf }); namen.ok++; },
+        () => {
+          namen.daten.set(key, { fehler: Date.now() }); // nicht sofort wieder versuchen
+          namen.fehler++;
+          if (!namen.ok && namen.fehler >= 4) namenAus();
+        })
+      .then(() => {
+        namen.laden.delete(key);
+        while (namen.daten.size > 80) namen.daten.delete(namen.daten.keys().next().value);
+        namen.stand++;
+        namenBald();
+        vektorWartende();
+      });
+    return null;
+  }
+  function namenAus() {
+    namen.aus = true;
+    if (namen.el) namen.el.style.display = 'none';
+    const c = umgebung.el && umgebung.el.querySelector('.u-namen');
+    if (c) c.style.display = 'none';
+    // Die eigene Karte braucht diese Daten: dann fertige Kartenbilder nehmen
+    const kc = kacheln, u = umgebung;
+    if (kc.quellen[kc.nr] && kc.quellen[kc.nr].vektor && kartenStatus.huelle) {
+      if (kc.nr + 1 < kc.quellen.length) { kachelQuelleSetzen(kc.nr + 1); if (kartenStatus.blick) kachelnLegen(kartenStatus.blick); } else kachelnAus();
+    }
+    if (u.quellen && u.quellen[u.nr] && u.quellen[u.nr].vektor) { if (u.nr + 1 < u.quellen.length) u.nr++; else u.aus = true; u.el.querySelector('.u-kacheln').textContent = ''; }
+    kartenArtZeigen();
+    if (u.el) { u.schluessel = ''; umgebungZeichnen(); }
   }
 
   // Teile einer Linie (Bildschirmpunkte), die im Rechteck 0…w × 0…h liegen (an den Rändern abgeschnitten)
@@ -1970,8 +2212,8 @@
     if (best) { if (best.wi > Math.PI / 2 - 0.01) best.wi -= Math.PI; else if (best.wi < -Math.PI / 2 - 0.01) best.wi += Math.PI; }
     return best;
   }
-  // Mitte des längsten sichtbaren Teils einer Linie (für Schilder)
-  function linienMitte(linie, w, h) {
+  // Punkt bei Anteil a (0…1) der Länge des längsten sichtbaren Teils einer Linie (für Schilder)
+  function linienPunkt(linie, w, h, a) {
     let pt = null, lang = 0;
     linieImBild(linie, w, h).forEach((t) => {
       let l = 0;
@@ -1981,7 +2223,7 @@
     if (!pt) return null;
     let len = 0;
     for (let i = 0; i + 3 < pt.length; i += 2) len += Math.sqrt((pt[i + 2] - pt[i]) * (pt[i + 2] - pt[i]) + (pt[i + 3] - pt[i + 1]) * (pt[i + 3] - pt[i + 1]));
-    let rest = len / 2;
+    let rest = len * a;
     for (let i = 0; i + 3 < pt.length; i += 2) {
       const sl = Math.sqrt((pt[i + 2] - pt[i]) * (pt[i + 2] - pt[i]) + (pt[i + 3] - pt[i + 1]) * (pt[i + 3] - pt[i + 1]));
       if (sl >= rest && sl > 0) return { x: pt[i] + (pt[i + 2] - pt[i]) * rest / sl, y: pt[i + 1] + (pt[i + 3] - pt[i + 1]) * rest / sl };
@@ -1998,7 +2240,14 @@
   /* Straßen und Namen für den Ausschnitt b (Bildschirm = Meter · s + x) in die Zeichenfläche cv malen.
      w, h: Größe des Ausschnitts, rand: so viel mehr rundherum, z: Zoomstufe der Kartenbilder, belegt: freizuhaltende
      Rechtecke { l, o, r, u }. Gibt zurück, ob alle Daten da waren. */
-  function namenMalen(cv, b, w, h, rand, z, belegt) {
+  // Farben der Namen: auf dem Luftbild hell mit dunklem Rand, auf der eigenen Karte dunkel mit hellem Rand
+  const NAMEN_FARBEN = {
+    foto: { ort: '#FFFFFF', teil: '#F4F1EA', strasse: '#F4F1EA', wasser: '#DDF0FB', land: '#F1E9FF', rand: 'rgba(10, 14, 20, .82)' },
+    hell: { ort: '#26303B', teil: '#55606C', strasse: '#3A444F', wasser: '#33688C', land: '#6D5C8D', rand: 'rgba(250, 251, 247, .94)' },
+    dunkel: { ort: '#E6EBF0', teil: '#AAB5C1', strasse: '#B8C2CD', wasser: '#80B3D5', land: '#BBACD8', rand: 'rgba(14, 20, 28, .92)' }
+  };
+  function namenMalen(cv, b, w, h, rand, z, belegt, art) {
+    const foto = art !== 'karte', fb = NAMEN_FARBEN[foto ? 'foto' : dunklesThema() ? 'dunkel' : 'hell'];
     const dpr = Math.min(2, window.devicePixelRatio || 1), W = w + 2 * rand, H = h + 2 * rand;
     const bw = Math.round(W * dpr), bh = Math.round(H * dpr);
     if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; cv.style.width = W + 'px'; cv.style.height = H + 'px'; }
@@ -2011,28 +2260,28 @@
     const dz = Math.min(namen.max, z), n = Math.pow(2, dz), T = WELT / n, ox = NULLPUNKT.x + WELT / 2, oy = NULLPUNKT.y + WELT / 2;
     const fest = (v) => Math.max(0, Math.min(n - 1, Math.floor(v / T)));
     const x0 = fest(ox + (-rand - b.x) / b.s), x1 = fest(ox + (w + rand - b.x) / b.s), y0 = fest(oy + (-rand - b.y) / b.s), y1 = fest(oy + (h + rand - b.y) / b.s);
-    if ((x1 - x0 + 1) * (y1 - y0 + 1) > 24) return true; // zu weit heraus (sollte bei Luftbild nicht vorkommen)
+    if ((x1 - x0 + 1) * (y1 - y0 + 1) > 48) return true; // zu weit heraus
     const stuecke = [];
     let alle = true;
     for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
       const d = namenDaten(dz, x, y);
       if (!d) { alle = false; continue; }
-      stuecke.push({ d, sx: (x * T - ox) * b.s + b.x, sy: (y * T - oy) * b.s + b.y, T });
+      if (d.ebene) stuecke.push({ d, sx: (x * T - ox) * b.s + b.x, sy: (y * T - oy) * b.s + b.y, T });
     }
     const punkte = (st, ext, teil) => {
       const f = st.T / ext * b.s, out = new Array(teil.length);
       for (let i = 0; i < teil.length; i += 2) { out[i] = st.sx + teil[i] * f; out[i + 1] = st.sy + teil[i + 1] * f; }
       return out;
     };
-    // 1. Straßen als helle Linien, wichtige oben
+    // 1. Auf dem Luftbild: Straßen als helle Linien, wichtige oben (die eigene Karte hat sie schon)
     const fak = z < 11 ? 0.7 : z < 14 ? 0.9 : z < 16 ? 1.15 : z < 17 ? 1.5 : 1.9;
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    NAMEN_STRASSEN.forEach(([art, ab, breite, farbe]) => {
+    if (foto) NAMEN_STRASSEN.forEach(([art, ab, breite, farbe]) => {
       if (z < ab) return;
       let etwas = false;
       ctx.beginPath();
       stuecke.forEach((st) => {
-        const e = st.d.transportation;
+        const e = st.d.ebene && st.d.ebene('transportation');
         if (!e) return;
         e.liste.forEach((m) => {
           if (m.typ !== 2 || m.eig.class !== art) return;
@@ -2049,22 +2298,42 @@
     // 2. Namen sammeln: Orte, Schilder, Straßennamen
     const kand = [];
     stuecke.forEach((st) => {
-      const orte = st.d.place, str = st.d.transportation_name;
+      const orte = st.d.ebene('place'), str = st.d.ebene('transportation_name');
       if (orte) orte.liste.forEach((m) => {
-        const a = NAMEN_ORTE[m.eig.class], name = m.eig['name:de'] || m.eig.name_de || m.eig.name;
+        const name = m.eig['name:de'] || m.eig.name_de || m.eig.name;
+        // Länder und Bundesländer nur weit heraus (dann sieht man, wo Deutschland aufhört)
+        if (name && m.typ === 1 && ((m.eig.class === 'country' && z <= 8) || (m.eig.class === 'state' && z >= 6 && z <= 8))) {
+          const p = punkte(st, orte.extent, m.teile[0]), land = m.eig.class === 'country';
+          kand.push({ art: 'ort', prio: land ? 50 : 60, text: name, x: p[0], y: p[1], g: land ? 15 : 12.5, s: land ? 700 : 600, farbe: land ? fb.land : fb.teil });
+          return;
+        }
+        const a = NAMEN_ORTE[m.eig.class];
         if (!a || !name || z < a[0] || m.typ !== 1) return;
         if (m.eig.class === 'city' && z < 8 && (m.eig.rank || 99) > 4) return;
         const p = punkte(st, orte.extent, m.teile[0]);
-        kand.push({ art: 'ort', prio: a[1] * 100 + Math.min(99, m.eig.rank || 50), text: name, x: p[0], y: p[1], g: a[2], s: a[3], teil: a[1] >= 3 });
+        kand.push({ art: 'ort', prio: a[1] * 100 + Math.min(99, m.eig.rank || 50), text: name, x: p[0], y: p[1], g: a[2], s: a[3], farbe: a[1] >= 3 ? fb.teil : fb.ort });
+      });
+      // Seen und Meere (Punkt oder Linie), Flüsse entlang ihres Laufs
+      const gew = st.d.ebene('water_name'), fluss = z >= 12 && st.d.ebene('waterway');
+      if (gew && z >= 9) gew.liste.forEach((m) => {
+        const name = m.eig['name:de'] || m.eig.name_de || m.eig.name;
+        if (!name) return;
+        if (m.typ === 1) { const p = punkte(st, gew.extent, m.teile[0]); kand.push({ art: 'ort', prio: 250, text: name, x: p[0], y: p[1], g: 13, s: 600, farbe: fb.wasser, kursiv: true }); }
+        else if (m.typ === 2) m.teile.forEach((t) => kand.push({ art: 'strasse', prio: 260, text: name, linie: punkte(st, gew.extent, t), farbe: fb.wasser, kursiv: true }));
+      });
+      if (fluss) fluss.liste.forEach((m) => {
+        const name = m.eig['name:de'] || m.eig.name_de || m.eig.name;
+        if (!name || m.typ !== 2 || (m.eig.class !== 'river' && m.eig.class !== 'canal' && z < 15)) return;
+        m.teile.forEach((t) => kand.push({ art: 'strasse', prio: 270, text: name, linie: punkte(st, fluss.extent, t), farbe: fb.wasser, kursiv: true }));
       });
       if (str) str.liste.forEach((m) => {
-        if (m.typ !== 2) return;
         const c = m.eig.class, ref = String(m.eig.ref || '').split(';')[0].trim(), name = m.eig['name:de'] || m.eig.name_de || m.eig.name;
         const linien = m.teile.map((t) => punkte(st, str.extent, t));
         const autobahn = c === 'motorway' && /^A ?\d/.test(ref), bund = (c === 'trunk' || c === 'primary') && /^B ?\d/.test(ref);
-        if ((autobahn && z >= 8) || (bund && z >= 10)) {
+        if ((autobahn && z >= 7) || (bund && z >= 10)) {
           linien.forEach((p) => kand.push({ art: 'schild', prio: autobahn ? 150 : 160, text: ref.replace(/^([AB]) ?/, '$1 '), linie: p, autobahn }));
         }
+        if (m.typ !== 2) return;
         const a = NAMEN_STRASSENNAMEN[c];
         if (a && name && z >= a[0] && (c !== 'path' || m.eig.subclass === 'pedestrian')) linien.forEach((p) => kand.push({ art: 'strasse', prio: 300 + a[1] * 10, text: name, linie: p }));
       });
@@ -2072,7 +2341,8 @@
     kand.sort((a, b2) => a.prio - b2.prio);
     // 3. Platz suchen: nichts darf sich überdecken, auch keine Anfrage, kein Knopf
     const besetzt = belegt.slice(), gesetzt = [], schonDa = {};
-    const frei = (l, o, r, u) => l >= -rand && o >= -rand && r <= w + rand && u <= h + rand && !besetzt.some((q) => l < q.r && r > q.l && o < q.u && u > q.o);
+    const L = 4; // so viel Luft bleibt um jeden Namen
+    const frei = (l, o, r, u) => l >= -rand && o >= -rand && r <= w + rand && u <= h + rand && !besetzt.some((q) => l - L < q.r && r + L > q.l && o - L < q.u && u + L > q.o);
     const nah = (text, x, y, abstand) => (schonDa[text] || []).some((q) => Math.abs(q.x - x) < abstand && Math.abs(q.y - y) < abstand);
     const merken = (k, box) => { besetzt.push(box); gesetzt.push(k); (schonDa[k.text] = schonDa[k.text] || []).push({ x: k.x, y: k.y }); };
     const strGroesse = z >= 17 ? 13.5 : 12.5;
@@ -2089,16 +2359,19 @@
           return true;
         });
       } else if (k.art === 'schild') {
-        const mi = linienMitte(k.linie, w, h);
-        if (!mi) return;
-        k.x = mi.x; k.y = mi.y;
-        if (nah(k.text, k.x, k.y, 260)) return;
         ctx.font = `700 12px ${NAMEN_SCHRIFT}`;
         k.tw = ctx.measureText(k.text).width;
-        const box = { l: k.x - k.tw / 2 - 6, o: k.y - 10, r: k.x + k.tw / 2 + 6, u: k.y + 10 };
-        if (box.l >= 2 && box.r <= w - 2 && box.o >= 2 && box.u <= h - 2 && frei(box.l, box.o, box.r, box.u)) merken(k, box);
+        // In der Mitte der Strecke, sonst etwas daneben (dort steht vielleicht eine Anfrage)
+        const stellen = k.linie.length === 2 ? [{ x: k.linie[0], y: k.linie[1] }] : [0.5, 0.3, 0.7, 0.15, 0.85].map((a) => linienPunkt(k.linie, w, h, a));
+        stellen.some((mi) => {
+          if (!mi || nah(k.text, mi.x, mi.y, 260)) return false;
+          const box = { l: mi.x - k.tw / 2 - 6, o: mi.y - 10, r: mi.x + k.tw / 2 + 6, u: mi.y + 10 };
+          if (box.l < 2 || box.r > w - 2 || box.o < 2 || box.u > h - 2 || !frei(box.l, box.o, box.r, box.u)) return false;
+          k.x = mi.x; k.y = mi.y; merken(k, box);
+          return true;
+        });
       } else {
-        ctx.font = `600 ${strGroesse}px ${NAMEN_SCHRIFT}`;
+        ctx.font = `${k.kursiv ? 'italic ' : ''}600 ${strGroesse}px ${NAMEN_SCHRIFT}`;
         const tw = ctx.measureText(k.text).width;
         const pl = linienPlatz(k.linie, tw + 16, w, h);
         if (!pl || nah(k.text, pl.x, pl.y, 220)) return;
@@ -2121,14 +2394,14 @@
         return;
       }
       const ort = k.art === 'ort';
-      ctx.font = ort ? `${k.s} ${k.g}px ${NAMEN_SCHRIFT}` : `600 ${strGroesse}px ${NAMEN_SCHRIFT}`;
+      ctx.font = (k.kursiv ? 'italic ' : '') + (ort ? `${k.s} ${k.g}px ${NAMEN_SCHRIFT}` : `600 ${strGroesse}px ${NAMEN_SCHRIFT}`);
       ctx.save();
       ctx.translate(k.x, k.y);
       if (!ort) ctx.rotate(k.wi);
       ctx.lineWidth = ort ? 3.6 : 3;
-      ctx.strokeStyle = 'rgba(10, 14, 20, .82)';
+      ctx.strokeStyle = fb.rand;
       ctx.strokeText(k.text, 0, 0);
-      ctx.fillStyle = ort && !k.teil ? '#FFFFFF' : '#F4F1EA';
+      ctx.fillStyle = k.farbe || fb.strasse;
       ctx.fillText(k.text, 0, 0);
       ctx.restore();
     });
@@ -2144,7 +2417,9 @@
   function namenGross() {
     const k = kartenStatus, el = namen.el;
     if (!el) return;
-    const an = namenMoeglich() && ui.view === 'karte' && !!k.blick && !!k.w && k.huelle.parentNode.classList.contains('k-foto');
+    const foto = k.huelle.parentNode.classList.contains('k-foto'), q = kacheln.quellen[kacheln.nr];
+    const art = foto ? 'foto' : q && q.vektor && !kacheln.aus ? 'karte' : null;
+    const an = namenMoeglich() && ui.view === 'karte' && !!k.blick && !!k.w && !!art;
     el.style.display = an ? '' : 'none';
     if (!an) return;
     // Erst zeichnen, wenn die Karte eine Viertelsekunde ruht (sonst stockt die nächste Bewegung)
@@ -2158,10 +2433,10 @@
       .map((e) => e.getBoundingClientRect()).filter((r) => r.width)
       .map((r) => ({ l: r.left - rahmen.left - 3, o: r.top - rahmen.top - 3, r: r.right - rahmen.left + 3, u: r.bottom - rahmen.top + 3 }));
     // Nichts verändert (gleicher Ausschnitt, gleiche Daten, Anfragen an denselben Stellen): nicht neu zeichnen
-    const schluessel = [b.s, b.x, b.y, k.w, k.h, namen.stand, namen.url, JSON.stringify(belegt.map((q) => [Math.round(q.l), Math.round(q.o)]))].join('|');
+    const schluessel = [b.s, b.x, b.y, k.w, k.h, namen.stand, namen.url, art, dunklesThema(), JSON.stringify(belegt.map((q2) => [Math.round(q2.l), Math.round(q2.o)]))].join('|');
     if (schluessel === namen.schluessel && namen.ref) { namenBewegen(b); return; }
     namen.schluessel = schluessel;
-    namenMalen(el.firstChild, b, k.w, k.h, NAMEN_RAND, kachelZoom(b.s), belegt);
+    namenMalen(el.firstChild, b, k.w, k.h, NAMEN_RAND, kachelZoom(b.s), belegt, art);
     namen.ref = { s: b.s, x: b.x, y: b.y };
     el.style.transform = '';
     if (namen.weg) { namen.weg = false; el.style.opacity = ''; }
@@ -2181,19 +2456,182 @@
     const u = umgebung, a = u.namenFuer;
     const cv = u.el && u.el.querySelector('.u-namen');
     if (!cv) return;
-    const an = !!a && namenMoeglich() && u.el.classList.contains('k-foto') && !!u.w;
+    const q = !u.aus && u.quellen && u.quellen[u.nr], foto = u.el && u.el.classList.contains('k-foto');
+    const art = foto ? 'foto' : q && q.vektor ? 'karte' : null;
+    const an = !!a && namenMoeglich() && !!art && !!u.w;
     cv.style.display = an ? '' : 'none';
     if (!an) return;
     namenStart();
-    const schluessel = [a.b.z, a.b.x, a.b.y, u.w, u.h, JSON.stringify(a.belegt), namen.stand, namen.url].join('|');
+    const schluessel = [a.b.z, a.b.x, a.b.y, u.w, u.h, JSON.stringify(a.belegt), namen.stand, namen.url, art, dunklesThema()].join('|');
     if (schluessel === u.namenSchluessel) return;
     u.namenSchluessel = schluessel;
-    namenMalen(cv, a.b, u.w, u.h, 0, a.b.z, a.belegt);
+    namenMalen(cv, a.b, u.w, u.h, 0, a.b.z, a.belegt, art);
   }
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { umgebung.namenSchluessel = ''; namenBald(); });
+
+  /* ===== Eigene Straßenkarte: von der App selbst gezeichnet =====
+     Statt fertiger Kartenbilder zeichnet die App die Karte selbst aus den Daten von OpenStreetMap (dieselben Daten
+     wie die Namen über dem Luftbild): Siedlungen, Wald, Wiesen, Wasser, Häuser, Straßen, Bahnlinien und Grenzen.
+     Vorteile: überall gleich genau (auch in den Nachbarländern), ein Stil, der zur App passt, hell und dunkel ohne
+     Farbfilter, und beim Zoomen gibt es keine fremde Karte, die durchscheint. Gezeichnet wird je Kartenquadrat in eine
+     Zeichenfläche, in kleinen Portionen pro Bild, damit Bewegungen flüssig bleiben. Erst wenn die Daten gar nicht
+     kommen, nimmt die App fertige Kartenbilder (basemap.de, OpenStreetMap). */
+  /* Zeichnen: am liebsten im Hintergrund (Web Worker mit eigener Zeichenfläche). Die Werkstatt bekommt die Daten,
+     zeichnet ein Quadrat und schickt ein fertiges Bild zurück; hier wird es wie ein normales Kartenbild gezeigt. Das
+     Handy zeichnet so nebenher, die Karte bleibt beim Zoomen flüssig. Ohne Hintergrund zeichnet die App hier, aber
+     nur, wenn die Karte ruht. Die Mitte zuerst. */
+  const malen = { liste: [], bild: 0, cv: null };
+  const werk = { w: null, aus: false, bereit: false, hat: [], offen: new Map(), id: 0 };
+  const zeichenDpr = () => Math.min(2, window.devicePixelRatio || 1);
+  function werkStarten() {
+    if (werk.w || werk.aus) return;
+    try {
+      if (!window.Worker || !window.OffscreenCanvas || !window.Blob || !window.URL || !URL.createObjectURL) throw new Error('kein Hintergrund');
+      const quelle = 'const W = (' + kartenWerkstatt.toString() + ')();\n' + `
+        const daten = new Map(); let cv = null;
+        const lesen = (key) => { const e = daten.get(key); if (!e) return null; daten.delete(key); daten.set(key, e); if (e.roh) { try { e.d = W.mvtLesen(e.roh); } catch (x) { e.d = {}; } e.roh = null; } return e.d; };
+        onmessage = (ev) => {
+          const m = ev.data;
+          if (m.typ === 'daten') { daten.set(m.key, m.buf ? { roh: m.buf } : { d: {} }); while (daten.size > 48) daten.delete(daten.keys().next().value); return; }
+          if (m.typ !== 'malen') return;
+          const d = lesen(m.key);
+          if (!d) { postMessage({ id: m.id, fehlt: true, key: m.key }); return; }
+          try {
+            cv = cv || new OffscreenCanvas(512, 512);
+            const r = W.vektorMalen(cv, d, m.z, m.x, m.y, m.dz, m.stil, m.dpr);
+            cv.convertToBlob({ type: 'image/png' }).then((blob) => postMessage({ id: m.id, blob, leer: r === 'leer' }), () => postMessage({ id: m.id, kaputt: true }));
+          } catch (x) { postMessage({ id: m.id, kaputt: true }); }
+        };
+        let ok = false;
+        try { ok = !!new OffscreenCanvas(4, 4).getContext('2d') && typeof OffscreenCanvas.prototype.convertToBlob === 'function'; } catch (x) { ok = false; }
+        postMessage({ typ: 'bereit', ok });`;
+      const url = URL.createObjectURL(new Blob([quelle], { type: 'text/javascript' }));
+      werk.w = new Worker(url);
+      werk.w.onmessage = werkAntwort;
+      werk.w.onerror = () => werkAus();
+      setTimeout(() => { if (!werk.bereit) werkAus(); }, 4000); // meldet sich nicht: hier zeichnen
+    } catch (e) { werkAus(); }
+  }
+  // Hintergrund geht nicht: alles, was dort lag, hier zeichnen
+  function werkAus() {
+    if (werk.w) { try { werk.w.terminate(); } catch (e) { /* egal */ } }
+    werk.w = null; werk.aus = true; werk.bereit = false;
+    werk.offen.forEach((t) => vektorPlanen(t));
+    werk.offen.clear();
+    vektorWeiter();
+  }
+  function werkAntwort(ev) {
+    const m = ev.data;
+    if (m.typ === 'bereit') { if (m.ok) { werk.bereit = true; vektorWeiter(); } else werkAus(); return; }
+    const t = werk.offen.get(m.id);
+    werk.offen.delete(m.id);
+    if (m.fehlt) { werk.hat = werk.hat.filter((k2) => k2 !== m.key); if (t) vektorPlanen(t); }
+    else if (m.kaputt) { if (t) { werkAus(); } }
+    else if (t) { t.wartet = !!m.leer; bildSetzen(t, URL.createObjectURL(m.blob)); }
+    vektorWeiter();
+  }
+  // Fertiges Bild zeigen; das alte erst freigeben, wenn das neue da ist (kein Flackern)
+  function bildSetzen(t, url, geladen) {
+    if (!t.img.parentNode) { if (/^blob:/.test(url)) URL.revokeObjectURL(url); return; }
+    const alt = t.img.src;
+    // Neu gezeichnet (z. B. dunkel): erst laden, dann tauschen, damit das Quadrat nie kurz leer ist
+    if (alt && !geladen) {
+      const vor = new Image();
+      vor.onload = vor.onerror = () => bildSetzen(t, url, true);
+      vor.src = url;
+      return;
+    }
+    t.img.onload = () => {
+      t.img.onload = null;
+      if (/^blob:/.test(alt) && alt !== url) URL.revokeObjectURL(alt);
+      if (t.vorschau) { t.img.dataset.fertig = t.schl; return; }
+      if (t.klein) { t.img.className = 'k-kachel da'; t.img.dataset.geladen = '1'; umgebungBasis(); return; }
+      if (!t.fertig) { t.fertig = true; kacheln.ok++; }
+      basisAuffrischen(t); altesWeg();
+    };
+    t.img.src = url;
+  }
+  function vektorPlanen(t) {
+    namenStart();
+    if (t.inListe) return;
+    t.inListe = true;
+    malen.liste.push(t);
+    vektorWeiter();
+  }
+  function vektorWeiter() {
+    if (!malen.bild && malen.liste.length) malen.bild = requestAnimationFrame(vektorSchritt);
+  }
+  function vektorSchritt() {
+    malen.bild = 0;
+    werkStarten();
+    const k = kartenStatus, ruhig = !(k.finger || k.ziel || k.rad) && performance.now() - (k.bewegtUm || 0) > 150;
+    // Wichtigstes zuerst: aktuelle Stufe, nahe der Mitte
+    if (malen.liste.length > 1 && k.blick) {
+      const mx = (k.w / 2 - k.blick.x) / k.blick.s + NULLPUNKT.x + WELT / 2, my = (k.h / 2 - k.blick.y) / k.blick.s + NULLPUNKT.y + WELT / 2;
+      const rang = (t) => (t.klein || t.vorschau || t.z === kacheln.z ? 0 : 1e9) + Math.abs((t.x + 0.5) * WELT / Math.pow(2, t.z) - mx) + Math.abs((t.y + 0.5) * WELT / Math.pow(2, t.z) - my);
+      malen.liste.sort((a, b) => rang(a) - rang(b));
+    }
+    const stil = dunklesThema() ? 'dunkel' : 'hell', dpr = zeichenDpr();
+    if (werk.w && !werk.bereit) { setTimeout(vektorWeiter, 50); return; } // Hintergrund startet noch
+    if (werk.w) {
+      // Im Hintergrund: einige Aufträge gleichzeitig unterwegs, der Rest wartet hier
+      while (malen.liste.length && werk.offen.size < 4) {
+        const t = malen.liste.shift();
+        t.inListe = false;
+        if (!t.img.parentNode) continue;
+        const dz = Math.min(namen.max, t.z), f = Math.pow(2, t.z - dz), px = Math.floor(t.x / f), py = Math.floor(t.y / f), key = dz + '/' + px + '/' + py;
+        const roh = namenRoh(dz, px, py);
+        if (roh === null) { t.wartet = true; continue; } // Daten kommen noch
+        if (werk.hat.indexOf(key) < 0) {
+          werk.w.postMessage({ typ: 'daten', key, buf: roh || null });
+          werk.hat.push(key);
+          if (werk.hat.length > 40) werk.hat.shift();
+        }
+        const id = ++werk.id;
+        werk.offen.set(id, t);
+        werk.w.postMessage({ typ: 'malen', id, key, z: t.z, x: t.x, y: t.y, dz, stil, dpr });
+      }
+      return;
+    }
+    // Hier zeichnen: nur in Ruhe, ein paar Millisekunden pro Bild
+    if (!ruhig) { setTimeout(vektorWeiter, 120); return; }
+    const start = performance.now();
+    let gemalt = 0;
+    while (malen.liste.length && (gemalt === 0 || performance.now() - start < 10)) {
+      const t = malen.liste.shift();
+      t.inListe = false;
+      if (!t.img.parentNode) continue;
+      const dz = Math.min(namen.max, t.z), f = Math.pow(2, t.z - dz);
+      const d = namenDaten(dz, Math.floor(t.x / f), Math.floor(t.y / f));
+      if (!d) { t.wartet = true; continue; }
+      const cv = malen.cv || (malen.cv = document.createElement('canvas'));
+      const r = WERKSTATT.vektorMalen(cv, d, t.z, t.x, t.y, dz, stil, dpr);
+      gemalt++;
+      t.wartet = r === 'leer';
+      bildAusZeichnung(cv, t);
+    }
+    vektorWeiter();
+  }
+  function bildAusZeichnung(cv, t) {
+    if (cv.toBlob && window.URL && URL.createObjectURL) cv.toBlob((blob) => bildSetzen(t, blob ? URL.createObjectURL(blob) : cv.toDataURL('image/png')), 'image/png');
+    else bildSetzen(t, cv.toDataURL('image/png'));
+  }
+  // Daten angekommen: wartende Quadrate noch einmal versuchen
+  function vektorWartende() {
+    kacheln.bilder.forEach((t) => { if (t.vektor && t.wartet) { t.wartet = false; vektorPlanen(t); } });
+    const v = kartenStatus.vorschauBild;
+    if (v && v.wartet) { v.wartet = false; vektorPlanen(v); }
+    (umgebung.vektor || []).forEach((t) => { if (t.wartet && t.img.parentNode) { t.wartet = false; vektorPlanen(t); } });
+  }
+  // Hell/dunkel gewechselt: alles in den neuen Farben neu zeichnen (die alte Zeichnung bleibt bis dahin stehen)
+  function vektorNeuFaerben() {
+    kacheln.bilder.forEach((t) => { if (t.vektor && t.fertig) vektorPlanen(t); });
+    (umgebung.vektor || []).forEach((t) => { if (t.img.parentNode) vektorPlanen(t); });
+  }
   function kachelWeg(t, key) {
     t.img.onload = t.img.onerror = null;
     if (t.img.parentNode) t.img.parentNode.removeChild(t.img);
+    if (/^blob:/.test(t.img.src)) URL.revokeObjectURL(t.img.src); // selbst gezeichnete Bilder sofort freigeben
     kacheln.bilder.delete(key);
   }
   function kachelnLeeren() {
@@ -2218,7 +2656,8 @@
     Object.assign(kc, { nr, ok: 0, fehler: 0, aus: false });
     const h = kartenStatus.huelle;
     h.classList.remove('ohne-kacheln');
-    h.classList.toggle('k-filter', !q.carto && !q.foto);
+    h.classList.toggle('k-filter', !q.carto && !q.foto && !q.vektor);
+    h.classList.toggle('k-vektor', !!q.vektor);
     kartenArtZeigen();
     $('#karte-hinweis').hidden = true;
     if (warAus) renderKarte();
@@ -2228,7 +2667,7 @@
     kachelnLeeren();
     kc.aus = true;
     kartenStatus.huelle.classList.add('ohne-kacheln');
-    kartenStatus.huelle.classList.remove('k-filter');
+    kartenStatus.huelle.classList.remove('k-filter', 'k-vektor');
     const quelle = $('.k-quelle');
     quelle.textContent = 'Vereinfacht · Lage: © OpenStreetMap-Mitwirkende, GeoNames';
     quelle.dataset.text = '';
@@ -2265,6 +2704,16 @@
   // lq: Luftbild-Quelle (dann in der Ebene darüber), sonst ein Bild der Straßenkarte
   function neueKachel(z, x, y, key, lq) {
     const kc = kacheln;
+    if (!lq && kc.quellen[kc.nr].vektor) {
+      const img = document.createElement('img');
+      img.className = 'k-kachel'; img.alt = ''; img.draggable = false; img.dataset.k = key;
+      img.setAttribute('decoding', 'async');
+      const t = { img, z, x, y, fertig: false, fehler: false, vektor: true };
+      kc.bilder.set(key, t);
+      kc.el.appendChild(img);
+      vektorPlanen(t);
+      return;
+    }
     const img = document.createElement('img');
     img.className = 'k-kachel';
     img.alt = '';
@@ -2336,7 +2785,7 @@
     kc.bilder.forEach((t, key) => {
       if (brauche[key]) return;
       // Ältere Luftbilder bleiben über mehrere Stufen liegen, bis die neuen da sind (keine Lücken beim schnellen Zoomen)
-      if (t.z === kc.z || !t.fertig || (t.luft ? Math.abs(t.z - kc.z) > 3 : t.z !== kc.vorZ)) { kachelWeg(t, key); return; }
+      if (t.z === kc.z || !t.fertig || (t.luft || t.vektor ? Math.abs(t.z - kc.z) > 3 : t.z !== kc.vorZ)) { kachelWeg(t, key); return; }
       // Ältere Stufe: nur behalten, solange sie im Bild liegt
       const T = WELT / Math.pow(2, t.z);
       const l = (t.x * T - r.ox) * b.s + b.x, o = (t.y * T - r.oy) * b.s + b.y;
@@ -2347,7 +2796,7 @@
       const l = Math.round((t.x * T - r.ox) * b.s + b.x), rr = Math.round(((t.x + 1) * T - r.ox) * b.s + b.x);
       const o = Math.round((t.y * T - r.oy) * b.s + b.y), u = Math.round(((t.y + 1) * T - r.oy) * b.s + b.y);
       // Die aktuelle Stufe oben, ältere Luftbilder darunter: die nähere Stufe über der ferneren
-      const zi = t.z === kc.z ? (t.luft ? 30 : 2) : t.luft ? 20 - Math.abs(t.z - kc.z) : 1;
+      const zi = t.z === kc.z ? (t.luft ? 30 : 25) : t.luft || t.vektor ? 20 - Math.abs(t.z - kc.z) : 1;
       t.img.style.cssText = `left:${l}px;top:${o}px;width:${rr - l}px;height:${u - o}px;z-index:${zi}`;
       basisAuffrischen(t);
     });
@@ -2381,7 +2830,7 @@
       if (!t) return false; // alle Anbieter gescheitert
       const l = Math.round((x * T - r.ox) * ref.s + ref.x), rr = Math.round(((x + 1) * T - r.ox) * ref.s + ref.x);
       const o = Math.round((y * T - r.oy) * ref.s + ref.y), u = Math.round(((y + 1) * T - r.oy) * ref.s + ref.y);
-      t.img.style.cssText = `left:${l}px;top:${o}px;width:${rr - l}px;height:${u - o}px;z-index:${lq ? 30 : 2}`;
+      t.img.style.cssText = `left:${l}px;top:${o}px;width:${rr - l}px;height:${u - o}px;z-index:${lq ? 30 : t.vektor ? 25 : 2}`;
       return true;
     };
     for (let x = r.x0; x <= r.x1; x++) for (let y = r.y0; y <= r.y1; y++) if (!legen(r.z + '/' + x + '/' + y, x, y)) return;
@@ -2390,6 +2839,8 @@
   // Nachts andere Bilder (CARTO) bzw. umgefärbte Bilder (basemap.de, OpenStreetMap, per CSS)
   function kachelnThema() {
     const kc = kacheln;
+    vektorNeuFaerben();
+    namen.schluessel = ''; umgebung.namenSchluessel = ''; namenBald();
     if (kc.aus || !kc.quellen.length || !kc.quellen[kc.nr].carto) return;
     kachelnLeeren();
     if (kartenStatus.blick) kachelnLegen(kartenStatus.blick);
@@ -2523,7 +2974,8 @@
   function umgebungKacheln(b) {
     const u = umgebung, box = u.el.querySelector('.u-kacheln'), luftBox = u.el.querySelector('.u-luft'), q = u.aus ? null : u.quellen[u.nr];
     u.el.classList.toggle('u-ohne', !q);
-    u.el.classList.toggle('k-filter', !!q && !q.carto && !q.foto);
+    u.el.classList.toggle('k-filter', !!q && !q.carto && !q.foto && !q.vektor);
+    u.el.classList.toggle('k-vektor', !!q && !!q.vektor);
     const quelle = u.el.querySelector('.u-quelle');
     if (!q) {
       box.textContent = ''; luftBox.textContent = ''; u.el.classList.remove('k-foto');
@@ -2548,6 +3000,16 @@
         const key = b.z + '/' + x + '/' + y;
         brauche[key] = true;
         let img = da[key];
+        if (!img && !luftbild && q.vektor) {
+          // Eigene Karte: Bild wird selbst gezeichnet
+          img = document.createElement('img');
+          img.className = 'k-kachel'; img.alt = ''; img.draggable = false; img.dataset.k = key;
+          const t = { img, z: b.z, x, y, klein: true };
+          u.vektor = (u.vektor || []).filter((v) => v.img.parentNode);
+          u.vektor.push(t);
+          ziel.appendChild(img);
+          vektorPlanen(t);
+        }
         if (!img) {
           img = document.createElement('img');
           img.className = 'k-kachel'; img.alt = ''; img.draggable = false; img.dataset.k = key;
@@ -2570,7 +3032,7 @@
         }
         img.style.cssText = `left:${Math.round((x * T - ox) * b.s + b.x)}px;top:${Math.round((y * T - oy) * b.s + b.y)}px;width:256px;height:256px`;
       }
-      Object.keys(da).forEach((key) => { if (!brauche[key]) ziel.removeChild(da[key]); });
+      Object.keys(da).forEach((key) => { if (!brauche[key]) { ziel.removeChild(da[key]); if (/^blob:/.test(da[key].src)) URL.revokeObjectURL(da[key].src); } });
     };
     legen(box, (x, y) => kachelUrl(q, b.z, x, y), false);
     if (mitLuft) legen(luftBox, (x, y) => luftUrl(lq, b.z, x, y), true); else luftBox.textContent = '';
@@ -2763,10 +3225,12 @@
   function blickBegrenzen(b) {
     const k = kartenStatus, g = { x0: DE_A.x, y0: DE_A.y, x1: DE_B.x, y1: DE_B.y };
     const s = Math.max(kleinster(), Math.min(groesster(), b.s));
-    // Deutschland darf nicht ganz aus dem Bild rutschen
-    const x = Math.min(k.w * 0.6 - g.x0 * s, Math.max(k.w * 0.4 - g.x1 * s, b.x));
-    const y = Math.min(k.h * 0.6 - g.y0 * s, Math.max(k.h * 0.4 - g.y1 * s, b.y));
-    return { s, x, y };
+    // Das Bild bleibt innerhalb von Deutschland mit Rand. Ist der Rand schmaler als das Bild, steht er in der Mitte.
+    const achse = (v, a0, a1, groesse) => {
+      const min = groesse - a1 * s, max = -a0 * s;
+      return min > max ? (min + max) / 2 : Math.min(max, Math.max(min, v));
+    };
+    return { s, x: achse(b.x, g.x0, g.x1, k.w), y: achse(b.y, g.y0, g.y1, k.h) };
   }
 
   function kartenGroesse(neu) {

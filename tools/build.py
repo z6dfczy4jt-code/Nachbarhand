@@ -294,7 +294,7 @@ def inhaltsrichtlinie(html, einst=None, genau_zwei=True):
         "connect-src 'self'" + (f' https://{db} wss://{db}' if db else '') + (' https://cdn.jsdelivr.net' if cdn else '')
         + (' https://' + urlparse(einst['karte']['beschriftung']).netloc if einst['karte'].get('beschriftung', '').startswith('https://') else '')
         + (' ' + einst['geocoder'].rstrip('/') if einst.get('geocoder', '').startswith('https://') else ''),
-        "worker-src 'self'",
+        "worker-src 'self' blob:",  # die Kartenwerkstatt zeichnet im Hintergrund
         "manifest-src 'self'",
         "media-src 'self'",
         "object-src 'none'",
