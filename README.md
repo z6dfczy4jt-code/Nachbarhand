@@ -16,6 +16,7 @@ App für Nachbarschaftshilfe in ganz Deutschland (gestartet in Garbsen): Anfrage
 - **Benachrichtigungen aufs Handy:** Web Push über die eigene Edge Function `supabase/functions/push` (ohne fremde Dienste wie Firebase), mit Erinnerungen vor und nach dem Termin und „Ich helfe gern bei …“. Einrichtung und Test: [SETUP.md](SETUP.md)
 - **Preisvorschläge** aus echten Anfragen, sobald es je Tätigkeit genug gibt
 - **Ganz Deutschland:** Ort per Suche (Photon/OpenStreetMap), Umkreis 2 bis 50 km, Karte am eigenen Ort; gespeichert wird nur die Mitte eines Rasterfelds von etwa 1 km (Datenbank-Update Teil 7)
+- **Profile und Bewertungen:** Nach jedem Auftrag bewerten sich beide mit Sternen und ein paar Sätzen. Beide Bewertungen erscheinen gleichzeitig (wenn beide bewertet haben, spätestens nach 14 Tagen), danach lassen sie sich nicht mehr ändern. Im Profil: Durchschnitt, Verteilung der Sterne und die Bewertungen mit Tätigkeit und Datum; jede Bewertung lässt sich melden (Datenbank-Update Teil 8)
 - **Einladen:** QR-Code in der App und ein Aushang fürs Schwarze Brett mit Zetteln zum Abreißen: [assets/aushang.pdf](assets/aushang.pdf)
 
 ## Aufbau

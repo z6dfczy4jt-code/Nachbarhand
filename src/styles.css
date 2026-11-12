@@ -733,6 +733,50 @@ html.ist-offline body { padding-top: 34px; }
 .profil-zahlen dt { font-size: 0.875rem; font-weight: 500; color: var(--muted); }
 .profil-zahlen dd { margin: 4px 0 0; font-family: var(--f-display); font-weight: 700; font-size: 1.75rem; display: flex; align-items: center; gap: 4px; }
 .profil-zahlen dd.klein { margin: 0; font-family: var(--f-body); font-weight: 400; font-size: 0.875rem; color: var(--muted); }
+/* ----- Bewertungen im Profil ----- */
+.rez { display: grid; gap: 14px; }
+.rez h3 { margin: 4px 0 0; }
+.rez-leer { margin: 0; color: var(--muted); }
+.rez-uebersicht { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 22px; align-items: center; padding: 16px; border-radius: var(--r-m); background: var(--tile); }
+.rez-schnitt { display: grid; justify-items: start; gap: 2px; }
+.rez-schnitt strong { font-family: var(--f-display); font-size: 2.5rem; line-height: 1; }
+.rez-schnitt > span:last-child { color: var(--muted); font-size: 0.875rem; }
+.rez-verteilung { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.rez-verteilung li { display: grid; grid-template-columns: 2.2em minmax(0, 1fr) 2em; gap: 8px; align-items: center; font-size: 0.875rem; color: var(--muted); }
+.rez-stufe { display: inline-flex; align-items: center; gap: 2px; font-variant-numeric: tabular-nums; }
+.rez-stufe .i { color: var(--accent); }
+.rez-balken { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.rez-balken i { display: block; height: 100%; border-radius: 4px; background: var(--accent); }
+.rez-zahl { text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 360px) { .rez-uebersicht { grid-template-columns: 1fr; } }
+.sterne-anzeige { display: inline-flex; gap: 1px; color: var(--accent); }
+.sterne-anzeige .i { width: 16px; height: 16px; }
+.sterne-anzeige .i-leer { color: var(--line); fill: currentColor; stroke: none; }
+.rez-liste { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.rezension { display: grid; gap: 8px; padding: 16px; border-radius: var(--r-m); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+.rezension:focus { outline: 3px solid var(--focus); outline-offset: 2px; }
+.rez-kopf { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.avatar-klein { width: 38px; height: 38px; font-size: 0.875rem; }
+.rez-wer { display: grid; min-width: 0; }
+.rez-name { justify-self: start; padding: 0; border: 0; background: none; color: var(--ink); font: inherit; font-weight: 700; text-align: left; }
+button.rez-name { min-height: 44px; margin: -8px 0; text-decoration: underline; text-decoration-color: var(--muted); text-underline-offset: 3px; cursor: pointer; }
+button.rez-name:hover { text-decoration-color: currentColor; }
+.rez-wann { color: var(--muted); font-size: 0.875rem; }
+.rez-auftrag { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--muted); font-size: 0.9375rem; }
+.rez-auftrag .bild { width: 20px; height: 20px; flex: none; }
+.rez-text { margin: 0; line-height: 1.5; overflow-wrap: anywhere; }
+.rez-melden { justify-self: start; min-height: 44px; margin: -8px 0 -10px; display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.875rem; text-decoration: none; }
+.rez-melden:hover { text-decoration: underline; }
+.rez-ohne { margin: 0; }
+/* Bewerten nach dem Auftrag */
+.bewerten { padding: 16px; border-radius: var(--r-m); background: var(--tile); gap: 10px; }
+.bewerten p { margin: 0; }
+.bewerten-titel:focus { outline: none; }
+.sterne-wort { color: var(--muted); font-weight: 600; min-height: 1.4em; }
+.bewerten .feld { margin: 0; }
+.bewerten-meine { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.bewerten-meine .sterne-anzeige .i { width: 22px; height: 22px; }
+.bewerten .link-zeile { border-top: 0; padding-top: 0; }
 .profil-belege { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
 .profil-belege li { display: flex; gap: 8px; align-items: center; font-weight: 600; }
 .profil-belege .i { color: var(--hedge); }

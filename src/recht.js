@@ -74,6 +74,7 @@ function RECHT_TEXTE(b, h, e) {
         <h3>6. Wer sieht was?</h3>
         <ul>
           <li><strong>Alle, auch ohne Konto:</strong> offene Anfragen mit Vorname, Anfangsbuchstabe, Ort, ungefährer Lage (100 bis 400 Meter um die Mitte eines Rasterfelds von etwa 1 km), Bewertungsschnitt und, wenn angegeben, für wen die Hilfe ist.</li>
+          <li><strong>Alle, auch ohne Konto, im Profil:</strong> Vorname, Anfangsbuchstabe, Ort, seit wann du dabei bist, wie oft du geholfen und Hilfe bekommen hast, und die Bewertungen über dich: Sterne, Text, Monat, Tätigkeit des Auftrags und Vorname mit Anfangsbuchstabe der Person, die bewertet hat. Bewertungen erscheinen erst, wenn beide bewertet haben, spätestens 14 Tage nach der ersten. Bis dahin sieht sie niemand außer der Person, die sie geschrieben hat.</li>
           <li><strong>Nur die Person, die zusagt:</strong> die genaue Adresse und die Telefonnummer.</li>
           <li><strong>Nur ihr beide:</strong> eure Nachrichten und der Sicherheits-Code für die Tür.</li>
           <li><strong>Nur wir:</strong> Meldungen. Die gemeldete Person erfährt nicht, wer gemeldet hat.</li>
@@ -135,10 +136,11 @@ function RECHT_TEXTE(b, h, e) {
           <li>Fragst du für jemand anderen an, zum Beispiel für deine Eltern, muss diese Person einverstanden sein. Das gilt auch dafür, dass die helfende Person ihre Adresse und Telefonnummer sieht.</li>
           <li>Bezahlt wird nach der Hilfe. Niemand darf Geld im Voraus, Gutscheinkarten oder Codes verlangen. Der Sicherheits-Code aus der App ist nur für die Begrüßung an der Tür gedacht.</li>
           <li>Keine Werbung, keine Weitergabe von Daten anderer.</li>
+          <li>Bewerte ehrlich und sachlich, was beim Auftrag passiert ist. Keine Beleidigungen, keine Adressen, Telefonnummern oder Angaben zur Gesundheit, keine Bewertungen gegen Geld oder unter Druck. Beide Bewertungen eines Auftrags erscheinen gleichzeitig: wenn beide bewertet haben, spätestens 14 Tage nach der ersten. Danach lassen sie sich nicht mehr ändern.</li>
         </ul>
 
         <h3>7. Melden und Sperren</h3>
-        <p>Über „Melden“ kannst du Anfragen und beteiligte Personen melden. Wir prüfen jede Meldung. Verstößt etwas gegen Gesetze oder diese Bedingungen, können wir Inhalte entfernen und Konten vorübergehend oder dauerhaft sperren. Wir sagen dir, was wir entschieden haben und warum. Bist du anderer Meinung, schreib uns an ${mail}.</p>
+        <p>Über „Melden“ kannst du Anfragen, beteiligte Personen und Bewertungen melden. Wir prüfen jede Meldung. Verstößt etwas gegen Gesetze oder diese Bedingungen, können wir Inhalte entfernen und Konten vorübergehend oder dauerhaft sperren. Wir sagen dir, was wir entschieden haben und warum. Bist du anderer Meinung, schreib uns an ${mail}.</p>
 
         <h3>8. Haftung</h3>
         <p>Für Schäden bei einer Hilfe haftet ihr untereinander nach den gesetzlichen Regeln. Prüf vorher, ob deine private Haftpflichtversicherung Schäden bei Gefälligkeiten abdeckt.</p>
@@ -165,6 +167,7 @@ function RECHT_TEXTE(b, h, e) {
           <li><strong>Ehrlich beschreiben.</strong> Was ist zu tun, wie lange dauert es, was ist schon da?</li>
           <li><strong>Fair bezahlen.</strong> Die Aufwandsentschädigung steht vorher fest und wird nach der Hilfe gezahlt, nicht vorab. Keine Gutscheinkarten, keine Codes.</li>
           <li><strong>Zusagen halten.</strong> Wenn etwas dazwischenkommt, sag so früh wie möglich in den Nachrichten ab.</li>
+          <li><strong>Fair bewerten.</strong> Schreib, was beim Auftrag passiert ist, sachlich und ohne private Angaben.</li>
           <li><strong>Freundlich bleiben.</strong> Keine Beleidigungen, kein Druck, keine Anmache.</li>
           <li><strong>Sicherheit geht vor.</strong> Frag an der Tür nach dem Sicherheits-Code aus der App. Lass niemanden auf wackelige Leitern, an Strom oder Gas. Bei Unsicherheit: lieber eine Fachfirma.</li>
           <li><strong>Privat bleibt privat.</strong> Adresse, Telefonnummer und Nachrichten nur für den Auftrag nutzen. Keine Bank- oder Passwortdaten teilen.</li>

@@ -138,6 +138,77 @@
       adresse: 'Großer Weg, Osterwald U.E.', antwort: 'Danke! Fang einfach an, ich bin im Garten.', status: 'offen', erstellt: 1 }
   ];
 
+  /* ===== Beispiel-Personen (Demo): Profile mit Bewertungen =====
+     Bewertung: [Sterne, von, Rolle, Kategorie, Tätigkeit, vor wie vielen Tagen, Text]
+     Rolle aus Sicht der Person im Profil: 'gesucht' = sie hat Hilfe gesucht (von hat geholfen), 'geholfen' = sie hat geholfen.
+     Wo zwei Beispiel-Personen sich gegenseitig bewertet haben, passen beide Seiten zusammen.
+     Weitere Bewertungen ohne Text ergänzt demoProfil() bis zur Anzahl (hilfen + gesuche) und zum Schnitt. */
+  const DEMO_PERSONEN = {
+    'Karin M.': { stadtteil: 'Berenbostel', dabei: 'März 2025', hilfen: 5, gesuche: 9, schnitt: 4.9, bewertungen: [
+      [5, 'Jonas K.', 'gesucht', 'garten', 'Rasen mähen', 16, 'Alles lag bereit, der Mäher war sogar vollgetankt. Hinterher gab es noch Apfelkuchen. Gerne wieder!'],
+      [5, 'Werner T.', 'geholfen', 'einkaufen', 'Einkauf aus Garbsen mitbringen', 34, 'Frau M. hat mir den Einkauf vorbeigebracht und an alles gedacht, sogar an die richtige Brotsorte. Vielen Dank.'],
+      [4, 'Paul D.', 'gesucht', 'garten', 'Hecke schneiden', 61, 'Nette Absprache. Die Hecke war ein ganzes Stück länger als beschrieben, deshalb hat es länger gedauert. Sie hat dann auch mehr gezahlt, das fand ich fair.'],
+      [5, 'Aylin Ö.', 'geholfen', 'tiere', 'Katze füttern', 102, 'Hat eine Woche lang meinen Kater versorgt und mir jeden Abend ein Foto geschickt. Ich war total beruhigt.']] },
+    'Herbert K.': { stadtteil: 'Altgarbsen', dabei: 'Januar 2025', hilfen: 1, gesuche: 8, schnitt: 4.7, bewertungen: [
+      [5, 'Lea S.', 'gesucht', 'garten', 'Laub rechen', 21, 'Herr K. hatte Rechen und Säcke schon rausgestellt und zwischendurch Kaffee gebracht. Sehr angenehm.'],
+      [4, 'Marco B.', 'gesucht', 'tragen', 'Blumenkübel in den Keller', 47, 'Freundlich und dankbar. Wir mussten den Termin einmal verschieben, das ging aber ohne Probleme.'],
+      [5, 'Renate H.', 'geholfen', 'haushalt', 'Gardinen aufhängen', 80, 'Herbert hat mir mit der Leiter geholfen, als ich allein nicht weiterkam. Pünktlich und sehr umsichtig.']] },
+    'Aylin Ö.': { stadtteil: 'Garbsen-Mitte', dabei: 'Mai 2025', hilfen: 4, gesuche: 2, schnitt: 5, bewertungen: [
+      [5, 'Jens W.', 'geholfen', 'tiere', 'Hund ausführen', 25, 'Bruno ist sonst eher schüchtern, aber mit Aylin ist er sofort mitgegangen. Danke!'],
+      [5, 'Gisela R.', 'geholfen', 'technik', 'Handy einrichten', 55, 'Sie hat mir in Ruhe gezeigt, wie ich Fotos an meine Enkel schicke. Ganz viel Geduld!'],
+      [5, 'Karin M.', 'gesucht', 'tiere', 'Katze füttern', 102, 'Aylin hatte alles aufgeschrieben: Futter, Uhrzeiten, Nummer vom Tierarzt. So macht das Spaß.']] },
+    'Jens W.': { stadtteil: 'Havelse', dabei: 'August 2025', hilfen: 15, gesuche: 6, schnitt: 4.8, bewertungen: [
+      [5, 'Sabine L.', 'geholfen', 'tragen', 'Waschmaschine in den Keller', 9, 'Kam mit Sackkarre und Spanngurt, in zehn Minuten war alles erledigt.'],
+      [4, 'Aylin Ö.', 'gesucht', 'tiere', 'Hund ausführen', 25, 'Bruno ist ein Schatz. Die Leine war ein bisschen kaputt, sonst alles bestens.'],
+      [5, 'Frank G.', 'geholfen', 'haushalt', 'Regal an die Wand', 27, 'Hat sauber gebohrt und hinterher sogar gesaugt. Klare Empfehlung.'],
+      [5, 'Herbert K.', 'geholfen', 'garten', 'Rasen vertikutieren', 70, 'Ein ruhiger, zuverlässiger junger Mann. Er hat mir auch gleich erklärt, wie oft man das machen sollte.'],
+      [3, 'Marco B.', 'geholfen', 'tragen', 'Sofa in den 2. Stock', 131, 'Kam eine halbe Stunde später als ausgemacht, ohne Bescheid zu sagen. Beim Tragen dann aber top.']] },
+    'Lea S.': { stadtteil: 'Auf der Horst', dabei: 'Februar 2026', hilfen: 2, gesuche: 1, schnitt: 4.6, bewertungen: [
+      [5, 'Herbert K.', 'geholfen', 'garten', 'Laub rechen', 21, 'Die junge Frau hat zügig und gründlich gearbeitet. Danke!'],
+      [4, 'Renate H.', 'geholfen', 'einkaufen', 'Getränke holen', 48, 'Hat alles mitgebracht, nur eine Sorte Saft war die falsche. Nicht schlimm, trotzdem danke.']] },
+    'Gisela R.': { stadtteil: 'Meyenfeld', dabei: 'Oktober 2025', hilfen: 2, gesuche: 9, schnitt: 4.9, bewertungen: [
+      [5, 'Aylin Ö.', 'gesucht', 'technik', 'Handy einrichten', 55, 'Frau R. ist eine ganz Liebe. Wir haben nebenbei Tee getrunken und viel gelacht.'],
+      [5, 'Paul D.', 'gesucht', 'technik', 'Fernseher: Sender suchen', 90, 'Frau R. hatte genau aufgeschrieben, was nicht ging. Nach 20 Minuten liefen alle Sender wieder.'],
+      [5, 'Sandra P.', 'geholfen', 'garten', 'Blumen gießen', 140, 'Gisela hat zwei Wochen lang die Blumen meiner Mutter gegossen, während wir im Urlaub waren. Unbezahlbar.']] },
+    'Marco B.': { stadtteil: 'Stelingen', dabei: 'Juni 2025', hilfen: 3, gesuche: 1, schnitt: 4.5, bewertungen: [
+      [5, 'Herbert K.', 'geholfen', 'tragen', 'Blumenkübel in den Keller', 47, 'Hat die schweren Kübel allein getragen, ich durfte nur die Tür aufhalten.'],
+      [4, 'Jens W.', 'gesucht', 'tragen', 'Sofa in den 2. Stock', 131, 'Das Treppenhaus war eng, aber Marco hatte vorher ausgemessen und die Füße schon abgeschraubt. Gut vorbereitet.']] },
+    'Sandra P.': { stadtteil: 'Horst', dabei: 'Januar 2025', hilfen: 9, gesuche: 8, schnitt: 4.8, bewertungen: [
+      [5, 'Frank G.', 'gesucht', 'garten', 'Hecke schneiden', 30, 'Für Sandras Mutter die Hecke geschnitten. Sandra hat am Telefon alles gut abgesprochen, und ihre Mutter hat Kaffee gekocht.'],
+      [5, 'Werner T.', 'geholfen', 'einkaufen', 'Apotheke und Bäcker', 66, 'Sandra hat mir zweimal ausgeholfen, als ich nicht aus dem Haus kam. Sehr hilfsbereit und herzlich.'],
+      [4, 'Thomas R.', 'geholfen', 'tragen', 'Umzugskartons tragen', 112, 'Hat gut mit angepackt. Wir mussten etwas warten, weil sie im Stau stand, sie hat aber vorher angerufen.'],
+      [5, 'Gisela R.', 'gesucht', 'garten', 'Blumen gießen', 140, 'Frau P. hat mir einen Zettel geschrieben, welche Pflanze wie viel Wasser braucht. Hat alles geklappt.']] },
+    'Werner T.': { stadtteil: 'Frielingen', dabei: 'Februar 2025', hilfen: 0, gesuche: 8, schnitt: 5, bewertungen: [
+      [5, 'Karin M.', 'gesucht', 'einkaufen', 'Einkauf aus Garbsen mitbringen', 34, 'Immer gern. Danach haben wir noch eine Weile auf der Bank vor dem Haus geklönt.'],
+      [5, 'Sandra P.', 'gesucht', 'einkaufen', 'Apotheke und Bäcker', 66, 'Herr T. hatte die Liste schon fertig und das Geld passend abgezählt. Ein sehr freundlicher Herr.']] },
+    'Sabine L.': { stadtteil: 'Osterwald O.E.', dabei: 'Juli 2025', hilfen: 7, gesuche: 5, schnitt: 4.9, bewertungen: [
+      [5, 'Jens W.', 'gesucht', 'tragen', 'Waschmaschine in den Keller', 9, 'Alles war freigeräumt und der Weg zum Keller frei. So geht das schnell.'],
+      [5, 'Paul D.', 'geholfen', 'tiere', 'Kaninchen versorgen', 52, 'Sabine hat sich um unsere Kaninchen gekümmert, als wir verreist waren. Die Kinder waren begeistert von den Fotos.'],
+      [5, 'Renate H.', 'geholfen', 'haushalt', 'Rollo reparieren', 98, 'Hat das klemmende Rollo wieder hinbekommen. Wollte erst gar kein Geld nehmen.']] },
+    'Paul D.': { stadtteil: 'Heitlingen', dabei: 'April 2025', hilfen: 3, gesuche: 2, schnitt: 4.7, bewertungen: [
+      [5, 'Karin M.', 'geholfen', 'garten', 'Hecke schneiden', 61, 'Paul war fleißig und hat die Hecke schön gerade geschnitten. Er hat auch gleich alles zusammengefegt.'],
+      [4, 'Sabine L.', 'gesucht', 'tiere', 'Kaninchen versorgen', 52, 'Futter und Heu standen bereit. Der Stall ließ sich schwer öffnen, das hätte ich gern vorher gewusst.'],
+      [5, 'Gisela R.', 'geholfen', 'technik', 'Fernseher: Sender suchen', 90, 'Paul hat mir alles aufgeschrieben, damit ich es beim nächsten Mal selbst schaffe. Sehr nett.']] },
+    'Renate H.': { stadtteil: 'Schloß Ricklingen', dabei: 'Dezember 2025', hilfen: 4, gesuche: 6, schnitt: 4.8, bewertungen: [
+      [5, 'Lea S.', 'gesucht', 'einkaufen', 'Getränke holen', 48, 'Sehr nette Dame. Sie hat sich trotz des falschen Safts herzlich bedankt.'],
+      [5, 'Herbert K.', 'gesucht', 'haushalt', 'Gardinen aufhängen', 80, 'Frau H. hatte die Gardinen schon gewaschen und gebügelt bereitgelegt. Hat gut zusammen geklappt.'],
+      [5, 'Sabine L.', 'gesucht', 'haushalt', 'Rollo reparieren', 98, 'Frau H. hat genau gezeigt, wo es hakt. Und es gab selbstgebackene Kekse.']] },
+    'Frank G.': { stadtteil: 'Osterwald U.E.', dabei: 'September 2025', hilfen: 4, gesuche: 3, schnitt: 4.6, bewertungen: [
+      [4, 'Jens W.', 'gesucht', 'haushalt', 'Regal an die Wand', 27, 'Das Regal war schon ausgepackt, nur die passenden Dübel fehlten. Ich hatte zum Glück welche dabei.'],
+      [5, 'Sandra P.', 'geholfen', 'garten', 'Hecke schneiden', 30, 'Herr G. hat die Hecke meiner Mutter sehr ordentlich geschnitten und sich danach noch Zeit für ein Gespräch genommen.'],
+      [5, 'Marco B.', 'geholfen', 'tragen', 'Umzugskartons tragen', 150, 'Frank hat einen ganzen Samstag mit angepackt. Ohne ihn hätten wir das nicht geschafft.']] }
+  };
+  // Du in der Demo (Tim)
+  const DEMO_ICH = { name: 'Tim S.', stadtteil: 'Garbsen-Mitte', dabei: 'Juni 2025', hilfen: 6, gesuche: 1, schnitt: 4.9, bewertungen: [
+    [5, 'Renate H.', 'geholfen', 'tragen', 'Gartenstühle in den Schuppen', 12, 'Tim war pünktlich und hat noch gefragt, ob er die Kissen auch reinbringen soll. Sehr aufmerksam.'],
+    [5, 'Werner T.', 'geholfen', 'einkaufen', 'Einkauf mitbringen', 40, 'Hat alles bekommen, was auf der Liste stand. Danke, junger Mann!'],
+    [4, 'Frank G.', 'geholfen', 'tragen', 'Kaminholz stapeln', 75, 'Ordentlich gestapelt. Hätte etwas schneller gehen können, aber es war ja auch kalt.'],
+    [5, 'Paul D.', 'gesucht', 'technik', 'WLAN-Router einrichten', 120, 'Tim hatte alle Zugangsdaten bereitgelegt, das hat viel Zeit gespart.']] };
+  // Demo: So bewertet die andere Person dich, nachdem du geholfen hast
+  const DEMO_GEGENBEWERTUNGEN = ['Pünktlich, freundlich und hat sauber gearbeitet. Gerne wieder!',
+    'Hat mitgedacht und gefragt, bevor etwas weggeräumt wurde. Sehr angenehm.',
+    'Schnell erledigt und hinterher noch kurz geplaudert. Danke!'];
+
   const SPEICHER = 'nachbarhand-prototyp-v3';
   const VIEWS = ['entdecken', 'karte', 'neu', 'auftraege'];
   const RECHT = RECHT_TEXTE(CONFIG.betreiber, Object.assign({ supabaseCdn: /^https?:/.test(SUPABASE_JS), geocoder: String(EINSTELLUNGEN.geocoder || '') }, CONFIG.hosting), (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
@@ -167,6 +238,9 @@
     letzte: new Map(),      // gesuch_id -> Zeit der letzten Nachricht der anderen Person
     gemeldet: new Set(),    // in dieser Sitzung gemeldete Anfragen
     profile: new Map(),     // profil_id -> öffentliches Profil (für die Profil-Ansicht)
+    rezensionen: new Map(), // profil_id -> erschienene Bewertungen (null = wird geladen, false = Datenbank ohne Update Teil 8)
+    rezGemeldet: new Set(), // in dieser Sitzung gemeldete Bewertungen
+    teil8: null,            // Datenbank kann geschriebene Bewertungen (Update Teil 8)? null = noch nicht bekannt
     altesSchema: false,     // Datenbank ohne das Update vom November 2026 (kein Termin, kein Bearbeiten)
     blockiert: new Map()    // profil_id -> Name (von mir blockiert)
   };
@@ -188,7 +262,7 @@
   }
 
   let gesuche = [];
-  const ui = { view: 'entdecken', kat: 'alle', umkreis: 10, suche: '', sort: 'termin', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', authWeg: 'passwort', authCode: '', vorlesen: false, markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profilGesuch: null, zuletzt: null, busy: false, bearbeiten: null, blockieren: false };
+  const ui = { view: 'entdecken', kat: 'alle', umkreis: 10, suche: '', sort: 'termin', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', authWeg: 'passwort', authCode: '', vorlesen: false, markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profil: null, profilStapel: [], profilAlle: false, rezMelden: null, bewertung: null, zuletzt: null, busy: false, bearbeiten: null, blockieren: false };
 
   /* ===== Ansicht: Design, Schriftgröße, Startseite (nur auf diesem Gerät gespeichert) ===== */
   const ANSICHT_SPEICHER = 'handdrauf-ansicht';
@@ -782,7 +856,10 @@
       sterne: p && p.sterne_anzahl ? p.sterne_summe / p.sterne_anzahl : null,
       bewertungen: p ? p.sterne_anzahl : 0,
       helferName: r.helfer_profil ? anzeigename(r.helfer_profil) : '',
-      meineBewertung: db.bewertungen.get(r.id) || 0
+      meineBewertung: (db.bewertungen.get(r.id) || {}).sterne || 0,
+      meinText: (db.bewertungen.get(r.id) || {}).text || '',
+      bewertungSichtbar: !!(db.bewertungen.get(r.id) || {}).sichtbar,
+      bewertetAm: (db.bewertungen.get(r.id) || {}).erstellt || null
     };
   }
 
@@ -842,8 +919,10 @@
         }
         const bl = await db.client.from('blockiert').select('wen, profil:profile!blockiert_wen_fkey(vorname, nachname_initial)').eq('von', db.user.id);
         if (!bl.error && bl.data) { db.blockiert.clear(); bl.data.forEach((x) => db.blockiert.set(x.wen, anzeigename(x.profil))); }
-        const b = await db.client.from('bewertungen').select('gesuch_id, sterne').eq('von', db.user.id);
-        if (!b.error && b.data) b.data.forEach((x) => db.bewertungen.set(x.gesuch_id, x.sterne));
+        // Eigene Bewertungen: Sterne, Text und ob sie schon erschienen sind (ohne Update Teil 8 nur Sterne)
+        let b = await db.client.from('bewertungen').select('gesuch_id, sterne, text, sichtbar, erstellt').eq('von', db.user.id);
+        if (b.error) { b = await db.client.from('bewertungen').select('gesuch_id, sterne').eq('von', db.user.id); if (!b.error) db.teil8 = false; }
+        if (!b.error && b.data) b.data.forEach((x) => db.bewertungen.set(x.gesuch_id, { sterne: x.sterne, text: x.text || '', sichtbar: x.sichtbar !== false, erstellt: x.erstellt || null }));
         const n = await db.client.from('nachrichten').select('gesuch_id, erstellt')
           .neq('von', db.user.id).order('erstellt', { ascending: false }).limit(300);
         if (!n.error && n.data) {
@@ -1028,14 +1107,103 @@
     demoSpeichern();
   }
 
-  async function bewerte(g, sterne) {
+  // Bewerten mit Sternen und Text. Beide Bewertungen eines Auftrags erscheinen gleichzeitig (siehe Datenbank, Teil 8).
+  async function bewerte(g, sterne, text) {
     if (istLive()) {
-      const { error } = await db.client.rpc('bewerten', { p_id: g.id, p_sterne: sterne });
+      let { data, error } = await db.client.rpc('bewerten', { p_id: g.id, p_sterne: sterne, p_text: text });
+      let ohneText = false;
+      if (error && (error.code === 'PGRST202' || error.code === '42883')) {
+        // Datenbank ohne Update Teil 8: nur Sterne, die gleich zählen
+        db.teil8 = false; ohneText = true;
+        ({ data, error } = await db.client.rpc('bewerten', { p_id: g.id, p_sterne: sterne }));
+      }
       if (error) throw error;
-      db.bewertungen.set(g.id, sterne);
+      if (!ohneText) db.teil8 = true;
+      const alt = db.bewertungen.get(g.id);
+      const neu = { sterne, text: ohneText ? '' : text, sichtbar: ohneText || data === true, erstellt: (alt && alt.erstellt) || new Date().toISOString() };
+      db.bewertungen.set(g.id, neu);
+      Object.assign(g, { meineBewertung: sterne, meinText: neu.text, bewertungSichtbar: neu.sichtbar, bewertetAm: neu.erstellt });
+      // Profile neu laden: Schnitt und Bewertungen können sich geändert haben
+      const person = anderePerson(g);
+      [person && person.id, db.user && db.user.id].forEach((id) => { if (id) { db.profile.delete(id); db.rezensionen.delete(id); } });
+      return { ohneText: ohneText && !!text };
     }
+    if (!g.bewertetAm) g.bewertetAm = Date.now();
     g.meineBewertung = sterne;
+    g.meinText = text;
     demoSpeichern();
+    // Demo: Kurz darauf bewertet die andere Person dich auch, dann erscheinen beide Bewertungen
+    if (!g.bewertungSichtbar && g.helfer === 'ich') {
+      setTimeout(() => {
+        if (!gesuche.includes(g) || g.bewertungSichtbar) return;
+        const n = Number(String(g.id).replace(/\D/g, '')) || 0;
+        g.ihreBewertung = { sterne: 5, text: DEMO_GEGENBEWERTUNGEN[n % DEMO_GEGENBEWERTUNGEN.length] };
+        g.bewertungSichtbar = true;
+        demoSpeichern();
+        meldung(`${vorname(g.wer)} hat dich auch bewertet. Eure Bewertungen sind jetzt zu sehen.`);
+        renderAlles();
+        if (ui.offen === g.id || ui.panel === 'profil') renderSheet();
+      }, 2500);
+    }
+    return {};
+  }
+  async function bewertungAbsenden() {
+    const g = gesuche.find((x) => x.id === ui.offen);
+    if (!g || !ui.bewertung || ui.bewertung.id !== g.id || !ui.bewertung.sterne) return;
+    const feld = $('#bewertung-text');
+    const text = feld ? feld.value.replace(/\s+/g, ' ').trim().slice(0, 600) : '';
+    const fehler = $('#bewertung-fehler');
+    const zeige = (t) => { fehler.textContent = t; fehler.hidden = false; if (feld) feld.focus(); };
+    if (text && anstoessig(text)) { zeige('Bitte schreib sachlich. Beleidigende oder anstößige Wörter werden nicht veröffentlicht.'); return; }
+    if (text && (/\d[\d\s/-]{6,}\d/.test(text) || /\S+@\S+\.\S+/.test(text))) { zeige('Bitte keine Telefonnummern oder E-Mail-Adressen in die Bewertung schreiben. Alle können sie lesen.'); return; }
+    ui.bewertung.text = feld ? feld.value : '';
+    ui.busy = true;
+    renderSheet();
+    try {
+      const r = await bewerte(g, ui.bewertung.sterne, text);
+      ui.bewertung = null;
+      meldung(r.ohneText ? 'Deine Sterne sind gespeichert. Den Text kann die Datenbank erst nach dem nächsten Update speichern.'
+        : g.bewertungSichtbar && db.teil8 !== false ? 'Danke! Eure Bewertungen sind jetzt zu sehen.' : 'Danke für deine Bewertung!');
+    } catch (err) {
+      meldung(fehlerText(err));
+    } finally {
+      ui.busy = false;
+    }
+    renderAlles();
+    if (ui.offen) renderSheet();
+    const f = $('#sheet .bewerten-titel');
+    if (f) { f.setAttribute('tabindex', '-1'); f.focus({ preventScroll: true }); }
+  }
+  async function rezMeldenAbsenden(form) {
+    const b = (ui.profilListe || [])[Number(form.dataset.rez)];
+    if (!b) return;
+    const wahl = form.querySelector('input[name="rez-grund"]:checked');
+    if (!wahl) {
+      const f = $('#rez-melden-fehler');
+      f.textContent = 'Bitte wähle einen Grund.';
+      f.hidden = false;
+      $('#rez-grund-unangemessen').focus();
+      return;
+    }
+    const grund = REZ_GRUENDE.find((x) => x[0] === wahl.value);
+    const zusatz = $('#rez-melden-text').value.trim().slice(0, 400);
+    const text = (grund[2] === 'anderes' ? `[${grund[1]}] ` : '') + zusatz;
+    ui.busy = true;
+    renderSheet();
+    try {
+      if (istLive()) {
+        const { error } = await db.client.rpc('bewertung_melden', { p_gesuch: b.gesuchId, p_von: b.vonKey, p_grund: grund[2], p_text: text });
+        if (error) throw error;
+      }
+      db.rezGemeldet.add(rezSchluessel(b));
+      ui.rezMelden = null;
+      meldung('Danke für deine Meldung. Wir prüfen die Bewertung.');
+    } catch (err) {
+      meldung(fehlerText(err));
+    } finally {
+      ui.busy = false;
+    }
+    renderSheet();
   }
 
   /* ===== Darstellung ===== */
@@ -2135,6 +2303,44 @@
   });
 
   /* ===== Detail-Ansicht und Konto (Bottom Sheet) ===== */
+  /* ----- Bewerten nach dem Auftrag: Sterne, ein paar Sätze, erscheint für beide gleichzeitig ----- */
+  function bewertenFrist(g) {
+    const ab = g.bewertetAm ? new Date(g.bewertetAm) : new Date();
+    return new Date(ab.getTime() + 14 * TAG_MS).toLocaleDateString('de-DE', { day: 'numeric', month: 'long' });
+  }
+  function bewertenHTML(g, wen, dis) {
+    const meine = g.meineBewertung || 0;
+    const entwurf = ui.bewertung && ui.bewertung.id === g.id ? ui.bewertung : null;
+    const mitText = db.teil8 !== false;
+    if (meine && !entwurf) {
+      const da = g.bewertungSichtbar;
+      return `<div class="bewerten bewerten-fertig">
+          <p class="bewerten-titel"><strong>${da && mitText ? 'Eure Bewertungen sind erschienen.' : 'Danke für deine Bewertung.'}</strong></p>
+          <div class="bewerten-meine">${sterneAnzeige(meine)}<span>${STERNE_WORTE[meine]}</span></div>
+          ${g.meinText ? `<p class="rez-text">${esc(g.meinText)}</p>` : ''}
+          <p class="klein">${da
+            ? `Du findest sie im Profil von ${esc(wen)}.${g.ihreBewertung ? ` ${esc(wen)} hat dir ${g.ihreBewertung.sterne} ${g.ihreBewertung.sterne === 1 ? 'Stern' : 'Sterne'} gegeben.` : ''}`
+            : mitText ? `Sie erscheint, sobald ${esc(wen)} dich auch bewertet hat, spätestens am ${bewertenFrist(g)}. Bis dahin kannst du sie ändern.` : ''}</p>
+          <div class="link-zeile">${da || !mitText
+            ? `${anderePerson(g) ? `<button type="button" class="link-inline" data-profil>${icon('stern', 'i-sm')}Profil von ${esc(wen)} ansehen</button>` : ''}${da ? `<button type="button" class="link-inline" data-mein-profil>Dein Profil</button>` : ''}`
+            : `<button type="button" class="link-inline" data-aktion="bewertung-aendern">Bewertung ändern</button>`}</div>
+        </div>`;
+    }
+    const st = entwurf ? entwurf.sterne : 0;
+    return `<form class="bewerten" id="bewerten-form" novalidate>
+        <p class="bewerten-titel"><strong>Wie war es mit ${esc(wen)}?</strong></p>
+        <div class="sterne" role="group" aria-label="Sterne vergeben">${[1, 2, 3, 4, 5].map((n) =>
+          `<button type="button" class="stern ${n <= st ? 'is-an' : ''}" id="stern-${n}" data-stern="${n}" aria-label="${n} ${n === 1 ? 'Stern' : 'Sterne'}: ${STERNE_WORTE[n]}" aria-pressed="${n === st}" ${dis}>${icon('stern')}</button>`).join('')}</div>
+        <p class="sterne-wort" aria-live="polite">${st ? STERNE_WORTE[st] : 'Tippe auf die Sterne.'}</p>
+        ${st ? `${mitText ? `<div class="feld"><label for="bewertung-text">${st >= 4 ? 'Was war gut?' : 'Was hätte besser laufen können?'} <span class="klein">(freiwillig)</span></label>
+            <textarea id="bewertung-text" maxlength="600" rows="3" placeholder="${st >= 4 ? 'z. B. pünktlich, freundlich, alles war vorbereitet' : 'Bleib sachlich und schreib, was passiert ist.'}">${esc(entwurf.text || '')}</textarea>
+            <p class="feld-hinweis">Erscheint mit deinem Vornamen im Profil von ${esc(wen)}. Bitte keine Adressen, Telefonnummern oder Angaben zur Gesundheit.</p></div>` : ''}
+          <p class="fehler" id="bewertung-fehler" role="alert" hidden></p>
+          <button type="submit" class="btn btn-primary" ${dis}>${meine ? 'Änderung speichern' : 'Bewertung abschicken'}</button>
+          ${mitText ? '<p class="klein">Ihr seht eure Bewertungen gleichzeitig: sobald ihr beide bewertet habt, spätestens nach 14 Tagen.</p>' : ''}` : ''}
+      </form>`;
+  }
+
   function sheetGesuchHTML(g) {
     const live = istLive();
     const vn = vorname(g.wer);
@@ -2153,8 +2359,9 @@
       const stand = g.status !== 'offen' ? '' : abgelaufen(g) ? 'Abgelaufen' : bis ? `Sichtbar bis ${bis}` : 'Sichtbar für Nachbarn';
       if (stand) html += `<p class="stand ${abgelaufen(g) ? 'stand-warn' : ''}">${esc(stand)}</p>`;
     } else {
-      const bewertung = g.bewertungen
-        ? `${icon('stern', 'i-xs i-fill')}${g.sterne.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} · ${g.bewertungen} ${g.bewertungen === 1 ? 'Bewertung' : 'Bewertungen'}`
+      const z = personZahlen(g);
+      const bewertung = z.anzahl && z.sterne
+        ? `${icon('stern', 'i-xs i-fill')}${komma(z.sterne)} · ${z.anzahl} ${z.anzahl === 1 ? 'Bewertung' : 'Bewertungen'}`
         : 'Neu bei Hand Drauf';
       html += `<button type="button" class="person person-knopf" data-profil aria-label="Profil von ${esc(g.wer)} ansehen">
         <span class="avatar" aria-hidden="true">${esc(g.initialen)}</span>
@@ -2231,10 +2438,13 @@
     }
     if (!g.eigen) html += codeHTML;
 
-    const sterneHTML = (b, wen) => `<div class="bewerten"><span><strong>${b ? 'Danke für deine Bewertung.' : `Wie war es mit ${esc(wen)}?`}</strong></span>
-      <div class="sterne" role="group" aria-label="Bewertung">${[1, 2, 3, 4, 5].map((n) =>
-        `<button type="button" class="stern ${n <= b ? 'is-an' : ''}" data-stern="${n}" aria-label="${n} ${n === 1 ? 'Stern' : 'Sterne'}" aria-pressed="${n <= b}" ${dis}>${icon('stern')}</button>`
-      ).join('')}</div></div>`;
+    const sterneHTML = (b, wen) => bewertenHTML(g, wen, dis);
+    // In der eigenen Anfrage: Wer hilft? Mit Weg zum Profil
+    const helferZeile = g.eigen && g.helferName && anderePerson(g) && g.status !== 'offen'
+      ? `<button type="button" class="person person-knopf" data-profil aria-label="Profil von ${esc(g.helferName)} ansehen">
+          <span class="avatar" aria-hidden="true">${esc(initialenVon(g.helferName))}</span>
+          <span class="person-text"><span class="person-name">${esc(g.helferName)}</span><span class="person-meta">Hilft dir</span></span>
+          <span class="person-mehr" aria-hidden="true">Profil</span></button>` : '';
 
     // Was jetzt zu tun ist: ein Hauptknopf, Nebensachen als Link
     if (g.eigen) {
@@ -2248,12 +2458,12 @@
               <button type="button" class="btn btn-secondary" data-aktion="rueckzug-nein">Abbrechen</button></div></div>`
           : `<button type="button" class="link-btn" data-aktion="rueckzug-frage">Anfrage zurückziehen</button>`;
       } else if (g.status === 'zugesagt') {
-        html += `<div class="status-box good">${icon('check')}${esc(g.helferName || 'Jemand')} hilft dir</div>${codeHTML}`;
+        html += `<div class="status-box good">${icon('check')}${esc(g.helferName || 'Jemand')} hilft dir</div>${helferZeile}${codeHTML}`;
       } else if (g.status === 'erledigt') {
-        html += `<div class="status-box warn">${esc(hn)} hat den Job als erledigt gemeldet.</div>
+        html += `<div class="status-box warn">${esc(hn)} hat den Job als erledigt gemeldet.</div>${helferZeile}
           <button type="button" class="btn btn-primary" data-aktion="bestaetigen" ${dis}>Erledigt bestätigen</button>`;
       } else if (g.status === 'bezahlt') {
-        html += `<div class="status-box good">${icon('check')}Abgeschlossen</div>` + (g.helferName ? sterneHTML(g.meineBewertung || 0, hn) : '');
+        html += `<div class="status-box good">${icon('check')}Abgeschlossen</div>${helferZeile}` + (g.helferName ? sterneHTML(g.meineBewertung || 0, hn) : '');
         html += `<button type="button" class="btn btn-secondary" data-aktion="nochmal">${icon('wieder')}Noch mal anfragen</button>`;
       }
     } else if (g.status === 'offen') {
@@ -2413,6 +2623,7 @@
         </div>
       </div>
       <p class="klein">Angemeldet als ${esc(db.user && db.user.email)}. Andere sehen nur deinen Vornamen, den Anfangsbuchstaben und deinen Ort.</p>
+      <button type="button" class="btn btn-secondary" data-mein-profil>${icon('stern')}Dein Profil und deine Bewertungen</button>
       <div class="konto-ort"><span><span class="klein">Dein Ort</span><strong id="konto-ort">${esc(p.stadtteil)}</strong></span><button type="button" class="btn btn-secondary btn-auto" data-ort-aendern>Ändern</button></div>
       <button type="button" class="btn btn-secondary" data-einladen>${icon('teilen')}Nachbarn einladen</button>
       <button type="button" class="btn btn-secondary" data-abmelden ${ui.busy ? 'disabled' : ''}>Abmelden</button>
@@ -2424,27 +2635,230 @@
         : `<button type="button" class="link-btn link-melden" data-loeschen-frage>Konto löschen</button>`}`;
   }
 
-  // Öffentliches Profil (Vorbild: BlaBlaCar D.R.E.A.M.S. und Airbnb): Angaben, Bewertungen, Aktivität
-  const DEMO_DABEI = ['Januar 2025', 'März 2025', 'Mai 2025', 'August 2025', 'Oktober 2025', 'Februar 2026'];
-  function profilDaten(g) {
-    if (!istLive()) {
-      const n = Number(String(g.id).replace(/\D/g, '')) || 0;
-      return { name: g.wer, kuerzel: g.initialen, stadtteil: g.stadtteil, dabei: DEMO_DABEI[n % DEMO_DABEI.length],
-        sterne: g.sterne, bewertungen: g.bewertungen || 0, hilfen: Math.max(0, (g.bewertungen || 0) - 3 - (n % 4)), gesuche: Math.min(g.bewertungen || 0, 3 + (n % 5)), volljaehrig: true };
-    }
-    const id = g.eigen ? g.helferId : g.erstellerId;
-    if (!id) return null;
+  /* ===== Profile mit Bewertungen (Vorbild: Airbnb, BlaBlaCar) =====
+     Eine Person: live über die Profil-ID, in der Demo über den Namen (DEMO_PERSONEN) bzw. 'ich'.
+     Einheitliche Form: { key, name, kuerzel, stadtteil, dabei, hilfen, gesuche, volljaehrig, ich,
+       sterne, anzahl, verteilung [1..5], liste: [Bewertungen mit Text] | null (lädt) | false (gibt es noch nicht), ohneText } */
+  const STERNE_WORTE = ['', 'Schlecht', 'Nicht so gut', 'In Ordnung', 'Gut', 'Sehr gut'];
+  const komma = (x) => x.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const initialenVon = (name) => String(name || '?').split(' ').map((t) => t[0] || '').join('').slice(0, 2).toUpperCase();
+  function sterneAnzeige(wert, cls) {
+    const voll = Math.round(wert || 0);
+    return `<span class="sterne-anzeige${cls ? ' ' + cls : ''}" role="img" aria-label="${komma(wert || 0).replace(',0', '')} von 5 Sternen">${[1, 2, 3, 4, 5].map((n) => icon('stern', n <= voll ? 'i-xs i-fill' : 'i-xs i-leer')).join('')}</span>`;
+  }
+  function wannBewertet(datum) {
+    const tage = Math.floor((Date.now() - new Date(datum).getTime()) / TAG_MS);
+    if (tage < 1) return 'Heute';
+    if (tage < 2) return 'Gestern';
+    if (tage < 7) return `Vor ${tage} Tagen`;
+    if (tage < 28) { const w = Math.round(tage / 7); return w === 1 ? 'Vor einer Woche' : `Vor ${w} Wochen`; }
+    return new Date(datum).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  }
+  function verteilungVon(alle) {
+    const v = [0, 0, 0, 0, 0, 0];
+    alle.forEach((x) => { v[x] += 1; });
+    return v;
+  }
+
+  // Demo: Profil einer Beispiel-Person mit allen Bewertungen (geschriebene, ergänzte nur mit Sternen, deine eigenen)
+  function demoProfil(key) {
+    const ich = key === 'ich';
+    const p = ich ? DEMO_ICH : DEMO_PERSONEN[key];
+    if (!p) return null;
+    const name = ich ? DEMO_ICH.name : key;
+    const geschrieben = p.bewertungen.map(([sterne, von, rolle, kat, titel, tage, text]) =>
+      ({ sterne, von, vonKey: DEMO_PERSONEN[von] ? von : null, rolle, kat, titel, datum: new Date(Date.now() - tage * TAG_MS), text }));
+    // Nur Sterne: bis zur Anzahl auffüllen, so dass der Schnitt stimmt
+    const n = p.hilfen + p.gesuche, rest = Math.max(0, n - geschrieben.length);
+    const summe = geschrieben.reduce((t, b) => t + b.sterne, 0);
+    let fehlt = Math.max(0, rest * 5 - (Math.round(p.schnitt * n) - summe));
+    const nurSterne = Array.from({ length: rest }, () => 5).map((x) => { const weg = Math.min(2, fehlt); fehlt -= weg; return x - weg; });
+    // Was du in der Demo selbst bewertet hast (erscheint, sobald beide bewertet haben)
+    const dazu = [];
+    gesuche.forEach((g) => {
+      if (g.helfer !== 'ich' || !g.bewertungSichtbar) return;
+      if (ich && g.ihreBewertung) dazu.push({ sterne: g.ihreBewertung.sterne, von: g.wer, vonKey: DEMO_PERSONEN[g.wer] ? g.wer : null, rolle: 'geholfen', kat: g.kat, titel: g.titel, datum: new Date(g.bewertetAm || Date.now()), text: g.ihreBewertung.text });
+      if (!ich && g.wer === key && g.meineBewertung) dazu.push({ sterne: g.meineBewertung, von: DEMO_ICH.name, vonKey: 'ich', rolle: 'gesucht', kat: g.kat, titel: g.titel, datum: new Date(g.bewertetAm || Date.now()), text: g.meinText || '' });
+    });
+    const mitText = dazu.concat(geschrieben).filter((b) => b.text);
+    const alle = geschrieben.concat(dazu).map((b) => b.sterne).concat(nurSterne);
+    const anzeige = gesuche.find((g) => g.wer === key);
+    return { key, name, kuerzel: initialenVon(name), stadtteil: ich ? meinOrt().stadtteil : (anzeige ? anzeige.stadtteil : p.stadtteil), dabei: p.dabei,
+      hilfen: p.hilfen + dazu.filter((b) => b.rolle === 'geholfen').length, gesuche: p.gesuche + dazu.filter((b) => b.rolle === 'gesucht').length,
+      volljaehrig: true, ich, sterne: alle.length ? alle.reduce((t, x) => t + x, 0) / alle.length : null, anzahl: alle.length,
+      verteilung: verteilungVon(alle), liste: mitText.sort((x, y) => y.datum - x.datum), ohneText: alle.length - mitText.length };
+  }
+  // Sterne und Anzahl für die Zeile „Person“ in einer Anfrage
+  function personZahlen(g) {
+    if (istLive()) return { sterne: g.sterne, anzahl: g.bewertungen || 0 };
+    const p = demoProfil(g.wer);
+    return p ? { sterne: p.sterne, anzahl: p.anzahl } : { sterne: g.sterne, anzahl: g.bewertungen || 0 };
+  }
+
+  // Live: Profil und erschienene Bewertungen laden (einmal je Sitzung und Person, nach dem Bewerten neu)
+  function profilLaden(id) {
     if (!db.profile.has(id)) {
       db.profile.set(id, null);
       db.client.from('profile').select('vorname, nachname_initial, stadtteil, volljaehrig, sterne_summe, sterne_anzahl, hilfen_anzahl, gesuche_anzahl, erstellt').eq('id', id).maybeSingle()
         .then(({ data }) => { db.profile.set(id, data || false); if (ui.panel === 'profil') renderSheet(); });
     }
+    if (!db.rezensionen.has(id)) {
+      db.rezensionen.set(id, null);
+      db.client.rpc('bewertungen_von', { p_person: id }).then(({ data, error }) => {
+        if (error) { if (error.code === 'PGRST202' || error.code === '42883') db.teil8 = false; db.rezensionen.set(id, false); }
+        else {
+          db.teil8 = true;
+          db.rezensionen.set(id, (data || []).map((r) => ({ gesuchId: r.gesuch_id, sterne: r.sterne, text: r.text || '', von: r.von_name, vonKey: r.von,
+            rolle: r.rolle, kat: r.kategorie, titel: r.titel, datum: r.erstellt })));
+        }
+        if (ui.panel === 'profil') renderSheet();
+      });
+    }
+  }
+  function profilDaten(key) {
+    if (!istLive()) return demoProfil(key);
+    const id = key === 'ich' ? db.user && db.user.id : key;
+    if (!id) return false;
+    profilLaden(id);
     const p = db.profile.get(id);
     if (!p) return p;
-    const dabei = new Date(p.erstellt).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
-    return { name: anzeigename(p), kuerzel: kuerzel(p), stadtteil: p.stadtteil, dabei, sterne: p.sterne_anzahl ? p.sterne_summe / p.sterne_anzahl : null,
-      bewertungen: p.sterne_anzahl, hilfen: p.hilfen_anzahl || 0, gesuche: p.gesuche_anzahl || 0, volljaehrig: p.volljaehrig };
+    const rez = db.rezensionen.get(id);
+    const liste = rez ? rez.filter((b) => b.text) : rez;
+    const verteilung = rez ? verteilungVon(rez.map((b) => b.sterne)) : null;
+    return { key: id, name: anzeigename(p), kuerzel: kuerzel(p), stadtteil: p.stadtteil, dabei: new Date(p.erstellt).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }),
+      hilfen: p.hilfen_anzahl || 0, gesuche: p.gesuche_anzahl || 0, volljaehrig: p.volljaehrig, ich: !!(db.user && id === db.user.id),
+      sterne: p.sterne_anzahl ? p.sterne_summe / p.sterne_anzahl : null, anzahl: p.sterne_anzahl || 0, verteilung, liste,
+      ohneText: rez ? rez.length - liste.length : 0 };
   }
+
+  // Profil öffnen. zurueck: wohin „Zurück“ führt ({ art: 'gesuch', id } | { art: 'profil', key, name } | { art: 'panel', name })
+  function profilOeffnen(key, name, zurueck) {
+    const ausloeser = ui.panel === 'profil' ? ui.zuletzt : (ui.zuletzt || document.activeElement);
+    if (ui.panel !== 'profil') oeffnePanel('profil');
+    ui.zuletzt = ausloeser;
+    ui.profilStapel = zurueck ? (ui.profilStapel || []).concat([zurueck]) : [];
+    ui.profil = { key, name };
+    ui.profilAlle = false;
+    ui.rezMelden = null;
+    ui.blockieren = false;
+    renderSheet();
+    $('#sheet').scrollTop = 0;
+    const t = $('#sheet-titel');
+    if (t) t.focus({ preventScroll: true });
+  }
+  function profilZurueck() {
+    const stapel = ui.profilStapel || [];
+    const ziel = stapel[stapel.length - 1];
+    ui.profilStapel = stapel.slice(0, -1);
+    if (!ziel) { schliessen(); return; }
+    if (ziel.art === 'gesuch') { const zuletzt = ui.zuletzt; oeffnen(ziel.id, zuletzt); return; }
+    if (ziel.art === 'panel') { oeffnePanel(ziel.name); return; }
+    ui.profil = { key: ziel.key, name: ziel.name };
+    ui.profilAlle = false; ui.rezMelden = null; ui.blockieren = false;
+    renderSheet();
+    $('#sheet').scrollTop = 0;
+    const t = $('#sheet-titel');
+    if (t) t.focus({ preventScroll: true });
+  }
+  function zurueckText() {
+    const stapel = ui.profilStapel || [];
+    const ziel = stapel[stapel.length - 1];
+    if (!ziel) return '';
+    if (ziel.art === 'gesuch') return 'Zurück zur Anfrage';
+    if (ziel.art === 'panel') return ziel.name === 'konto' ? 'Zurück zum Konto' : 'Zurück zum Menü';
+    return `Zurück zu ${vorname(ziel.name)}`;
+  }
+
+  // Bewertungen melden: Gründe passend zu Bewertungen, gespeichert als einer der Gründe der Datenbank
+  const REZ_GRUENDE = [['unangemessen', 'Beleidigend oder unangemessen', 'unangemessen'], ['privat', 'Enthält private Angaben (Adresse, Telefon, Gesundheit)', 'anderes'],
+    ['falsch', 'Gehört nicht zu diesem Auftrag oder ist erfunden', 'anderes'], ['geld', 'Gegen Geld oder unter Druck geschrieben', 'betrug']];
+  const rezSchluessel = (b) => (b.gesuchId || b.titel) + '|' + (b.vonKey || b.von);
+
+  function rezensionHTML(b, i, p) {
+    const vn = vorname(b.von);
+    const vonIch = b.vonKey === 'ich' || (istLive() && db.user && b.vonKey === db.user.id);
+    const name = b.vonKey && !vonIch
+      ? `<button type="button" class="rez-name" data-profil-key="${esc(b.vonKey)}" data-profil-name="${esc(b.von)}">${esc(b.von)}</button>`
+      : `<strong class="rez-name">${vonIch ? 'Du' : esc(b.von)}</strong>`;
+    const wer = b.rolle === 'geholfen' ? (p.ich ? 'Du' : vorname(p.name)) : (vonIch ? 'Du' : vn);
+    const gemeldet = db.rezGemeldet.has(rezSchluessel(b));
+    let melden = '';
+    if (!vonIch) {
+      if (gemeldet) melden = `<p class="gemeldet">${icon('flagge', 'i-xs')}Gemeldet. Danke, wir prüfen das.</p>`;
+      else if (ui.rezMelden !== i) melden = `<button type="button" class="link-btn rez-melden" data-rez-melden="${i}" aria-label="Bewertung von ${esc(b.von)} melden">${icon('flagge', 'i-xs')}Melden</button>`;
+      else melden = `<form class="melden-box" id="rez-melden-form" data-rez="${i}" novalidate>
+          <fieldset class="feld"><legend>Was stimmt mit dieser Bewertung nicht?</legend>
+            ${REZ_GRUENDE.map(([w, n]) => `<label class="check"><input type="radio" name="rez-grund" id="rez-grund-${w}" value="${w}"><span>${n}</span></label>`).join('')}
+          </fieldset>
+          <div class="feld"><label for="rez-melden-text">Was sollen wir wissen? (freiwillig)</label><textarea id="rez-melden-text" maxlength="400" rows="2"></textarea></div>
+          <p class="fehler" id="rez-melden-fehler" role="alert" hidden></p>
+          <div class="btn-row"><button type="submit" class="btn btn-danger-solid" ${ui.busy ? 'disabled aria-busy="true"' : ''}>Meldung senden</button>
+            <button type="button" class="btn btn-secondary" data-rez-melden-nein>Abbrechen</button></div>
+        </form>`;
+    }
+    return `<li class="rezension">
+        <div class="rez-kopf">
+          <span class="avatar avatar-klein" aria-hidden="true">${esc(vonIch ? kuerzelIch() : initialenVon(b.von))}</span>
+          <div class="rez-wer">${name}<span class="rez-wann">${esc(wannBewertet(b.datum))}</span></div>
+          ${sterneAnzeige(b.sterne)}
+        </div>
+        <p class="rez-auftrag">${icon(b.kat, 'i-xs')}<span>${esc(wer)} ${wer === 'Du' ? 'hast' : 'hat'} geholfen: ${esc(b.titel || '')}</span></p>
+        <p class="rez-text">${esc(b.text)}</p>
+        ${melden}
+      </li>`;
+  }
+  function kuerzelIch() { return istLive() ? kuerzel(db.profil) : CONFIG.ich.initialen; }
+
+  function sheetProfilHTML() {
+    const pr = ui.profil || {};
+    const zurueck = zurueckText();
+    const kopf = `<div class="sheet-top">
+        ${zurueck ? `<button type="button" class="link-btn zurueck" data-profil-zurueck><span class="zurueck-pfeil" aria-hidden="true">‹</span>${esc(zurueck)}</button>` : '<span class="eyebrow">Profil</span>'}
+        <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
+      </div>`;
+    const p = profilDaten(pr.key);
+    if (!p) return kopf + `<h2 id="sheet-titel" tabindex="-1">${p === null ? 'Profil wird geladen …' : 'Profil nicht verfügbar'}</h2>`;
+    const vn = vorname(p.name);
+    let bewertungen;
+    if (!p.anzahl) bewertungen = `<p class="rez-leer">${p.ich ? 'Du hast noch keine Bewertungen.' : `${esc(vn)} hat noch keine Bewertungen.`} Nach jedem Auftrag bewertet ihr euch gegenseitig.</p>`;
+    else {
+      const v = p.verteilung;
+      const verteilung = v ? `<ul class="rez-verteilung" aria-label="So verteilen sich die Sterne">${[5, 4, 3, 2, 1].map((n) =>
+        `<li><span class="rez-stufe">${n}${icon('stern', 'i-xs i-fill')}</span><span class="rez-balken" aria-hidden="true"><i style="width:${Math.round(v[n] / p.anzahl * 100)}%"></i></span><span class="rez-zahl">${v[n]}</span><span class="sr">${n} ${n === 1 ? 'Stern' : 'Sterne'}: ${v[n]}</span></li>`).join('')}</ul>` : '';
+      const schnitt = `<div class="rez-schnitt"><strong>${komma(p.sterne)}</strong>${sterneAnzeige(p.sterne)}<span>${p.anzahl} ${p.anzahl === 1 ? 'Bewertung' : 'Bewertungen'}</span></div>`;
+      let liste = '';
+      if (p.liste === null) liste = '<p class="lade">Bewertungen werden geladen …</p>';
+      else if (p.liste === false) liste = `<p class="klein">Geschriebene Bewertungen gibt es nach dem nächsten Update der Datenbank.</p>`;
+      else if (p.liste.length) {
+        const zeige = ui.profilAlle ? p.liste : p.liste.slice(0, 4);
+        ui.profilListe = zeige;
+        liste = `<ul class="rez-liste">${zeige.map((b, i) => rezensionHTML(b, i, p)).join('')}</ul>`
+          + (p.liste.length > zeige.length ? `<button type="button" class="btn btn-secondary" data-profil-alle>Alle ${p.liste.length} geschriebenen Bewertungen zeigen</button>` : '');
+      }
+      if (p.liste && p.ohneText) liste += `<p class="klein rez-ohne">${p.liste.length ? 'Dazu' : 'Bisher'} ${p.ohneText} ${p.ohneText === 1 ? 'Bewertung' : 'Bewertungen'} nur mit Sternen.</p>`;
+      bewertungen = `<div class="rez-uebersicht">${schnitt}${verteilung}</div>${liste}`;
+    }
+    const person = p.ich ? null : { id: p.key, name: p.name };
+    return kopf + `<div class="profil-kopf">
+        <span class="avatar avatar-gross" aria-hidden="true">${esc(p.kuerzel)}</span>
+        <div><h2 id="sheet-titel" tabindex="-1">${p.ich ? 'Dein Profil' : esc(p.name)}</h2><p class="person-meta">${p.ich ? esc(p.name) + ' · ' : ''}${esc(p.stadtteil || '')} · dabei seit ${esc(p.dabei)}</p></div>
+      </div>
+      ${p.ich ? '<p class="klein">So sehen dich andere. Adresse und E-Mail sieht niemand.</p>' : ''}
+      <dl class="profil-zahlen">
+        <div><dt>Bewertung</dt><dd>${p.anzahl ? icon('stern', 'i-sm i-fill') + komma(p.sterne) : '–'}</dd><dd class="klein">${p.anzahl} ${p.anzahl === 1 ? 'Bewertung' : 'Bewertungen'}</dd></div>
+        <div><dt>Geholfen</dt><dd>${p.hilfen}</dd><dd class="klein">${p.hilfen === 1 ? 'Auftrag' : 'Aufträge'}</dd></div>
+        <div><dt>Hilfe bekommen</dt><dd>${p.gesuche}</dd><dd class="klein">${p.gesuche === 1 ? 'Auftrag' : 'Aufträge'}</dd></div>
+      </dl>
+      <section class="rez" aria-labelledby="rez-titel"><h3 class="h-klein" id="rez-titel">Bewertungen</h3>${bewertungen}</section>
+      <ul class="profil-belege">
+        ${p.volljaehrig ? `<li>${icon('check', 'i-sm')}Mindestens 18 Jahre, bei der Anmeldung bestätigt</li>` : ''}
+        <li>${icon('check', 'i-sm')}Konto mit E-Mail-Adresse</li>
+        <li>${icon('check', 'i-sm')}Hat den Regeln für Nachbarn zugestimmt</li>
+      </ul>
+      <p class="klein">${p.ich ? 'Andere sehen nur deinen Vornamen, den Anfangsbuchstaben und deinen Ort.' : 'Andere sehen nur Vorname, Anfangsbuchstabe und Ort. Adresse und E-Mail sieht niemand.'} Bewertungen erscheinen für beide gleichzeitig, wenn beide bewertet haben, spätestens nach 14 Tagen.</p>
+      ${person ? blockierenHTML(person) : ''}`;
+  }
+
   // Die andere Person einer Anfrage: live über die Profil-ID, in der Demo über den Namen
   function anderePerson(g) {
     if (!g) return null;
@@ -2452,8 +2866,7 @@
     const id = istLive() ? (g.eigen ? g.helferId : g.erstellerId) : name;
     return id && name ? { id, name } : null;
   }
-  function blockierenHTML(g) {
-    const person = anderePerson(g);
+  function blockierenHTML(person) {
     if (!person) return '';
     const vn = esc(vorname(person.name));
     if (!ui.blockieren) return `<button type="button" class="link-btn link-melden" data-blockieren-frage>${icon('x', 'i-sm')}${vn} blockieren</button>`;
@@ -2461,33 +2874,6 @@
         <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-blockieren ${ui.busy ? 'disabled aria-busy="true"' : ''}>Blockieren</button>
         <button type="button" class="btn btn-secondary" data-blockieren-nein>Abbrechen</button></div></div>`;
   }
-  function sheetProfilHTML() {
-    const g = gesuche.find((x) => x.id === ui.profilGesuch);
-    const kopf = `<div class="sheet-top">
-        <button type="button" class="link-btn zurueck" data-zurueck-gesuch><span class="zurueck-pfeil" aria-hidden="true">‹</span>Zurück zur Anfrage</button>
-        <button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button>
-      </div>`;
-    const p = g && profilDaten(g);
-    if (!p) return kopf + `<h2 id="sheet-titel">${p === null ? 'Profil wird geladen …' : 'Profil nicht verfügbar'}</h2>`;
-    const stern = p.bewertungen ? p.sterne.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '–';
-    return kopf + `<div class="profil-kopf">
-        <span class="avatar avatar-gross" aria-hidden="true">${esc(p.kuerzel)}</span>
-        <div><h2 id="sheet-titel">${esc(p.name)}</h2><p class="person-meta">${esc(p.stadtteil)} · dabei seit ${esc(p.dabei)}</p></div>
-      </div>
-      <dl class="profil-zahlen">
-        <div><dt>Bewertung</dt><dd>${p.bewertungen ? icon('stern', 'i-sm i-fill') : ''}${stern}</dd><dd class="klein">${p.bewertungen} ${p.bewertungen === 1 ? 'Bewertung' : 'Bewertungen'}</dd></div>
-        <div><dt>Geholfen</dt><dd>${p.hilfen}</dd><dd class="klein">${p.hilfen === 1 ? 'Auftrag' : 'Aufträge'}</dd></div>
-        <div><dt>Hilfe bekommen</dt><dd>${p.gesuche}</dd><dd class="klein">${p.gesuche === 1 ? 'Auftrag' : 'Aufträge'}</dd></div>
-      </dl>
-      <ul class="profil-belege">
-        ${p.volljaehrig ? `<li>${icon('check', 'i-sm')}Mindestens 18 Jahre, bei der Anmeldung bestätigt</li>` : ''}
-        <li>${icon('check', 'i-sm')}Konto mit E-Mail-Adresse</li>
-        <li>${icon('check', 'i-sm')}Hat den Regeln für Nachbarn zugestimmt</li>
-      </ul>
-      <p class="klein">Andere sehen nur Vorname, Anfangsbuchstabe und Ort. Adresse und E-Mail sieht niemand.</p>
-      ${blockierenHTML(g)}`;
-  }
-
   function sheetRechtHTML(name) {
     const r = RECHT[name];
     return `<div class="sheet-top">
@@ -2571,6 +2957,7 @@
           ${eintrag('#fragen', 'Häufige Fragen')}
           ${knopf('data-start-zeigen', 'So funktioniert Hand Drauf')}
           ${knopf('data-einladen', 'Nachbarn einladen')}
+          ${!istLive() || db.profil ? knopf('data-mein-profil', 'Dein Profil und deine Bewertungen') : ''}
           ${installEreignis ? knopf('data-installieren', 'Auf den Startbildschirm') : ''}
           ${CONFIG.betreiber.email ? eintrag(`mailto:${esc(CONFIG.betreiber.email)}`, 'Kontakt') : ''}
         </div>
@@ -2814,14 +3201,41 @@
       if (erstes) erstes.focus();
       return;
     }
-    if (t.hasAttribute('data-zurueck-gesuch')) { const id = ui.profilGesuch; ui.profilGesuch = null; oeffnen(id); return; }
+    if (t.hasAttribute('data-profil-zurueck')) { profilZurueck(); return; }
+    if (t.hasAttribute('data-mein-profil')) {
+      const vorher = ui.offen ? { art: 'gesuch', id: ui.offen } : ui.panel === 'profil' && ui.profil ? { art: 'profil', key: ui.profil.key, name: ui.profil.name }
+        : ui.panel ? { art: 'panel', name: ui.panel } : null;
+      profilOeffnen('ich', istLive() ? anzeigename(db.profil) : DEMO_ICH.name, vorher);
+      return;
+    }
     if (t.hasAttribute('data-profil')) {
-      const id = ui.offen;
-      const zuletzt = ui.zuletzt;
-      oeffnePanel('profil');
-      ui.profilGesuch = id;
-      ui.zuletzt = zuletzt;
+      // Die andere Person der offenen Anfrage
+      const g = gesuche.find((x) => x.id === ui.offen);
+      const person = anderePerson(g);
+      if (person) profilOeffnen(person.id, person.name, { art: 'gesuch', id: g.id });
+      return;
+    }
+    if (t.dataset.profilKey) {
+      const vorher = ui.panel === 'profil' && ui.profil ? { art: 'profil', key: ui.profil.key, name: ui.profil.name }
+        : ui.offen ? { art: 'gesuch', id: ui.offen } : ui.panel ? { art: 'panel', name: ui.panel } : null;
+      profilOeffnen(t.dataset.profilKey, t.dataset.profilName || '', vorher);
+      return;
+    }
+    if (t.hasAttribute('data-profil-alle')) {
+      ui.profilAlle = true;
+      const vorher = (ui.profilListe || []).length;
       renderSheet();
+      const naechste = document.querySelectorAll('#sheet .rezension')[vorher];
+      if (naechste) { naechste.setAttribute('tabindex', '-1'); naechste.focus({ preventScroll: false }); }
+      return;
+    }
+    if (t.dataset.rezMelden !== undefined || t.hasAttribute('data-rez-melden-nein')) {
+      if (t.dataset.rezMelden !== undefined && istLive() && !db.profil) { oeffnePanel('anmelden', 'Bitte melde dich an, um eine Bewertung zu melden.'); return; }
+      const i = t.dataset.rezMelden !== undefined ? Number(t.dataset.rezMelden) : ui.rezMelden;
+      ui.rezMelden = t.dataset.rezMelden !== undefined ? i : null;
+      renderSheet();
+      const f = ui.rezMelden !== null ? $('#rez-grund-unangemessen') : $(`#sheet [data-rez-melden="${i}"]`);
+      if (f) f.focus({ preventScroll: true });
       return;
     }
     if (t.hasAttribute('data-blockieren-frage') || t.hasAttribute('data-blockieren-nein')) {
@@ -2833,8 +3247,8 @@
       return;
     }
     if (t.hasAttribute('data-blockieren')) {
-      const person = anderePerson(gesuche.find((x) => x.id === ui.profilGesuch));
-      if (!person) return;
+      const person = ui.profil && ui.profil.key !== 'ich' ? { id: ui.profil.key, name: ui.profil.name || (profilDaten(ui.profil.key) || {}).name } : null;
+      if (!person || !person.name) return;
       ui.busy = true; renderSheet();
       try {
         await blockiere(person.id, person.name);
@@ -2998,7 +3412,18 @@
       if (f) f.focus({ preventScroll: true });
       return;
     }
-    if (!a && !t.dataset.stern) return;
+    // Bewerten: Sterne wählen (noch nicht speichern), Text schreiben, dann abschicken
+    if (t.dataset.stern || a === 'bewertung-aendern') {
+      const feld = $('#bewertung-text');
+      ui.bewertung = t.dataset.stern
+        ? { id: g.id, sterne: Number(t.dataset.stern), text: feld ? feld.value : (ui.bewertung && ui.bewertung.id === g.id ? ui.bewertung.text : g.meinText || '') }
+        : { id: g.id, sterne: g.meineBewertung, text: g.meinText || '' };
+      renderSheet();
+      const f = t.dataset.stern ? $('#stern-' + t.dataset.stern) : $('#bewertung-text');
+      if (f) f.focus({ preventScroll: true });
+      return;
+    }
+    if (!a) return;
     if (istLive() && !db.profil) {
       oeffnePanel('anmelden', a === 'zusagen' ? 'Melde dich an, um zu helfen. Danach kannst du direkt zusagen.' : 'Bitte melde dich an.');
       return;
@@ -3007,17 +3432,12 @@
     ui.busy = true;
     renderSheet();
     try {
-      if (t.dataset.stern) {
-        await bewerte(g, Number(t.dataset.stern));
-        meldung('Bewertung gespeichert');
-      } else {
-        await aendereStatus(g, a);
-        if (a === 'bestaetigen') {
-          ladeStatistik();
-          feiern('Hand drauf!', feierText(gesuche.find((x) => x.id === g.id) || g));
-        } else meldung(ERFOLG[a](g));
-        if (a === 'rueckzug') { ui.busy = false; schliessen(); renderAlles(); return; }
-      }
+      await aendereStatus(g, a);
+      if (a === 'bestaetigen') {
+        ladeStatistik();
+        feiern('Hand drauf!', feierText(gesuche.find((x) => x.id === g.id) || g));
+      } else meldung(ERFOLG[a](g));
+      if (a === 'rueckzug') { ui.busy = false; schliessen(); renderAlles(); return; }
     } catch (err) {
       meldung(fehlerText(err));
     } finally {
@@ -3025,8 +3445,7 @@
     }
     renderAlles();
     if (ui.offen) renderSheet();
-    const fokus = t.dataset.stern ? `#sheet [data-stern="${t.dataset.stern}"]` : '#sheet .btn';
-    const f = $(fokus);
+    const f = $('#sheet .btn');
     if (f) f.focus({ preventScroll: true });
   });
 
@@ -3110,6 +3529,8 @@
   $('#sheet').addEventListener('submit', async (e) => {
     if (e.target.id === 'chat-form') { e.preventDefault(); chatAbsenden(); return; }
     if (e.target.id === 'melden-form') { e.preventDefault(); meldungAbsenden(); return; }
+    if (e.target.id === 'bewerten-form') { e.preventDefault(); bewertungAbsenden(); return; }
+    if (e.target.id === 'rez-melden-form') { e.preventDefault(); rezMeldenAbsenden(e.target); return; }
     if (e.target.id === 'code-form') { e.preventDefault(); codeAbsenden(e.target); return; }
     if (e.target.id !== 'auth-form') return;
     e.preventDefault();
