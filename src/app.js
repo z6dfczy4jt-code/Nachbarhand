@@ -1686,6 +1686,7 @@
     // Der Dienst antwortet nicht: ohne Luftbild weiter (die Straßenkarte liegt ja darunter)
     luft.aus = true;
     kacheln.bilder.forEach((t, key) => { if (t.luft) kachelWeg(t, key); });
+    kacheln.bilder.forEach(basisAuffrischen);
     if (umgebung.el) { umgebung.schluessel = ''; umgebungZeichnen(); }
     kartenArtZeigen();
   }
@@ -2172,7 +2173,7 @@
     const f = b.s / r.s;
     el.style.transform = `translate3d(${b.x - r.x * f}px, ${b.y - r.y * f}px, 0) scale(${f})`;
     // Stark vergrößert oder verkleinert wäre die Schrift riesig oder winzig: bis zum neuen Zeichnen ausblenden
-    const weg = f > 1.9 || f < 0.5;
+    const weg = f > 1.6 || f < 0.65;
     if (weg !== !!namen.weg) { namen.weg = weg; el.style.opacity = weg ? '0' : ''; }
   }
   // Kleine Karte auf der Startseite (steht still)
@@ -2270,11 +2271,36 @@
     img.draggable = false;
     img.setAttribute('decoding', 'async');
     const t = { img, z, x, y, fertig: false, fehler: false, luft: !!lq };
-    img.onload = () => { t.fertig = true; img.className = 'k-kachel da'; if (lq) luft.ok++; else kc.ok++; altesWeg(); };
-    img.onerror = () => { t.fehler = true; if (lq) luftFehler(); else kachelFehler(); if (!kc.aus) altesWeg(); };
+    img.onload = () => {
+      t.fertig = true;
+      if (lq) { img.className = 'k-kachel da'; luft.ok++; basisAuffrischen(kc.bilder.get(key.slice(1))); } else { basisAuffrischen(t); kc.ok++; }
+      altesWeg();
+    };
+    img.onerror = () => {
+      t.fehler = true;
+      if (lq) { luftFehler(); basisAuffrischen(kc.bilder.get(key.slice(1))); } else kachelFehler();
+      if (!kc.aus) altesWeg();
+    };
     kc.bilder.set(key, t);
     (lq ? luft.el : kc.el).appendChild(img);
     img.src = lq ? luftUrl(lq, z, x, y) : kachelUrl(kc.quellen[kc.nr], z, x, y);
+  }
+  // Entweder Luftbild oder Straßenkarte, nicht beides durcheinander: Im Luftbild-Gebiet wird ein Bild der Straßenkarte
+  // erst sichtbar, wenn das Luftbild darüber da ist. Dann scheint es nur dort durch, wo es kein Luftbild gibt
+  // (außerhalb Niedersachsens). Bis dahin sieht man das alte Luftbild vergrößert oder eine ruhige dunkle Fläche.
+  function basisZeigen(t) {
+    const kc = kacheln, lq = luftQuelle(kc.quellen, kc.nr);
+    if (!lq || kc.z == null) return true;
+    if (kc.z < lq.min && t.z < lq.min) return true;          // weit heraus: nur Straßenkarte
+    if (!luftDeckt(lq, t.z, t.x, t.y, t.x, t.y)) return true; // außerhalb des Luftbild-Gebiets
+    if (t.z < lq.min) return false;                            // Straßenkarte von vorhin beim Hineinzoomen
+    const l = kc.bilder.get('L' + t.z + '/' + t.x + '/' + t.y);
+    return !!l && (l.fertig || l.fehler);
+  }
+  function basisAuffrischen(t) {
+    if (!t || t.luft || !t.fertig) return;
+    const c = basisZeigen(t) ? 'k-kachel da' : 'k-kachel';
+    if (t.img.className !== c) t.img.className = c;
   }
   // Luftbilder für den Bereich r (nur Quadrate, die Niedersachsen berühren)
   function luftBereich(r, je) {
@@ -2309,7 +2335,8 @@
     luftBereich(r, (key, x, y, lq) => { brauche[key] = true; if (!kc.bilder.has(key)) neueKachel(r.z, x, y, key, lq); });
     kc.bilder.forEach((t, key) => {
       if (brauche[key]) return;
-      if (t.z === kc.z || t.z !== kc.vorZ || !t.fertig) { kachelWeg(t, key); return; }
+      // Ältere Luftbilder bleiben über mehrere Stufen liegen, bis die neuen da sind (keine Lücken beim schnellen Zoomen)
+      if (t.z === kc.z || !t.fertig || (t.luft ? Math.abs(t.z - kc.z) > 3 : t.z !== kc.vorZ)) { kachelWeg(t, key); return; }
       // Ältere Stufe: nur behalten, solange sie im Bild liegt
       const T = WELT / Math.pow(2, t.z);
       const l = (t.x * T - r.ox) * b.s + b.x, o = (t.y * T - r.oy) * b.s + b.y;
@@ -2319,7 +2346,10 @@
       const T = WELT / Math.pow(2, t.z);
       const l = Math.round((t.x * T - r.ox) * b.s + b.x), rr = Math.round(((t.x + 1) * T - r.ox) * b.s + b.x);
       const o = Math.round((t.y * T - r.oy) * b.s + b.y), u = Math.round(((t.y + 1) * T - r.oy) * b.s + b.y);
-      t.img.style.cssText = `left:${l}px;top:${o}px;width:${rr - l}px;height:${u - o}px;z-index:${t.z === kc.z ? 2 : 1}`;
+      // Die aktuelle Stufe oben, ältere Luftbilder darunter: die nähere Stufe über der ferneren
+      const zi = t.z === kc.z ? (t.luft ? 30 : 2) : t.luft ? 20 - Math.abs(t.z - kc.z) : 1;
+      t.img.style.cssText = `left:${l}px;top:${o}px;width:${rr - l}px;height:${u - o}px;z-index:${zi}`;
+      basisAuffrischen(t);
     });
     altesWeg();
   }
@@ -2351,7 +2381,7 @@
       if (!t) return false; // alle Anbieter gescheitert
       const l = Math.round((x * T - r.ox) * ref.s + ref.x), rr = Math.round(((x + 1) * T - r.ox) * ref.s + ref.x);
       const o = Math.round((y * T - r.oy) * ref.s + ref.y), u = Math.round(((y + 1) * T - r.oy) * ref.s + ref.y);
-      t.img.style.cssText = `left:${l}px;top:${o}px;width:${rr - l}px;height:${u - o}px;z-index:2`;
+      t.img.style.cssText = `left:${l}px;top:${o}px;width:${rr - l}px;height:${u - o}px;z-index:${lq ? 30 : 2}`;
       return true;
     };
     for (let x = r.x0; x <= r.x1; x++) for (let y = r.y0; y <= r.y1; y++) if (!legen(r.z + '/' + x + '/' + y, x, y)) return;
@@ -2522,8 +2552,12 @@
           img = document.createElement('img');
           img.className = 'k-kachel'; img.alt = ''; img.draggable = false; img.dataset.k = key;
           img.setAttribute('decoding', 'async');
-          img.onload = () => { img.className = 'k-kachel da'; if (luftbild) luft.ok++; else u.ok++; };
-          img.onerror = luftbild ? luftFehler : () => {
+          img.onload = () => {
+            img.dataset.geladen = '1';
+            if (luftbild) { img.className = 'k-kachel da'; luft.ok++; } else u.ok++;
+            umgebungBasis();
+          };
+          img.onerror = luftbild ? () => { img.dataset.fehler = '1'; luftFehler(); umgebungBasis(); } : () => {
             u.fehler++;
             if (u.ok || u.fehler < 3) return;
             // Dieser Anbieter lädt nicht: nächster, zuletzt ohne Kartenbilder
@@ -2540,6 +2574,22 @@
     };
     legen(box, (x, y) => kachelUrl(q, b.z, x, y), false);
     if (mitLuft) legen(luftBox, (x, y) => luftUrl(lq, b.z, x, y), true); else luftBox.textContent = '';
+    u.basis = { box, luftBox, lq, mitLuft };
+    umgebungBasis();
+  }
+  // Kleine Karte: Straßenkarte im Luftbild-Gebiet erst zeigen, wenn das Luftbild darüber da ist (wie auf der großen)
+  function umgebungBasis() {
+    const a = umgebung.basis;
+    if (!a) return;
+    const { box, luftBox, lq, mitLuft } = a, luftDa = {};
+    [].slice.call(luftBox.children).forEach((img) => { if (img.dataset.geladen || img.dataset.fehler) luftDa[img.dataset.k] = true; });
+    [].slice.call(box.children).forEach((img) => {
+      if (!img.dataset.geladen) return;
+      const xy = img.dataset.k.split('/').map(Number);
+      const zeigen = !mitLuft || !luftDeckt(lq, xy[0], xy[1], xy[2], xy[1], xy[2]) || luftDa[img.dataset.k];
+      const c = zeigen ? 'k-kachel da' : 'k-kachel';
+      if (img.className !== c) img.className = c;
+    });
   }
   function umgebungZeichnen() {
     const u = umgebung;

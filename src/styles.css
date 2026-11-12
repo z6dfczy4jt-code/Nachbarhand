@@ -406,6 +406,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .pin-text { margin: 4px 0 0 2px; font-family: var(--f-display); font-weight: 700; font-size: 0.9375rem; line-height: 1.2; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink);
   text-shadow: 0 0 2px var(--halo), 0 0 2px var(--halo), 0 0 3px var(--halo), 0 0 4px var(--halo); }
 .text-links .pin-text { margin: 4px 2px 0 0; }
+/* Luftbild-Ansicht: Wo noch kein Luftbild geladen ist, eine ruhige dunkle Fläche statt der Straßenkarte */
+.karte.k-foto #map, .umgebung.k-foto { background-color: #353B31; background-image: none; }
 /* Auf dem Luftbild: helle Schrift mit dunklem Rand, sonst geht sie zwischen Dächern und Bäumen unter */
 .k-foto .pin-text { color: #FFFFFF; text-shadow: 0 0 2px #0B0F14, 0 0 2px #0B0F14, 0 0 3px #0B0F14, 0 0 5px rgba(11, 15, 20, .8); }
 .k-foto .pin-abgelaufen .pin-text { color: #D5DBE1; }
