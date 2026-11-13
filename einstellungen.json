@@ -26,7 +26,9 @@
     "carto": "",
     "esri": "",
     "_hinweis_beschriftung": "beschriftung: Namen von Orten und Straßen über dem Luftbild (Vektordaten von OpenStreetMap, OpenFreeMap, ohne Schlüssel). Leer = ohne Namen.",
-    "beschriftung": "https://tiles.openfreemap.org/planet"
+    "beschriftung": "https://tiles.openfreemap.org/planet",
+    "_hinweis_luftbild": "luftbild: in Niedersachsen immer das Luftbild des LGLN zeigen (true). false = überall die selbst gezeichnete Karte.",
+    "luftbild": true
   },
   "codeLogin": false,
   "gebuehren": false

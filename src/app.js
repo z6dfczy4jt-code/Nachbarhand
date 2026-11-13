@@ -43,7 +43,7 @@
     // siehe SETUP.md) Luftbilder für ganz Deutschland. Auch dieser Schlüssel ist öffentlich.
     // Kartendaten für die eigene Karte und die Namen auf dem Luftbild: Vektordaten von OpenStreetMap (OpenFreeMap,
     // ohne Schlüssel). Leer = fertige Kartenbilder von basemap.de, ohne Namen auf dem Luftbild.
-    karte: { carto: EINSTELLUNGEN.karte.carto || '', esri: EINSTELLUNGEN.karte.esri || '', beschriftung: EINSTELLUNGEN.karte.beschriftung || '' },
+    karte: { carto: EINSTELLUNGEN.karte.carto || '', esri: EINSTELLUNGEN.karte.esri || '', beschriftung: EINSTELLUNGEN.karte.beschriftung || '', luftbild: EINSTELLUNGEN.karte.luftbild !== false },
     // Anmelden mit einem Code per E-Mail statt mit Passwort. Erst einschalten, wenn der E-Mail-Versand
     // eingerichtet ist und die E-Mail-Vorlage den Code enthält (siehe SETUP.md).
     codeLogin: !!EINSTELLUNGEN.codeLogin,
@@ -238,7 +238,7 @@
 
   const SPEICHER = 'nachbarhand-prototyp-v3';
   const VIEWS = ['entdecken', 'karte', 'neu', 'auftraege'];
-  const RECHT = RECHT_TEXTE(CONFIG.betreiber, Object.assign({ supabaseCdn: /^https?:/.test(SUPABASE_JS), geocoder: String(EINSTELLUNGEN.geocoder || ''), esri: !!CONFIG.karte.esri, beschriftung: !!CONFIG.karte.beschriftung }, CONFIG.hosting), (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+  const RECHT = RECHT_TEXTE(CONFIG.betreiber, Object.assign({ supabaseCdn: /^https?:/.test(SUPABASE_JS), geocoder: String(EINSTELLUNGEN.geocoder || ''), esri: !!CONFIG.karte.esri, beschriftung: !!CONFIG.karte.beschriftung, luftbild: CONFIG.karte.luftbild }, CONFIG.hosting), (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
   const FRAGEN = FRAGEN_TEXTE(CONFIG);
   const JUGEND_REGELN = 'leichte Arbeit, höchstens 2 Stunden, Montag bis Samstag zwischen 8 und 18 Uhr, nicht während der Schule, kein Alkohol und kein Tabak';
   const istSeite = (n) => !!RECHT[n] || n === 'fragen' || n === 'eltern'; // Seiten mit eigener Adresse (#impressum, #fragen, #eltern …)
@@ -300,15 +300,14 @@
   let gesuche = [];
   const ui = { view: 'entdecken', kat: 'alle', umkreis: 10, suche: '', sort: 'termin', offen: null, panel: null, authModus: 'anmelden', authGrund: '', authFertig: '', authWeg: 'passwort', authCode: '', vorlesen: false, markiert: null, zentrieren: null, rueckzug: false, melden: false, loeschen: false, profil: null, profilStapel: [], profilAlle: false, rezMelden: null, bewertung: null, zuletzt: null, busy: false, bearbeiten: null, blockieren: false };
 
-  /* ===== Ansicht: Design, Schriftgröße, Startseite, Luftbild (nur auf diesem Gerät gespeichert) ===== */
+  /* ===== Ansicht: Design, Schriftgröße, Startseite (nur auf diesem Gerät gespeichert) ===== */
   const ANSICHT_SPEICHER = 'handdrauf-ansicht';
   const ANSICHT_OPTIONEN = {
     thema: [['auto', 'Automatisch'], ['hell', 'Hell'], ['dunkel', 'Dunkel']],
     schrift: [['normal', 'Normal'], ['gross', 'Groß'], ['sehr-gross', 'Sehr groß']],
-    start: [['entdecken', 'Liste'], ['karte', 'Karte']],
-    kartenart: [['luftbild', 'Luftbild'], ['karte', 'Straßenkarte']]
+    start: [['entdecken', 'Liste'], ['karte', 'Karte']]
   };
-  const ansicht = { thema: 'auto', schrift: 'normal', start: 'entdecken', kartenart: 'luftbild' };
+  const ansicht = { thema: 'auto', schrift: 'normal', start: 'entdecken' };
   try {
     const gespeichert = JSON.parse(localStorage.getItem(ANSICHT_SPEICHER) || '{}');
     Object.keys(ansicht).forEach((k) => {
@@ -1641,7 +1640,7 @@
   function kachelQuellen() {
     const q = [];
     const carto = CONFIG.karte && CONFIG.karte.carto;
-    if (esriQuelle() && ansicht.kartenart === 'luftbild') q.push(esriQuelle());
+    if (esriQuelle()) q.push(esriQuelle());
     // Die eigene, selbst gezeichnete Karte (Daten von OpenStreetMap); fertige Kartenbilder nur als Ersatz
     if (CONFIG.karte.beschriftung && !VORSCHAU && window.fetch && window.TextDecoder) q.push({ vektor: true, min: 0, max: 18,
       quelle: '© <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-Mitwirkende' });
@@ -1706,11 +1705,35 @@
     gebiet: [6.6, 51.28, 11.62, 53.9],  // Niedersachsen (Länge, Breite): außerhalb gar nicht erst fragen
     quelle: '<a href="https://www.lgln.niedersachsen.de" target="_blank" rel="noopener">LGLN</a>'
   };
-  const luft = { el: null, aus: false, ok: 0, fehler: 0 };
+  const luft = { el: null, aus: false, ok: 0, fehler: 0, kaputt: new Set() };
+  // Sicher in Niedersachsen (grob, mit Abstand zur Landesgrenze, ohne Bremen und die Küste): Dort deckt das Luftbild
+  // jedes Kartenquadrat ganz. Die Straßenkarte darunter wird dort gar nicht erst gezeichnet und geladen. Das spart beim
+  // Zoomen viel Arbeit und Speicher (vorher lagen zwei volle Ebenen übereinander). Länge, Breite:
+  const NI_INNEN = [[7.35, 52.5], [7.35, 53.25], [7.6, 53.45], [8.0, 53.45], [8.35, 53.35], [8.40, 53.0], [8.60, 52.95], [9.05, 52.95],
+    [9.10, 53.15], [9.0, 53.35], [8.95, 53.65], [9.6, 53.45], [9.85, 53.33], [10.3, 53.33], [10.8, 53.15], [11.2, 52.95], [10.75, 52.75],
+    [10.75, 52.45], [10.85, 52.2], [10.45, 51.95], [10.4, 51.62], [10.0, 51.45], [9.75, 51.5], [9.6, 51.7], [9.5, 51.9], [9.3, 52.08],
+    [9.15, 52.25], [9.25, 52.45], [9.0, 52.6], [8.3, 52.58], [8.0, 52.45]];
+  function inNiedersachsen(lng, lat) {
+    let drin = false;
+    for (let i = 0, j = NI_INNEN.length - 1; i < NI_INNEN.length; j = i++) {
+      const [xi, yi] = NI_INNEN[i], [xj, yj] = NI_INNEN[j];
+      if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) drin = !drin;
+    }
+    return drin;
+  }
+  // Liegt das Quadrat z/x/y ganz unter dem Luftbild? (Ecken innen und keine Ecke der Grenze im Quadrat)
+  function luftInnen(z, x, y) {
+    const lq = luftQuelle(kacheln.quellen, kacheln.nr);
+    if (!lq || z < lq.min || luft.kaputt.has(z + '/' + x + '/' + y)) return false;
+    const n = Math.pow(2, z), breite = (v) => Math.atan(Math.sinh(Math.PI * (1 - 2 * v / n))) * 180 / Math.PI;
+    const w = x / n * 360 - 180, o = (x + 1) / n * 360 - 180, s = breite(y + 1), nb = breite(y);
+    if (!inNiedersachsen(w, s) || !inNiedersachsen(o, s) || !inNiedersachsen(w, nb) || !inNiedersachsen(o, nb)) return false;
+    return !NI_INNEN.some(([lng, lat]) => lng > w && lng < o && lat > s && lat < nb);
+  }
   // Luftbild über diese Straßenkarte legen? Nicht, wenn sie selbst schon ein Luftbild ist (Esri).
   function luftQuelle(quellen, nr) {
     const q = quellen && quellen[nr];
-    return !VORSCHAU && !luft.aus && ansicht.kartenart === 'luftbild' && q && !q.foto ? LGLN : null;
+    return !VORSCHAU && CONFIG.karte.luftbild && !luft.aus && q && !q.foto ? LGLN : null;
   }
   // Berühren die Kartenquadrate x0…x1, y0…y1 der Zoomstufe z das Gebiet mit Luftbildern?
   function luftDeckt(q, z, x0, y0, x1, y1) {
@@ -1731,6 +1754,7 @@
     luft.aus = true;
     kacheln.bilder.forEach((t, key) => { if (t.luft) kachelWeg(t, key); });
     kacheln.bilder.forEach(basisAuffrischen);
+    kachelnBald(); // wo bisher nur das Luftbild lag, jetzt die Straßenkarte
     if (umgebung.el) { umgebung.schluessel = ''; umgebungZeichnen(); }
     kartenArtZeigen();
   }
@@ -1742,19 +1766,17 @@
     const text = !mitLuft ? q.quelle : q.bkg ? `© ${BKG}<span class="k-veraendert"> (Farben angepasst)</span>, ${LGLN.quelle} (${jahr}) ${CC_BY}` : `Luftbild © ${LGLN.quelle} (${jahr}) ${CC_BY} · ${q.quelle}`;
     return text + (mitNamen ? NAMEN_QUELLE : '');
   }
-  // Knopf unten links auf der großen Karte: wechselt zwischen Luftbild und Straßenkarte. Er zeigt als kleines Bild
-  // die Stelle in der Mitte so, wie man sie nach dem Tippen sieht (wie bei Google Maps). Nur da, wo es Luftbilder gibt.
+  // Wo es Luftbilder gibt, zeigt die Karte immer das Luftbild (in Niedersachsen ab Zoomstufe 10). Darauf stehen Beträge
+  // und Maßstab hell mit dunklem Rand (wie bei Google Maps), sonst dunkel mit hellem Rand. Dazu die Quellenangabe.
   function kartenArtZeigen() {
-    const k = kartenStatus, kc = kacheln, knopf = $('#karte-art'), quelle = $('.k-quelle');
-    if (!k.huelle || !knopf) return;
+    const k = kartenStatus, kc = kacheln, quelle = $('.k-quelle');
+    if (!k.huelle) return;
     const q = kc.quellen[kc.nr];
-    let hier = false, r = null;
+    let hier = false;
     if (q && !kc.aus && !VORSCHAU && k.blick && k.w) {
-      r = kachelBereich(k.blick, kachelZoom(k.blick.s));
+      const r = kachelBereich(k.blick, kachelZoom(k.blick.s));
       hier = CONFIG.karte.esri ? true : !luft.aus && r.z >= LGLN.min && luftDeckt(LGLN, r.z, r.x0, r.y0, r.x1, r.y1);
     }
-    // Auf Luftbildern stehen Beträge und Maßstab hell mit dunklem Rand (wie bei Google Maps), sonst dunkel mit hellem Rand.
-    // Dazu kommen die Namen von Orten und Straßen.
     const foto = !!q && !kc.aus && (!!q.foto || (hier && !!luftQuelle(kc.quellen, kc.nr)));
     if (foto !== k.huelle.parentNode.classList.contains('k-foto')) { k.huelle.parentNode.classList.toggle('k-foto', foto); namenBald(); }
     if (q && !kc.aus) {
@@ -1763,49 +1785,6 @@
       // „Powered by Esri“ muss immer zu sehen sein
       quelleFest(quelle.parentNode, !!q.foto);
     }
-    knopf.hidden = !hier;
-    if (!hier) return;
-    const zuLuft = ansicht.kartenart !== 'luftbild';
-    // Bild: das Kartenquadrat eine Stufe näher, in dem die Mitte liegt
-    const z = Math.min(18, r.z + 1), n = Math.pow(2, z), T = WELT / n;
-    const x = Math.floor((r.ox + (k.w / 2 - k.blick.x) / k.blick.s) / T), y = Math.floor((r.oy + (k.h / 2 - k.blick.y) / k.blick.s) / T);
-    const strasse = kc.quellen.find((e) => !e.foto) || q;
-    const bild = knopf.querySelector('img');
-    if (!zuLuft && strasse.vektor) {
-      // Die eigene Karte: das Quadrat klein zeichnen (sobald die Daten da sind)
-      const schl = ['v', z, x, y, dunklesThema()].join('/');
-      if (bild.dataset.fertig !== schl) {
-        const t = k.vorschauBild || (k.vorschauBild = { img: bild, vorschau: true });
-        Object.assign(t, { z, x, y, schl });
-        vektorPlanen(t);
-      }
-      bild.dataset.src = schl;
-      bild.classList.remove('k-strasse');
-    } else {
-      const src = zuLuft ? (CONFIG.karte.esri ? kachelUrl(esriQuelle(), z, x, y) : luftUrl(LGLN, z, x, y)) : kachelUrl(strasse, z, x, y);
-      if (bild.dataset.src !== src) { bild.dataset.src = src; bild.src = src; }
-      bild.classList.toggle('k-strasse', !zuLuft && !strasse.carto);
-    }
-    knopf.querySelector('.karte-art-name').textContent = zuLuft ? 'Luftbild' : 'Karte';
-    knopf.setAttribute('aria-label', zuLuft ? 'Luftbild zeigen' : 'Straßenkarte zeigen');
-  }
-  // Luftbild an oder aus (Knopf auf der Karte oder Menü)
-  function kartenArtNeu() {
-    const k = kartenStatus, kc = kacheln, u = umgebung;
-    Object.assign(luft, { aus: false, ok: 0, fehler: 0 }); // ausdrücklich gewählt: noch einmal versuchen
-    if (k.huelle && !VORSCHAU && !kc.aus) {
-      // Mit Esri sind Luftbild und Straßenkarte verschiedene Quellen, sonst liegt das Luftbild nur darüber
-      if (CONFIG.karte.esri) { kc.quellen = kachelQuellen(); kachelQuelleSetzen(0); }
-      else kc.bilder.forEach((t, key) => { if (t.luft) kachelWeg(t, key); });
-      if (k.blick) kachelnLegen(k.blick);
-      kartenArtZeigen();
-    }
-    if (u.el && !VORSCHAU && !u.aus) {
-      if (CONFIG.karte.esri) { u.quellen = kachelQuellen(); u.nr = 0; u.ok = 0; u.fehler = 0; }
-      u.schluessel = '';
-      umgebungZeichnen();
-    }
-    namenBald();
   }
 
   /* ===== Kartenwerkstatt: Kartendaten lesen und daraus die Karte zeichnen =====
@@ -2463,7 +2442,7 @@
     if (!namen.url) return; // kommt nach dem Start von selbst
     const b = k.blick, rahmen = k.huelle.getBoundingClientRect();
     // Freihalten: Knöpfe, Quellenangabe, Maßstab und alle Anfragen auf der Karte
-    const belegt = [...document.querySelectorAll('.karte-knoepfe, .k-quelle-box .quelle-knopf, #map .k-massstab, .karte-art:not([hidden]), #map .k-schicht .pin, #map .k-schicht .k-sammel, #map .k-schicht .k-ich i, #map .k-schicht .k-ich b')]
+    const belegt = [...document.querySelectorAll('.karte-knoepfe, .k-quelle-box .quelle-knopf, #map .k-massstab, #map .k-schicht .pin, #map .k-schicht .k-sammel, #map .k-schicht .k-ich i, #map .k-schicht .k-ich b')]
       .map((e) => e.getBoundingClientRect()).filter((r) => r.width)
       .map((r) => ({ l: r.left - rahmen.left - 3, o: r.top - rahmen.top - 3, r: r.right - rahmen.left + 3, u: r.bottom - rahmen.top + 3 }));
     // Nichts verändert (gleicher Ausschnitt, gleiche Daten, Anfragen an denselben Stellen): nicht neu zeichnen
@@ -2653,8 +2632,6 @@
   // Daten angekommen: wartende Quadrate noch einmal versuchen
   function vektorWartende() {
     kacheln.bilder.forEach((t) => { if (t.vektor && t.wartet) { t.wartet = false; vektorPlanen(t); } });
-    const v = kartenStatus.vorschauBild;
-    if (v && v.wartet) { v.wartet = false; vektorPlanen(v); }
     (umgebung.vektor || []).forEach((t) => { if (t.wartet && t.img.parentNode) { t.wartet = false; vektorPlanen(t); } });
   }
   // Hell/dunkel gewechselt: alles in den neuen Farben neu zeichnen (die alte Zeichnung bleibt bis dahin stehen)
@@ -2664,6 +2641,9 @@
   }
   function kachelWeg(t, key) {
     t.img.onload = t.img.onerror = null;
+    // Noch nicht geladen (z. B. eine Zwischenstufe beim Zoomen): Anfrage abbrechen, damit sie die Leitung nicht für
+    // die Bilder blockiert, die jetzt gebraucht werden
+    if (!t.fertig && !t.vektor && t.img.getAttribute('src')) t.img.removeAttribute('src');
     if (t.img.parentNode) t.img.parentNode.removeChild(t.img);
     if (/^blob:/.test(t.img.src)) URL.revokeObjectURL(t.img.src); // selbst gezeichnete Bilder sofort freigeben
     kacheln.bilder.delete(key);
@@ -2754,14 +2734,23 @@
     img.draggable = false;
     img.setAttribute('decoding', 'async');
     const t = { img, z, x, y, fertig: false, fehler: false, luft: !!lq };
-    img.onload = () => {
+    const zeigen = () => {
+      if (kc.bilder.get(key) !== t) return; // inzwischen weggeräumt
       t.fertig = true;
       if (lq) { img.className = 'k-kachel da'; luft.ok++; basisAuffrischen(kc.bilder.get(key.slice(1))); } else { basisAuffrischen(t); kc.ok++; }
       altesWeg();
     };
+    // Luftbilder vor dem Zeigen fertig entschlüsseln (im Hintergrund): Sonst macht das der Browser beim ersten Zeichnen,
+    // und auf dem iPhone stockt dabei die Bewegung
+    img.onload = () => { if (lq && img.decode) img.decode().then(zeigen, zeigen); else zeigen(); };
     img.onerror = () => {
       t.fehler = true;
-      if (lq) { luftFehler(); basisAuffrischen(kc.bilder.get(key.slice(1))); } else kachelFehler();
+      if (lq) {
+        luftFehler();
+        // Dieses eine Luftbild fehlt: hier doch die Straßenkarte zeigen
+        if (!luft.aus && !kc.bilder.has(key.slice(1))) { luft.kaputt.add(key.slice(1)); kachelnBald(); }
+        basisAuffrischen(kc.bilder.get(key.slice(1)));
+      } else kachelFehler();
       if (!kc.aus) altesWeg();
     };
     kc.bilder.set(key, t);
@@ -2785,41 +2774,80 @@
     const c = basisZeigen(t) ? 'k-kachel da' : 'k-kachel';
     if (t.img.className !== c) t.img.className = c;
   }
+  // Quadrate des Bereichs r, die in der Mitte zuerst: Sie werden zuerst angefragt und sind zuerst da
+  function vonDerMitte(r, b) {
+    const k = kartenStatus;
+    const mx = b ? (r.ox + (k.w / 2 - b.x) / b.s) / r.T - 0.5 : (r.x0 + r.x1) / 2, my = b ? (r.oy + (k.h / 2 - b.y) / b.s) / r.T - 0.5 : (r.y0 + r.y1) / 2;
+    const liste = [];
+    for (let x = r.x0; x <= r.x1; x++) for (let y = r.y0; y <= r.y1; y++) liste.push([x, y, (x - mx) * (x - mx) + (y - my) * (y - my)]);
+    return liste.sort((a, c) => a[2] - c[2]);
+  }
   // Luftbilder für den Bereich r (nur Quadrate, die Niedersachsen berühren)
-  function luftBereich(r, je) {
+  function luftBereich(r, je, liste) {
     const lq = luftQuelle(kacheln.quellen, kacheln.nr);
     if (!lq || r.z < lq.min || !luft.el || !luftDeckt(lq, r.z, r.x0, r.y0, r.x1, r.y1)) return;
-    for (let x = r.x0; x <= r.x1; x++) for (let y = r.y0; y <= r.y1; y++) {
-      if (luftDeckt(lq, r.z, x, y, x, y)) je('L' + r.z + '/' + x + '/' + y, x, y, lq);
+    (liste || vonDerMitte(r, kartenStatus.blick)).forEach(([x, y]) => { if (luftDeckt(lq, r.z, x, y, x, y)) je('L' + r.z + '/' + x + '/' + y, x, y, lq); });
+  }
+  // Ist das Quadrat z/x/y schon ganz von fertigen Luftbildern einer näheren Stufe bedeckt (beim Herauszoomen)?
+  function luftGedeckt(z, x, y) {
+    const kc = kacheln;
+    for (let d = 1; d <= 3; d++) {
+      const m = 1 << d;
+      let alle = true;
+      for (let i = 0; i < m && alle; i++) for (let j = 0; j < m && alle; j++) {
+        const t = kc.bilder.get('L' + (z + d) + '/' + (x * m + i) + '/' + (y * m + j));
+        if (!t || !t.fertig) alle = false;
+      }
+      if (alle) return true;
     }
+    return false;
+  }
+  // Etwas fehlt (ein Luftbild kam nicht): gleich nachlegen, aber nicht mitten in einer Bewegung
+  function kachelnBald() {
+    clearTimeout(kacheln.bald);
+    kacheln.bald = setTimeout(() => { if (kartenStatus.blick && ui.view === 'karte') kachelnLegen(kartenStatus.blick); }, 250);
   }
   // Sind alle Bilder der neuen Zoomstufe da, verschwinden die der alten (bis dahin füllen sie die Lücken)
   function altesWeg() {
     const kc = kacheln;
+    if (kc.ohneLuft) return;
     let alle = true;
     kc.bilder.forEach((t) => { if (t.z === kc.z && !t.fertig && !t.fehler) alle = false; });
     if (alle) kc.bilder.forEach((t, key) => { if (t.z !== kc.z) kachelWeg(t, key); });
   }
-  // Bilder für den Ausschnitt b holen und pixelgenau legen
-  function kachelnLegen(b) {
+  // Bilder für den Ausschnitt b holen und pixelgenau legen. Mitten in einer Zoom-Bewegung (art):
+  // 'rein': noch keine Luftbilder anfragen (die Stufe ist gleich wieder vorbei), die bisherigen bleiben vergrößert stehen;
+  // 'raus': nur Luftbilder für den Rand, wo die bisherigen nichts mehr decken. Alles Übrige erst, wenn die Karte ruht.
+  function kachelnLegen(b, art) {
     const kc = kacheln, k = kartenStatus;
     if (kc.aus || !kc.el || !kc.quellen.length) return;
+    clearTimeout(kc.bald);
     const r = kachelBereich(b, kachelZoom(b.s));
     if (r.z !== kc.z) { kc.vorZ = kc.z; kc.z = r.z; }
     kc.ref = { s: b.s, x: b.x, y: b.y };
     schichtenVerschieben('');
-    const brauche = {};
-    for (let x = r.x0; x <= r.x1; x++) for (let y = r.y0; y <= r.y1; y++) {
+    const brauche = {}, liste = vonDerMitte(r, b);
+    kc.ohneLuft = !!art && !!luftQuelle(kc.quellen, kc.nr) && r.z >= LGLN.min;
+    for (const [x, y] of liste) {
+      if (luftInnen(r.z, x, y)) continue; // ganz unter dem Luftbild: keine Straßenkarte
       const key = r.z + '/' + x + '/' + y;
       brauche[key] = true;
       if (!kc.bilder.has(key)) neueKachel(r.z, x, y, key);
     }
     if (kc.aus) return; // alle Anbieter sind gescheitert
-    luftBereich(r, (key, x, y, lq) => { brauche[key] = true; if (!kc.bilder.has(key)) neueKachel(r.z, x, y, key, lq); });
+    if (!kc.ohneLuft || art === 'raus') luftBereich(r, (key, x, y, lq) => {
+      brauche[key] = true;
+      if (!kc.bilder.has(key) && !(kc.ohneLuft && luftGedeckt(r.z, x, y))) neueKachel(r.z, x, y, key, lq);
+    }, liste);
+    // Das fertige Luftbild der nächstgelegenen Stufe bleibt immer liegen, auch nach vielen Stufen am Stück (sonst wäre
+    // beim schnellen Hineinzoomen kurz gar nichts zu sehen)
+    let besteLuft = null;
+    kc.bilder.forEach((t) => { if (t.luft && t.fertig && t.z !== kc.z && (besteLuft === null || Math.abs(t.z - kc.z) < Math.abs(besteLuft - kc.z))) besteLuft = t.z; });
     kc.bilder.forEach((t, key) => {
       if (brauche[key]) return;
       // Ältere Luftbilder bleiben über mehrere Stufen liegen, bis die neuen da sind (keine Lücken beim schnellen Zoomen)
-      if (t.z === kc.z || !t.fertig || (t.luft || t.vektor ? Math.abs(t.z - kc.z) > 3 : t.z !== kc.vorZ)) { kachelWeg(t, key); return; }
+      const alt = t.luft || t.vektor ? Math.abs(t.z - kc.z) > 3 && !(t.luft && t.z === besteLuft) : t.z !== kc.vorZ;
+      if (t.z === kc.z || !t.fertig || alt) { kachelWeg(t, key); return; }
       // Ältere Stufe: nur behalten, solange sie im Bild liegt
       const T = WELT / Math.pow(2, t.z);
       const l = (t.x * T - r.ox) * b.s + b.x, o = (t.y * T - r.oy) * b.s + b.y;
@@ -2847,13 +2875,19 @@
     const andereStufe = r.z !== kc.z;
     // Andere Zoomstufe: mitten in der Bewegung höchstens alle 0,3 Sekunden neue Bilder holen. So entstehen beim
     // Herauszoomen keine leeren Ränder, und es werden trotzdem nicht bei jedem Bild neue Bilder angefordert.
-    if (andereStufe && performance.now() - (kc.zuletzt || 0) > 300) { kc.zuletzt = performance.now(); kachelnLegen(b); return; }
+    if (andereStufe && performance.now() - (kc.zuletzt || 0) > 300) {
+      kc.zuletzt = performance.now();
+      kachelnLegen(b, r.z > kc.z ? 'rein' : 'raus');
+      // Endet die Bewegung hier, fehlt sonst der Rest (Luftbilder der neuen Stufe)
+      kc.ruhe = setTimeout(() => { if (k.blick) kachelnLegen(k.blick); }, 160);
+      return;
+    }
     // Gleiche Stufe, aber am Rand fehlt etwas (Verschieben): nur die fehlenden Bilder dazulegen. Die Schicht bleibt,
     // wie sie ist, die übrigen Bilder werden nicht angefasst.
     if (!andereStufe) kachelnErgaenzen(r);
     const f = b.s / kc.ref.s;
     schichtenVerschieben(f === 1 ? `translate3d(${b.x - kc.ref.x}px, ${b.y - kc.ref.y}px, 0)` : `translate3d(${b.x - kc.ref.x * f}px, ${b.y - kc.ref.y * f}px, 0) scale(${f})`);
-    if (f !== 1 || andereStufe) kc.ruhe = setTimeout(() => { if (k.blick) kachelnLegen(k.blick); }, andereStufe ? 160 : 220);
+    if (f !== 1 || andereStufe || kc.ohneLuft) kc.ruhe = setTimeout(() => { if (k.blick) kachelnLegen(k.blick); }, andereStufe || kc.ohneLuft ? 160 : 220);
   }
   function kachelnErgaenzen(r) {
     const kc = kacheln, ref = kc.ref, T = WELT / Math.pow(2, r.z);
@@ -2867,8 +2901,9 @@
       t.img.style.cssText = `left:${l}px;top:${o}px;width:${rr - l}px;height:${u - o}px;z-index:${lq ? 30 : t.vektor ? 25 : 2}`;
       return true;
     };
-    for (let x = r.x0; x <= r.x1; x++) for (let y = r.y0; y <= r.y1; y++) if (!legen(r.z + '/' + x + '/' + y, x, y)) return;
-    luftBereich(r, legen);
+    const liste = vonDerMitte(r, kartenStatus.blick || ref);
+    for (const [x, y] of liste) if (!luftInnen(r.z, x, y) && !legen(r.z + '/' + x + '/' + y, x, y)) return;
+    if (!kc.ohneLuft) luftBereich(r, legen, liste);
   }
   // Nachts andere Bilder (CARTO) bzw. umgefärbte Bilder (basemap.de, OpenStreetMap, per CSS)
   function kachelnThema() {
@@ -2885,7 +2920,7 @@
     if (mqK.addEventListener) mqK.addEventListener('change', kachelnThema);
   }
   window.addEventListener('online', () => {
-    luft.aus = false; luft.ok = 0; luft.fehler = 0;
+    luft.aus = false; luft.ok = 0; luft.fehler = 0; luft.kaputt.clear();
     if (!kacheln.aus || !kartenStatus.huelle || VORSCHAU) return;
     kacheln.quellen = kachelQuellen();
     kachelQuelleSetzen(0);
@@ -3096,7 +3131,7 @@
     const liste = ui.umgebungListe || [];
     const b = umgebungBlick(liste);
     u.blick = b;
-    const schluessel = [b.z, b.x, b.y, w, h, u.nr, u.aus, dunklesThema(), ansicht.kartenart, luft.aus, namen.aus].join('|');
+    const schluessel = [b.z, b.x, b.y, w, h, u.nr, u.aus, dunklesThema(), luft.aus, namen.aus].join('|');
     if (schluessel !== u.schluessel) { u.schluessel = schluessel; umgebungKacheln(b); }
     // Schilder wie auf der großen Karte; wo sie sich berühren würden, steht eine Zahl
     const gruppen = [];
@@ -3506,7 +3541,7 @@
     const k = kartenStatus;
     if (!k.schicht) return;
     const rahmen = k.huelle.getBoundingClientRect();
-    const fest = [...document.querySelectorAll('.karte-knoepfe, .k-quelle-box .quelle-knopf, #map .k-massstab, .karte-art')].map((el) => el.getBoundingClientRect());
+    const fest = [...document.querySelectorAll('.karte-knoepfe, .k-quelle-box .quelle-knopf, #map .k-massstab')].map((el) => el.getBoundingClientRect());
     const schilder = [...k.schicht.querySelectorAll('.k-pin .pin, .k-sammel')].map((el) => el.getBoundingClientRect());
     const belegt = fest.slice();
     const namen = [...k.schicht.querySelectorAll('.k-name')];
@@ -3626,10 +3661,6 @@
     blickSetzen(blickAuf(inMeter(g.lat, g.lng), Math.max(k.blick.s, massstabFuerZoom(14.6))), false);
   }
 
-  $('#karte-art').addEventListener('click', () => {
-    ansichtSetzen('kartenart', ansicht.kartenart === 'luftbild' ? 'karte' : 'luftbild');
-    kartenArtNeu();
-  });
   document.querySelector('.karte-knoepfe').addEventListener('click', (e) => {
     const b = e.target.closest('[data-karte]');
     if (!b || !kartenStatus.blick) return;
@@ -4726,7 +4757,6 @@
         ${gruppe('thema', 'Design')}
         ${gruppe('schrift', 'Schrift')}
         ${gruppe('start', 'Start mit')}
-        ${VORSCHAU ? '' : gruppe('kartenart', 'Karte') + (CONFIG.karte.esri ? '' : '<p class="klein menue-hinweis">Luftbilder gibt es bisher in Niedersachsen. Anderswo zeigt die Karte Straßen.</p>')}
         ${ohneKonto ? `<div class="menue-zeile"><span class="menue-label">Ort</span><button type="button" class="btn btn-secondary btn-auto" data-ort-aendern>${zeigeIch() ? esc(meinOrt().stadtteil) : 'Ort wählen'}</button></div>` : ''}
       </section>
       <section class="menue-gruppe" aria-labelledby="m-push"><h3 class="h-klein" id="m-push">Benachrichtigungen</h3>
@@ -5908,7 +5938,6 @@
     const opt = e.target.closest('[data-ansicht]');
     if (opt) {
       ansichtSetzen(opt.dataset.ansicht, opt.dataset.wert);
-      if (opt.dataset.ansicht === 'kartenart') kartenArtNeu();
       renderSheet();
       const zurueck = document.querySelector(`[data-ansicht="${opt.dataset.ansicht}"][data-wert="${opt.dataset.wert}"]`);
       if (zurueck) zurueck.focus({ preventScroll: true });
