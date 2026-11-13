@@ -240,7 +240,8 @@
   const VIEWS = ['entdecken', 'karte', 'neu', 'auftraege'];
   const RECHT = RECHT_TEXTE(CONFIG.betreiber, Object.assign({ supabaseCdn: /^https?:/.test(SUPABASE_JS), geocoder: String(EINSTELLUNGEN.geocoder || ''), esri: !!CONFIG.karte.esri, beschriftung: !!CONFIG.karte.beschriftung }, CONFIG.hosting), (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
   const FRAGEN = FRAGEN_TEXTE(CONFIG);
-  const istSeite = (n) => !!RECHT[n] || n === 'fragen'; // Seiten mit eigener Adresse (#impressum, #fragen …)
+  const JUGEND_REGELN = 'leichte Arbeit, höchstens 2 Stunden, Montag bis Samstag zwischen 8 und 18 Uhr, nicht während der Schule, kein Alkohol und kein Tabak';
+  const istSeite = (n) => !!RECHT[n] || n === 'fragen' || n === 'eltern'; // Seiten mit eigener Adresse (#impressum, #fragen, #eltern …)
   const EIGEN_VERSATZ = [[180, -150], [-160, 170], [220, 160], [-210, -190]]; // Demo: Meter Nord/Ost ab deinem Standort
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -271,9 +272,11 @@
     rezGemeldet: new Set(), // in dieser Sitzung gemeldete Bewertungen
     teil8: null,            // Datenbank kann geschriebene Bewertungen (Update Teil 8)? null = noch nicht bekannt
     altesSchema: false,     // Datenbank ohne das Update vom November 2026 (kein Termin, kein Bearbeiten)
+    alter: null,            // 16 oder 17: { jugendlich, elternOk, elternName, linkDa, ab } (Update Teil 10), sonst null
     blockiert: new Map()    // profil_id -> Name (von mir blockiert)
   };
   const istLive = () => db.modus === 'live';
+  function jugendlich() { return !!(istLive() && db.profil && db.alter && db.alter.jugendlich); }
   // Echte Seite mit Datenbank: Bis die Verbindung steht, nichts aus der Demo zeigen (keine erfundenen Anfragen, kein „Tim“)
   const LIVE_GEPLANT = !VORSCHAU && !BEISPIEL_MODUS && !!(LIVE.url && LIVE.key);
   const wartetAufLive = () => LIVE_GEPLANT && !istLive() && !db.liveAus;
@@ -610,6 +613,8 @@
   const MAX_VORAUS = 60; // so weit im Voraus lässt sich ein Termin wählen (wie in der Datenbank)
   const ZEIT_TEXT = { vormittags: 'vormittags', nachmittags: 'nachmittags', abends: 'abends', flexibel: 'Uhrzeit flexibel' };
   function heute() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+  // Heute vor n Jahren (für das Alter bei der Anmeldung). Am 29. Februar zählt der 1. März.
+  const vorJahren = (n) => { const h = heute(); const d = new Date(h.getFullYear() - n, h.getMonth(), h.getDate()); return d.getMonth() === h.getMonth() ? d : new Date(h.getFullYear() - n, h.getMonth() + 1, 1); };
   function plusTage(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
   const isoTag = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const ausIso = (s) => { const [j, m, t] = String(s).split('-').map(Number); return new Date(j, m - 1, t); };
@@ -645,6 +650,20 @@
     });
     return teile.length === 1 ? teile[0] : `${teile.slice(0, -1).join(', ')} oder ${teile[teile.length - 1]}`;
   }
+  // Ab 16: Darf bei dieser Anfrage auch jemand mit 16 oder 17 helfen? Gleiche Regeln wie privat.fuer_jugend in der
+  // Datenbank (Taschengeldbörsen): nicht Tragen, nicht abends, Uhrzeit 8 bis 16 Uhr, nicht nur sonntags.
+  function jugendGrund(kat, wann) {
+    const w = String(wann || '');
+    const uhrOk = (re) => { const m = w.match(re); return !m || (+m[1] >= 8 && +m[1] <= 16); };
+    if (kat === 'tragen') return 'Beim Tragen helfen nur Erwachsene.';
+    if (/abends/i.test(w)) return 'Abends helfen nur Erwachsene.';
+    if (!uhrOk(/gegen (\d{1,2})(?::\d\d)? Uhr/) || !uhrOk(/\bab (\d{1,2})(?::\d\d)? Uhr/)) return 'Vor 8 und nach 16 Uhr helfen nur Erwachsene.';
+    if ((/So\./.test(w) && !/(Mo|Di|Mi|Do|Fr|Sa)\./.test(w)) || /^sonntag/i.test(w)) return 'Sonntags helfen nur Erwachsene.';
+    return '';
+  }
+  function fuerJugend(kat, wann) { return !jugendGrund(kat, wann); }
+  // In der Demo fehlt die Angabe: dann zählen nur Tätigkeit und Termin
+  function jugendErlaubt(g) { return (g.jugend === undefined ? true : !!g.jugend) && fuerJugend(g.kat, g.wann); }
   const uhrzeitText = (hhmm) => { const [h, m] = String(hhmm || '16:00').split(':').map(Number); return `gegen ${h}${m ? ':' + String(m).padStart(2, '0') : ''} Uhr`; };
   // Liest den Termin aus dem Wann-Text: „Di. 10. Nov., nachmittags“, „Sa./So. 14./15. Nov.“, „Woche 16.–22. Nov.“,
   // ältere Texte wie „Samstag, vormittags“ oder „Morgen, ab 16 Uhr“. Ergebnis: erster und letzter Tag, Uhrzeit-Fenster.
@@ -838,6 +857,15 @@
   let baldTimer;
   function bald(fn) { clearTimeout(baldTimer); baldTimer = setTimeout(fn, 400); }
 
+  // 16 oder 17? Und haben die Eltern zugestimmt? (Datenbank ohne Update Teil 10: wie bisher, alle ab 18)
+  async function alterLaden() {
+    if (!istLive() || !db.profil) { db.alter = null; return; }
+    try {
+      const r = await db.client.rpc('mein_alter');
+      const z = !r.error && r.data && (Array.isArray(r.data) ? r.data[0] : r.data);
+      db.alter = z && z.jugendlich ? { jugendlich: true, elternOk: !!z.eltern_ok, elternName: z.eltern_name || '', linkDa: !!z.link_da, ab: z.volljaehrig_ab || null } : null;
+    } catch (e) { /* wie bisher */ }
+  }
   async function setzeSitzung(session, erzwingen) {
     const uid = session && session.user ? session.user.id : null;
     const bisher = db.user ? db.user.id : null;
@@ -851,6 +879,9 @@
     db.letzte.clear();
     db.gemeldet.clear();
     db.blockiert.clear();
+    db.alter = null;
+    ui.elternLink = '';
+    ui.elternNeu = false;
     if (uid) {
       const { data } = await db.client.from('profile').select('*').eq('id', uid).maybeSingle();
       db.profil = data || null;
@@ -862,6 +893,7 @@
         const w = await db.client.rpc('mein_ort');
         const z = !w.error && w.data && (Array.isArray(w.data) ? w.data[0] : w.data);
         if (z && typeof z.lat === 'number' && typeof z.lng === 'number') db.wohnort = { lat: z.lat, lng: z.lng, umkreis: z.umkreis_km || 5 };
+        await alterLaden();
       }
     }
     if (ui.panel === 'anmelden' && db.profil) {
@@ -889,6 +921,7 @@
       erstellt: Date.parse(r.erstellt) || 0,
       bis: r.bis || null,
       fuer: r.fuer || '', tuercode: r.tuercode || '',
+      jugend: r.jugend === undefined ? undefined : !!r.jugend, helferJung: !!r.helfer_jugendlich,
       laeuftAb: r.laeuft_ab ? Date.parse(r.laeuft_ab) || 0 : 0,
       eigen: !!ich && r.ersteller === ich,
       helfer: ich && r.helfer === ich ? 'ich' : (r.helfer ? 'andere' : null),
@@ -1262,6 +1295,7 @@
         <span class="card-title">${esc(g.titel)}</span>
         <span class="card-meta"><span class="card-wann">${esc(wannText(g))}</span> <span class="card-wer">${esc(g.eigen ? 'Deine Anfrage' : g.wer)}</span></span>
         <span class="card-ort"><span class="ortsschild">${esc(g.stadtteil)}</span><span>${distanz(g)}</span></span>
+        ${jugendlich() && !g.eigen && g.status === 'offen' && !jugendErlaubt(g) ? '<span class="card-pills"><span class="pill pill-muted">Nur Erwachsene</span></span>' : ''}
         ${extra}
       </span>
       <span class="abriss"><span class="price">${euroKurz(g.betrag)}</span></span>
@@ -3761,6 +3795,8 @@
           <span class="person-text"><span class="person-name">${esc(g.helferName)}</span><span class="person-meta">Hilft dir</span></span>
           <span class="person-mehr" aria-hidden="true">Profil</span></button>` : '';
 
+    // Hilft jemand mit 16 oder 17: Das sehen nur die Beteiligten, mit den Regeln
+    const jugendBox = g.eigen && g.helferJung ? `<div class="jugend-box">${icon('schild', 'i-sm')}<p><strong>${esc(vorname(g.helferName) || 'Die Person')} ist 16 oder 17</strong> und hilft mit Zustimmung der Eltern. Bitte achte darauf: ${JUGEND_REGELN}.</p></div>` : '';
     // Was jetzt zu tun ist: ein Hauptknopf, Nebensachen als Link
     if (g.eigen) {
       if (g.status === 'offen') {
@@ -3773,17 +3809,24 @@
               <button type="button" class="btn btn-secondary" data-aktion="rueckzug-nein">Abbrechen</button></div></div>`
           : `<button type="button" class="link-btn" data-aktion="rueckzug-frage">Anfrage zurückziehen</button>`;
       } else if (g.status === 'zugesagt') {
-        html += `<div class="status-box good">${icon('check')}${esc(g.helferName || 'Jemand')} hilft dir</div>${helferZeile}${codeHTML}`;
+        html += `<div class="status-box good">${icon('check')}${esc(g.helferName || 'Jemand')} hilft dir</div>${helferZeile}${jugendBox}${codeHTML}`;
       } else if (g.status === 'erledigt') {
-        html += `<div class="status-box warn">${esc(hn)} hat den Job als erledigt gemeldet.</div>${helferZeile}
+        html += `<div class="status-box warn">${esc(hn)} hat den Job als erledigt gemeldet.</div>${helferZeile}${jugendBox}
           <button type="button" class="btn btn-primary" data-aktion="bestaetigen" ${dis}>Erledigt bestätigen</button>`;
       } else if (g.status === 'bezahlt') {
         html += `<div class="status-box good">${icon('check')}Abgeschlossen</div>${helferZeile}` + (g.helferName ? sterneHTML(g.meineBewertung || 0, hn) : '');
         html += `<button type="button" class="btn btn-secondary" data-aktion="nochmal">${icon('wieder')}Noch mal anfragen</button>`;
       }
     } else if (g.status === 'offen') {
-      html += `<button type="button" class="btn btn-primary" data-aktion="zusagen" ${dis}>Ich helfe</button>`;
+      if (jugendlich() && !jugendErlaubt(g)) html += `<div class="status-box">${icon('schloss')}Bei dieser Anfrage helfen nur Erwachsene.</div>`;
+      else if (jugendlich() && !db.alter.elternOk) html += `<div class="status-box warn">Bevor du hilfst, müssen deine Eltern zustimmen.</div>
+        <button type="button" class="btn btn-primary" data-eltern-konto>Link für deine Eltern</button>`;
+      else {
+        if (jugendlich()) html += `<p class="jugend-hinweis">${icon('schild', 'i-sm')}<span>Für dich gilt: ${JUGEND_REGELN}.</span></p>`;
+        html += `<button type="button" class="btn btn-primary" data-aktion="zusagen" ${dis}>Ich helfe</button>`;
+      }
     } else if (g.status === 'zugesagt') {
+      if (g.helferJung && g.helfer === 'ich') html += `<p class="jugend-hinweis">${icon('schild', 'i-sm')}<span>Deine Eltern sehen diesen Auftrag mit Adresse und Zeit. Denk dran: ${JUGEND_REGELN}.</span></p>`;
       html += `<button type="button" class="btn btn-primary" data-aktion="erledigt" ${dis}>Job erledigt melden</button>
         ${telefon ? `<a class="btn btn-secondary" href="${esc(telLink(telefon))}">${icon('telefon')}${esc(g.fuer ? 'Anrufen' : `${vn} anrufen`)}</a>` : ''}
         <button type="button" class="link-btn" data-aktion="absagen" ${dis}>Zusage zurückziehen</button>`;
@@ -3911,7 +3954,8 @@
           <div class="passwort-feld"><input id="auth-passwort" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" minlength="8" required>
             <button type="button" class="passwort-auge" data-passwort-zeigen aria-pressed="false" aria-label="Passwort anzeigen">${icon('auge')}</button></div>
           ${reg ? '<p class="feld-hinweis" style="margin-top:0">Mindestens 8 Zeichen.</p>' : ''}</div>`}
-        ${reg ? `<label class="check"><input type="checkbox" id="auth-18"><span>Ich bin mindestens 18 Jahre alt.</span></label>
+        ${reg ? `<div class="feld"><label for="auth-geburt">Geburtsdatum</label><input id="auth-geburt" type="date" autocomplete="bday" max="${isoTag(vorJahren(16))}" min="1900-01-01" required aria-describedby="auth-geburt-hinweis">
+          <p class="feld-hinweis" id="auth-geburt-hinweis">Helfen geht ab 16, mit Zustimmung der Eltern. Anfragen stellen ab 18. Andere sehen dein Alter nicht.</p></div>
         <label class="check"><input type="checkbox" id="auth-regeln"><span>Ich akzeptiere die Nutzungsbedingungen. Hand Drauf vermittelt nur, die Absprache und Bezahlung läuft direkt zwischen uns Nachbarn, gelegentlich und in kleinem Umfang.</span></label>
         <p class="klein recht-links-form">Lies vorher die <a href="${NATIV ? OEFFENTLICH : ''}#nutzung" target="_blank" rel="noopener">Nutzungsbedingungen</a> und die <a href="${NATIV ? OEFFENTLICH : ''}#datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a> (öffnen ${NATIV ? 'im Browser' : 'in neuem Tab'}).</p>` : ''}
         <p class="fehler" id="auth-fehler" role="alert" hidden></p>
@@ -3920,6 +3964,188 @@
       ${!reg && CONFIG.codeLogin ? `<button type="button" class="link-btn" data-auth-weg="${codeWeg ? 'passwort' : 'code'}">${codeWeg ? 'Lieber mit Passwort anmelden' : 'Ohne Passwort anmelden (Code per E-Mail)'}</button>` : ''}`;
   }
 
+  /* ===== Für Eltern: Zustimmung über den Link aus der App, ohne eigenes Konto (Update Teil 10) ===== */
+  const ELTERN_SPEICHER = 'handdrauf-eltern';
+  const ELTERN_PUSH = 'handdrauf-eltern-push';
+  const ELTERN_TEXT = () => 'Hallo! Ich möchte bei Hand Drauf Nachbarn helfen, zum Beispiel beim Einkaufen oder im Garten. Weil ich noch nicht 18 bin, brauche ich deine Zustimmung. Hier siehst du, was ich darf, und kannst zustimmen:';
+  const lesen = (k) => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+  const schreiben = (k, v) => { try { if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); } catch (e) { /* nur für diese Sitzung */ } };
+  // #eltern=<Link>: auf dem Gerät merken und aus der Adresszeile nehmen (dort steht dann nur #eltern)
+  function elternAusAdresse() {
+    const m = /^#eltern=([0-9a-f]{64})$/.exec(location.hash);
+    if (!m) return false;
+    if (lesen(ELTERN_SPEICHER) !== m[1]) schreiben(ELTERN_PUSH, '');
+    schreiben(ELTERN_SPEICHER, m[1]);
+    ui.eltern = { link: m[1] };
+    history.replaceState(null, '', '#eltern');
+    return true;
+  }
+  function elternStart() {
+    const link = (ui.eltern && ui.eltern.link) || lesen(ELTERN_SPEICHER);
+    ui.eltern = { link, daten: undefined, frage: false };
+    elternLaden();
+  }
+  async function elternLaden() {
+    const e = ui.eltern;
+    if (!e || !e.link || !istLive()) return;
+    let daten;
+    try {
+      const { data, error } = await db.client.rpc('eltern_ansehen', { p_link: e.link });
+      daten = error ? (error.code === 'PGRST202' || /could not find the function/i.test(error.message || '') ? 'alt' : 'fehler') : (data || null);
+    } catch (err) { daten = 'fehler'; }
+    if (ui.eltern !== e) return;
+    e.daten = daten;
+    if (ui.panel === 'eltern') renderSheet();
+  }
+  const ELTERN_STATUS = { zugesagt: 'Zugesagt', erledigt: 'Erledigt gemeldet', bestaetigt: 'Abgeschlossen' };
+  function sheetElternHTML() {
+    const e = ui.eltern || {}, d = e.daten, busy = ui.busy ? 'disabled aria-busy="true"' : '';
+    const kopf = `<div class="sheet-top"><span class="eyebrow">Für Eltern</span><button type="button" class="icon-btn" data-close aria-label="Schließen">${icon('x')}</button></div>`;
+    const nur = (titel, text, mehr = '') => kopf + `<h2 id="sheet-titel" tabindex="-1">${titel}</h2><p>${text}</p>${mehr}`;
+    const lade = kopf + '<h2 id="sheet-titel" class="sr-only">Für Eltern</h2><p class="lade">Wird geladen …</p>';
+    if (!e.link) return nur('Link fehlt', 'Öffne den Link, den dein Kind dir aus der App geschickt hat. Dann siehst du hier, was dein Kind darf, und kannst zustimmen.');
+    if (!istLive()) return wartetAufLive() ? lade : nur('Gerade nicht erreichbar', 'Die Verbindung zu Hand Drauf steht gerade nicht. Versuch es gleich noch einmal.');
+    if (d === undefined) return lade;
+    if (d === 'alt') return nur('Noch nicht verfügbar', 'Die Zustimmung für Eltern kommt mit dem nächsten Update. Versuch es bald noch einmal.');
+    if (d === 'fehler') return nur('Gerade nicht erreichbar', 'Die Seite konnte nicht geladen werden.', `<button type="button" class="btn btn-secondary" data-eltern="laden">${icon('wieder')}Noch einmal versuchen</button>`);
+    if (d === null) return nur('Dieser Link gilt nicht mehr', 'Vielleicht hat dein Kind inzwischen einen neuen Link erstellt. Bitte es, dir den neuen Link aus der App zu schicken.');
+    if (d.erwachsen) return nur('Keine Zustimmung mehr nötig', 'Dein Kind ist inzwischen 18 und braucht keine Zustimmung mehr.');
+    const vn = esc(d.vorname);
+    const regeln = `<ul class="eltern-liste">
+        <li>${vn} kann nur helfen und keine Anfragen stellen.</li>
+        <li>Nur bei Anfragen, bei denen die anfragende Person Jugendliche erlaubt: im Garten, beim Einkaufen (ohne Alkohol und Tabak), mit Tieren, im Haushalt und bei Technik. Nicht beim Tragen.</li>
+        <li>Höchstens 2 Stunden, Montag bis Samstag zwischen 8 und 18 Uhr, nicht während der Schule.</li>
+        <li>Höchstens 2 offene Zusagen gleichzeitig, höchstens 50 € pro Auftrag. Bezahlt wird nach der Hilfe, direkt an ${vn}.</li>
+      </ul>`;
+    if (!d.zugestimmt) {
+      return kopf + `<h2 id="sheet-titel" tabindex="-1">Darf ${vn} bei Hand Drauf helfen?</h2>
+        <p>${vn} aus ${esc(d.ort)} möchte über Hand Drauf Nachbarn bei kleinen Dingen helfen, gegen eine kleine Aufwandsentschädigung. Weil ${vn} noch nicht 18 ist, braucht es deine Zustimmung.</p>
+        <h3 class="h-klein">Das darf ${vn}</h3>${regeln}
+        <h3 class="h-klein">Gut zu wissen</h3>
+        <ul class="eltern-liste">
+          <li>Auf dieser Seite siehst du jede Zusage mit Adresse und Zeit. Auf Wunsch bekommst du eine Benachrichtigung.</li>
+          <li>Das Profil von ${vn} sehen nur die Personen, bei denen ${vn} hilft. Ein Profilbild gibt es erst ab 18.</li>
+          <li>Hand Drauf vermittelt nur und versichert nicht. Kinder sind meist über die private Haftpflicht der Eltern mitversichert, prüf das am besten kurz.</li>
+          <li>Du kannst die Zustimmung hier jederzeit zurückziehen. Offene Zusagen werden dann abgesagt.</li>
+        </ul>
+        <form id="eltern-form" class="form" novalidate>
+          <div class="feld"><label for="eltern-name">Dein Vor- und Nachname</label><input id="eltern-name" autocomplete="name" maxlength="80" required></div>
+          <label class="check"><input type="checkbox" id="eltern-sorge"><span>Ich bin für ${vn} sorgeberechtigt.</span></label>
+          <label class="check"><input type="checkbox" id="eltern-ok"><span>Ich bin einverstanden, dass ${vn} nach diesen Regeln hilft.</span></label>
+          <p class="klein recht-links-form">Mehr dazu in den <a href="${NATIV ? OEFFENTLICH : ''}#nutzung" target="_blank" rel="noopener">Nutzungsbedingungen</a> und der <a href="${NATIV ? OEFFENTLICH : ''}#datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a>.</p>
+          <p class="fehler" id="eltern-fehler" role="alert" hidden></p>
+          <button type="submit" class="btn btn-primary" ${busy}>Zustimmen</button>
+        </form>`;
+    }
+    const auftraege = Array.isArray(d.auftraege) ? d.auftraege : [];
+    const liste = auftraege.length ? `<ul class="eltern-auftraege">${auftraege.map((a) => `<li>
+        <div class="ea-kopf">${icon(a.kategorie, 'i-sm')}<strong>${esc(a.titel)}</strong><span class="pill ${a.laufend ? 'pill-info' : 'pill-good'}">${ELTERN_STATUS[a.status] || ''}</span></div>
+        <p>${esc(wannLang(a))}</p>
+        <p class="klein">Bei ${esc(a.bei)}${a.adresse ? `, ${esc(a.adresse)}` : ''}, ${esc(a.stadtteil)} · ${euroKurz(a.betrag)}</p></li>`).join('')}</ul>`
+      : `<p class="klein">${vn} hat noch bei keiner Anfrage zugesagt. Sobald ${vn} zusagt, steht es hier.</p>`;
+    const hier = lesen(ELTERN_PUSH) === '1' && pushMoeglich() && Notification.permission === 'granted';
+    const pushTeil = hier
+      ? `<div class="status-box good">${icon('check')}Auf diesem Gerät bekommst du Bescheid, wenn ${vn} zusagt.</div><button type="button" class="link-btn" data-eltern="push-aus" ${busy}>Benachrichtigungen ausschalten</button>`
+      : pushMoeglich() ? `<button type="button" class="btn btn-secondary" data-eltern="push-ein" ${busy}>${icon('glocke')}Bescheid bekommen, wenn ${vn} zusagt</button>`
+      : `<p class="klein">${esc(pushGrund())}</p>`;
+    return kopf + `<h2 id="sheet-titel" tabindex="-1">${vn} darf helfen</h2>
+      <p>${esc(d.eltern_name || 'Du')} hat am ${esc(datumLang(d.zugestimmt))} zugestimmt. Hier siehst du, wo und wann ${vn} hilft.</p>
+      <h3 class="h-klein">Aufträge</h3>${liste}
+      ${pushTeil}
+      <details class="eltern-regeln"><summary>Was ${vn} darf</summary>${regeln}</details>
+      ${e.frage ? `<div class="bestaetigen-box"><p><strong>Zustimmung wirklich zurückziehen?</strong> ${vn} kann dann nicht mehr zusagen. Offene Zusagen werden abgesagt, und wer angefragt hat, erfährt davon.</p>
+          <div class="btn-row"><button type="button" class="btn btn-danger-solid" data-eltern="widerrufen" ${busy}>Zurückziehen</button>
+          <button type="button" class="btn btn-secondary" data-eltern="frage-nein">Abbrechen</button></div></div>`
+        : `<button type="button" class="link-btn link-melden" data-eltern="frage">Zustimmung zurückziehen</button>`}
+      <p class="klein">Leg dir diese Seite als Lesezeichen an, dann findest du sie wieder. Den Link nicht weitergeben: Wer ihn hat, sieht die Aufträge.</p>`;
+  }
+  async function elternAktion(art, knopf) {
+    const e = ui.eltern;
+    if (!e) return;
+    if (art === 'frage' || art === 'frage-nein') {
+      e.frage = art === 'frage';
+      renderSheet();
+      const f = $(`#sheet [data-eltern="${e.frage ? 'widerrufen' : 'frage'}"]`);
+      if (f) f.focus();
+      return;
+    }
+    if (art === 'laden') { e.daten = undefined; renderSheet(); elternLaden(); return; }
+    ui.busy = true;
+    if (knopf) knopf.disabled = true;
+    try {
+      if (art === 'widerrufen') {
+        const { error } = await db.client.rpc('eltern_widerrufen', { p_link: e.link });
+        if (error) throw error;
+        e.frage = false;
+        meldung('Zustimmung zurückgezogen');
+      } else if (art === 'push-ein') {
+        const erlaubt = await Notification.requestPermission();
+        if (erlaubt !== 'granted') { meldung(erlaubt === 'denied' ? 'Benachrichtigungen sind für diese Seite gesperrt. Du kannst sie in den Einstellungen deines Browsers erlauben.' : 'Ohne deine Erlaubnis gibt es keine Benachrichtigungen.'); return; }
+        const j = (await pushAbo(true)).toJSON();
+        const { error } = await db.client.rpc('eltern_push_anmelden', { p_link: e.link, p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth });
+        if (error) throw error;
+        schreiben(ELTERN_PUSH, '1');
+        meldung('Benachrichtigungen eingeschaltet');
+      } else if (art === 'push-aus') {
+        const abo = await pushAbo(false);
+        if (abo) await db.client.rpc('eltern_push_abmelden', { p_link: e.link, p_endpoint: abo.endpoint });
+        schreiben(ELTERN_PUSH, '');
+      }
+      await elternLaden();
+    } catch (err) {
+      meldung(fehlerText(err));
+    } finally {
+      ui.busy = false;
+      if (ui.panel === 'eltern') renderSheet();
+    }
+  }
+  async function elternZustimmen(formular) {
+    const e = ui.eltern, f = $('#eltern-fehler');
+    const zeig = (text, feld) => { f.textContent = text; f.hidden = false; if (feld) feld.focus(); };
+    const name = $('#eltern-name').value.trim().replace(/\s+/g, ' ');
+    if (name.length < 3 || !name.includes(' ')) return zeig('Bitte gib deinen Vor- und Nachnamen ein.', $('#eltern-name'));
+    if (!$('#eltern-sorge').checked) return zeig('Bitte bestätige, dass du sorgeberechtigt bist.', $('#eltern-sorge'));
+    if (!$('#eltern-ok').checked) return zeig('Bitte bestätige, dass du einverstanden bist.', $('#eltern-ok'));
+    const knopf = formular.querySelector('button[type="submit"]');
+    knopf.disabled = true;
+    knopf.setAttribute('aria-busy', 'true');
+    try {
+      const { error } = await db.client.rpc('eltern_zustimmen', { p_link: e.link, p_name: name });
+      if (error) throw error;
+      await elternLaden();
+      meldung(`Danke! ${e.daten && e.daten.vorname ? e.daten.vorname : 'Dein Kind'} kann jetzt helfen.`);
+      const h = $('#sheet-titel');
+      if (h) h.focus();
+    } catch (err) {
+      knopf.disabled = false;
+      knopf.removeAttribute('aria-busy');
+      zeig(fehlerText(err));
+    }
+  }
+
+  // 16 oder 17: Zustimmung der Eltern über einen Link
+  const elternUrl = (link) => (NATIV ? OEFFENTLICH : location.origin + location.pathname) + '#eltern=' + link;
+  const datumLang = (iso) => { const d = ausIso(String(iso).slice(0, 10)); return `${d.getDate()}. ${MONATE_LANG[d.getMonth()]} ${d.getFullYear()}`; };
+  function jugendKontoHTML() {
+    if (!jugendlich()) return '';
+    const a = db.alter, busy = ui.busy ? 'disabled aria-busy="true"' : '';
+    const link = ui.elternLink;
+    const knopf = a.elternOk && !ui.elternNeu
+      ? `<button type="button" class="btn btn-secondary" data-eltern-teilen>${icon('teilen')}Neuen Link für deine Eltern</button>`
+      : `<button type="button" class="btn btn-primary" data-eltern-teilen ${busy}>${icon('teilen')}${ui.elternNeu ? 'Ja, neuen Link erstellen' : link ? 'Link noch einmal schicken' : 'Link an deine Eltern schicken'}</button>`;
+    return `<section class="jugend-konto" aria-labelledby="jugend-titel">
+        <h3 class="h-klein" id="jugend-titel">${a.elternOk ? `${icon('check', 'i-sm')}Deine Eltern haben zugestimmt` : 'Deine Eltern müssen zustimmen'}</h3>
+        <p>${a.elternOk ? `${esc(a.elternName || 'Deine Eltern')} hat zugestimmt. Du kannst bei Anfragen helfen, die für Jugendliche passen.`
+          : link ? 'Schick deinen Eltern diesen Link. Sie sehen dort, was du darfst, und stimmen zu. Danach kannst du helfen.'
+          : 'Du bist 16 oder 17. Bevor du helfen kannst, müssen deine Eltern zustimmen. Dafür schickst du ihnen einen Link.'}</p>
+        ${link && !a.elternOk ? `<div class="eltern-link"><input id="eltern-link" readonly value="${esc(link)}" aria-label="Link für deine Eltern"><button type="button" class="btn btn-secondary btn-auto" data-eltern-kopieren>Kopieren</button></div>` : ''}
+        ${ui.elternNeu ? '<p class="status-box warn">Ein neuer Link macht den alten ungültig. Deine Eltern müssen dann noch einmal zustimmen, und bis dahin kannst du nicht zusagen.</p>' : ''}
+        ${knopf}
+        ${ui.elternNeu ? '<button type="button" class="link-btn" data-eltern-neu-nein>Abbrechen</button>' : ''}
+        ${!a.elternOk && !link && a.linkDa ? '<p class="klein">Du hast schon einmal einen Link erstellt. Ein neuer macht den alten ungültig.</p>' : ''}
+        <p class="klein">Bis zu deinem 18. Geburtstag${a.ab ? ` am ${esc(datumLang(a.ab))}` : ''} gilt: ${JUGEND_REGELN}. Anfragen stellen und ein Profilbild gibt es ab 18. Dein Profil sehen nur die Personen, bei denen du hilfst.</p>
+      </section>`;
+  }
   function sheetKontoHTML() {
     const p = db.profil;
     if (!p) return '';
@@ -3938,6 +4164,7 @@
         </div>
       </div>
       <p class="klein">Angemeldet als ${esc(db.user && db.user.email)}. Andere sehen nur deinen Vornamen, den Anfangsbuchstaben und deinen Ort.</p>
+      ${jugendKontoHTML()}
       <button type="button" class="btn btn-secondary" data-mein-profil>${icon('stern')}Dein Profil und deine Bewertungen</button>
       <div class="konto-ort"><span><span class="klein">Dein Ort</span><strong id="konto-ort">${esc(p.stadtteil)}</strong></span><button type="button" class="btn btn-secondary btn-auto" data-ort-aendern>Ändern</button></div>
       <button type="button" class="btn btn-secondary" data-einladen>${icon('teilen')}Nachbarn einladen</button>
@@ -4203,8 +4430,10 @@
     const steckbrief = (p.bio ? `<p class="profil-bio">${esc(p.bio).replace(/\n/g, '<br>')}</p>` : '')
       + (zeilen.length ? `<dl class="steckbrief">${zeilen.map(([t, d]) => `<div><dt>${t}</dt><dd>${d}</dd></div>`).join('')}</dl>` : '');
     const eigenes = p.ich ? (leer
-      ? `<div class="profil-anstoss"><p><strong>Mach dein Profil persönlich.</strong> Mit Foto und ein paar Sätzen über dich wissen Nachbarn, wer klingelt.</p>
-          <button type="button" class="btn btn-primary" data-profil-bearbeiten>${icon('kamera')}Foto und Angaben hinzufügen</button></div>`
+      ? (jugendlich() ? `<div class="profil-anstoss"><p><strong>Mach dein Profil persönlich.</strong> Mit ein paar Sätzen über dich wissen Nachbarn, wer klingelt.</p>
+          <button type="button" class="btn btn-primary" data-profil-bearbeiten>${icon('stift')}Angaben hinzufügen</button></div>`
+        : `<div class="profil-anstoss"><p><strong>Mach dein Profil persönlich.</strong> Mit Foto und ein paar Sätzen über dich wissen Nachbarn, wer klingelt.</p>
+          <button type="button" class="btn btn-primary" data-profil-bearbeiten>${icon('kamera')}Foto und Angaben hinzufügen</button></div>`)
       : `<button type="button" class="btn btn-secondary profil-bearbeiten-knopf" data-profil-bearbeiten>${icon('stift')}Profil bearbeiten</button>`) : '';
     return kopf + `<div class="profil-kopf">
         ${avatarHTML(p.kuerzel, p.bild, 'avatar-gross')}
@@ -4220,7 +4449,8 @@
       </dl>
       <section class="rez" aria-labelledby="rez-titel"><h3 class="h-klein" id="rez-titel">${p.ich ? 'So wurdest du bewertet' : 'Bewertungen'}</h3>${bewertungen}</section>
       <ul class="profil-belege">
-        ${p.volljaehrig ? `<li>${icon('check', 'i-sm')}Mindestens 18 Jahre, bei der Anmeldung bestätigt</li>` : ''}
+        ${p.volljaehrig ? `<li>${icon('check', 'i-sm')}Mindestens 18 Jahre, bei der Anmeldung bestätigt</li>`
+          : istLive() ? `<li>${icon('check', 'i-sm')}16 oder 17 Jahre, ${p.ich ? (db.alter && db.alter.elternOk ? 'deine Eltern haben zugestimmt' : 'deine Eltern müssen noch zustimmen') : 'hilft mit Zustimmung der Eltern'}</li>` : ''}
         <li>${icon('check', 'i-sm')}Konto mit E-Mail-Adresse</li>
         <li>${icon('check', 'i-sm')}Hat den Regeln für Nachbarn zugestimmt</li>
       </ul>
@@ -4259,7 +4489,8 @@
     return `<h2 id="sheet-titel" tabindex="-1">Profil bearbeiten</h2>
       ${ohne ? '<p class="status-box warn">Foto und Angaben gehen erst nach dem nächsten Update der Datenbank.</p>' : ''}
       <form id="profil-form" class="profil-form" novalidate>
-        <div class="foto-feld">
+        ${jugendlich() ? `<p class="jugend-hinweis">${icon('schild', 'i-sm')}<span>Profilbilder gibt es ab 18. So bleibt dein Profil privat.</span></p>` : ''}
+        <div class="foto-feld" ${jugendlich() ? 'hidden' : ''}>
           ${avatarHTML(p.kuerzel, bildJetzt, 'avatar-riesig')}
           <div class="foto-knoepfe">
             <input type="file" id="foto-datei" class="datei-versteckt" accept="image/*" aria-describedby="foto-hinweis" ${ohne ? 'disabled' : ''}>
@@ -4268,7 +4499,7 @@
             ${bildJetzt ? '<button type="button" class="link-btn" data-foto-weg>Foto entfernen</button>' : ''}
           </div>
         </div>
-        <p class="feld-hinweis" id="foto-hinweis">Am besten ein freundliches Foto von dir allein: keine anderen Personen, keine Kinder. Alle können es sehen. Die App verkleinert es und entfernt dabei Angaben wie den Aufnahmeort.</p>
+        <p class="feld-hinweis" id="foto-hinweis" ${jugendlich() ? 'hidden' : ''}>Am besten ein freundliches Foto von dir allein: keine anderen Personen, keine Kinder. Alle können es sehen. Die App verkleinert es und entfernt dabei Angaben wie den Aufnahmeort.</p>
         <p class="fehler" id="foto-fehler" role="alert" hidden></p>
         <div class="feld"><label for="profil-bio">Über mich <span class="klein">(freiwillig)</span></label>
           <textarea id="profil-bio" maxlength="300" rows="4" aria-describedby="profil-bio-hinweis" placeholder="z. B. seit wann du hier wohnst, was du gern machst, ob du ein Auto oder Werkzeug hast">${esc(p.bio)}</textarea>
@@ -4561,6 +4792,7 @@
     else if (ui.panel === 'ort') html = sheetOrtHTML();
     else if (ui.panel === 'anmelden') html = sheetAnmeldenHTML();
     else if (ui.panel === 'konto') html = sheetKontoHTML();
+    else if (ui.panel === 'eltern') html = sheetElternHTML();
     else {
       const g = gesuche.find((x) => x.id === ui.offen);
       if (!g) { schliessen(); return; }
@@ -4631,6 +4863,7 @@
     if (location.hash === '#' + view) zeige(view); else location.hash = view;
   }
   window.addEventListener('hashchange', () => {
+    if (elternAusAdresse()) { oeffnePanel('eltern'); return; }
     const v = location.hash.slice(1);
     if (VIEWS.includes(v)) { if (istSeite(ui.panel)) schliessen(); zeige(v); }
     else if (istSeite(v)) oeffnePanel(v);
@@ -4669,6 +4902,8 @@
     ui.authCode = '';
     ui.authWeg = CONFIG.codeLogin ? 'code' : 'passwort';
     ui.blockieren = false;
+    if (name === 'konto') { ui.elternNeu = false; if (jugendlich()) alterLaden().then(() => { if (ui.panel === 'konto') renderSheet(); }); }
+    if (name === 'eltern') elternStart();
     renderSheet();
     sheetZeigen();
     renderKarte();
@@ -4752,6 +4987,29 @@
       return;
     }
     if (t.hasAttribute('data-profil-zurueck')) { profilZurueck(); return; }
+    if (t.hasAttribute('data-eltern-konto')) { oeffnePanel('konto'); return; }
+    if (t.hasAttribute('data-eltern-neu-nein')) { ui.elternNeu = false; renderSheet(); return; }
+    if (t.hasAttribute('data-eltern-kopieren')) {
+      const f = $('#eltern-link');
+      try { await navigator.clipboard.writeText(f.value); meldung('Link kopiert'); } catch (err) { f.select(); meldung('Halte den Link gedrückt, um ihn zu kopieren.'); }
+      return;
+    }
+    if (t.hasAttribute('data-eltern-teilen')) {
+      if (ui.elternLink && !db.alter.elternOk) { teilen(ELTERN_TEXT(), ui.elternLink); return; }
+      if (db.alter.elternOk && !ui.elternNeu) { ui.elternNeu = true; renderSheet(); const k = $('#sheet [data-eltern-teilen]'); if (k) k.focus(); return; }
+      ui.busy = true; renderSheet();
+      try {
+        const { data, error } = await db.client.rpc('eltern_link');
+        if (error) throw error;
+        ui.elternLink = elternUrl(data);
+        Object.assign(db.alter, { elternOk: false, elternName: '', linkDa: true });
+        ui.elternNeu = false;
+      } catch (err) { meldung(fehlerText(err)); }
+      finally { ui.busy = false; renderSheet(); }
+      if (ui.elternLink) teilen(ELTERN_TEXT(), ui.elternLink);
+      return;
+    }
+    if (t.dataset.eltern) { elternAktion(t.dataset.eltern, t); return; }
     // Eigenes Profil bearbeiten
     if (t.hasAttribute('data-profil-bearbeiten') || t.hasAttribute('data-profil-abbrechen')) {
       ui.profilBearbeiten = t.hasAttribute('data-profil-bearbeiten');
@@ -5120,6 +5378,7 @@
 
   $('#sheet').addEventListener('submit', async (e) => {
     if (e.target.id === 'chat-form') { e.preventDefault(); chatAbsenden(); return; }
+    if (e.target.id === 'eltern-form') { e.preventDefault(); elternZustimmen(e.target); return; }
     if (e.target.id === 'melden-form') { e.preventDefault(); meldungAbsenden(); return; }
     if (e.target.id === 'bewerten-form') { e.preventDefault(); bewertungAbsenden(); return; }
     if (e.target.id === 'rez-melden-form') { e.preventDefault(); rezMeldenAbsenden(e.target); return; }
@@ -5137,7 +5396,10 @@
     if (reg && !$('#auth-vorname').value.trim()) return zeigeFehler('Bitte gib deinen Vornamen ein.', $('#auth-vorname'));
     if (!/^\S+@\S+\.\S+$/.test(email)) return zeigeFehler('Bitte gib eine gültige E-Mail-Adresse ein.', $('#auth-email'));
     if (!codeWeg && passwort.length < (reg ? 8 : 1)) return zeigeFehler(reg ? 'Das Passwort braucht mindestens 8 Zeichen.' : 'Bitte gib dein Passwort ein.', $('#auth-passwort'));
-    if (reg && !$('#auth-18').checked) return zeigeFehler('Hand Drauf ist erst ab 18 Jahren.', $('#auth-18'));
+    const geburt = reg ? $('#auth-geburt').value : '';
+    if (reg && !/^\d{4}-\d{2}-\d{2}$/.test(geburt)) return zeigeFehler('Bitte gib dein Geburtsdatum ein.', $('#auth-geburt'));
+    if (reg && (geburt < '1900-01-01' || geburt > isoTag(heute()))) return zeigeFehler('Bitte prüf dein Geburtsdatum.', $('#auth-geburt'));
+    if (reg && geburt > isoTag(vorJahren(16))) return zeigeFehler('Hand Drauf geht erst ab 16 Jahren.', $('#auth-geburt'));
     if (reg && !$('#auth-regeln').checked) return zeigeFehler('Bitte bestätige, dass du die Regeln verstanden hast.', $('#auth-regeln'));
 
     const knopf = e.target.querySelector('button[type="submit"]');
@@ -5161,7 +5423,8 @@
               stadtteil: ort.name,
               lat: punkt.lat,
               lng: punkt.lng,
-              volljaehrig: 'true'
+              geburt,
+              volljaehrig: geburt <= isoTag(vorJahren(18)) ? 'true' : 'false'
             }
           }
         });
@@ -5596,6 +5859,7 @@
     navigator.serviceWorker.addEventListener('message', (e) => {
       const d = e.data || {};
       if (d.typ !== 'push-link') return;
+      if (d.link === 'eltern') { oeffnePanel('eltern'); return; }
       const id = linkId(String(d.link || ''));
       if (id) gesuchAusLink(id); else if (istLive()) bald(neuLaden);
     });
@@ -5709,7 +5973,7 @@
       <ul class="start-liste">
         <li>${icon('schloss')}<span><strong>Adresse erst nach der Zusage</strong>Auf der Karte erscheint nur ein Punkt in der Nähe.</span></li>
         <li>${icon('schild')}<span><strong>Ein Code an der Tür</strong>Wer hilft, nennt einen Code, den nur ihr beide kennt.</span></li>
-        <li>${icon('stern')}<span><strong>Bewertungen und Melden</strong>Helfen kann man ab 18. Nach jedem Auftrag bewertet ihr euch, und wir prüfen jede Meldung.</span></li>
+        <li>${icon('stern')}<span><strong>Bewertungen und Melden</strong>Helfen kann man ab 16, unter 18 mit Zustimmung der Eltern. Nach jedem Auftrag bewertet ihr euch, und wir prüfen jede Meldung.</span></li>
       </ul>
       ${fuss(3, 'Los geht’s', 'fertig')}`;
   }
@@ -5861,6 +6125,10 @@
       zeile('Wo', `${esc($('#neu-stadtteil').value)}${adresse ? `<span class="klein">${esc(adresse)}, sieht nur, wer zusagt</span>` : ''}`, 2) +
       (telefonWert() ? zeile('Telefon', `${esc(telefonWert())}<span class="klein">sieht nur, wer zusagt</span>`, 2) : '') +
       zeile('Aufwandsentschädigung', euro(betragWert()), 3);
+    // Auch Jugendliche ab 16? Nur, wenn Tätigkeit und Termin dafür passen
+    const grund = jugendGrund(k, terminSpeichern().wann);
+    $('#neu-jugend-wahl').hidden = !!grund;
+    $('#neu-jugend-hinweis').textContent = grund || `Mit Zustimmung ihrer Eltern. Dann gilt: ${JUGEND_REGELN}. Du siehst nach der Zusage, ob jemand 16 oder 17 ist.`;
   }
   function zeigeSchritt(n, fokus = true) {
     wizSchritt = n;
@@ -6148,6 +6416,7 @@
     $('#neu-stadtteil').dataset.auto = '0';
     $('#neu-adresse').value = istLive() || adresse !== g.stadtteil ? adresse : '';
     $('#neu-telefon').value = telefonVon(g);
+    $('#neu-jugend').checked = g.jugend !== false;
     betragInput.value = g.betrag;
     betragGeaendert = true;
     renderKosten();
@@ -6197,6 +6466,7 @@
       oeffnePanel('anmelden', 'Melde dich an, um deine Anfrage zu veröffentlichen. Deine Eingaben bleiben erhalten.');
       return;
     }
+    if (jugendlich()) { $('#neu-fehler').textContent = 'Anfragen stellen können nur Erwachsene. Deine Eltern können für dich eine Anfrage stellen.'; $('#neu-fehler').hidden = false; return; }
 
     const kat = katWahl();
     const titel = $('#neu-titel').value.trim();
@@ -6215,6 +6485,7 @@
     }
     const lage = rasterpunkt(punkt);
     const { wann, bis } = terminSpeichern();
+    const jugend = $('#neu-jugend').checked && fuerJugend(kat, wann);
     const text = $('#neu-text').value.trim();
     const fuer = fuerWert();
     const telefon = telefonWert();
@@ -6237,13 +6508,16 @@
         const ohneOrt = () => { if (!nurGarbsen) throw new Error('Orte außerhalb von Garbsen gehen erst nach dem nächsten Datenbank-Update.'); };
         const mitLage = { p_lat: lage.lat, p_lng: lage.lng };
         if (bearbeitet) {
-          let r = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis, ...dazu, ...mitLage });
+          // „Auch Jugendliche“ kennt erst die Datenbank mit Update Teil 10
+          let r = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis, ...dazu, ...mitLage, p_jugend: jugend });
+          if (fehlt(r.error)) r = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis, ...dazu, ...mitLage });
           if (fehlt(r.error)) { ohneOrt(); r = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis, ...dazu }); }
           if (fehlt(r.error)) r = await db.client.rpc('gesuch_bearbeiten', { p_id: bearbeitet, ...felder, p_bis: bis });
           if (fehlt(r.error)) throw new Error('Bearbeiten ist noch nicht freigeschaltet. Zieh die Anfrage zurück und stelle sie neu.');
           if (r.error) throw r.error;
         } else {
-          let r = db.altesSchema ? { error: { code: 'PGRST202' } } : await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis, ...dazu, ...mitLage });
+          let r = db.altesSchema ? { error: { code: 'PGRST202' } } : await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis, ...dazu, ...mitLage, p_jugend: jugend });
+          if (fehlt(r.error) && !db.altesSchema) r = await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis, ...dazu, ...mitLage });
           if (fehlt(r.error)) ohneOrt();
           if (fehlt(r.error) && !db.altesSchema) r = await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis, ...dazu });
           if (fehlt(r.error) && !db.altesSchema) r = await db.client.rpc('gesuch_erstellen', { ...felder, p_bis: bis });
@@ -6268,7 +6542,7 @@
         const [nord, ost] = EIGEN_VERSATZ[gesuche.indexOf(g) % EIGEN_VERSATZ.length];
         Object.assign(g, versetze(stadtteil === meinOrt().stadtteil && punkt === ort ? meinOrt() : punkt, nord, ost));
       }
-      Object.assign(g, { kat, titel, text, betrag: b, wann, bis, laeuftAb: demoAblauf(bis), stadtteil, adresse: adresse || stadtteil, fuer, telefon });
+      Object.assign(g, { kat, titel, text, betrag: b, wann, bis, laeuftAb: demoAblauf(bis), stadtteil, adresse: adresse || stadtteil, fuer, telefon, jugend });
       demoSpeichern();
     } else {
       const anzahlEigene = gesuche.filter((g) => g.eigen).length;
@@ -6279,7 +6553,7 @@
       gesuche.unshift({
         id: neuId, eigen: true, kat, titel, wer: 'Du', initialen: CONFIG.ich.initialen, betrag: b,
         stadtteil, lat: pos.lat, lng: pos.lng, wann, bis, laeuftAb: demoAblauf(bis), dauer: 'nach Absprache', text,
-        adresse: adresse || stadtteil, fuer, telefon, status: 'offen', erstellt: Date.now()
+        adresse: adresse || stadtteil, fuer, telefon, jugend, status: 'offen', erstellt: Date.now()
       });
       demoSpeichern();
     }
@@ -6307,12 +6581,14 @@
     $('#beispiel-zurueck').href = location.pathname + '#entdecken';
   }
   gesuche = LIVE_GEPLANT ? [] : demoLaden();
+  elternAusAdresse();
   const start = location.hash.slice(1);
   renderStadtteilAuswahl();
   renderAlles();
   renderKosten();
   zeige(VIEWS.includes(start) ? start : ansicht.start);
-  if (istSeite(start)) oeffnePanel(start);
+  if (start === 'eltern') oeffnePanel(start);
+  else if (istSeite(start)) oeffnePanel(start);
   else if (linkId(start)) { /* geteilte Anfrage: erst die Anfrage zeigen, die Begrüßung kommt beim nächsten Besuch */ }
   else {
     if (!startGesehen()) startZeigen();
@@ -6322,6 +6598,7 @@
   // Mit Datenbank erst, wenn die Verbindung steht (starteLive), damit keine Demo-Inhalte aufblitzen.
   if (!LIVE_GEPLANT) seiteZeigen();
   starteLive().then((live) => {
+    if (ui.panel === 'eltern') elternStart();
     if (!live) { if (linkId(start)) gesuchAusLink(linkId(start)); return; }
     renderStadtteilAuswahl();
     renderKosten();

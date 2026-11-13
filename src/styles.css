@@ -1188,3 +1188,26 @@ h1, .sheet h2, .liste-gruppe, .geholfen {
 .feier-scheibe { background: var(--accent); box-shadow: inset 0 0 0 5px var(--accent), inset 0 0 0 8px #172029, 0 3px 0 var(--accent-tief); }
 /* Profilbilder und Initialen: runde Aufkleber mit weißem Rand */
 .avatar, .avatar-btn { box-shadow: 0 0 0 3px var(--surface), 0 3px 6px -1px rgba(30, 42, 54, .35); }
+
+/* ===== Ab 16 Jahren: Hinweise, Konto, Eltern-Seite ===== */
+.jugend-hinweis { display: flex; gap: 8px; align-items: flex-start; margin: 0; color: var(--muted); }
+.jugend-hinweis .i-sm { flex: none; margin-top: 3px; }
+.jugend-box { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r-m); background: var(--tile); }
+.jugend-box .i-sm { flex: none; margin-top: 3px; }
+.jugend-box p { margin: 0; }
+.jugend-wahl { display: grid; gap: 6px; padding: 14px 16px; border-radius: var(--r-m); background: var(--tile); }
+.jugend-wahl .feld-hinweis { margin: 0; }
+.jugend-konto { display: grid; gap: 10px; padding: 16px 18px; border-radius: var(--r-l); background: var(--tile); }
+.jugend-konto h3 { display: flex; gap: 7px; align-items: center; margin: 0; }
+.jugend-konto p { margin: 0; }
+.eltern-link { display: flex; gap: 8px; align-items: center; }
+.eltern-link input { flex: 1; min-width: 0; min-height: 48px; font-size: 0.95rem; color: var(--ink); background: var(--surface); border: 0; box-shadow: inset 0 0 0 1.5px var(--line); border-radius: var(--r-s); padding: 11px 13px; text-overflow: ellipsis; }
+.eltern-link input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.eltern-liste { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.eltern-auftraege { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.eltern-auftraege li { display: grid; gap: 4px; padding: 14px 16px; border-radius: var(--r-m); background: var(--tile); }
+.eltern-auftraege p { margin: 0; }
+.ea-kopf { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ea-kopf .pill { margin-left: auto; }
+.eltern-regeln summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+.eltern-regeln .eltern-liste { margin-top: 4px; }

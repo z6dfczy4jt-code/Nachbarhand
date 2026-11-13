@@ -7,7 +7,7 @@
  * - Benachrichtigungen: zeigt an, was die Datenbank schickt, und öffnet beim Antippen die passende Anfrage.
  * Nach Änderungen an Dateien in assets/ die Versionsnummer erhöhen.
  */
-const VERSION = 'handdrauf-2026-11-13a';
+const VERSION = 'handdrauf-2026-11-13b';
 const HUELLE = [
   './',
   'manifest.webmanifest',

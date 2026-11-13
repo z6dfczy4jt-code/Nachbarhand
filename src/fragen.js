@@ -41,7 +41,10 @@ function FRAGEN_TEXTE(c) {
         frage('Was passiert mit beleidigenden Wörtern?',
           `<p>Anfragen, Nachrichten und Bewertungen mit beleidigenden oder anstößigen Wörtern werden nicht veröffentlicht. Rutscht trotzdem etwas durch, melde es bitte.</p>`),
         frage('Ab welchem Alter geht das?',
-          `<p>Ab 18 Jahren. Das bestätigst du bei der Anmeldung.</p>`)
+          `<p>Helfen geht ab 16 Jahren. Wer 16 oder 17 ist, braucht die Zustimmung der Eltern: In „Dein Konto“ gibt es dafür einen Link, den du ihnen schickst. Anfragen stellen geht ab 18.</p>
+           <p>Bis 18 gelten die Regeln der Taschengeldbörsen: leichte Arbeit, höchstens 2 Stunden, Montag bis Samstag zwischen 8 und 18 Uhr, nicht während der Schule, kein Alkohol und kein Tabak einkaufen, nicht beim Tragen. Wer anfragt, entscheidet, ob auch Jugendliche helfen dürfen.</p>`),
+        frage('Was sehen Eltern?',
+          `<p>Über ihren Link sehen Eltern jede Zusage ihres Kindes mit Zeit, Adresse und bei wem. Auf Wunsch bekommen sie eine Benachrichtigung, wenn ihr Kind zusagt. Sie können die Zustimmung jederzeit zurückziehen. Ein Konto brauchen sie dafür nicht.</p>`)
       ]],
       ['Anfragen', [
         frage('Gibt es Hand Drauf auch in meinem Ort?',

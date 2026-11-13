@@ -62,7 +62,8 @@ function RECHT_TEXTE(b, h, e) {
         <p>Gespeichert werden:</p>
         <ul>
           <li>E-Mail-Adresse und Passwort (nur verschlüsselt als Prüfwert)</li>
-          <li>Vorname, Anfangsbuchstabe des Nachnamens, Ort (Name sowie Mitte eines Rasterfelds von etwa 1 km) und deine Bestätigung, dass du mindestens 18 bist</li>
+          <li>Vorname, Anfangsbuchstabe des Nachnamens, Ort (Name sowie Mitte eines Rasterfelds von etwa 1 km) und ob du volljährig bist</li>
+          <li>wenn du 16 oder 17 bist: dein Geburtsdatum, damit dein Konto an deinem 18. Geburtstag umgestellt wird (danach löschen wir es), der Name des Elternteils, das zugestimmt hat, und wann. Vom Link für die Eltern speichern wir nur einen Prüfwert, nicht den Link selbst.</li>
           <li>deine Anfragen, die Adresse zu einer Anfrage, deine Zusagen und Bewertungen</li>
           <li>wenn du sie angibst: eine Telefonnummer zur Anfrage und für wen die Hilfe ist</li>
           <li>den Sicherheits-Code eines laufenden Auftrags</li>
@@ -72,7 +73,7 @@ function RECHT_TEXTE(b, h, e) {
         </ul>
         <p>Dein Profilbild verkleinert die App schon auf deinem Gerät auf 400 × 400 Bildpunkte. Dabei fallen Angaben weg, die in Fotos stecken können, etwa Aufnahmeort, Datum und Kameramodell. Das Bild liegt im Speicher von Supabase, ebenfalls in Frankfurt am Main. Ersetzt oder entfernst du es, löschen wir das alte Bild.</p>
         <p>Fragst du für jemand anderen an, zum Beispiel für deine Eltern, speichern wir auch deine Angaben zu dieser Person (Name oder Bezeichnung, Adresse, Telefonnummer). Bitte hol vorher ihr Einverständnis ein.</p>
-        <p>Rechtsgrundlage ist der Nutzungsvertrag mit dir (Art. 6 Abs. 1 lit. b DSGVO). Meldungen verarbeiten wir außerdem, um rechtswidrige Inhalte zu entfernen und Nutzer zu schützen (Art. 6 Abs. 1 lit. c und f DSGVO). Die Bestätigungs-E-Mail bei der Registrierung verschickt Supabase für uns.</p>
+        <p>Rechtsgrundlage ist der Nutzungsvertrag mit dir (Art. 6 Abs. 1 lit. b DSGVO), bei Jugendlichen mit Zustimmung der Eltern (§ 107 BGB, Art. 8 DSGVO). Meldungen verarbeiten wir außerdem, um rechtswidrige Inhalte zu entfernen und Nutzer zu schützen (Art. 6 Abs. 1 lit. c und f DSGVO). Die Bestätigungs-E-Mail bei der Registrierung verschickt Supabase für uns.</p>
         <p>Die Programmbibliothek für die Anmeldung lädt die App vom Dienst jsDelivr. Dabei wird deine IP-Adresse an dessen Server übertragen (Art. 6 Abs. 1 lit. f DSGVO).</p>
 
         <h3>6. Wer sieht was?</h3>
@@ -81,12 +82,14 @@ function RECHT_TEXTE(b, h, e) {
           <li><strong>Alle, auch ohne Konto, im Profil:</strong> Vorname, Anfangsbuchstabe, Ort, seit wann du dabei bist, wie oft du geholfen und Hilfe bekommen hast, und die Bewertungen über dich: Sterne, Text, Monat, Tätigkeit des Auftrags und Vorname mit Anfangsbuchstabe der Person, die bewertet hat. Hast du ein Profilbild oder Angaben wie „Über mich“ eingetragen, sehen alle auch diese. Bewertungen erscheinen erst, wenn beide bewertet haben, spätestens 14 Tage nach der ersten. Bis dahin sieht sie niemand außer der Person, die sie geschrieben hat.</li>
           <li><strong>Nur die Person, die zusagt:</strong> die genaue Adresse und die Telefonnummer.</li>
           <li><strong>Nur ihr beide:</strong> eure Nachrichten und der Sicherheits-Code für die Tür.</li>
+          <li><strong>Wenn du 16 oder 17 bist:</strong> Dein Profil sehen nur du und die Personen, mit denen du einen Auftrag hast; sie sehen auch, dass du 16 oder 17 bist. Deine Eltern sehen über ihren Link deine Zusagen mit Zeit, Adresse und bei wem. Dein Alter oder Geburtsdatum sieht sonst niemand.</li>
           <li><strong>Nur wir:</strong> Meldungen. Die gemeldete Person erfährt nicht, wer gemeldet hat.</li>
         </ul>
 
         <h3>7. Benachrichtigungen aufs Handy</h3>
         <p>Benachrichtigungen bekommst du nur, wenn du sie im Menü oder in einem Auftrag einschaltest. Dein Gerät meldet sich dann beim Benachrichtigungsdienst seines Browsers an: bei Google (Chrome, Android), Apple (Safari, iPhone), Mozilla (Firefox) oder Microsoft (Edge). Dieser Dienst vergibt eine Adresse für dein Gerät. Wir speichern diese Adresse und zwei Schlüssel bei Supabase.</p>
         <p>Sagt jemand zu, schreibt dir oder ist ein Auftrag fertig, schicken wir über diesen Dienst eine kurze Mitteilung an dein Gerät, zum Beispiel „Tim hilft dir“ mit Titel und Termin der Anfrage. Außerdem erinnern wir am Abend vor dem Termin und am Tag danach, falls der Auftrag noch nicht abgeschlossen ist. Hast du „Neue Anfragen“ eingeschaltet, speichern wir auch, bei welchen Tätigkeiten du gern hilfst. Sie ist so verschlüsselt, dass nur dein Gerät sie lesen kann. Was in euren Nachrichten steht, ist nicht Teil der Mitteilung. Die Dienste sitzen zum Teil in den USA.</p>
+        <p>Eltern von Jugendlichen können auf ihrer Seite ebenfalls Benachrichtigungen einschalten. Dann speichern wir die Adresse ihres Geräts zusammen mit dem Konto ihres Kindes und schicken eine Mitteilung, wenn das Kind zusagt. Ein neuer Link oder das Ausschalten löscht die Adresse.</p>
         <p>Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG). Du kannst sie jederzeit widerrufen: Schalte die Benachrichtigungen im Menü aus. Dann löschen wir die Adresse deines Geräts. Beim Abmelden lösen wir das Gerät von deinem Konto.</p>
 
         <h3>8. Wie lange?</h3>
@@ -115,7 +118,8 @@ function RECHT_TEXTE(b, h, e) {
 
         <h3>3. Dein Konto</h3>
         <ul>
-          <li>Ein Konto darf nur anlegen, wer mindestens 18 Jahre alt ist.</li>
+          <li>Ein Konto darf anlegen, wer mindestens 16 Jahre alt ist. Bei der Anmeldung gibst du dein Geburtsdatum an.</li>
+          <li>Wer 16 oder 17 ist, braucht die Zustimmung der Eltern (oder einer anderen sorgeberechtigten Person), bevor er oder sie helfen kann. Die Eltern stimmen über einen Link aus der App zu und können die Zustimmung jederzeit zurückziehen.</li>
           <li>Deine Angaben müssen stimmen. Jede Person hat nur ein Konto.</li>
           <li>Halte dein Passwort geheim. Du bist für alles verantwortlich, was über dein Konto passiert.</li>
         </ul>
@@ -126,9 +130,22 @@ function RECHT_TEXTE(b, h, e) {
           <li>höchstens 50 € pro Anfrage,</li>
           <li>höchstens 5 laufende Anfragen pro Person,</li>
           <li>höchstens 8 Zusagen in 30 Tagen und höchstens 2 für dieselbe Person,</li>
+          <li>höchstens 29 Zusagen im Kalenderjahr,</li>
           <li>keine Daueraufträge und keine Leistungen, für die man ein Gewerbe oder eine Ausbildung braucht.</li>
         </ul>
         <p>Nicht erlaubt sind insbesondere: Arbeiten an Strom-, Gas- oder Wasserleitungen, Arbeiten in gefährlicher Höhe, Fahrten gegen Bezahlung, Pflege und medizinische Hilfe, die Betreuung von Kindern ohne Anwesenheit der Eltern sowie alles, was gegen Gesetze verstößt.</p>
+
+        <p><strong>Für Jugendliche (16 und 17)</strong></p>
+        <p>Für Jugendliche gelten die Regeln der Taschengeldbörsen, angelehnt an das Jugendarbeitsschutzgesetz:</p>
+        <ul>
+          <li>nur helfen, keine Anfragen stellen, kein Profilbild,</li>
+          <li>nur bei Anfragen, bei denen die anfragende Person Jugendliche erlaubt hat,</li>
+          <li>nur leichte Tätigkeiten: Garten, Einkaufen, Tiere, Haushalt, Technik. Nicht beim Tragen und nichts, was gefährlich ist oder körperlich überfordert,</li>
+          <li>höchstens 2 Stunden pro Auftrag, Montag bis Samstag zwischen 8 und 18 Uhr, nicht vor oder während der Schule,</li>
+          <li>beim Einkaufen kein Alkohol, kein Tabak und keine E-Zigaretten,</li>
+          <li>höchstens 2 offene Zusagen gleichzeitig.</li>
+        </ul>
+        <p>Wer anfragt und Jugendliche erlaubt, achtet bei der Absprache auf diese Regeln. Nach einer Zusage sehen beide, dass jemand 16 oder 17 ist.</p>
 
         <h3>5. Steuern und Sozialleistungen</h3>
         <p>Für Steuern und Meldepflichten ist jede Person selbst verantwortlich. Einkünfte aus gelegentlichen Leistungen bleiben bis unter 256 € Gewinn im Jahr steuerfrei (§ 22 Nr. 3 EStG). Wer Bürgergeld oder andere Leistungen bezieht, muss Einnahmen dem Jobcenter oder Amt melden.</p>
@@ -148,7 +165,7 @@ function RECHT_TEXTE(b, h, e) {
         <p>Über „Melden“ kannst du Anfragen, beteiligte Personen, Profile und Bewertungen melden. Wir prüfen jede Meldung. Verstößt etwas gegen Gesetze oder diese Bedingungen, können wir Inhalte entfernen und Konten vorübergehend oder dauerhaft sperren. Wir sagen dir, was wir entschieden haben und warum. Bist du anderer Meinung, schreib uns an ${mail}.</p>
 
         <h3>8. Haftung</h3>
-        <p>Für Schäden bei einer Hilfe haftet ihr untereinander nach den gesetzlichen Regeln. Prüf vorher, ob deine private Haftpflichtversicherung Schäden bei Gefälligkeiten abdeckt.</p>
+        <p>Für Schäden bei einer Hilfe haftet ihr untereinander nach den gesetzlichen Regeln. Prüf vorher, ob deine private Haftpflichtversicherung Schäden bei Gefälligkeiten abdeckt. Jugendliche sind meist über die private Haftpflichtversicherung ihrer Eltern mitversichert. Hand Drauf bietet keine eigene Versicherung.</p>
         <p>Hand Drauf haftet unbeschränkt bei Vorsatz und grober Fahrlässigkeit sowie bei Verletzung von Leben, Körper oder Gesundheit. Bei leichter Fahrlässigkeit haften wir nur, wenn wir eine wesentliche Pflicht verletzen, auf die du vertrauen darfst, und nur für den typischerweise vorhersehbaren Schaden. Die Haftung nach dem Produkthaftungsgesetz bleibt unberührt.</p>
 
         <h3>9. Verfügbarkeit</h3>
@@ -167,7 +184,7 @@ function RECHT_TEXTE(b, h, e) {
 
     regeln: {
       titel: 'Regeln für Nachbarn',
-      html: `<p class="recht-kurz">Damit Hand Drauf für alle angenehm bleibt, ob 18 oder 80.</p>
+      html: `<p class="recht-kurz">Damit Hand Drauf für alle angenehm bleibt, ob 16 oder 80.</p>
         <ol class="regel-liste">
           <li><strong>Ehrlich beschreiben.</strong> Was ist zu tun, wie lange dauert es, was ist schon da?</li>
           <li><strong>Fair bezahlen.</strong> Die Aufwandsentschädigung steht vorher fest und wird nach der Hilfe gezahlt, nicht vorab. Keine Gutscheinkarten, keine Codes.</li>
@@ -178,6 +195,7 @@ function RECHT_TEXTE(b, h, e) {
           <li><strong>Sicherheit geht vor.</strong> Frag an der Tür nach dem Sicherheits-Code aus der App. Lass niemanden auf wackelige Leitern, an Strom oder Gas. Bei Unsicherheit: lieber eine Fachfirma.</li>
           <li><strong>Privat bleibt privat.</strong> Adresse, Telefonnummer und Nachrichten nur für den Auftrag nutzen. Keine Bank- oder Passwortdaten teilen.</li>
           <li><strong>Gelegentlich, nicht ständig.</strong> Hand Drauf ist Nachbarschaftshilfe, kein Nebenjob.</li>
+          <li><strong>Jugendliche schützen.</strong> Hilft jemand mit 16 oder 17: nur leichte Arbeit, höchstens 2 Stunden, zwischen 8 und 18 Uhr, kein Alkohol und kein Tabak. Kontakt nur über die App und nur für den Auftrag.</li>
           <li><strong>Etwas stimmt nicht?</strong> Nutze „Melden“. Bei Gefahr ruf die Polizei unter 110 an.</li>
         </ol>
         <p>Weitere Einzelheiten stehen in den ${verweis('nutzung', 'Nutzungsbedingungen')}.</p>`
