@@ -1722,8 +1722,7 @@
     return drin;
   }
   // Liegt das Quadrat z/x/y ganz unter dem Luftbild? (Ecken innen und keine Ecke der Grenze im Quadrat)
-  function luftInnen(z, x, y) {
-    const lq = luftQuelle(kacheln.quellen, kacheln.nr);
+  function luftInnen(z, x, y, lq = luftQuelle(kacheln.quellen, kacheln.nr)) {
     if (!lq || z < lq.min || luft.kaputt.has(z + '/' + x + '/' + y)) return false;
     const n = Math.pow(2, z), breite = (v) => Math.atan(Math.sinh(Math.PI * (1 - 2 * v / n))) * 180 / Math.PI;
     const w = x / n * 360 - 180, o = (x + 1) / n * 360 - 180, s = breite(y + 1), nb = breite(y);
@@ -2557,7 +2556,6 @@
     t.img.onload = () => {
       t.img.onload = null;
       if (/^blob:/.test(alt) && alt !== url) URL.revokeObjectURL(alt);
-      if (t.vorschau) { t.img.dataset.fertig = t.schl; return; }
       if (t.klein) { t.img.className = 'k-kachel da'; t.img.dataset.geladen = '1'; umgebungBasis(); return; }
       if (!t.fertig) { t.fertig = true; kacheln.ok++; }
       basisAuffrischen(t); altesWeg();
@@ -2581,7 +2579,7 @@
     // Wichtigstes zuerst: aktuelle Stufe, nahe der Mitte
     if (malen.liste.length > 1 && k.blick) {
       const mx = (k.w / 2 - k.blick.x) / k.blick.s + NULLPUNKT.x + WELT / 2, my = (k.h / 2 - k.blick.y) / k.blick.s + NULLPUNKT.y + WELT / 2;
-      const rang = (t) => (t.klein || t.vorschau || t.z === kacheln.z ? 0 : 1e9) + Math.abs((t.x + 0.5) * WELT / Math.pow(2, t.z) - mx) + Math.abs((t.y + 0.5) * WELT / Math.pow(2, t.z) - my);
+      const rang = (t) => (t.klein || t.z === kacheln.z ? 0 : 1e9) + Math.abs((t.x + 0.5) * WELT / Math.pow(2, t.z) - mx) + Math.abs((t.y + 0.5) * WELT / Math.pow(2, t.z) - my);
       malen.liste.sort((a, b) => rang(a) - rang(b));
     }
     const stil = dunklesThema() ? 'dunkel' : 'hell', dpr = zeichenDpr();
@@ -3066,6 +3064,7 @@
       const brauche = {};
       for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
         if (luftbild && !luftDeckt(lq, b.z, x, y, x, y)) continue;
+        if (!luftbild && mitLuft && luftInnen(b.z, x, y, lq)) continue; // ganz unter dem Luftbild: keine Straßenkarte
         const key = b.z + '/' + x + '/' + y;
         brauche[key] = true;
         let img = da[key];
@@ -3088,7 +3087,12 @@
             if (luftbild) { img.className = 'k-kachel da'; luft.ok++; } else u.ok++;
             umgebungBasis();
           };
-          img.onerror = luftbild ? () => { img.dataset.fehler = '1'; luftFehler(); umgebungBasis(); } : () => {
+          img.onerror = luftbild ? () => {
+            img.dataset.fehler = '1'; luftFehler();
+            // Dieses Luftbild fehlt: dort doch die Straßenkarte
+            if (!luft.aus && !luft.kaputt.has(key)) { luft.kaputt.add(key); umgebung.schluessel = ''; setTimeout(umgebungZeichnen, 0); }
+            umgebungBasis();
+          } : () => {
             u.fehler++;
             if (u.ok || u.fehler < 3) return;
             // Dieser Anbieter lädt nicht: nächster, zuletzt ohne Kartenbilder
@@ -3746,7 +3750,7 @@
       html += `<button type="button" class="person person-knopf" data-profil aria-label="Profil von ${esc(g.wer)} ansehen">
         ${avatarHTML(g.initialen, istLive() ? db.bilder.get(g.erstellerId) : '')}
         <span class="person-text">
-          <span class="person-name">${esc(g.wer)}${live ? '' : ` <span class="pill pill-good">${icon('check', 'i-xs')}Verifiziert</span>`}</span>
+          <span class="person-name">${esc(g.wer)}</span>
           <span class="person-meta">${bewertung}</span>
         </span>
         <span class="person-mehr" aria-hidden="true">Profil</span>
@@ -6157,7 +6161,7 @@
     // Auch Jugendliche ab 16? Nur, wenn Tätigkeit und Termin dafür passen
     const grund = jugendGrund(k, terminSpeichern().wann);
     $('#neu-jugend-wahl').hidden = !!grund;
-    $('#neu-jugend-hinweis').textContent = grund || `Mit Zustimmung ihrer Eltern. Dann gilt: ${JUGEND_REGELN}. Du siehst nach der Zusage, ob jemand 16 oder 17 ist.`;
+    $('#neu-jugend-hinweis').textContent = grund || 'Mit Zustimmung ihrer Eltern, nur leichte Arbeit, höchstens 2 Stunden zwischen 8 und 18 Uhr. Nach der Zusage siehst du, ob jemand 16 oder 17 ist.';
   }
   function zeigeSchritt(n, fokus = true) {
     wizSchritt = n;
