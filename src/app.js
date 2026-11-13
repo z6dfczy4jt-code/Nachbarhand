@@ -4191,7 +4191,7 @@
           + (p.liste.length > zeige.length ? `<button type="button" class="btn btn-secondary" data-profil-alle>Alle ${p.liste.length} geschriebenen Bewertungen zeigen</button>` : '');
       }
       if (p.liste && p.ohneText) liste += `<p class="klein rez-ohne">${p.liste.length ? 'Dazu' : 'Bisher'} ${p.ohneText} ${p.ohneText === 1 ? 'Bewertung' : 'Bewertungen'} nur mit Sternen.</p>`;
-      bewertungen = `<div class="rez-uebersicht">${schnitt}${verteilung}</div>${liste}`;
+      bewertungen = `<div class="rez-uebersicht">${schnitt}${verteilung}</div>${liste}<p class="klein rez-echt">Bewerten können nur die beiden Personen eines Auftrags, der über Hand Drauf vereinbart und bestätigt wurde. Wir prüfen Bewertungen nicht vorab, gehen aber jeder Meldung nach.</p>`;
     }
     const person = p.ich ? null : { id: p.key, name: p.name };
     const chips = (liste) => liste.map((x) => `<span class="steck-chip">${x}</span>`).join('');

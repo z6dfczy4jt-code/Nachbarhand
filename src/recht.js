@@ -140,7 +140,7 @@ function RECHT_TEXTE(b, h, e) {
           <li>Fragst du für jemand anderen an, zum Beispiel für deine Eltern, muss diese Person einverstanden sein. Das gilt auch dafür, dass die helfende Person ihre Adresse und Telefonnummer sieht.</li>
           <li>Bezahlt wird nach der Hilfe. Niemand darf Geld im Voraus, Gutscheinkarten oder Codes verlangen. Der Sicherheits-Code aus der App ist nur für die Begrüßung an der Tür gedacht.</li>
           <li>Keine Werbung, keine Weitergabe von Daten anderer.</li>
-          <li>Bewerte ehrlich und sachlich, was beim Auftrag passiert ist. Keine Beleidigungen, keine Adressen, Telefonnummern oder Angaben zur Gesundheit, keine Bewertungen gegen Geld oder unter Druck. Beide Bewertungen eines Auftrags erscheinen gleichzeitig: wenn beide bewertet haben, spätestens 14 Tage nach der ersten. Danach lassen sie sich nicht mehr ändern.</li>
+          <li>Bewerte ehrlich und sachlich, was beim Auftrag passiert ist. Keine Beleidigungen, keine Adressen, Telefonnummern oder Angaben zur Gesundheit, keine Bewertungen gegen Geld oder unter Druck. Beide Bewertungen eines Auftrags erscheinen gleichzeitig: wenn beide bewertet haben, spätestens 14 Tage nach der ersten. Danach lassen sie sich nicht mehr ändern. Bewerten können nur die beiden Personen eines Auftrags, der über Hand Drauf vereinbart und bestätigt wurde. So stellen wir sicher, dass Bewertungen von echten Beteiligten stammen. Vorab prüfen wir sie nicht, gemeldete Bewertungen prüfen wir.</li>
           <li>Profilbild und „Über mich“ sind für alle sichtbar. Zeig auf dem Bild nur dich selbst: keine anderen Personen, keine Kinder, nichts Anstößiges. Gib dich nicht als jemand anderes aus. Schreib keine Adresse, Telefonnummer oder E-Mail ins Profil.</li>
         </ul>
 
