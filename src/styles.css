@@ -212,12 +212,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (hover: hover) { .u-oeffnen:hover { background: var(--surface); } }
 /* Quellenangabe der Karten: beim ersten Zeigen 5 Sekunden ausgeklappt, danach nur ein (i) in der Ecke
    (erlaubt nach der Richtlinie von OpenStreetMap; so machen es auch MapLibre und Mapbox) */
-.quelle-box { position: absolute; right: 0; bottom: 0; z-index: 4; max-width: 100%; box-sizing: border-box; min-width: 44px; min-height: 44px; }
-.quelle-box > p { display: none; margin: 0 6px 6px; padding: 6px 44px 6px 12px; border-radius: 16px; background: var(--glas); color: var(--muted); font-size: 0.875rem; line-height: 1.35; text-align: right;
+/* Zugeklappt bleibt der Text unsichtbar an seinem Platz (kein Springen beim Einklappen), Tippen geht durch ihn hindurch */
+.quelle-box { position: absolute; right: 0; bottom: 0; z-index: 4; max-width: 100%; box-sizing: border-box; min-width: 44px; min-height: 44px; pointer-events: none; }
+.quelle-box > p { visibility: hidden; opacity: 0; transition: opacity .2s, visibility 0s .2s; margin: 0 6px 6px; padding: 6px 44px 6px 12px; border-radius: 16px; background: var(--glas); color: var(--muted); font-size: 0.875rem; line-height: 1.35; text-align: right;
   box-shadow: var(--schatten-1), inset 0 0 0 1px var(--glas-rand); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
-.quelle-box.offen > p { display: block; }
+.quelle-box.offen > p { visibility: visible; opacity: 1; pointer-events: auto; transition: opacity .2s; }
 .quelle-box > p a { color: inherit; }
-.quelle-knopf { position: absolute; right: 0; bottom: 0; width: 44px; height: 44px; padding: 0; border: 0; background: none; color: var(--ink); cursor: pointer; display: grid; place-items: center; -webkit-tap-highlight-color: transparent; }
+.quelle-knopf { pointer-events: auto; position: absolute; right: 0; bottom: 0; width: 44px; height: 44px; padding: 0; border: 0; background: none; color: var(--ink); cursor: pointer; display: grid; place-items: center; -webkit-tap-highlight-color: transparent; }
 .quelle-punkt { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--surface); box-shadow: 0 2px 0 var(--kante), 0 4px 8px -4px rgba(30, 42, 54, .35); }
 .quelle-punkt .i { width: 22px; height: 22px; }
 .quelle-box.offen .quelle-punkt { box-shadow: none; background: transparent; }

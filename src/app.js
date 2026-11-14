@@ -369,7 +369,10 @@
 
   /* ===== Hilfsfunktionen ===== */
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const euro = (n) => n.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+  // Zahlenformate nur einmal anlegen (toLocaleString mit Optionen baut sie bei jedem Aufruf neu, das kostet bei vielen Anfragen Zeit)
+  const FORMAT = {};
+  const zahlFormat = (name, optionen) => FORMAT[name] || (FORMAT[name] = new Intl.NumberFormat('de-DE', optionen));
+  const euro = (n) => zahlFormat('euro', { style: 'currency', currency: 'EUR' }).format(n);
   const euroKurz = (n) => Number.isInteger(n) ? `${n} €` : euro(n);
   const katName = (id) => (KATEGORIEN.find((k) => k.id === id) || {}).name || '';
   // Tätigkeiten als echte Objekte (Bild), alles andere als feine Linien-Symbole
@@ -594,7 +597,7 @@
     if (g.eigen) return 'bei dir';
     const m = meterVonMir(g);
     if (m < 1000) return Math.max(100, Math.round(m / 50) * 50) + '\u00a0m';
-    return (m / 1000).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '\u00a0km';
+    return zahlFormat('km', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(m / 1000) + '\u00a0km';
   }
   // Geschätzter Weg: Luftlinie mal 1,3; zu Fuß 80 m pro Minute, mit dem Rad 250 m
   function wegText(g) {
@@ -1372,6 +1375,7 @@
 
     if (laedt) {
       ui.umgebungListe = [];
+      ui.umgebungWartet = !db.fehler;
       umgebungZeichnen();
       $('#liste').innerHTML = db.fehler
         ? `<div class="leer"><p><strong>Die Anfragen konnten nicht geladen werden.</strong></p><p>${esc(db.fehler)}</p><button type="button" class="btn btn-secondary btn-auto" data-neu-laden>Erneut versuchen</button></div>`
@@ -1380,6 +1384,7 @@
     }
     const treffer = sortiere(offene.filter((g) => passt(g) && meterVonMir(g) <= ui.umkreis * 1000));
     ui.umgebungListe = treffer;
+    ui.umgebungWartet = false;
     umgebungZeichnen();
     if (!treffer.length) {
       const q = ui.suche.trim();
@@ -3038,7 +3043,7 @@
     const s = massstabFuerZoom(z);
     return { z, s, c, x: Math.round(u.w / 2 - c.x * s), y: Math.round(u.h / 2 - c.y * s) };
   }
-  function umgebungKacheln(b) {
+  function umgebungKacheln(b, nurText) {
     const u = umgebung, box = u.el.querySelector('.u-kacheln'), luftBox = u.el.querySelector('.u-luft'), q = u.aus ? null : u.quellen[u.nr];
     u.el.classList.toggle('u-ohne', !q);
     u.el.classList.toggle('k-filter', !!q && !q.carto && !q.foto && !q.vektor);
@@ -3057,6 +3062,7 @@
     quelle.innerHTML = quellenText(q, mitLuft, (mitLuft || !!q.foto) && namenMoeglich());
     quelleFest(quelle.parentNode, !!q.foto);
     u.el.classList.toggle('k-foto', mitLuft || !!q.foto);
+    if (nurText) return; // Quellenangabe schon jetzt, damit sie später nicht wächst
     // Bilder, die schon da sind, bleiben liegen (kein Flackern beim Tippen in der Suche)
     const legen = (ziel, url, luftbild) => {
       const da = {};
@@ -3136,7 +3142,11 @@
     const b = umgebungBlick(liste);
     u.blick = b;
     const schluessel = [b.z, b.x, b.y, w, h, u.nr, u.aus, dunklesThema(), luft.aus, namen.aus].join('|');
-    if (schluessel !== u.schluessel) { u.schluessel = schluessel; umgebungKacheln(b); }
+    // Solange die Anfragen noch laden, steht der Ausschnitt nicht fest: Kartenbilder erst danach
+    // (sonst lädt das Handy zuerst die nahe Stufe und gleich darauf eine andere). Nach 3 Sekunden trotzdem.
+    const warten = ui.umgebungWartet && performance.now() < 3000;
+    if (warten) { clearTimeout(u.wartenZeit); u.wartenZeit = setTimeout(umgebungZeichnen, 3000 - performance.now()); umgebungKacheln(b, true); }
+    else if (schluessel !== u.schluessel) { u.schluessel = schluessel; umgebungKacheln(b); }
     // Schilder wie auf der großen Karte; wo sie sich berühren würden, steht eine Zahl
     const gruppen = [];
     liste.forEach((g) => {
@@ -3205,7 +3215,7 @@
     });
     gruppen.forEach((gr) => pinFlaechen.push({ l: gr.x - 15, o: gr.y - 38, r: gr.x + 15, u: gr.y + 4 }));
     if (zeigeIch()) pinFlaechen.push(DU_FLAECHE(w / 2, h / 2));
-    quelleKurzZeigen(u.el.querySelector('.u-quelle-box'));
+    if (!warten) quelleKurzZeigen(u.el.querySelector('.u-quelle-box'));
     u.namenFuer = { b, belegt: belegt.concat(pinFlaechen.map((q) => ({ l: Math.round(q.l), o: Math.round(q.o), r: Math.round(q.r), u: Math.round(q.u) }))) };
     umgebungNamen();
   }

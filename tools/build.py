@@ -194,6 +194,29 @@ def inset_ausschreiben(css):
     return re.sub(r'(^|[;{\s])inset:\s*([^;}]+?)\s*(?=[;}])', ersetzen, css)
 
 
+def verbindungen_vorbereiten(db):
+    """Verbindungen zu Datenbank, Kartendiensten und Skript schon beim Laden der Seite aufbauen.
+
+    Spart auf dem Handy pro Dienst einige hundert Millisekunden (Namensauflösung und Verschlüsselung),
+    und das Datenbank-Skript lädt gleich mit der Seite statt erst danach.
+    """
+    from urllib.parse import urlparse
+    if not db.get('url'):
+        return ''  # Demo ohne Datenbank: nichts vorab
+    def wurzel(adresse):
+        u = urlparse(adresse)
+        return f'{u.scheme}://{u.netloc}'
+    links = [f'<link rel="preconnect" href="{wurzel(db["url"])}" crossorigin>']
+    js = EINSTELLUNGEN['supabaseJs']
+    links.append(f'<link rel="preload" href="{js}" as="script">')
+    karte = EINSTELLUNGEN['karte']
+    if karte.get('luftbild', True) is not False:
+        links.append('<link rel="preconnect" href="https://opendata.lgln.niedersachsen.de">')
+    if karte.get('beschriftung', '').startswith('https://'):
+        links.append(f'<link rel="preconnect" href="{wurzel(karte["beschriftung"])}" crossorigin>')
+    return '\n' + '\n'.join(links)
+
+
 def teile(vorschau):
     styles = (SRC / 'styles.css').read_text()
     schriften = '' if vorschau else '\n'.join(
@@ -226,6 +249,7 @@ def teile(vorschau):
     schrift_kopf = GOOGLE_FONTS if vorschau else ''.join(
         f'<link rel="preload" href="assets/fonts/{d}.woff" as="font" type="font/woff" crossorigin>' for _, _, d in SCHRIFTEN if d in ('barlow-regular', 'barlowsemicondensed-bold'))
     db = {} if vorschau else EINSTELLUNGEN['supabase']
+    schrift_kopf += verbindungen_vorbereiten(db)
     frueh = FRUEH % {'url': json.dumps(db.get('url', '')), 'key': json.dumps(db.get('key', '')), 'fassung': json.dumps(oeffentlich['fassung'])}
     kopf = f'{frueh}\n{schrift_kopf}\n<style>\n{styles}</style>'
     rumpf = f'{body}\n<script>\n{app}</script>\n'
