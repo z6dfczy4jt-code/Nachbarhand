@@ -319,6 +319,7 @@
     if (ansicht.thema === 'auto') r.removeAttribute('data-theme');
     else r.setAttribute('data-theme', ansicht.thema === 'dunkel' ? 'dark' : 'light');
     if (ansicht.schrift === 'normal') r.removeAttribute('data-schrift'); else r.setAttribute('data-schrift', ansicht.schrift);
+    if (typeof karteHoehe === 'function') karteHoehe();
     // Farbe der Statusleiste: bei „Automatisch“ je nach Gerät hell oder dunkel, sonst passend zum gewählten Design
     const papier = getComputedStyle(r).getPropertyValue('--paper').trim() || '#EDF1F5';
     document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
@@ -808,8 +809,10 @@
     t.textContent = text;
     t.classList.add('zeigen');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('zeigen'), 3200);
+    // Lange genug zum Lesen, auch langsam: mindestens 4 Sekunden, bei längeren Texten bis 10 (Antippen schließt)
+    toastTimer = setTimeout(() => t.classList.remove('zeigen'), Math.min(10000, 4000 + text.length * 50));
   }
+  $('#toast').addEventListener('click', () => { clearTimeout(toastTimer); $('#toast').classList.remove('zeigen'); });
 
   /* ===== Live: Verbindung, Anmeldung, Laden ===== */
   function ladeSkript(src) {
@@ -1476,7 +1479,6 @@
       </section>` : '';
     const erstes = liste[0];
     $('#banner-naechstes').innerHTML = erstes ? `<button type="button" class="banner" data-oeffne="${erstes.g.id}">
-        <span class="banner-punkt" aria-hidden="true"></span>
         <span><strong>${esc(erstes.titel)}:</strong> ${esc(erstes.text)}${liste.length > 1 ? ` <span class="banner-mehr">und ${liste.length - 1} weitere${liste.length === 2 ? 's' : ''}</span>` : ''}</span>
       </button>` : '';
   }
@@ -4879,6 +4881,17 @@
   }
 
   /* ===== Navigation ===== */
+  // Die große Karte endet über der Leiste unten: sonst liegen ihr unterer Rand und die Quellenangabe (i)
+  // auf dem Handy unter der Leiste. Mindestens 320 Pixel hoch (bei sehr großer Schrift scrollt die Seite dann).
+  function karteHoehe() {
+    const k = $('.karte'), tabs = $('.tabs');
+    if (!k || ui.view !== 'karte') return;
+    const leiste = tabs && tabs.getBoundingClientRect().height ? innerHeight - tabs.getBoundingClientRect().top + 12 : 16;
+    const oben = k.getBoundingClientRect().top + (window.scrollY || 0);
+    k.style.height = Math.round(Math.max(320, Math.min(680, innerHeight - oben - Math.max(16, leiste)))) + 'px';
+  }
+  window.addEventListener('resize', karteHoehe);
+
   function zeige(view) {
     if (view !== 'neu' && ui.bearbeiten) bearbeitenBeenden();
     ui.view = view;
@@ -4887,6 +4900,7 @@
       if (t.dataset.view === view) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
     });
     if (view !== 'karte') ui.markiert = null;
+    if (view === 'karte') karteHoehe();
     if (view === 'karte' && initKarte()) {
       kartenGroesse(false);
       if (ui.kartenZiel && kartenStatus.w) {

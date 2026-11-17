@@ -75,6 +75,8 @@ function FRAGEN_TEXTE(c) {
           `<p>Ja. In jeder Anfrage steht „Vorlesen“. Dein Gerät liest dann Titel, Termin, Ort, Betrag und Beschreibung vor.</p>`),
         frage('Wie lade ich Nachbarn ein?',
           `<p>Im Menü unter „Nachbarn einladen“ findest du einen QR-Code, einen Link zum Verschicken und einen Aushang zum Ausdrucken, mit Zetteln zum Abreißen.</p>`),
+        frage('Gibt es Werbung?',
+          `<p>Nein. Hand Drauf zeigt keine Werbung, hat keine bezahlten Einträge und verkauft keine Daten. Später soll sich die App nur über die kleine Servicegebühr tragen (siehe „Was kostet Hand Drauf?“).</p>`),
         frage('Wie lösche ich mein Konto?',
           `<p>Oben rechts auf dein Kürzel tippen, dann ganz unten „Konto löschen“. Profil, Anfragen, Adressen, Nachrichten und Bewertungen werden sofort gelöscht.</p>`),
         frage('Wie erreiche ich euch?',
