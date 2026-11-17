@@ -25,10 +25,10 @@
     "_hinweis": "carto: optionaler Schlüssel von carto.com für den Kartenstil Voyager. Leer = basemap.de. esri: optionaler Schlüssel der ArcGIS Location Platform für Luftbilder in ganz Deutschland. Leer = Luftbilder nur in Niedersachsen (LGLN).",
     "carto": "",
     "esri": "",
-    "_hinweis_beschriftung": "beschriftung: Namen von Orten und Straßen über dem Luftbild (Vektordaten von OpenStreetMap, OpenFreeMap, ohne Schlüssel). Leer = ohne Namen.",
+    "_hinweis_beschriftung": "beschriftung: Kartendaten von OpenStreetMap (über OpenFreeMap, ohne Schlüssel). Daraus zeichnet die App die Karte selbst, hell oder dunkel passend zum Design, mit Orts- und Straßennamen. Leer = fertige Kartenbilder von basemap.de.",
     "beschriftung": "https://tiles.openfreemap.org/planet",
-    "_hinweis_luftbild": "luftbild: in Niedersachsen immer das Luftbild des LGLN zeigen (true). false = überall die selbst gezeichnete Karte.",
-    "luftbild": true
+    "_hinweis_luftbild": "luftbild: true = in Niedersachsen das Luftbild des LGLN zeigen. false = überall die selbst gezeichnete Karte (seit 17. November 2026, vorerst).",
+    "luftbild": false
   },
   "codeLogin": false,
   "gebuehren": false

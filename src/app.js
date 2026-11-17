@@ -2084,7 +2084,7 @@
      für Autobahnen (blau) und Bundesstraßen (gelb). Nichts überdeckt sich, auch keine Anfrage und kein Knopf.
      Gezeichnet wird in eine Fläche über dem Luftbild, wenn die Karte ruht. Beim Zoomen und Verschieben wird die fertige
      Zeichnung nur mitbewegt, das kostet nichts. Kommen keine Daten, bleibt es beim Luftbild ohne Namen. */
-  const namen = { url: '', max: 14, start: null, daten: new Map(), laden: new Set(), ok: 0, fehler: 0, aus: false, bald: 0, stand: 0, el: null, ref: null };
+  const namen = { url: '', max: 14, start: null, daten: new Map(), laden: new Map(), vorab: new Set(), ok: 0, fehler: 0, aus: false, bald: 0, stand: 0, el: null, ref: null };
   const NAMEN_RAND = 48; // so viele Bildpunkte rundherum mehr zeichnen: kurzes Verschieben zeigt sie schon
   const NAMEN_SCHRIFT = '"Barlow Semi Condensed", "Barlow", "Helvetica Neue", Arial, sans-serif';
   // Straßen: Art in OpenMapTiles, ab Zoomstufe, Breite, Farbe (von unten nach oben gezeichnet)
@@ -2142,18 +2142,21 @@
       return d;
     }
     if (namen.aus || !namen.url || namen.laden.has(key) || namen.laden.size >= 8) return null;
-    namen.laden.add(key);
-    fetch(namen.url.replace('{z}', z).replace('{x}', x).replace('{y}', y))
+    const halt = window.AbortController ? new AbortController() : null;
+    namen.laden.set(key, halt);
+    fetch(namen.url.replace('{z}', z).replace('{x}', x).replace('{y}', y), halt ? { signal: halt.signal } : undefined)
       .then((r) => { if (!r.ok) throw new Error('Namen ' + r.status); return r.arrayBuffer(); })
       .then(entpacken)
       .then((buf) => { namen.daten.set(key, { roh: buf }); namen.ok++; },
-        () => {
+        (err) => {
+          if (halt && halt.signal.aborted) return; // selbst abgebrochen (wird nicht mehr gebraucht): kein Fehler
           namen.daten.set(key, { fehler: Date.now() }); // nicht sofort wieder versuchen
           namen.fehler++;
           if (!namen.ok && namen.fehler >= 4) namenAus();
         })
       .then(() => {
-        namen.laden.delete(key);
+        if (namen.laden.get(key) === halt) namen.laden.delete(key); // inzwischen neu angefragt: das neue gilt
+        if (halt && halt.signal.aborted) return;
         while (namen.daten.size > 80) namen.daten.delete(namen.daten.keys().next().value);
         namen.stand++;
         namenBald();
@@ -2518,11 +2521,13 @@
           try {
             cv = cv || new OffscreenCanvas(512, 512);
             const r = W.vektorMalen(cv, d, m.z, m.x, m.y, m.dz, m.stil, m.dpr);
-            cv.convertToBlob({ type: 'image/png' }).then((blob) => postMessage({ id: m.id, blob, leer: r === 'leer' }), () => postMessage({ id: m.id, kaputt: true }));
+            // Fertiges Bild ohne Umweg über PNG übergeben (das Verpacken kostete ein Vielfaches des Zeichnens)
+            const bmp = cv.transferToImageBitmap();
+            postMessage({ id: m.id, bmp, leer: r === 'leer', vorlaeufig: !!m.vorlaeufig }, [bmp]);
           } catch (x) { postMessage({ id: m.id, kaputt: true }); }
         };
         let ok = false;
-        try { ok = !!new OffscreenCanvas(4, 4).getContext('2d') && typeof OffscreenCanvas.prototype.convertToBlob === 'function'; } catch (x) { ok = false; }
+        try { ok = !!new OffscreenCanvas(4, 4).getContext('2d') && typeof OffscreenCanvas.prototype.transferToImageBitmap === 'function'; } catch (x) { ok = false; }
         postMessage({ typ: 'bereit', ok });`;
       const url = URL.createObjectURL(new Blob([quelle], { type: 'text/javascript' }));
       werk.w = new Worker(url);
@@ -2546,28 +2551,59 @@
     werk.offen.delete(m.id);
     if (m.fehlt) { werk.hat = werk.hat.filter((k2) => k2 !== m.key); if (t) vektorPlanen(t); }
     else if (m.kaputt) { if (t) { werkAus(); } }
-    else if (t) { t.wartet = !!m.leer; bildSetzen(t, URL.createObjectURL(m.blob)); }
+    else if (t) { t.wartet = !!m.leer || (!!m.vorlaeufig && !!t.vorlaeufig); bildZeigen(t, m.bmp); }
+    else if (m.bmp && m.bmp.close) m.bmp.close(); // Quadrat ist inzwischen weg
     vektorWeiter();
   }
-  // Fertiges Bild zeigen; das alte erst freigeben, wenn das neue da ist (kein Flackern)
-  function bildSetzen(t, url, geladen) {
-    if (!t.img.parentNode) { if (/^blob:/.test(url)) URL.revokeObjectURL(url); return; }
-    const alt = t.img.src;
-    // Neu gezeichnet (z. B. dunkel): erst laden, dann tauschen, damit das Quadrat nie kurz leer ist
-    if (alt && !geladen) {
-      const vor = new Image();
-      vor.onload = vor.onerror = () => bildSetzen(t, url, true);
-      vor.src = url;
+  // Fertiges Bild (aus dem Hintergrund oder von hier) in die Fläche des Quadrats übertragen. Das ist eine Kopie auf der
+  // Grafikkarte, kein Ver- und Entpacken. Neu gefärbt (hell/dunkel) wird einfach darübergemalt, nichts ist kurz leer.
+  function bildZeigen(t, quelle) {
+    const cv = t.img;
+    if (!cv.parentNode) { if (quelle.close) quelle.close(); return; }
+    // Bild aus dem Hintergrund: ohne Kopie übernehmen („bitmaprenderer“). Hier gezeichnet: erst in ein solches Bild
+    // umwandeln. Nur wo das fehlt (sehr alte Browser), wird kopiert.
+    if (!quelle.close && window.createImageBitmap && cv.dataset.art !== '2d') {
+      createImageBitmap(quelle).then((bmp) => bildZeigen(t, bmp), () => { cv.dataset.art = '2d'; bildZeigen(t, quelle); });
       return;
     }
-    t.img.onload = () => {
-      t.img.onload = null;
-      if (/^blob:/.test(alt) && alt !== url) URL.revokeObjectURL(alt);
-      if (t.klein) { t.img.className = 'k-kachel da'; t.img.dataset.geladen = '1'; umgebungBasis(); return; }
-      if (!t.fertig) { t.fertig = true; kacheln.ok++; }
-      basisAuffrischen(t); altesWeg();
-    };
-    t.img.src = url;
+    let ctx = cv.dataset.art === '2d' ? null : cv.getContext('bitmaprenderer');
+    if (ctx && quelle.close) {
+      if (cv.width !== quelle.width || cv.height !== quelle.height) { cv.width = quelle.width; cv.height = quelle.height; }
+      ctx.transferFromImageBitmap(quelle);
+    }
+    else {
+      cv.dataset.art = '2d';
+      if (cv.width !== quelle.width || cv.height !== quelle.height) { cv.width = quelle.width; cv.height = quelle.height; }
+      ctx = ctx || cv.getContext('2d');
+      ctx.drawImage(quelle, 0, 0);
+      if (quelle.close) quelle.close();
+    }
+    if (t.klein) { cv.className = 'k-kachel da'; cv.dataset.geladen = '1'; umgebungBasis(); return; }
+    if (!t.fertig) { t.fertig = true; kacheln.ok++; }
+    basisAuffrischen(t); altesWeg();
+  }
+  // Fläche für ein selbst gezeichnetes Quadrat
+  function kachelFlaeche(key) {
+    const cv = document.createElement('canvas');
+    cv.className = 'k-kachel'; cv.width = 1; cv.height = 1; cv.dataset.k = key;
+    return cv;
+  }
+  // Speicher sofort freigeben (Safari hält ihn sonst, bis aufgeräumt wird, und hat dafür eine feste Grenze)
+  function flaecheFrei(el) { if (el && el.tagName === 'CANVAS') { el.width = 0; el.height = 0; } }
+  // Welche Daten zeichnen das Quadrat t? Die eigenen, wenn sie da sind (sonst werden sie jetzt geholt). Solange sie
+  // unterwegs sind: einmal vorläufig aus den gröberen Daten einer der drei Stufen darüber, die schon da sind (nach dem
+  // Hineinzoomen fast immer). So ist die Karte sofort scharf, Häuser und kleine Wege kommen kurz danach dazu.
+  function vektorDaten(t) {
+    const dz = Math.min(namen.max, t.z), f = Math.pow(2, t.z - dz), px = Math.floor(t.x / f), py = Math.floor(t.y / f);
+    const roh = namenRoh(dz, px, py);
+    if (roh === false && t.vorlaeufig) return null; // eigene Daten kamen nicht: die vorläufige Zeichnung bleibt
+    if (roh !== null) { t.vorlaeufig = false; return { dz, px, py, roh, vorlaeufig: false }; }
+    if (t.vorlaeufig) return null; // schon vorläufig gezeichnet: auf die eigenen Daten warten
+    for (let d = dz - 1; d >= Math.max(0, dz - 3); d--) {
+      const g = Math.pow(2, t.z - d), qx = Math.floor(t.x / g), qy = Math.floor(t.y / g), e = namen.daten.get(d + '/' + qx + '/' + qy);
+      if (e && e.roh) { t.vorlaeufig = true; return { dz: d, px: qx, py: qy, roh: e.roh, vorlaeufig: true }; }
+    }
+    return null;
   }
   function vektorPlanen(t) {
     namenStart();
@@ -2597,17 +2633,17 @@
         const t = malen.liste.shift();
         t.inListe = false;
         if (!t.img.parentNode) continue;
-        const dz = Math.min(namen.max, t.z), f = Math.pow(2, t.z - dz), px = Math.floor(t.x / f), py = Math.floor(t.y / f), key = dz + '/' + px + '/' + py;
-        const roh = namenRoh(dz, px, py);
-        if (roh === null) { t.wartet = true; continue; } // Daten kommen noch
+        const q = vektorDaten(t);
+        if (!q) { t.wartet = true; continue; } // Daten kommen noch
+        const key = q.dz + '/' + q.px + '/' + q.py;
         if (werk.hat.indexOf(key) < 0) {
-          werk.w.postMessage({ typ: 'daten', key, buf: roh || null });
+          werk.w.postMessage({ typ: 'daten', key, buf: q.roh || null });
           werk.hat.push(key);
           if (werk.hat.length > 40) werk.hat.shift();
         }
         const id = ++werk.id;
         werk.offen.set(id, t);
-        werk.w.postMessage({ typ: 'malen', id, key, z: t.z, x: t.x, y: t.y, dz, stil, dpr });
+        werk.w.postMessage({ typ: 'malen', id, key, z: t.z, x: t.x, y: t.y, dz: q.dz, stil, dpr, vorlaeufig: q.vorlaeufig });
       }
       return;
     }
@@ -2619,20 +2655,16 @@
       const t = malen.liste.shift();
       t.inListe = false;
       if (!t.img.parentNode) continue;
-      const dz = Math.min(namen.max, t.z), f = Math.pow(2, t.z - dz);
-      const d = namenDaten(dz, Math.floor(t.x / f), Math.floor(t.y / f));
+      const q = vektorDaten(t);
+      const d = q && namenDaten(q.dz, q.px, q.py);
       if (!d) { t.wartet = true; continue; }
       const cv = malen.cv || (malen.cv = document.createElement('canvas'));
-      const r = WERKSTATT.vektorMalen(cv, d, t.z, t.x, t.y, dz, stil, dpr);
+      const r = WERKSTATT.vektorMalen(cv, d, t.z, t.x, t.y, q.dz, stil, dpr);
       gemalt++;
-      t.wartet = r === 'leer';
-      bildAusZeichnung(cv, t);
+      t.wartet = r === 'leer' || q.vorlaeufig;
+      bildZeigen(t, cv);
     }
     vektorWeiter();
-  }
-  function bildAusZeichnung(cv, t) {
-    if (cv.toBlob && window.URL && URL.createObjectURL) cv.toBlob((blob) => bildSetzen(t, blob ? URL.createObjectURL(blob) : cv.toDataURL('image/png')), 'image/png');
-    else bildSetzen(t, cv.toDataURL('image/png'));
   }
   // Daten angekommen: wartende Quadrate noch einmal versuchen
   function vektorWartende() {
@@ -2650,7 +2682,7 @@
     // die Bilder blockiert, die jetzt gebraucht werden
     if (!t.fertig && !t.vektor && t.img.getAttribute('src')) t.img.removeAttribute('src');
     if (t.img.parentNode) t.img.parentNode.removeChild(t.img);
-    if (/^blob:/.test(t.img.src)) URL.revokeObjectURL(t.img.src); // selbst gezeichnete Bilder sofort freigeben
+    if (t.vektor) flaecheFrei(t.img); // selbst gezeichnete Bilder sofort freigeben
     kacheln.bilder.delete(key);
   }
   function kachelnLeeren() {
@@ -2724,9 +2756,7 @@
   function neueKachel(z, x, y, key, lq) {
     const kc = kacheln;
     if (!lq && kc.quellen[kc.nr].vektor) {
-      const img = document.createElement('img');
-      img.className = 'k-kachel'; img.alt = ''; img.draggable = false; img.dataset.k = key;
-      img.setAttribute('decoding', 'async');
+      const img = kachelFlaeche(key);
       const t = { img, z, x, y, fertig: false, fehler: false, vektor: true };
       kc.bilder.set(key, t);
       kc.el.appendChild(img);
@@ -2823,15 +2853,16 @@
   // Bilder für den Ausschnitt b holen und pixelgenau legen. Mitten in einer Zoom-Bewegung (art):
   // 'rein': noch keine Luftbilder anfragen (die Stufe ist gleich wieder vorbei), die bisherigen bleiben vergrößert stehen;
   // 'raus': nur Luftbilder für den Rand, wo die bisherigen nichts mehr decken. Alles Übrige erst, wenn die Karte ruht.
-  function kachelnLegen(b, art) {
+  // bereich: Stufe und Ausschnitt nach diesem Blick (dem Ziel einer Bewegung), gelegt wird passend zu b
+  function kachelnLegen(b, art, bereich) {
     const kc = kacheln, k = kartenStatus;
     if (kc.aus || !kc.el || !kc.quellen.length) return;
     clearTimeout(kc.bald);
-    const r = kachelBereich(b, kachelZoom(b.s));
+    const rb = bereich || b, r = kachelBereich(rb, kachelZoom(rb.s));
     if (r.z !== kc.z) { kc.vorZ = kc.z; kc.z = r.z; }
     kc.ref = { s: b.s, x: b.x, y: b.y };
     schichtenVerschieben('');
-    const brauche = {}, liste = vonDerMitte(r, b);
+    const brauche = {}, liste = vonDerMitte(r, rb);
     kc.ohneLuft = !!art && !!luftQuelle(kc.quellen, kc.nr) && r.z >= LGLN.min;
     for (const [x, y] of liste) {
       if (luftInnen(r.z, x, y)) continue; // ganz unter dem Luftbild: keine Straßenkarte
@@ -2880,7 +2911,18 @@
     const andereStufe = r.z !== kc.z;
     // Andere Zoomstufe: mitten in der Bewegung höchstens alle 0,3 Sekunden neue Bilder holen. So entstehen beim
     // Herauszoomen keine leeren Ränder, und es werden trotzdem nicht bei jedem Bild neue Bilder angefordert.
-    if (andereStufe && performance.now() - (kc.zuletzt || 0) > 300) {
+    // Hineinzoomen mit bekanntem Ziel (Knopf, Doppeltippen) auf der eigenen Karte: keine Zwischenstufe zeichnen. Die
+    // bisherigen Bilder wachsen mit, die Daten der Zielstufe sind schon unterwegs (vektorVorab), am Ende wird scharf gelegt.
+    const zielZ = k.ziel && kc.quellen[kc.nr].vektor ? kachelZoom(k.ziel.s) : null;
+    const nurZiel = andereStufe && zielZ !== null && (r.z > kc.z || zielZ === kc.z);
+    // Herauszoomen mit bekanntem Ziel: gleich die Quadrate der Zielstufe für den ganzen Zielausschnitt legen. Sie decken
+    // schon jetzt die Ränder, die Zwischenstufen (und deren Daten) entfallen.
+    if (andereStufe && zielZ !== null && zielZ < kc.z && r.z < kc.z) {
+      kachelnLegen(b, 'raus', k.ziel);
+      kc.ruhe = setTimeout(() => { if (k.blick) kachelnLegen(k.blick); }, 160);
+      return;
+    }
+    if (andereStufe && !nurZiel && performance.now() - (kc.zuletzt || 0) > 300) {
       kc.zuletzt = performance.now();
       kachelnLegen(b, r.z > kc.z ? 'rein' : 'raus');
       // Endet die Bewegung hier, fehlt sonst der Rest (Luftbilder der neuen Stufe)
@@ -2893,6 +2935,30 @@
     const f = b.s / kc.ref.s;
     schichtenVerschieben(f === 1 ? `translate3d(${b.x - kc.ref.x}px, ${b.y - kc.ref.y}px, 0)` : `translate3d(${b.x - kc.ref.x * f}px, ${b.y - kc.ref.y * f}px, 0) scale(${f})`);
     if (f !== 1 || andereStufe || kc.ohneLuft) kc.ruhe = setTimeout(() => { if (k.blick) kachelnLegen(k.blick); }, andereStufe || kc.ohneLuft ? 160 : 220);
+  }
+  // Daten der eigenen Karte für den Ausschnitt b schon anfragen (die Mitte zuerst), ohne etwas zu zeichnen
+  function vektorVorab(b) {
+    const kc = kacheln;
+    if (kc.aus || !kc.quellen.length || !kc.quellen[kc.nr].vektor || !namen.url || !kartenStatus.w) return;
+    const r = kachelBereich(b, kachelZoom(b.s)), dz = Math.min(namen.max, r.z), f = Math.pow(2, r.z - dz);
+    const liste = [], schon = {};
+    vonDerMitte(r, b).forEach(([x, y]) => {
+      const px = Math.floor(x / f), py = Math.floor(y / f), key = dz + '/' + px + '/' + py;
+      if (!schon[key]) { schon[key] = true; liste.push([px, py, key]); }
+    });
+    // Mehrmals schnell gezoomt: Daten für ein überholtes Ziel abbrechen, wenn kein Quadrat sie mehr braucht. So bekommt
+    // das neue Ziel die Leitung sofort.
+    const gebraucht = Object.assign({}, schon);
+    const merke = (t) => { if (t.vektor || t.klein) { const d = Math.min(namen.max, t.z), g = Math.pow(2, t.z - d); gebraucht[d + '/' + Math.floor(t.x / g) + '/' + Math.floor(t.y / g)] = true; } };
+    // Halbfertige Quadrate anderer Stufen räumt das neue Ziel ohnehin weg: ihre Daten braucht niemand mehr
+    kc.bilder.forEach((t) => { if (!t.fertig && t.z === r.z) merke(t); });
+    (umgebung.vektor || []).forEach(merke);
+    namen.vorab.forEach((key) => {
+      const halt = namen.laden.get(key);
+      if (!gebraucht[key] && halt) { halt.abort(); namen.laden.delete(key); }
+    });
+    namen.vorab.clear();
+    liste.forEach(([px, py, key]) => { namenEintrag(dz, px, py); if (namen.laden.has(key)) namen.vorab.add(key); });
   }
   function kachelnErgaenzen(r) {
     const kc = kacheln, ref = kc.ref, T = WELT / Math.pow(2, r.z);
@@ -3078,8 +3144,7 @@
         let img = da[key];
         if (!img && !luftbild && q.vektor) {
           // Eigene Karte: Bild wird selbst gezeichnet
-          img = document.createElement('img');
-          img.className = 'k-kachel'; img.alt = ''; img.draggable = false; img.dataset.k = key;
+          img = kachelFlaeche(key);
           const t = { img, z: b.z, x, y, klein: true };
           u.vektor = (u.vektor || []).filter((v) => v.img.parentNode);
           u.vektor.push(t);
@@ -3113,7 +3178,7 @@
         }
         img.style.cssText = `left:${Math.round((x * T - ox) * b.s + b.x)}px;top:${Math.round((y * T - oy) * b.s + b.y)}px;width:256px;height:256px`;
       }
-      Object.keys(da).forEach((key) => { if (!brauche[key]) { ziel.removeChild(da[key]); if (/^blob:/.test(da[key].src)) URL.revokeObjectURL(da[key].src); } });
+      Object.keys(da).forEach((key) => { if (!brauche[key]) { ziel.removeChild(da[key]); flaecheFrei(da[key]); } });
     };
     legen(box, (x, y) => kachelUrl(q, b.z, x, y), false);
     if (mitLuft) legen(luftBox, (x, y) => luftUrl(lq, b.z, x, y), true); else luftBox.textContent = '';
@@ -3391,9 +3456,12 @@
     k.ziel = null;
     if (!sanft || weniger || !k.blick) { k.blick = ziel; zeichneBlick(); return; }
     k.ziel = ziel;
+    vektorVorab(ziel); // Daten für das Ziel schon jetzt holen, während die Karte noch fährt
     const von = k.blick, start = performance.now(), dauer = 320;
     const schritt = (t) => {
-      const f = Math.min(1, (t - start) / dauer), e = 1 - Math.pow(1 - f, 3);
+      // Die Zeit des ersten Bildes kann vor dem Start liegen: nie unter 0, sonst zoomt die Karte erst kurz in die
+      // falsche Richtung (und holt dabei unnötig die Daten einer anderen Stufe)
+      const f = Math.min(1, Math.max(0, (t - start) / dauer)), e = 1 - Math.pow(1 - f, 3);
       // Maßstab logarithmisch, damit das Zoomen gleichmäßig wirkt
       const s = von.s * Math.pow(ziel.s / von.s, e);
       const p = fix || { x: k.w / 2, y: k.h / 2 };
@@ -3402,7 +3470,11 @@
       k.blick = { s, x: p.x - (mv.x + (mz.x - mv.x) * e) * s, y: p.y - (mv.y + (mz.y - mv.y) * e) * s };
       zeichneBlick();
       if (f < 1) k.animation = requestAnimationFrame(schritt);
-      else { k.ziel = null; if (zoomStufe(k.blick.s) !== k.stufe && !k.finger) renderKarte(true); }
+      else {
+        k.ziel = null;
+        if (zoomStufe(k.blick.s) !== k.stufe && !k.finger) renderKarte(true);
+        if (!k.finger && ui.view === 'karte' && kacheln.ref) { clearTimeout(kacheln.ruhe); kachelnLegen(k.blick); }
+      }
     };
     k.animation = requestAnimationFrame(schritt);
   }
