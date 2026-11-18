@@ -1193,6 +1193,23 @@ h1, .sheet h2, .liste-gruppe, .geholfen {
 .kachel-radio input:checked + .kachel-karte { background-image: var(--textur-papier); background-repeat: repeat; background-position: 0 0; background-size: 70px 70px; }
 .kachel-radio input:checked + .kachel-karte > span:last-child { background: var(--marker-bild) no-repeat 50% 70% / calc(100% + 10px) 70%; }
 .kachel-radio input:checked + .kachel-karte .bild { -webkit-transform: rotate(-6deg); transform: rotate(-6deg); }
+/* Spalten: zwei auf dem Handy, drei erst ab 600 px (vorher drei ab 401 px: Namen standen über den Rand).
+   Ist eine Kachel für Bild und Namen nebeneinander zu schmal (kleines Handy, große Schrift), steht der Name unter dem Bild. */
+.kachel-wahl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 600px) { .kachel-wahl { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.kachel-radio { container-type: inline-size; }
+.kachel-karte > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+@container (max-width: 9.25em) {
+  .kachel-karte { -webkit-flex-direction: column; flex-direction: column; -webkit-justify-content: center; justify-content: center; gap: 6px; min-height: 100px; padding: 12px 6px 10px; text-align: center; }
+  .kachel-karte .bild { width: 48px; height: 48px; }
+}
+/* Umschalter (z. B. Automatisch / Hell / Dunkel): gleich breit, solange es passt; ein langes Wort bekommt seinen Platz,
+   und wenn gar nichts mehr passt, rutscht ein Knopf in eine zweite Reihe statt über den Rand */
+.segment { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; }
+.segment button { -webkit-flex: 1 1 0; flex: 1 1 0; min-width: -webkit-min-content; min-width: min-content; }
+/* Leiste unten: jede Spalte mindestens so breit wie ihr Name („Hilfe suchen“ auf sehr kleinen Handys) */
+.tabs-inner { grid-template-columns: repeat(4, minmax(auto, 1fr)); }
+@media (max-width: 340px) { .tabs { width: calc(100% - 14px); padding: 4px; } .tab { padding-inline: 1px; } }
 
 /* Namen wie „Jens W.“ bleiben zusammen */
 .card-wer { white-space: nowrap; }
